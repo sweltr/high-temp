@@ -1,0 +1,3234 @@
+---
+title: "8 Differentially Abundant ASVs & OTUs"
+description: |
+  Reproducible workflow for ... In this workflow, ....
+author:
+#  - name: Jarrod J Scott
+#    url: https://example.com/norajones
+#    affiliation: Spacely Sprockets
+#    affiliation_nrl: https://example.com/spacelysprokets
+bibliography: assets/cite.bib
+output:
+    distill::distill_article:
+      css: assets/styles.css
+      toc: true
+      toc_depth: 3
+---
+
+<details markdown="1">
+<summary>Click here for setup information.</summary>
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+set.seed(119)
+#library(conflicted)
+#pacman::p_depends(microbiomeMarker, local = TRUE)  
+#pacman::p_depends_reverse(microbiomeMarker, local = TRUE)  
+library(phyloseq); packageVersion("phyloseq")
+library(Biostrings); packageVersion("Biostrings")
+pacman::p_load(tidyverse, metacoder, hilldiv, patchwork, ampvis2, 
+               agricolae, labdsv, naniar, codefolder, ape,
+               pairwiseAdonis, microbiome, seqRFLP, DT, microbiomeMarker, 
+               install = FALSE, update = FALSE)
+
+options(scipen=999)
+knitr::opts_current$get(c(
+  "cache",
+  "cache.path",
+  "cache.rebuild",
+  "dependson",
+  "autodep"
+))
+```
+</details>
+
+<br/>
+
+```{r, echo=FALSE, eval=TRUE}
+xaringanExtra::use_panelset()
+```
+
+> Hit the *Hide Code* button to collapse the R code (visible by default).
+
+<aside>
+```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
+codefolder::generic(init = "show", query = "pre.sourceCode",
+  style = "position: absolute; right: 14%; z-index: 200")
+```
+</aside>
+
+# Synopsis
+
+This workflow contains ASV differential abundance analysis for the 2018 high temperature data sets. In order to run the workflow, you ...
+
+In this workflow...
+
+# 16s rRNA
+
+```{r, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/da_ssu18_wf.rdata")
+```
+
+```{r, include=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
+ssu18_ps_pime <- readRDS("files/pime/rdata/ssu18_ps_pime.rds")
+ssu18_ps_perfect <- readRDS("files/perfect/rdata/ssu18_ps_perfect.rds")
+ssu18_ps_work_otu <- readRDS("files/otu/rdata/ssu18_ps_work_otu.rds")
+ssu18_ps_pime_otu <- readRDS("files/pime/rdata/ssu18_ps_pime_otu.rds")
+ssu18_ps_perfect_otu <- readRDS("files/perfect/rdata/ssu18_ps_perfect_otu.rds")
+# work_otu needs tree :/
+tmp_tree <- rtree(ntaxa(ssu18_ps_work_otu), rooted = TRUE,
+                           tip.label = taxa_names(ssu18_ps_work_otu))
+ssu18_ps_work_otu <- merge_phyloseq(ssu18_ps_work_otu,
+                               sample_data,
+                               tmp_tree)
+rm(tmp_tree)
+```
+
+
+```{r, echo=FALSE}
+samp_ps <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
+             "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+for (i in samp_ps) {
+  tmp_get <- get(i)
+  tmp_path <- file.path("files/alpha/rdata/")
+  tmp_read <- readRDS(paste(tmp_path, i, ".rds", sep = ""))
+  tmp_sam_data <- sample_data(tmp_read)
+  tmp_tax_data <- data.frame(tax_table(tmp_get))
+  #tmp_tax_data[,c(1:6)]
+  tmp_tax_data$ASV_ID <- NULL # Some have, some do not
+  tmp_tax_data[] <- data.frame(lapply(tmp_tax_data, gsub, 
+                                      pattern = "^[k | p | c | o | f]_.*", 
+                                      replacement = NA, fixed = FALSE))
+  tmp_tax_data <- as.matrix(tmp_tax_data)
+  tmp_ps <- phyloseq(otu_table(tmp_get),
+                     phy_tree(tmp_get),
+                     tax_table(tmp_tax_data),
+                     tmp_sam_data)
+  assign(i, tmp_ps)
+  rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+Before jumping into the work flow, we need to first filter the FULL ASV and OTU data sets. For low-count filtering, we set the minimum read count to `5` and the prevalance to `0.2`. Then we apply another filter to remove ASVs with a low variance (`0.2`).
+
+```{r}
+tmp_low_count <- phyloseq::genefilter_sample(
+                                         ssu18_ps_work, 
+                                         filterfun_sample(function(x) x >= 5), 
+                                         A = 0.2 * nsamples(ssu18_ps_work))
+tmp_low_count <- phyloseq::prune_taxa(tmp_low_count, ssu18_ps_work)
+tmp_low_var <- phyloseq::filter_taxa(tmp_low_count, 
+                                     function(x) var(x) > 0.2, prune = TRUE)
+ssu18_ps_filt <- tmp_low_var
+rm(list = ls(pattern = "tmp_"))
+
+tmp_low_count <- phyloseq::genefilter_sample(
+                                         ssu18_ps_work_otu, 
+                                         filterfun_sample(function(x) x >= 5), 
+                                         A = 0.2 * nsamples(ssu18_ps_work_otu))
+tmp_low_count <- phyloseq::prune_taxa(tmp_low_count, ssu18_ps_work_otu)
+tmp_low_var <- phyloseq::filter_taxa(tmp_low_count, 
+                                     function(x) var(x) > 0.2, prune = TRUE)
+ssu18_ps_filt_otu <- tmp_low_var
+rm(list = ls(pattern = "tmp_"))
+```
+
+```{r, echo=FALSE}
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+```
+
+## Indicator Analysis
+
+Details about IA
+
+1. Choose a data set(s) & set the p-value cutoff.
+
+```{r}
+samp_ps <- c("ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect", 
+             "ssu18_ps_filt_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+indval_pval <- 0.05
+```
+
+2. Format Data Frame
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(otu_table(tmp_get))
+     tmp_df <- tmp_df[, which(colSums(tmp_df) != 0)]
+     tmp_row_names <- row.names(tmp_df)
+     tmp_row_names <- tmp_row_names %>%
+              stringr::str_replace("P[0-9]{2}_D[0-9]{2}_[0-9]{3}_", "") %>%
+              stringr::str_replace("[A-Z]$", "")
+     tmp_df <- tmp_df %>% tibble::add_column(tmp_row_names, .before = 1)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_seq_tab"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+3. Run Indicator Analysis
+
+```{r}
+set.seed(1191)
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
+     tmp_iva <- indval(tmp_get[,-1], tmp_get[,1])
+     tmp_gr <- tmp_iva$maxcls[tmp_iva$pval <= indval_pval]
+     tmp_iv <- tmp_iva$indcls[tmp_iva$pval <= indval_pval]
+     tmp_pv <- tmp_iva$pval[tmp_iva$pval <= indval_pval]
+     tmp_fr <- apply(tmp_get[,-1] > 0, 2, sum)[tmp_iva$pval <= indval_pval]
+     tmp_sum <- data.frame(group = tmp_gr, indval = tmp_iv,
+                                  pval = tmp_pv, freq = tmp_fr)
+     tmp_sum <- tmp_sum[order(tmp_sum$group, -tmp_sum$indval),]
+
+     tmp_tax_df <- data.frame(tax_table(get(i)))
+     tmp_tax_df$ASV_ID <- NULL
+     tmp_sum_tax <- merge(tmp_sum, tmp_tax_df, by = "row.names", all = TRUE)
+     tmp_sum_tax <- tmp_sum_tax[!(is.na(tmp_sum_tax$group)),]
+     class(tmp_sum_tax$group) <- "character"
+     tmp_sum_tax$group <- stringr::str_replace(tmp_sum_tax$group, "^1$", "C0")
+     tmp_sum_tax$group <- stringr::str_replace(tmp_sum_tax$group, "^2$", "W3")
+     tmp_sum_tax$group <- stringr::str_replace(tmp_sum_tax$group, "^3$", "W8")
+     tmp_sum_tax <- tmp_sum_tax %>% dplyr::rename("ASV_ID" = "Row.names")
+     tmp_sum_tax <- tmp_sum_tax[order(as.numeric(gsub("[A-Z]{3}", "", tmp_sum_tax$ASV_ID))),]
+     tmp_sum_tax$ASV_ID <-  as.character(tmp_sum_tax$ASV_ID)
+     tmp_sum.prob.corrected <- p.adjust(tmp_sum$pval, "bonferroni")
+     tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_indval_summary"))
+     assign(tmp_res_name, tmp_sum_tax)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+Now we can save a few files and display the data.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
+     tmp_get[,1] <- NULL
+     tmp_df <- as.data.frame(t(tmp_get))
+     tmp_col_names <- colnames(tmp_df)
+     tmp_col_names <- tmp_col_names %>%
+              stringr::str_replace("P[0-9]{2}_D[0-9]{2}_[0-9]{3}_", "") %>%
+              stringr::str_replace("[A-Z]$", "")
+     colnames(tmp_df) <- tmp_col_names
+     #tmp_df$freq_all <- apply(tmp_df > 0, 1, sum)
+     tmp_df$freq_C0 <- apply(tmp_df[ , (names(tmp_df) %in% "C0")] > 0, 1, sum)
+     tmp_df$freq_W3 <- apply(tmp_df[ , (names(tmp_df) %in% "W3")] > 0, 1, sum)
+     tmp_df$freq_W8 <- apply(tmp_df[ , (names(tmp_df) %in% "W8")] > 0, 1, sum)
+     tmp_df$reads_total <- base::rowSums(tmp_df[ , (names(tmp_df) %in% c("C0", "W3", "W8"))])
+     tmp_df$reads_C0 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "C0")])
+     tmp_df$reads_W3 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W3")])
+     tmp_df$reads_W8 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W8")])
+     tmp_df <- tmp_df[,!grepl("^[C | W]", names(tmp_df))]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("ASV_ID")
+
+     tmp_get_indval <- get(purrr::map_chr(i, ~ paste0(., "_indval_summary")))
+     tmp_merge_df <- merge(tmp_df, tmp_get_indval, by = "ASV_ID", all = FALSE)
+     tmp_merge_df <- tmp_merge_df[,c(1,9:12,2:8,13:19)]
+     tmp_merge_df <- tmp_merge_df[order(tmp_merge_df$reads_total, decreasing = TRUE), ]
+     tmp_merge_name <- purrr::map_chr(i, ~ paste0(., "_indval_final"))
+     assign(tmp_merge_name, tmp_merge_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+4. Save a new phyloseq object
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_indval_summary")))
+     tmp_list <- tmp_tab[,1]
+     tmp_ps <- prune_taxa(tmp_list, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_ind"))
+     assign(tmp_name, tmp_ps)
+     tmp_ps@phy_tree <- NULL
+     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
+     tmp_ps_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+                            tip.label = taxa_names(tmp_ps))
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_ps_tree)
+     assign(tmp_name, tmp_ps)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+## Indicator Summary
+
+</br>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_filt_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for FULL ASV data set.')),
+          elementId = "aoujz2o59aed35ocrusj",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_filt_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_pime_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PIME ASV data set.')),
+          elementId = "5ngb51aex096wsyexm74",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_pime_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_perfect_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PERfect ASV data set.')),
+          elementId = "hzk8d4z2xkjat6kbu1ws",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_perfect_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_filt_otu_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for FULL OTU data set.')),
+          elementId = "efha9eaxwe4gamb9dnio",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_filt_otu_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_pime_otu_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PIME OTU data set.')),
+          elementId = "839wey6tt5l97rhkoe22",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_pime_otu_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_perfect_otu_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PERfect OTU data set.')),
+          elementId = "jufu9owxf7w5or39vco8",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_perfect_otu_indval_final), fontSize = '80%')
+```
+::: 
+::: 
+::: 
+
+## LEfSe
+
+Details about LEFSE
+
+[microbiomeMarker](https://github.com/yiluheihei/microbiomeMarker)
+
+Remove ASV seq, subset only ASVs
+
+```{r}
+for (i in samp_ps) {
+  tmp_get <- get(i)
+  tax_table(tmp_get) <- tax_table(tmp_get)[,c(1:6)]
+  tax_table(tmp_get) <- cbind(tax_table(tmp_get),
+                           rownames(tax_table(tmp_get)))
+  colnames(tax_table(tmp_get)) <- c("Kingdom", "Phylum", "Class", "Order", 
+                                    "Family", "Genus", "Species")
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_rf_all"))
+  assign(tmp_name, tmp_get)
+  tax_table(tmp_get) <- tax_table(tmp_get)[,c(7)]
+  tmp_name_asv <- purrr::map_chr(i, ~ paste0(., "_rf_asv"))
+  assign(tmp_name_asv, tmp_get)
+  rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_rf")
+```
+
+1. Choose a data set(s) & set the LEfSe cutoff values.
+
+```{r}
+samp_ps <- c("ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect", 
+             "ssu18_ps_filt_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+lefse_lda <- 2
+lefse_kw <- 0.05
+lefse_wc <- 0.05
+```
+
+
+```{r, warnings = FALSE, error = FALSE}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_rf_asv")))
+     tmp_lefse <- lefse(tmp_get, norm = "CPM", class = "TEMP", correct = "2", 
+                        lda_cutoff = lefse_lda, 
+                        kw_cutoff = lefse_kw, 
+                        wilcoxon_cutoff = lefse_wc, 
+                        bootstrap_n = 30, bootstrap_fraction = 2/3, 
+                        sample_min = 10, multicls_strat = FALSE, curv = FALSE)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_lefse_asv"))
+     assign(tmp_name, tmp_lefse)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_lefse_asv")
+
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_rf_all")))
+     tmp_lefse <- lefse(tmp_get, norm = "CPM", class = "TEMP", correct = "2", 
+                        lda_cutoff = lefse_lda, 
+                        kw_cutoff = lefse_kw, 
+                        wilcoxon_cutoff = lefse_wc, 
+                        bootstrap_n = 30, bootstrap_fraction = 2/3, 
+                        sample_min = 10, multicls_strat = FALSE, curv = FALSE)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_lefse_all"))
+     assign(tmp_name, tmp_lefse)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_lefse_asv")
+objects(pattern = "_lefse_all")
+```
+
+```{r, echo=FALSE}
+# DONT RUN, TESTING ONLY
+#tmp_tab <- data.frame(marker_table(ssu18_ps_pime_lefse_asv))
+#tmp_tab$feature <- gsub('s__', '', tmp_tab$feature)
+
+#tmp_ps <- data.frame(t(otu_table(ssu18_ps_pime_rf_asv)))
+#tmp_ps <- tmp_ps %>% tibble::rownames_to_column("feature")
+#write.table(dplyr::left_join(tmp_tab, tmp_ps, by = "feature"), "test.txt", quote = FALSE, sep = "\t")
+```
+
+
+```{r}
+for (i in samp_ps) {
+    tmp_o_tax <- data.frame(tax_table(get(i)))
+    tmp_o_tax$ASV_ID <- NULL 
+    tmp_o_tax <- tmp_o_tax %>% tibble::rownames_to_column("ASV_ID")
+    
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_asv")))
+    tmp_mt <- data.frame(marker_table(tmp_get))
+    tmp_mt$feature <- gsub('s__', '', tmp_mt$feature)
+    tmp_mt <- tmp_mt %>% dplyr::rename(c("ASV_ID" = 1, "group" = 2, "pval" = 4)) %>%
+          tibble::remove_rownames()
+    tmp_sum <- dplyr::left_join(tmp_mt, tmp_o_tax, by = "ASV_ID")
+    tmp_sum$group <- stringr::str_replace(tmp_sum$group, "^0$", "C0")
+    tmp_sum$group <- stringr::str_replace(tmp_sum$group, "^3$", "W3")
+    tmp_sum$group <- stringr::str_replace(tmp_sum$group, "^8$", "W8")
+
+    tmp_sum <- tmp_sum[order(as.numeric(gsub("[A-Z]{3}", "", tmp_sum$ASV_ID))),]
+    
+    tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_summary"))
+    assign(tmp_res_name, tmp_sum)
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Now we can save a few files and display the data.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(t(otu_table(tmp_get)))
+     #tmp_get[,1] <- NULL
+     #tmp_df <- as.data.frame(t(tmp_otu))
+     tmp_col_names <- colnames(tmp_df)
+     tmp_col_names <- tmp_col_names %>%
+              stringr::str_replace("P[0-9]{2}_D[0-9]{2}_[0-9]{3}_", "") %>%
+              stringr::str_replace("[A-Z]$", "")
+     colnames(tmp_df) <- tmp_col_names
+     tmp_df$freq <- apply(tmp_df > 0, 1, sum)
+     tmp_df$freq_C0 <- apply(tmp_df[ , (names(tmp_df) %in% "C0")] > 0, 1, sum)
+     tmp_df$freq_W3 <- apply(tmp_df[ , (names(tmp_df) %in% "W3")] > 0, 1, sum)
+     tmp_df$freq_W8 <- apply(tmp_df[ , (names(tmp_df) %in% "W8")] > 0, 1, sum)
+     tmp_df$reads_total <- base::rowSums(tmp_df[ , (names(tmp_df) %in% c("C0", "W3", "W8"))])
+     tmp_df$reads_C0 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "C0")])
+     tmp_df$reads_W3 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W3")])
+     tmp_df$reads_W8 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W8")])
+     tmp_df <- tmp_df[,!grepl("^[C | W]", names(tmp_df))]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("ASV_ID")
+
+     tmp_get_lefse <- get(purrr::map_chr(i, ~ paste0(., "_lefse_summary")))
+     tmp_merge_df <- merge(tmp_df, tmp_get_lefse, by = "ASV_ID", all = FALSE)
+
+     tmp_merge_df <- tmp_merge_df[,c(1,10:12,2:9,14:20)]
+     tmp_merge_df <- tmp_merge_df[order(tmp_merge_df$reads_total, decreasing = TRUE), ]
+     tmp_merge_name <- purrr::map_chr(i, ~ paste0(., "_lefse_final"))
+     assign(tmp_merge_name, tmp_merge_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Save a new phyloseq object
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_lefse_summary")))
+     tmp_list <- tmp_tab[,1]
+     tmp_ps <- prune_taxa(tmp_list, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_lefse"))
+     assign(tmp_name, tmp_ps)
+     tmp_ps@phy_tree <- NULL
+     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
+     tmp_ps_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+                            tip.label = taxa_names(tmp_ps))
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_ps_tree)
+     assign(tmp_name, tmp_ps)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+## LEfSe Summary
+
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_filt_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for FULL ASV data set.')),
+          elementId = "bdsladp57qaei42zttst",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_filt_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_pime_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PIME ASV data set.')),
+          elementId = "jma9whi8yy77v1n6axzx",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_pime_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_perfect_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PERfect ASV data set.')),
+          elementId = "s83ktlgu15iv26l84hro",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_perfect_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_filt_otu_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for FULL OTU data set.')),
+          elementId = "6h2s2vgyh5rwwq3ijdnd",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_filt_otu_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_pime_otu_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PIME OTU data set.')),
+          elementId = "zl1nrfygao8r2xpmw6p2",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_pime_otu_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_perfect_otu_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PERfect OTU data set.')),
+          elementId = "jwsompq8ulth9x2wjacd",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_perfect_otu_lefse_final), fontSize = '80%')
+```
+:::
+:::
+:::
+
+
+## LEfSe Visualization
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_asv")))
+     tmp_mt <- data.frame(marker_table(tmp_get))
+     tmp_mt  <-  tmp_mt %>% filter(lda >= 3)
+     tmp_mt <- marker_table(tmp_mt)
+     tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_asv_viz_trim"))
+     assign(tmp_res_name, tmp_mt)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+objects(pattern = "_lefse_asv_viz_trim")
+```
+
+</br>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_filt_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+
+#### PIME ASV
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_pime_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 5))
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_perfect_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 6))
+```
+:::
+
+::: {.panel}
+
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_filt_otu_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 8))
+```
+
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_pime_otu_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 5))
+```
+
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_perfect_otu_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 8))
+```
+:::
+:::
+:::
+
+## LEfSe Summary (Markers)
+
+```{r}
+for (i in samp_ps) {
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
+    tmp_mt <- data.frame(marker_table(tmp_get))
+    tmp_mt <- tmp_mt[, c(2:4,1)]
+    tmp_mt <- tmp_mt %>% dplyr::rename(c("group" = 1, "pval" = 3))
+    tmp_mt$group <- stringr::str_replace(tmp_mt$group, "^0$", "C0")
+    tmp_mt$group <- stringr::str_replace(tmp_mt$group, "^3$", "W3")
+    tmp_mt$group <- stringr::str_replace(tmp_mt$group, "^8$", "W8")
+    tmp_mt <- tmp_mt %>% tibble::rownames_to_column("marker")
+    tmp_mt <- tmp_mt %>% tidyr::separate(col = "feature", 
+                                         into = c("Kingdom", "Phylum", "Class", 
+                                                  "Order", "Family", "Genus", "ASV_ID"), 
+                                         sep = "\\|\\w__")
+    
+    tmp_mt$Kingdom <- gsub('k__', '', tmp_mt$Kingdom)
+    tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_marker_final"))
+    assign(tmp_res_name, tmp_mt)
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+</br>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_filt_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for FULL ASV data set.')),
+          elementId = "951pipufkbqkan4nrcj6",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_filt_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_pime_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PIME ASV data set.')),
+          elementId = "iyy1bgueu83q20akxz93",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_pime_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_perfect_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PERfect ASV data set.')),
+          elementId = "v8i46ce2v9kiihb3pe6v",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_perfect_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_filt_otu_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for FULL OTU data set.')),
+          elementId = "5taz7ab8850c712wjdq2",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_filt_otu_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_pime_otu_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PIME OTU data set.')),
+          elementId = "km6l5019e9461ymmy08a",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_pime_otu_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(ssu18_ps_perfect_otu_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PERfect OTU data set.')),
+          elementId = "88r5cctea5nvkv77gmmb",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_ps_perfect_otu_lefse_marker_final), fontSize = '80%')
+```
+::: 
+::: 
+::: 
+
+## LEfSe Visualization (Markers)
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
+     tmp_mt <- data.frame(marker_table(tmp_get))
+     tmp_mt  <-  tmp_mt %>% filter(lda >= 4)
+     tmp_mt <- marker_table(tmp_mt)
+     tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_all_viz_trim"))
+     assign(tmp_res_name, tmp_mt)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_lefse_all_viz_trim")
+```
+
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_filt_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+
+#### PIME ASV
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_pime_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_perfect_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_filt_otu_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_pime_otu_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(ssu18_ps_perfect_otu_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271"))+ 	
+	  theme(axis.text = element_text(size = 8))
+```
+
+:::
+:::
+:::
+
+```{r, echo=FALSE}
+save.image("page_build/da_ssu18_wf.rdata")
+objects()
+```
+
+
+## Visualizing DA ASVs/OTUs in Anvi’o
+
+Next, we will combine the results of the ISA and LEfSe analyses with the distribution of ASVs (OTUs) across each sample. We are going to do the analysis in anvi’o using the `anvi-interactive` command. Anvi’o likes databases but it also understands that sometimes you do not have a database. So it offers a manual mode. If you type this command you can have a look at the relevant pieces we need for the visualization, specifically those under the headings MANUAL INPUTS and ADDITIONAL STUFF.
+
+```bash
+anvi-interactive -h
+```
+
+```
+MANUAL INPUTS:
+  Mandatory input parameters to start the interactive interface without
+  anvi'o databases.
+
+--manual-mode           We need this flag to run anvi'o in an ad hoc
+                        manner, i.e., no database.
+-f FASTA, --fasta-file FASTA
+                        A FASTA-formatted input file. This is sort of
+                        optional
+-d VIEW_DATA, --view-data VIEW_DATA
+                        A TAB-delimited file for view data. This is the ASV
+                        by sample matrix. We need this
+-t NEWICK, --tree NEWICK
+                        NEWICK formatted tree structure. How the ASVs are
+                        ordered in our case.
+ADDITIONAL STUFF:
+  Parameters to provide additional layers, views, or layer data.
+
+-V ADDITIONAL_VIEW, --additional-view ADDITIONAL_VIEW
+                        A TAB-delimited file for an additional view to be used
+                        in the interface. This file should contain all split
+                        names, and values for each of them in all samples.
+                        Each column in this file must correspond to a sample
+                        name. Content of this file will be called 'user_view',
+                        which will be available as a new item in the 'views'
+                        combo box in the interface
+-A ADDITIONAL_LAYERS, --additional-layers ADDITIONAL_LAYERS
+                        A TAB-delimited file for additional layer info. In
+                        our case this is info about each ASV. The first column
+                        of the file must be the ASV names, and
+                        the remaining columns should be unique attributes.
+```
+
+There are also a few files we generate that cannot be loaded directly. So, in addition to the files that can be loaded when running the interactive, we also have files that must be added to the database created by anvi’o.
+
+Here is a nice tutorial on [Working with anvi’o additional data tables](http://merenlab.org/2017/12/11/additional-data-tables/). A lot of what we need is covered in this tutorial. To get the most out the visualization we need to create a few files to give anvi’o when we fire up the interactive interface.
+
+1. View data: in our case, a sample by ASV abundance matrix.
+2. Additional info about each ASV.
+3. Additional info about each sample.
+4. Taxa abundance data for each sample at some rank.
+5. Dendrograms ordering the ASVs and samples (based on view data).
+6. Fasta file of all ASVs in the analysis.
+
+
+```{r, echo=FALSE}
+remove(list = ls())
+load("page_build/da_ssu18_wf.rdata")
+```
+
+### 1. View data
+
+Let’s start with the `-d` or `--view-data` file. This file needs to be an ASV by sample matrix of read counts. To simplify the visualization, we will use ***all*** ASVs represented by 100 or more total reads, including those identified as differentially abundant by the ISA and/or LEfSe. 
+
+```{r}
+samp_ps_all <- c("ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect", 
+                 "ssu18_ps_filt_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu", 
+                 "ssu18_ps_work", "ssu18_ps_work_otu")
+samp_ps <- c("ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect", 
+             "ssu18_ps_filt_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+samp_ps_org <- c("ssu18_ps_work", "ssu18_ps_work_otu")
+samp_ps_pime <- c("ssu18_ps_pime", "ssu18_ps_pime_otu")
+samp_ps_other <- c("ssu18_ps_filt", "ssu18_ps_perfect", 
+                   "ssu18_ps_filt_otu", "ssu18_ps_perfect_otu")
+
+trim_val <- 100
+for (i in samp_ps_pime) {
+     tmp_get <- get(i)
+     tmp_df <- prune_taxa(taxa_sums(tmp_get) > trim_val, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+trim_val <- 300
+for (i in samp_ps_other) {
+     tmp_get <- get(i)
+     tmp_df <- prune_taxa(taxa_sums(tmp_get) > trim_val, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_trim")
+```
+
+```{r, echo=FALSE}
+for (i in samp_ps) {
+     tmp_path <- file.path("files/anvio/ssu/")
+     dir.create(paste(tmp_path, i, sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps_org) {
+     tmp_path <- file.path("files/anvio/ssu/")
+     dir.create(paste(tmp_path, i, sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_df <- as.data.frame(t(otu_table(tmp_get)))
+     tmp_df <- tmp_df %>% rownames_to_column("Group")
+     tmp_path <- file.path("files/anvio/ssu/")
+     write.table(tmp_df, paste(tmp_path, i, "/", "data.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Or export a table of transformed data.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_trans <- transform_sample_counts(tmp_get, function(x) 1e5 * {x/sum(x)})
+     tmp_df <- as.data.frame(t(otu_table(tmp_trans)))
+     tmp_df <- tmp_df %>% rownames_to_column("Group")
+     #tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim_tab"))
+     #assign(tmp_name, tmp_df)
+     tmp_path <- file.path("files/anvio/ssu/")
+     write.table(tmp_df, paste(tmp_path, i, "/", "data_trans.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### 2. Additional Layers for ASVs
+
+Next, we need some additional data **about the ASVs** to overlay on the visual. This can be anything however what I specifically want are the details of the ISA analysis, total reads, and lineage info. I warn you; this code will get ugly and I urge you to find a better way.
+
+Start with an ASV + lineage table for the ASVs in the new phyloseq object.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get_indval <- get(purrr::map_chr(i, ~ paste0(., "_indval_final")))
+     tmp_get_indval <- tmp_get_indval %>% dplyr::rename("Group" = "ASV_ID") %>%
+                                          dplyr::rename("enrich_indval" = "group") %>%
+                                          dplyr::rename("test_indval" = "indval") %>%
+                                          dplyr::rename("pval_indval" = "pval")
+     tmp_get_indval <- tmp_get_indval[,1:5]
+
+     tmp_get_lefse <- get(purrr::map_chr(i, ~ paste0(., "_lefse_final")))
+     tmp_get_lefse <- tmp_get_lefse %>% dplyr::rename("Group" = "ASV_ID") %>%
+                                          dplyr::rename("enrich_lefse" = "group") %>%
+                                          dplyr::rename("test_lefse" = "lda") %>%
+                                          dplyr::rename("pval_lefse" = "pval")
+     tmp_get_lefse <- tmp_get_lefse[,1:4]
+     
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_otu_df <- as.data.frame(t(otu_table(tmp_get)))
+     tmp_total <- cbind(tmp_otu_df, total_reads = rowSums(tmp_otu_df))
+     tmp_total <- rev(tmp_total)[1]
+     tmp_total <- tmp_total %>% tibble::rownames_to_column("Group")
+     tmp_tax_df <- as.data.frame(tax_table(tmp_get))
+     tmp_tax_df$ASV_SEQ <- NULL
+     tmp_tax_df$ASV_ID <- NULL
+     
+     tmp_tax_df <- tmp_tax_df %>% tibble::rownames_to_column("Group")
+     tmp_add_lay <- dplyr::left_join(tmp_tax_df, tmp_total, by = "Group") %>%
+                   dplyr::left_join(., tmp_get_indval, by = "Group") %>%
+                   dplyr::left_join(., tmp_get_lefse, by = "Group")
+     tmp_add_lay$ASV_ID <- tmp_add_lay$Group
+     tmp_add_lay <- tmp_add_lay[, c(1,16,8,12,9:11,13:15,2:7)]
+     tmp_path <- file.path("files/anvio/ssu/")
+     write.table(tmp_add_lay, paste(tmp_path, i, "/", "additional_layers.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE, na = "")
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### 3. Additional Views for Samples
+
+Now we want some general data **about the samples** to overlay on the visual. Again, this can be anything. How about a table of alpha diversity metrics? We actually have such a table that was generated way back up the road. Just need to fix the column names.
+
+<aside>
+**Added** to  profile.db with  `anvi-import-misc-data` command &  `--target-data-table layers` flag.
+</aside>
+
+```{r}
+metadata_tab <- read.table("files/metadata/tables/metadata.txt",
+                           header = TRUE)
+
+tmp_x <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
+data.frame(sample_data(tmp_x))
+metadata_tab[,c(2:5)] <- list(NULL)
+for (i in samp_ps_all) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(sample_data(tmp_get))
+     tmp_df <- tmp_df[,c(2:9)]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("id")
+     tmp_df <- tmp_df %>% dplyr::rename("no_asvs" = "Observed")
+     tmp_rc <- data.frame(readcount(tmp_get))
+     tmp_rc <- tmp_rc %>% tibble::rownames_to_column("id")
+     tmp_rc <- tmp_rc %>% dplyr::rename("no_reads" = 2)
+     #identical(tmp_df$id, tmp_rc$id)
+     tmp_merge <- dplyr::left_join(tmp_df, tmp_rc)
+     tmp_merge <- tmp_merge[, c(1:6,10,7:9)]
+     tmp_final <- dplyr::left_join(tmp_merge, metadata_tab)
+     tmp_path <- file.path("files/anvio/ssu/")
+     write.table(tmp_final, paste(tmp_path, i, "/", "additional_views.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+rm(metadata_tab)
+```
+
+### 4. Taxon rank abundance by sample
+
+Turned out this was a little tricky to figure out, but thanks to a [little nifty block of code](https://github.com/joey711/phyloseq/issues/418#issuecomment-262637034) written by [guoyanzhao](https://github.com/guoyanzhao) on the phyloseq Issues forum, it was a piece of cake. The code can be altered to take any rank. See the post for an explanation.
+
+Anyway, the goal is to sum each taxon at some rank and present that as a bar chart for each sample in the visualization. Anvi'o has a specific format it needs where each row is a sample and each column is a taxon. Taxa names need the prefix `t_<RANK>!`. For example, `t_class!` should be added for Class rank.
+
+<aside>
+**Added** to  profile.db with `anvi-import-misc-data` command & `--target-data-table layers` flag.
+</aside>
+
+```{r}
+pick_rank <- "Phylum"
+pick_rank_l <- "phylum"
+for (i in samp_ps_all) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_glom <- tax_glom(tmp_get, taxrank = pick_rank)
+    tmp_melt <- psmelt(tmp_glom)
+    tmp_melt[[pick_rank]] <- as.character(tmp_melt[[pick_rank]])
+    tmp_abund <- aggregate(Abundance ~ Sample + tmp_melt[[pick_rank]], tmp_melt, FUN = sum)
+    colnames(tmp_abund)[2] <- "tax_rank"
+    library(reshape2)
+    tmp_abund <- as.data.frame(reshape::cast(tmp_abund, Sample ~ tax_rank))
+    tmp_abund <- tibble::remove_rownames(tmp_abund)
+    tmp_abund <- tibble::column_to_rownames(tmp_abund, "Sample")
+# Reorder table column by sum
+    tmp_layers <- tmp_abund[,names(sort(colSums(tmp_abund), decreasing = TRUE))]
+# Add the prefix
+    tmp_layers <- tmp_layers %>% dplyr::rename_all(function(x) paste0("t_", pick_rank_l,"!", x))
+    tmp_layers <- tibble::rownames_to_column (tmp_layers, "taxon")
+# save the table
+    tmp_path <- file.path("files/anvio/ssu/")
+    write.table(tmp_layers, paste(tmp_path, i, "/", "tax_layers.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+
+### 5. Construct Dendrograms
+
+The last piece we need is to generate dendrograms that order the ASVs by their distribution in the samples and the samples by their ASV composition. For this task we will use anvi'o.
+
+```bash
+anvi-matrix-to-newick data.txt --distance euclidean \
+                               --linkage ward \
+                               -o asv.tre
+anvi-matrix-to-newick data.txt --distance euclidean \
+                               --linkage ward \
+                               -o sample.tre \
+                               --transpose
+```
+
+The first command reads the view data we generated above and uses Euclidean distance and Ward linkage for hierarchical clustering of the ASVs. The second command transposes the view data table and then does the same for the samples. There are several distance metrics and linkage methods available. See the help menu for the command by typing `anvi-matrix-to-newick -h`.  Boom.
+
+```{r, echo=FALSE}
+#bash_commands <- c() USE this to combine all commands
+# including in loop creates separate files
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("files/anvio/ssu/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+# FOR TANSFORMED DATA
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv_trans.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample_trans.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("files/anvio/ssu/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre_transformed.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{bash, echo=FALSE}
+#NEED to run in anvio from base dir
+cd ssu18_ps_filt
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd ssu18_ps_filt_otu
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd ssu18_ps_perfect
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd ssu18_ps_perfect_otu
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd ssu18_ps_pime
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd ssu18_ps_pime_otu
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+```
+
+Alternatively, we can generate dendrograms using `phyloseq::distance` and `hclust`. 
+
+```{r}
+pick_dist <- "bray"
+pick_clust <- "complete"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist, type = "sample")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("files/anvio/ssu/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+pick_dist_asv <- "euclidean"
+pick_clust_asv <- "ward"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist_asv, type = "taxa")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust_asv)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("files/anvio/ssu/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "asv_", pick_dist_asv, "_", pick_clust_asv, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+<aside>
+The file `asv.tre` is **loaded** with  `anvi-interactive` command & the `--tree` flag.
+</aside>
+
+
+The ASV tree is fine as is, but the sample tree needs a [special format](http://merenlab.org/2017/12/11/additional-data-tables/#layer-orders-additional-data-table). Specifically, the tree needs to be in a three column, tab delimited,  *table*. This way you can add multiple orderings to the same file and view them all in the interactive. The table needs to be in this format:
+
+| item_name	| data_type	| data_value                                          |
+|-----------|-----------|-----------------------------------------------------|
+| tree_1  	| newick	  | ((P01_D00_010_W8A:0.0250122,P05_D00_010_W8C:0.02,.. |
+| tree_2  	| newick	  | ((((((((OTU14195:0.0712585,OTU13230:0.0712585)0:,...|
+| (…)	      | (…)	      | (…)                                                 |
+
+This is easy to do by hand, but I *really* need the practice so I will do it in R. Anvi'o is very particular about formatting. For example, if this file ends with a blank line, which it will because when anvi'o made the initial dendrogram it add a new line. We need to get rid of that or we get an error when trying to import the table.
+
+<aside>
+The file `sample.tre` is **added** to the profile.db with  `anvi-import-misc-data` command &   `--target-data-table layer_orders` flag.
+</aside>
+
+```{r}
+for (i in samp_ps) {
+      tmp_path <- file.path("files/anvio/ssu/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+# FOR TRANSFORMED DATA
+for (i in samp_ps) {
+      tmp_path <- file.path("files/anvio/ssu/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/","sample_trans.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_trans.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+```{r}
+# FOR HCLUST TREE
+for (i in samp_ps) {
+      tmp_path <- file.path("files/anvio/ssu/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c(paste(pick_dist, "_", pick_clust, "_hclust", sep = ""))
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### 6. Make a fasta file
+
+We don't need to add a fasta file, but it is a nice way to keep everything in one place. Plus, you can do BLAST searches directly in the interface by right clicking on the ASV of interest, so it is nice to have the sequences.
+
+<aside>
+**Loaded** with `anvi-interactive` command &  `--fasta-file` flag.
+</aside>
+
+```{r}
+for (i in samp_ps) {
+       tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+       tmp_tab <- tax_table(tmp_get)
+       tmp_tab <- tmp_tab[, 7]
+       tmp_df <- data.frame(row.names(tmp_tab), tmp_tab)
+       colnames(tmp_df) <- c("ASV_ID", "ASV_SEQ")
+       tmp_df$ASV_ID <- sub("^", ">", tmp_df$ASV_ID)
+       tmp_path <- file.path("files/anvio/ssu/")
+
+       write.table(tmp_df, paste(tmp_path, i, "/", i, ".fasta", sep = ""),
+            sep = "\n", col.names = FALSE, row.names = FALSE,
+            quote = FALSE, fileEncoding = "UTF-8")
+       rm(list = ls(pattern = "tmp_"))
+}
+```
+
+## Building the Profile Database
+
+Time to put all of these pieces together. This gets a little tricky since we do not have a database to start with because some of these files can be loaded directly in the interface but some need to be added to a database. When we fire up the interactive in `--manual` mode, we ***must*** give anvi'o the name of a database and it will *create* that database for us. Then we can shut down the interactive, add the necessary data files, and start back up.
+
+```bash
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db \
+                 --manual
+```
+
+Now we have a new profile database that we can add the sample metadata (`additional_layers.txt`) and the sample dendrogram (sample.tre) using the command `anvi-import-misc-data`. These commands add the table to the new `profile.db`. First, kill the interactive.
+
+```bash
+anvi-import-misc-data additional_views.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+anvi-import-misc-data sample.tre \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layer_orders
+```
+
+One last this is to get the table with the taxonomy total by sample (`tax_layers.txt`) into the profile database. We will run the same command we just used.
+
+```bash
+anvi-import-misc-data tax_layers.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+```
+
+In fact, we could just as easily append the taxonomy total data onto the `additional_layers.txt` and import in one command. But we didn't.
+
+## Interactive Interface
+
+With a populated database in hand, we can now begin modifying the visual by running the interactive command again.
+
+```bash
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db
+                 --fasta-file anvio.fasta \
+                 --manual
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=2}
+knitr::include_graphics("figures/16s-da-asvs/before.png")
+```
+
+
+```{r, echo=FALSE}
+# ALL commands
+#anvi-interactive --view-data data_ssu18_ps_pime.txt --tree asv_ssu18_ps_pime.tre --additional-layers additional_layers_ssu18_ps_pime.txt --profile-db profile_ssu18_ps_pime.db --fasta-file ssu18_ps_pime.fasta --manual
+
+#anvi-import-misc-data additional_views_ssu18_ps_pime.txt --pan-or-profile-db profile_ssu18_ps_pime.db --target-data-table layers
+
+#anvi-import-misc-data sample_ssu18_ps_pime.tre --pan-or-profile-db profile_ssu18_ps_pime.db --target-data-table layer_orders
+
+#anvi-import-misc-data tax_layers_ssu18_ps_pime.txt --pan-or-profile-db profile_ssu18_ps_pime.db --target-data-table layers
+
+#anvi-interactive --view-data data_ssu18_ps_pime.txt --tree asv_ssu18_ps_pime.tre --additional-layers additional_layers_ssu18_ps_pime.txt --profile-db profile_ssu18_ps_pime.db --fasta-file ssu18_ps_pime.fasta --manual
+
+```
+
+# ITS
+
+
+```{r, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/da_its18_wf.rdata")
+```
+
+```{r, include=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
+its18_ps_work_otu <- readRDS("files/otu/rdata/its18_ps_work_otu.rds")
+its18_ps_pime <- readRDS("files/pime/rdata/its18_ps_pime.rds")
+its18_ps_pime_otu <- readRDS("files/pime/rdata/its18_ps_pime_otu.rds")
+its18_ps_perfect <- readRDS("files/perfect/rdata/its18_ps_perfect.rds")
+its18_ps_perfect_otu <- readRDS("files/perfect/rdata/its18_ps_perfect_otu.rds")
+```
+
+
+```{r, echo=FALSE}	
+samp_ps <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 	
+	             "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")	
+for (i in samp_ps) {	
+	  tmp_get <- get(i)	
+	  tmp_path <- file.path("files/alpha/rdata/")	
+	  tmp_read <- readRDS(paste(tmp_path, i, ".rds", sep = ""))	
+	  tmp_sam_data <- sample_data(tmp_read)	
+	  tmp_tax_data <- data.frame(tax_table(tmp_get))	
+	  #tmp_tax_data[,c(1:6)]	
+	  tmp_tax_data$ASV_ID <- NULL # Some have, some do not	
+	  tmp_tax_data[] <- data.frame(lapply(tmp_tax_data, gsub, 	
+	                                      pattern = "^[k | p | c | o | f]_.*", 	
+	                                      replacement = NA, fixed = FALSE))	
+	  tmp_tax_data <- as.matrix(tmp_tax_data)	
+	  tmp_ps <- phyloseq(otu_table(tmp_get),	
+	                     tax_table(tmp_tax_data),	
+	                     tmp_sam_data)	
+	  assign(i, tmp_ps)	
+	  rm(list = ls(pattern = "tmp_"))	
+}	
+objects()	
+```
+
+Before jumping into the work flow, we need to first filter the FULL ASV and OTU data sets. For low-count filtering, we set the minimum read count to `5` and the prevalance to 20%. Then we apply another filter to remove ASVs with a low variance (`0.2`).
+
+```{r}
+tmp_low_count <- phyloseq::genefilter_sample(its18_ps_work, 
+                                             filterfun_sample(function(x) x >= 5), 
+                                             A = 0.2 * nsamples(its18_ps_work))
+tmp_low_count <- phyloseq::prune_taxa(tmp_low_count, its18_ps_work)
+tmp_low_var <- phyloseq::filter_taxa(tmp_low_count, 
+                                     function(x) var(x) > 0.2, prune = TRUE)
+
+its18_ps_filt <- tmp_low_var
+rm(list = ls(pattern = "tmp_"))
+tmp_low_count <- phyloseq::genefilter_sample(its18_ps_work_otu, 
+                                             filterfun_sample(function(x) x >= 5), 
+                                             A = 0.2 * nsamples(its18_ps_work_otu))
+tmp_low_count <- phyloseq::prune_taxa(tmp_low_count, its18_ps_work_otu)
+tmp_low_var <- phyloseq::filter_taxa(tmp_low_count, 
+                                     function(x) var(x) > 0.2, prune = TRUE)
+its18_ps_filt_otu <- tmp_low_var
+rm(list = ls(pattern = "tmp_"))
+objects()
+```
+
+```{r, echo=FALSE}
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+```
+
+## Indicator Analysis
+
+Details about IA
+
+1. Choose a data set(s) & set the p-value cutoff.
+
+```{r}
+samp_ps <- c("its18_ps_filt", "its18_ps_pime", "its18_ps_perfect", 
+             "its18_ps_filt_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
+indval_pval <- 0.05
+```
+
+2. Format Data Frame
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(otu_table(tmp_get))
+     tmp_df <- tmp_df[, which(colSums(tmp_df) != 0)]
+     tmp_row_names <- row.names(tmp_df)
+     tmp_row_names <- tmp_row_names %>%
+              stringr::str_replace("P[0-9]{2}_D[0-9]{2}_[0-9]{3}_", "") %>%
+              stringr::str_replace("[A-Z]$", "")
+     tmp_df <- tmp_df %>% tibble::add_column(tmp_row_names, .before = 1)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_seq_tab"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+3. Run Indicator Analysis
+
+```{r}
+set.seed(1191)
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
+     tmp_iva <- indval(tmp_get[,-1], tmp_get[,1])
+     tmp_gr <- tmp_iva$maxcls[tmp_iva$pval <= indval_pval]
+     tmp_iv <- tmp_iva$indcls[tmp_iva$pval <= indval_pval]
+     tmp_pv <- tmp_iva$pval[tmp_iva$pval <= indval_pval]
+     tmp_fr <- apply(tmp_get[,-1] > 0, 2, sum)[tmp_iva$pval <= indval_pval]
+     tmp_sum <- data.frame(group = tmp_gr, indval = tmp_iv,
+                                  pval = tmp_pv, freq = tmp_fr)
+     tmp_sum <- tmp_sum[order(tmp_sum$group, -tmp_sum$indval),]
+
+     tmp_tax_df <- data.frame(tax_table(get(i)))
+     tmp_tax_df$ASV_ID <- NULL
+     tmp_sum_tax <- merge(tmp_sum, tmp_tax_df, by = "row.names", all = TRUE)
+     tmp_sum_tax <- tmp_sum_tax[!(is.na(tmp_sum_tax$group)),]
+     class(tmp_sum_tax$group) <- "character"
+     tmp_sum_tax$group <- stringr::str_replace(tmp_sum_tax$group, "^1$", "C0")
+     tmp_sum_tax$group <- stringr::str_replace(tmp_sum_tax$group, "^2$", "W3")
+     tmp_sum_tax$group <- stringr::str_replace(tmp_sum_tax$group, "^3$", "W8")
+     tmp_sum_tax <- tmp_sum_tax %>% dplyr::rename("ASV_ID" = "Row.names")
+     tmp_sum_tax <- tmp_sum_tax[order(as.numeric(gsub("[A-Z]{3}", "", tmp_sum_tax$ASV_ID))),]
+     tmp_sum_tax$ASV_ID <-  as.character(tmp_sum_tax$ASV_ID)
+     tmp_sum.prob.corrected <- p.adjust(tmp_sum$pval, "bonferroni")
+     tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_indval_summary"))
+     assign(tmp_res_name, tmp_sum_tax)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Now we can save a few files and display the data.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
+     tmp_get[,1] <- NULL
+     tmp_df <- as.data.frame(t(tmp_get))
+     tmp_col_names <- colnames(tmp_df)
+     tmp_col_names <- tmp_col_names %>%
+              stringr::str_replace("P[0-9]{2}_D[0-9]{2}_[0-9]{3}_", "") %>%
+              stringr::str_replace("[A-Z]$", "")
+     colnames(tmp_df) <- tmp_col_names
+     #tmp_df$freq_all <- apply(tmp_df > 0, 1, sum)
+     tmp_df$freq_C0 <- apply(tmp_df[ , (names(tmp_df) %in% "C0")] > 0, 1, sum)
+     tmp_df$freq_W3 <- apply(tmp_df[ , (names(tmp_df) %in% "W3")] > 0, 1, sum)
+     tmp_df$freq_W8 <- apply(tmp_df[ , (names(tmp_df) %in% "W8")] > 0, 1, sum)
+     tmp_df$reads_total <- base::rowSums(tmp_df[ , (names(tmp_df) %in% c("C0", 
+                                                                         "W3", 
+                                                                         "W8"))])
+     tmp_df$reads_C0 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "C0")])
+     tmp_df$reads_W3 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W3")])
+     tmp_df$reads_W8 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W8")])
+     tmp_df <- tmp_df[,!grepl("^[C | W]", names(tmp_df))]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("ASV_ID")
+
+     tmp_get_indval <- get(purrr::map_chr(i, ~ paste0(., "_indval_summary")))
+     tmp_merge_df <- merge(tmp_df, tmp_get_indval, by = "ASV_ID", all = FALSE)
+     tmp_merge_df <- tmp_merge_df[,c(1,9:12,2:8,13:19)]
+     tmp_merge_df <- tmp_merge_df[order(tmp_merge_df$reads_total, decreasing = TRUE), ]
+     tmp_merge_name <- purrr::map_chr(i, ~ paste0(., "_indval_final"))
+     assign(tmp_merge_name, tmp_merge_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+4. Save a new phyloseq object
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_indval_summary")))
+     tmp_list <- tmp_tab[,1]
+     tmp_ps <- prune_taxa(tmp_list, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_ind"))
+     assign(tmp_name, tmp_ps)
+     tmp_ps@phy_tree <- NULL
+     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
+     tmp_ps_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+                            tip.label = taxa_names(tmp_ps))
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_ps_tree)
+     assign(tmp_name, tmp_ps)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+## Indicator Summary
+
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_filt_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for FULL ASV data set.')),
+          elementId = "9yuhrhatt9c9a22yrugj",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(its18_ps_filt_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_pime_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PIME ASV data set.')),
+          elementId = "3e6lg8o8kzjf79wf0b8u",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(its18_ps_pime_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_perfect_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PERfect ASV data set.')),
+          elementId = "1yv0lzjwerx1lhfi92ph",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(its18_ps_perfect_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_filt_otu_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for FULL OTU data set.')),
+          elementId = "wwrqfopygk899tzombfq",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(its18_ps_filt_otu_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_pime_otu_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PIME OTU data set.')),
+          elementId = "gjar3kdgfbvxp274j2br",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(its18_ps_pime_otu_indval_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_perfect_otu_indval_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of Indicator Analysis for PERfect OTU data set.')),
+          elementId = "9tor9gbaklw3x9l1sp7g",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("indval"), digits = 5) %>%
+    DT::formatStyle(columns = colnames(its18_ps_perfect_otu_indval_final), fontSize = '80%')
+```
+::: 
+::: 
+::: 
+
+## LEfSe
+
+Details about LEFSE
+
+[microbiomeMarker](https://github.com/yiluheihei/microbiomeMarker)
+
+Remove ASV seq, subset only ASVs
+
+```{r}
+for (i in samp_ps) {
+  tmp_get <- get(i)
+  tax_table(tmp_get) <- tax_table(tmp_get)[,c(1:6)]
+  tax_table(tmp_get) <- cbind(tax_table(tmp_get),
+                           rownames(tax_table(tmp_get)))
+  colnames(tax_table(tmp_get)) <- c("Kingdom", "Phylum", "Class", "Order", 
+                                    "Family", "Genus", "Species")
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_rf_all"))
+  assign(tmp_name, tmp_get)
+  tax_table(tmp_get) <- tax_table(tmp_get)[,c(7)]
+  tmp_name_asv <- purrr::map_chr(i, ~ paste0(., "_rf_asv"))
+  assign(tmp_name_asv, tmp_get)
+  rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_rf")
+```
+
+1. Choose a data set(s) & set the LEfSe cutoff values.	
+		
+```{r}	
+samp_ps <- c("its18_ps_filt", "its18_ps_pime", "its18_ps_perfect", 	
+	             "its18_ps_filt_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")	
+lefse_lda <- 2	
+lefse_kw <- 0.05	
+lefse_wc <- 0.05	
+```	
+
+
+```{r, warnings = FALSE, error = FALSE}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_rf_asv")))
+     tmp_lefse <- lefse(tmp_get, norm = "CPM", class = "TEMP", correct = "2", 
+                        lda_cutoff = lefse_lda, kw_cutoff = lefse_kw, wilcoxon_cutoff = lefse_wc, 
+                        bootstrap_n = 30, bootstrap_fraction = 2/3, 
+                        sample_min = 10, multicls_strat = FALSE, curv = FALSE)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_lefse_asv"))
+     assign(tmp_name, tmp_lefse)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_lefse_asv")
+
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_rf_all")))
+     tmp_lefse <- lefse(tmp_get, norm = "CPM", class = "TEMP", correct = "2", 
+                        lda_cutoff = lefse_lda, kw_cutoff = lefse_kw, wilcoxon_cutoff = lefse_wc, 
+                        bootstrap_n = 30, bootstrap_fraction = 2/3, 
+                        sample_min = 10, multicls_strat = FALSE, curv = FALSE)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_lefse_all"))
+     assign(tmp_name, tmp_lefse)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_lefse_asv")
+objects(pattern = "_lefse_all")
+```
+
+```{r, echo=FALSE}
+# DONT RUN, TESTING ONLY
+#tmp_tab <- data.frame(marker_table(its18_ps_pime_lefse_asv))
+#tmp_tab$feature <- gsub('s__', '', tmp_tab$feature)
+
+#tmp_ps <- data.frame(t(otu_table(its18_ps_pime_rf_asv)))
+#tmp_ps <- tmp_ps %>% tibble::rownames_to_column("feature")
+#write.table(dplyr::left_join(tmp_tab, tmp_ps, by = "feature"), "test.txt", quote = FALSE, sep = "\t")
+```
+
+
+```{r}
+for (i in samp_ps) {
+    tmp_o_tax <- data.frame(tax_table(get(i)))
+    tmp_o_tax$ASV_ID <- NULL 
+    tmp_o_tax <- tmp_o_tax %>% tibble::rownames_to_column("ASV_ID")
+    
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_asv")))
+    tmp_mt <- data.frame(marker_table(tmp_get))
+    tmp_mt$feature <- gsub('s__', '', tmp_mt$feature)
+    tmp_mt <- tmp_mt %>% dplyr::rename(c("ASV_ID" = 1, "group" = 2, "pval" = 4)) %>%
+          tibble::remove_rownames()
+    tmp_sum <- dplyr::left_join(tmp_mt, tmp_o_tax, by = "ASV_ID")
+    tmp_sum$group <- stringr::str_replace(tmp_sum$group, "^0$", "C0")
+    tmp_sum$group <- stringr::str_replace(tmp_sum$group, "^3$", "W3")
+    tmp_sum$group <- stringr::str_replace(tmp_sum$group, "^8$", "W8")
+
+    tmp_sum <- tmp_sum[order(as.numeric(gsub("[A-Z]{3}", "", tmp_sum$ASV_ID))),]
+    
+    tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_summary"))
+    assign(tmp_res_name, tmp_sum)
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Now we can save a few files and display the data.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(t(otu_table(tmp_get)))
+     #tmp_get[,1] <- NULL
+     #tmp_df <- as.data.frame(t(tmp_otu))
+     tmp_col_names <- colnames(tmp_df)
+     tmp_col_names <- tmp_col_names %>%
+              stringr::str_replace("P[0-9]{2}_D[0-9]{2}_[0-9]{3}_", "") %>%
+              stringr::str_replace("[A-Z]$", "")
+     colnames(tmp_df) <- tmp_col_names
+     tmp_df$freq <- apply(tmp_df > 0, 1, sum)
+     tmp_df$freq_C0 <- apply(tmp_df[ , (names(tmp_df) %in% "C0")] > 0, 1, sum)
+     tmp_df$freq_W3 <- apply(tmp_df[ , (names(tmp_df) %in% "W3")] > 0, 1, sum)
+     tmp_df$freq_W8 <- apply(tmp_df[ , (names(tmp_df) %in% "W8")] > 0, 1, sum)
+     tmp_df$reads_total <- base::rowSums(tmp_df[ , (names(tmp_df) %in% c("C0", "W3", "W8"))])
+     tmp_df$reads_C0 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "C0")])
+     tmp_df$reads_W3 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W3")])
+     tmp_df$reads_W8 <- base::rowSums(tmp_df[ , (names(tmp_df) %in% "W8")])
+     tmp_df <- tmp_df[,!grepl("^[C | W]", names(tmp_df))]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("ASV_ID")
+
+     tmp_get_lefse <- get(purrr::map_chr(i, ~ paste0(., "_lefse_summary")))
+     tmp_merge_df <- merge(tmp_df, tmp_get_lefse, by = "ASV_ID", all = FALSE)
+
+     tmp_merge_df <- tmp_merge_df[,c(1,10:12,2:9,14:20)]
+     tmp_merge_df <- tmp_merge_df[order(tmp_merge_df$reads_total, decreasing = TRUE), ]
+     tmp_merge_name <- purrr::map_chr(i, ~ paste0(., "_lefse_final"))
+     assign(tmp_merge_name, tmp_merge_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Save a new phyloseq object
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_lefse_summary")))
+     tmp_list <- tmp_tab[,1]
+     tmp_ps <- prune_taxa(tmp_list, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_lefse"))
+     assign(tmp_name, tmp_ps)
+     tmp_ps@phy_tree <- NULL
+     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
+     tmp_ps_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+                            tip.label = taxa_names(tmp_ps))
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_ps_tree)
+     assign(tmp_name, tmp_ps)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+## LEfSe Summary
+
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_filt_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for FULL ASV data set.')),
+          elementId = "jcutk9dxgrrvyz2h3om9",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_filt_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_pime_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PIME ASV data set.')),
+          elementId = "8bn3wmuliu4zoj9f0cu5",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_pime_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_perfect_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PERfect ASV data set.')),
+          elementId = "2jxni4y4bh6cdgymlrsr",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_perfect_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_filt_otu_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for FULL OTU data set.')),
+          elementId = "akqazzfa545tpmr6xv2o",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_filt_otu_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_pime_otu_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PIME OTU data set.')),
+          elementId = "v0rnzkewsiecjk0w409y",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_pime_otu_lefse_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_perfect_otu_lefse_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Analysis for PERfect OTU data set.')),
+          elementId = "lrzo316rci28ajt660y1",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_perfect_otu_lefse_final), fontSize = '80%')
+```
+:::
+:::
+:::
+
+
+## LEfSe Visualization
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_asv")))
+     tmp_mt <- data.frame(marker_table(tmp_get))
+     tmp_mt  <-  tmp_mt %>% filter(lda >= 3)
+     tmp_mt <- marker_table(tmp_mt)
+     tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_asv_viz_trim"))
+     assign(tmp_res_name, tmp_mt)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+objects(pattern = "_lefse_asv_viz_trim")
+```
+
+</br>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_filt_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_pime_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 5))
+```
+:::
+
+::: {.panel}
+
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_perfect_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 6))
+```
+:::
+
+::: {.panel}
+
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_filt_otu_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 8))
+```
+
+:::
+
+::: {.panel}
+
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_pime_otu_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 5))
+```
+
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_perfect_otu_lefse_asv_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 
+  theme(axis.text = element_text(size = 8))
+```
+:::
+:::
+:::
+
+## LEfSe Summary (Markers)
+
+```{r}
+for (i in samp_ps) {
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
+    tmp_mt <- data.frame(marker_table(tmp_get))
+    tmp_mt <- tmp_mt[, c(2:4,1)]
+    tmp_mt <- tmp_mt %>% dplyr::rename(c("group" = 1, "pval" = 3))
+    tmp_mt$group <- stringr::str_replace(tmp_mt$group, "^0$", "C0")
+    tmp_mt$group <- stringr::str_replace(tmp_mt$group, "^3$", "W3")
+    tmp_mt$group <- stringr::str_replace(tmp_mt$group, "^8$", "W8")
+    tmp_mt <- tmp_mt %>% tibble::rownames_to_column("marker")
+    tmp_mt <- tmp_mt %>% tidyr::separate(col = "feature", 
+                                         into = c("Kingdom", "Phylum", "Class", 
+                                                  "Order", "Family", "Genus", "ASV_ID"), 
+                                         sep = "\\|\\w__")
+    
+    tmp_mt$Kingdom <- gsub('k__', '', tmp_mt$Kingdom)
+    tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_marker_final"))
+    assign(tmp_res_name, tmp_mt)
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_filt_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for FULL ASV data set.')),
+          elementId = "5q64hvhpyfvos34s77np",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_filt_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_pime_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PIME ASV data set.')),
+          elementId = "m9neyi5schift1vcad41",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_pime_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_perfect_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PERfect ASV data set.')),
+          elementId = "wf6rstjui3zkk17spejf",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_perfect_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_filt_otu_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for FULL OTU data set.')),
+          elementId = "5fvv6vnqwknu5iyahhkk",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_filt_otu_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_pime_otu_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PIME OTU data set.')),
+          elementId = "quei819thwr3f37apls4",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_pime_otu_lefse_marker_final), fontSize = '80%')
+```
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+## elementId https://www.random.org/strings/
+datatable(its18_ps_perfect_otu_lefse_marker_final, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of LEfSe Marker Analysis for PERfect OTU data set.')),
+          elementId = "3j499eq1cvod7ygovpt6",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c("lda"), digits = 5) %>%
+    DT::formatRound(columns = c("pval"), digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_ps_perfect_otu_lefse_marker_final), fontSize = '80%')
+```
+::: 
+::: 
+::: 
+
+## LEfSe Visualization (Markers)
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
+     tmp_mt <- data.frame(marker_table(tmp_get))
+     tmp_mt  <-  tmp_mt %>% filter(lda >= 3.5)
+     tmp_mt <- marker_table(tmp_mt)
+     tmp_res_name <- purrr::map_chr(i, ~ paste0(., "_lefse_all_viz_trim"))
+     assign(tmp_res_name, tmp_mt)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+objects(pattern = "_lefse_all_viz_trim")
+```
+
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_filt_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+
+#### PIME ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_pime_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 5))
+```
+:::
+
+::: {.panel}
+#### PERfect ASV
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_perfect_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+:::
+
+::: {.panel}
+
+#### FULL OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_filt_otu_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 8))
+```
+
+:::
+
+::: {.panel}
+#### PIME OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_pime_otu_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 5))
+```
+
+:::
+
+::: {.panel}
+#### PERfect OTU
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout="l-body-outset"}
+plot_ef_bar(its18_ps_perfect_otu_lefse_all_viz_trim) +
+  scale_fill_manual(values = c("0" = "#2271B2", "3" = "#71B222", "8" = "#B22271")) + 	
+	  theme(axis.text = element_text(size = 7))
+```
+
+:::
+:::
+:::
+
+
+```{r, echo=FALSE}
+save.image("page_build/da_its18_wf.rdata")
+objects()
+```
+
+
+## Visualizing DA ASVs/OTUs in Anvi’o
+
+Next, we will combine the results of the ISA and LEfSe analyses with the distribution of ASVs (OTUs) across each sample. We are going to do the analysis in anvi’o using the `anvi-interactive` command. Anvi’o likes databases but it also understands that sometimes you do not have a database. So it offers a manual mode. If you type this command you can have a look at the relevant pieces we need for the visualization, specifically those under the headings MANUAL INPUTS and ADDITIONAL STUFF.
+
+```bash
+anvi-interactive -h
+```
+
+```
+MANUAL INPUTS:
+  Mandatory input parameters to start the interactive interface without
+  anvi'o databases.
+
+--manual-mode           We need this flag to run anvi'o in an ad hoc
+                        manner, i.e., no database.
+-f FASTA, --fasta-file FASTA
+                        A FASTA-formatted input file. This is sort of
+                        optional
+-d VIEW_DATA, --view-data VIEW_DATA
+                        A TAB-delimited file for view data. This is the ASV
+                        by sample matrix. We need this
+-t NEWICK, --tree NEWICK
+                        NEWICK formatted tree structure. How the ASVs are
+                        ordered in our case.
+ADDITIONAL STUFF:
+  Parameters to provide additional layers, views, or layer data.
+
+-V ADDITIONAL_VIEW, --additional-view ADDITIONAL_VIEW
+                        A TAB-delimited file for an additional view to be used
+                        in the interface. This file should contain all split
+                        names, and values for each of them in all samples.
+                        Each column in this file must correspond to a sample
+                        name. Content of this file will be called 'user_view',
+                        which will be available as a new item in the 'views'
+                        combo box in the interface
+-A ADDITIONAL_LAYERS, --additional-layers ADDITIONAL_LAYERS
+                        A TAB-delimited file for additional layer info. In
+                        our case this is info about each ASV. The first column
+                        of the file must be the ASV names, and
+                        the remaining columns should be unique attributes.
+```
+
+There are also a few files we generate that cannot be loaded directly. So, in addition to the files that can be loaded when running the interactive, we also have files that must be added to the database created by anvi’o.
+
+Here is a nice tutorial on [Working with anvi’o additional data tables](http://merenlab.org/2017/12/11/additional-data-tables/). A lot of what we need is covered in this tutorial. To get the most out the visualization we need to create a few files to give anvi’o when we fire up the interactive interface.
+
+1. View data: in our case, a sample by ASV abundance matrix.
+2. Additional info about each ASV.
+3. Additional info about each sample.
+4. Taxa abundance data for each sample at some rank.
+5. Dendrograms ordering the ASVs and samples (based on view data).
+6. Fasta file of all ASVs in the analysis.
+
+
+```{r, echo=FALSE}
+remove(list = ls())
+load("page_build/da_its18_wf.rdata")
+```
+
+### 1. View data
+
+Let’s start with the `-d` or `--view-data` file. This file needs to be an ASV by sample matrix of read counts. To simplify the visualization, we will use ***all*** ASVs represented by 100 or more total reads, including those identified as differentially abundant by the ISA and/or LEfSe. 
+
+```{r}
+samp_ps_all <- c("its18_ps_filt", "its18_ps_pime", "its18_ps_perfect", 
+                 "its18_ps_filt_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu", 
+                 "its18_ps_work", "its18_ps_work_otu")
+samp_ps <- c("its18_ps_filt", "its18_ps_pime", "its18_ps_perfect", 
+             "its18_ps_filt_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
+samp_ps_org <- c("its18_ps_work", "its18_ps_work_otu")
+samp_ps_pime <- c("its18_ps_pime", "its18_ps_pime_otu")
+samp_ps_other <- c("its18_ps_filt", "its18_ps_perfect", 
+                   "its18_ps_filt_otu", "its18_ps_perfect_otu")
+
+trim_val <- 50
+for (i in samp_ps_pime) {
+     tmp_get <- get(i)
+     tmp_df <- prune_taxa(taxa_sums(tmp_get) > trim_val, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+trim_val <- 300
+for (i in samp_ps_other) {
+     tmp_get <- get(i)
+     tmp_df <- prune_taxa(taxa_sums(tmp_get) > trim_val, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_trim")
+its18_ps_filt_trim
+its18_ps_pime_trim
+its18_ps_perfect_trim
+its18_ps_filt_otu_trim
+its18_ps_pime_otu_trim
+its18_ps_perfect_otu_trim
+```
+
+```{r, echo=FALSE}
+for (i in samp_ps) {
+     tmp_path <- file.path("files/anvio/its/")
+     dir.create(paste(tmp_path, i, sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps_org) {
+     tmp_path <- file.path("files/anvio/its/")
+     dir.create(paste(tmp_path, i, sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_df <- as.data.frame(t(otu_table(tmp_get)))
+     tmp_df <- tmp_df %>% rownames_to_column("Group")
+     tmp_path <- file.path("files/anvio/its/")
+     write.table(tmp_df, paste(tmp_path, i, "/", "data.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+Or export a table of transformed data.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_trans <- transform_sample_counts(tmp_get, function(x) 1e5 * {x/sum(x)})
+     tmp_df <- as.data.frame(t(otu_table(tmp_trans)))
+     tmp_df <- tmp_df %>% rownames_to_column("Group")
+     #tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim_tab"))
+     #assign(tmp_name, tmp_df)
+     tmp_path <- file.path("files/anvio/its/")
+     write.table(tmp_df, paste(tmp_path, i, "/", "data_trans.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+### 2. Additional Layers for ASVs
+
+Next, we need some additional data **about the ASVs** to overlay on the visual. This can be anything however what I specifically want are the details of the ISA analysis, total reads, and lineage info. I warn you; this code will get ugly and I urge you to find a better way.
+
+Start with an ASV + lineage table for the ASVs in the new phyloseq object.
+
+```{r}
+for (i in samp_ps) {
+     tmp_get_indval <- get(purrr::map_chr(i, ~ paste0(., "_indval_final")))
+     tmp_get_indval <- tmp_get_indval %>% dplyr::rename("Group" = "ASV_ID") %>%
+                                          dplyr::rename("enrich_indval" = "group") %>%
+                                          dplyr::rename("test_indval" = "indval") %>%
+                                          dplyr::rename("pval_indval" = "pval")
+     tmp_get_indval <- tmp_get_indval[,1:5]
+
+     tmp_get_lefse <- get(purrr::map_chr(i, ~ paste0(., "_lefse_final")))
+     tmp_get_lefse <- tmp_get_lefse %>% dplyr::rename("Group" = "ASV_ID") %>%
+                                          dplyr::rename("enrich_lefse" = "group") %>%
+                                          dplyr::rename("test_lefse" = "lda") %>%
+                                          dplyr::rename("pval_lefse" = "pval")
+     tmp_get_lefse <- tmp_get_lefse[,1:4]
+     
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_otu_df <- as.data.frame(t(otu_table(tmp_get)))
+     tmp_total <- cbind(tmp_otu_df, total_reads = rowSums(tmp_otu_df))
+     tmp_total <- rev(tmp_total)[1]
+     tmp_total <- tmp_total %>% tibble::rownames_to_column("Group")
+     tmp_tax_df <- as.data.frame(tax_table(tmp_get))
+     tmp_tax_df$ASV_SEQ <- NULL
+     tmp_tax_df$ASV_ID <- NULL
+     
+     tmp_tax_df <- tmp_tax_df %>% tibble::rownames_to_column("Group")
+     tmp_add_lay <- dplyr::left_join(tmp_tax_df, tmp_total, by = "Group") %>%
+                   dplyr::left_join(., tmp_get_indval, by = "Group") %>%
+                   dplyr::left_join(., tmp_get_lefse, by = "Group")
+     tmp_add_lay$ASV_ID <- tmp_add_lay$Group
+     tmp_add_lay <- tmp_add_lay[, c(1,16,8,12,9:11,13:15,2:7)]
+     tmp_path <- file.path("files/anvio/its/")
+     write.table(tmp_add_lay, paste(tmp_path, i, "/", "additional_layers.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE, na = "")
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### 3. Additional Views for Samples
+
+Now we want some general data **about the samples** to overlay on the visual. Again, this can be anything. How about a table of alpha diversity metrics? We actually have such a table that was generated way back up the road. Just need to fix the column names.
+
+<aside>
+**Added** to  profile.db with  `anvi-import-misc-data` command &  `--target-data-table layers` flag.
+</aside>
+
+```{r}
+metadata_tab <- read.table("files/metadata/tables/metadata.txt",
+                           header = TRUE)
+
+tmp_x <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
+data.frame(sample_data(tmp_x))
+metadata_tab[,c(2:5)] <- list(NULL)
+for (i in samp_ps_all) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(sample_data(tmp_get))
+     tmp_df <- tmp_df[,c(2:9)]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("id")
+     tmp_df <- tmp_df %>% dplyr::rename("no_asvs" = "Observed")
+     tmp_rc <- data.frame(readcount(tmp_get))
+     tmp_rc <- tmp_rc %>% tibble::rownames_to_column("id")
+     tmp_rc <- tmp_rc %>% dplyr::rename("no_reads" = 2)
+     #identical(tmp_df$id, tmp_rc$id)
+     tmp_merge <- dplyr::left_join(tmp_df, tmp_rc)
+     tmp_merge <- tmp_merge[, c(1:6,10,7:9)]
+     tmp_final <- dplyr::left_join(tmp_merge, metadata_tab)
+     tmp_path <- file.path("files/anvio/its/")
+     write.table(tmp_final, paste(tmp_path, i, "/", "additional_views.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+rm(metadata_tab)
+```
+
+### 4. Taxon rank abundance by sample
+
+Turned out this was a little tricky to figure out, but thanks to a [little nifty block of code](https://github.com/joey711/phyloseq/iitses/418#iitsecomment-262637034) written by [guoyanzhao](https://github.com/guoyanzhao) on the phyloseq Iitses forum, it was a piece of cake. The code can be altered to take any rank. See the post for an explanation.
+
+Anyway, the goal is to sum each taxon at some rank and present that as a bar chart for each sample in the visualization. Anvi'o has a specific format it needs where each row is a sample and each column is a taxon. Taxa names need the prefix `t_<RANK>!`. For example, `t_class!` should be added for Class rank.
+
+<aside>
+**Added** to  profile.db with `anvi-import-misc-data` command & `--target-data-table layers` flag.
+</aside>
+
+```{r}
+pick_rank <- "Order"
+pick_rank_l <- "order"
+for (i in samp_ps_all) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_glom <- tax_glom(tmp_get, taxrank = pick_rank)
+    tmp_melt <- psmelt(tmp_glom)
+    tmp_melt[[pick_rank]] <- as.character(tmp_melt[[pick_rank]])
+    tmp_abund <- aggregate(Abundance ~ Sample + tmp_melt[[pick_rank]], tmp_melt, FUN = sum)
+    colnames(tmp_abund)[2] <- "tax_rank"
+    library(reshape2)
+    tmp_abund <- as.data.frame(reshape::cast(tmp_abund, Sample ~ tax_rank))
+    tmp_abund <- tibble::remove_rownames(tmp_abund)
+    tmp_abund <- tibble::column_to_rownames(tmp_abund, "Sample")
+# Reorder table column by sum
+    tmp_layers <- tmp_abund[,names(sort(colSums(tmp_abund), decreasing = TRUE))]
+# Add the prefix
+    tmp_layers <- tmp_layers %>% dplyr::rename_all(function(x) paste0("t_", pick_rank_l,"!", x))
+    tmp_layers <- tibble::rownames_to_column (tmp_layers, "taxon")
+# save the table
+    tmp_path <- file.path("files/anvio/its/")
+    write.table(tmp_layers, paste(tmp_path, i, "/", "tax_layers.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+
+### 5. Construct Dendrograms
+
+The last piece we need is to generate dendrograms that order the ASVs by their distribution in the samples and the samples by their ASV composition. For this task we will use anvi'o.
+
+```bash
+anvi-matrix-to-newick data.txt --distance euclidean \
+                               --linkage ward \
+                               -o asv.tre
+anvi-matrix-to-newick data.txt --distance euclidean \
+                               --linkage ward \
+                               -o sample.tre \
+                               --transpose
+```
+
+The first command reads the view data we generated above and uses Euclidean distance and Ward linkage for hierarchical clustering of the ASVs. The second command transposes the view data table and then does the same for the samples. There are several distance metrics and linkage methods available. See the help menu for the command by typing `anvi-matrix-to-newick -h`.  Boom.
+
+```{r, echo=FALSE}
+#bash_commands <- c() USE this to combine all commands
+# including in loop creates separate files
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("files/anvio/its/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+# FOR TANSFORMED DATA
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv_trans.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample_trans.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("files/anvio/its/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre_transformed.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{bash, echo=FALSE}
+#NEED to run in anvio from base dir
+cd its18_ps_filt
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd its18_ps_filt_otu
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd its18_ps_perfect
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd its18_ps_perfect_otu
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd its18_ps_pime
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+cd its18_ps_pime_otu
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+```
+
+Alternatively, we can generate dendrograms using `phyloseq::distance` and `hclust`. 
+
+```{r}
+pick_dist <- "bray"
+pick_clust <- "complete"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist, type = "sample")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("files/anvio/its/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+pick_dist_asv <- "euclidean"
+pick_clust_asv <- "ward"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist_asv, type = "taxa")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust_asv)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("files/anvio/its/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "asv_", pick_dist_asv, "_", pick_clust_asv, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+```
+
+<aside>
+The file `asv.tre` is **loaded** with  `anvi-interactive` command & the `--tree` flag.
+</aside>
+
+
+The ASV tree is fine as is, but the sample tree needs a [special format](http://merenlab.org/2017/12/11/additional-data-tables/#layer-orders-additional-data-table). Specifically, the tree needs to be in a three column, tab delimited,  *table*. This way you can add multiple orderings to the same file and view them all in the interactive. The table needs to be in this format:
+
+| item_name	| data_type	| data_value                                          |
+|-----------|-----------|-----------------------------------------------------|
+| tree_1  	| newick	  | ((P01_D00_010_W8A:0.0250122,P05_D00_010_W8C:0.02,.. |
+| tree_2  	| newick	  | ((((((((OTU14195:0.0712585,OTU13230:0.0712585)0:,...|
+| (…)	      | (…)	      | (…)                                                 |
+
+This is easy to do by hand, but I *really* need the practice so I will do it in R. Anvi'o is very particular about formatting. For example, if this file ends with a blank line, which it will because when anvi'o made the initial dendrogram it add a new line. We need to get rid of that or we get an error when trying to import the table.
+
+<aside>
+The file `sample.tre` is **added** to the profile.db with  `anvi-import-misc-data` command &   `--target-data-table layer_orders` flag.
+</aside>
+
+```{r}
+for (i in samp_ps) {
+      tmp_path <- file.path("files/anvio/its/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+# FOR TRANSFORMED DATA
+for (i in samp_ps) {
+      tmp_path <- file.path("files/anvio/its/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/","sample_trans.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_trans.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+```{r}
+# FOR HCLUST TREE
+for (i in samp_ps) {
+      tmp_path <- file.path("files/anvio/its/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c(paste(pick_dist, "_", pick_clust, "_hclust", sep = ""))
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### 6. Make a fasta file
+
+We don't need to add a fasta file, but it is a nice way to keep everything in one place. Plus, you can do BLAST searches directly in the interface by right clicking on the ASV of interest, so it is nice to have the sequences.
+
+<aside>
+**Loaded** with `anvi-interactive` command &  `--fasta-file` flag.
+</aside>
+
+```{r}
+for (i in samp_ps) {
+       tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+       tmp_tab <- tax_table(tmp_get)
+       tmp_tab <- tmp_tab[, 7]
+       tmp_df <- data.frame(row.names(tmp_tab), tmp_tab)
+       colnames(tmp_df) <- c("ASV_ID", "ASV_SEQ")
+       tmp_df$ASV_ID <- sub("^", ">", tmp_df$ASV_ID)
+       tmp_path <- file.path("files/anvio/its/")
+
+       write.table(tmp_df, paste(tmp_path, i, "/", i, ".fasta", sep = ""),
+            sep = "\n", col.names = FALSE, row.names = FALSE,
+            quote = FALSE, fileEncoding = "UTF-8")
+       rm(list = ls(pattern = "tmp_"))
+}
+```
+
+## Building the Profile Database
+
+Time to put all of these pieces together. This gets a little tricky since we do not have a database to start with because some of these files can be loaded directly in the interface but some need to be added to a database. When we fire up the interactive in `--manual` mode, we ***must*** give anvi'o the name of a database and it will *create* that database for us. Then we can shut down the interactive, add the necessary data files, and start back up.
+
+```bash
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db \
+                 --manual
+```
+
+Now we have a new profile database that we can add the sample metadata (`additional_layers.txt`) and the sample dendrogram (sample.tre) using the command `anvi-import-misc-data`. These commands add the table to the new `profile.db`. First, kill the interactive.
+
+```bash
+anvi-import-misc-data additional_views.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+anvi-import-misc-data sample.tre \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layer_orders
+```
+
+One last this is to get the table with the taxonomy total by sample (`tax_layers.txt`) into the profile database. We will run the same command we just used.
+
+```bash
+anvi-import-misc-data tax_layers.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+```
+
+In fact, we could just as easily append the taxonomy total data onto the `additional_layers.txt` and import in one command. But we didn't.
+
+## Interactive Interface
+
+With a populated database in hand, we can now begin modifying the visual by running the interactive command again.
+
+```bash
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db
+                 --fasta-file anvio.fasta \
+                 --manual
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=2}
+knitr::include_graphics("figures/16s-da-asvs/before.png")
+```
+
+
+```{r, echo=FALSE}
+# ALL commands
+#anvi-interactive --view-data data_its18_ps_pime.txt --tree asv_its18_ps_pime.tre --additional-layers additional_layers_its18_ps_pime.txt --profile-db profile_its18_ps_pime.db --fasta-file its18_ps_pime.fasta --manual
+
+#anvi-import-misc-data additional_views_its18_ps_pime.txt --pan-or-profile-db profile_its18_ps_pime.db --target-data-table layers
+
+#anvi-import-misc-data sample_its18_ps_pime.tre --pan-or-profile-db profile_its18_ps_pime.db --target-data-table layer_orders
+
+#anvi-import-misc-data tax_layers_its18_ps_pime.txt --pan-or-profile-db profile_its18_ps_pime.db --target-data-table layers
+
+#anvi-interactive --view-data data_its18_ps_pime.txt --tree asv_its18_ps_pime.tre --additional-layers additional_layers_its18_ps_pime.txt --profile-db profile_its18_ps_pime.db --fasta-file its18_ps_pime.fasta --manual
+
+```
+
+
+```{r include=FALSE, eval=TRUE}
+remove(list = ls())
+```
+
+
+##  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/da.Rmd). Please note, that in order to process the data *and*  build the website, we needed to run the workflow and get the results. Then hard code the results and turn off the individual commands. So the raw file for this page is a bit messy---you have been warned.

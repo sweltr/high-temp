@@ -1,0 +1,1884 @@
+---
+title: "1 DADA2 Workflow"
+description: |
+  DADA2 workflow for processing the **2018 16S rRNA** and the **2018 ITS** high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.
+author:
+#  - name: Jarrod J Scott
+#    url: https://example.com/norajones
+#    affiliation: Spacely Sprockets
+#    affiliation_url: https://example.com/spacelysprokets
+bibliography: assets/cite.bib
+---
+
+
+<details markdown="1">
+<summary>Click here for setup information.</summary>
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+set.seed(919191)
+#pacman::p_depends(ape, local = TRUE)  
+#pacman::p_depends_reverse(ape, local = TRUE)  
+library(dada2); packageVersion("dada2")
+library(ShortRead); packageVersion("ShortRead")
+library(ggplot2); packageVersion("ggplot2")
+pacman::p_load(rmarkdown, DT, gridExtra, grid, 
+               install = FALSE, update = FALSE)
+
+options(scipen=999)
+knitr::opts_current$get(c(
+  "cache",
+  "cache.path",
+  "cache.rebuild",
+  "dependson",
+  "autodep"
+))
+remove(list = ls())
+```
+</details>
+
+> Hit the *Hide Code* button to collapse the R code (visible by default).
+
+<aside>
+```{r codefolder, echo=FALSE, results='asis', eval=TRUE}
+codefolder::generic(init = "show", query = "pre.sourceCode",
+  style = "position: absolute; right: 14%; z-index: 200")
+```
+</aside>
+
+# Prerequisites
+
+In order to run this workflow, you either need the *raw* data, available on the figshare project site, or the *trimmed* data, available from the ENA under project accession number ... See the [Data Availability](data-availability.html) page for complete details.
+
+This workflow is how we processed our 16S rRNA and ITS data sets using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2] from samples collected in **2018**. Workflow construction is based on the [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) and the primer identification section of the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html).
+
+<aside>
+Because the workflows share many common variable names, you must either split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
+</aside>
+
+# 16s rRNA Data
+
+```{r, include=FALSE}
+remove(list = ls())
+```
+
+> NOTE: The reverse reads for 16s rRNA data set are unusable, therefore this workflow deals with forward reads *only*.
+
+We will screen the forward reads for reverse primers and show the quality plots of the reverse reads at the beginning of the workflow. After that, reverse reads are not used.
+
+## Overview
+
+### Sequence Files & Samples
+
+We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table <- read.table("files/dada2/tables/ssu18_sample_seq_info.txt",
+                        header = TRUE, sep = "\t")
+datatable(seq_table, width = "100%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+### Workflow
+
+The workflow consists of the following steps:
+
+| Step | Command                | What we’re doing                                           |
+|------|------------------------|------------------------------------------------------------|
+| 1    | multiple               | prepare input file names & paths                           |
+| 2    | multiple               | Define  primers (all orientations)                         |
+| 3    | `cutadapt`             | Remove  primers                                            |
+| 4    | `filterAndTrim()`      | assess quality & filter reads                              |
+| 5    | `learnErrors()`        | generate an error model for the data                       |
+| 6    | `derepFastq`           | dereplicate sequences                                      |
+| 7    | `dada()`               | infer ASVs on both forward & reverse reads independently   |
+| 8    | `makeSequenceTable()`  | generate a count table                                     |
+| 9    | `removeBimeraDenovo()` | screen for & remove chimeras                               |
+| 10   |                        | track reads through workflow                               |
+| 11   | `assignTaxonomy()`     | assign taxonomy & finish workflow                          |
+| 12   | `save.image()`         | save an image of seqtab & taxtab for next part of workflow |
+
+
+## 1. Set Working Environment
+
+Next, we need to setup the working environment by renaming the fastq files and defining a path for the working directory.
+
+### Rename samples
+
+To make the parsing easier, we will eliminate the lane and well number from each sample. If you do not wish to do that you will need to adjust the code accordingly. I am *positive* there are more elegant ways of doing this.
+
+> CAUTION. You should check that this code works on a few backup files before proceeding.
+
+```{r, warning=FALSE}
+setwd("RAW")
+orig_fastq <- list.files(pattern = "*.fastq.gz")
+newname_fastq <- gsub("_S.*_L001", "", orig_fastq)
+newname_fastq <- gsub("_001", "", newname_fastq)
+file.rename(orig_fastq, newname_fastq)
+setwd("../")
+```
+
+```{r}
+path <- "RAW"
+head(list.files(path))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+c("P1_R1.fastq.gz", "P1_R2.fastq.gz", "P1-8C_R1.fastq.gz",
+  "P1-8C_R2.fastq.gz", "P10_R1.fastq.gz", "P10_R2.fastq.gz")
+```
+
+Then, we generate matched lists of the forward and reverse read files. We also parse out the sample name.
+
+```{r}
+fnFs <- sort(list.files(path, pattern = "_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern = "_R2.fastq.gz", full.names = TRUE))
+```
+
+
+```{r, layout="l-body-outset", warning=FALSE, fig.height=3}
+p1a <- plotQualityProfile(fnFs[1:15], aggregate = TRUE)
+p2a <- plotQualityProfile(fnRs[1:15], aggregate = TRUE)
+
+p3a <- grid.arrange(p1a, p2a, nrow = 1)
+ggsave("plot_qscores_2018a.png", p3a, width = 7, height = 3)
+```
+
+Unfortunately, the reverse reads are unusable.
+
+```{r, echo=FALSE, layout="l-body", warning=FALSE, fig.height=4, fig.width=4, eval=TRUE}
+system("cp files/dada2/figures/ssu18_plot_qscores_a.png include/dada2/ssu18_plot_qscores_a.png")
+knitr::include_graphics("include/dada2/ssu18_plot_qscores_a.png")
+```
+<small><em>Aggregated quality score plots for forward reads & reverse reads.</em></small>
+
+## 2. Define Primers
+
+Before we start the DADA2 workflow we need to run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] on all `fastq.gz` files to trim the primers. For this part of the study we used  the primer pair 505F (GTGCCAGCMGCCGCGGTAA) and 806R   (GGACTACHVGGGTWTCTAAT) [@caporaso2011global] which should yield an amplicon length of about 253 bp.
+
+First we define the primers.
+
+```{r}
+FWD <- "GTGCCAGCMGCCGCGGTAA"
+REV <- "GGACTACHVGGGTWTCTAAT"
+```
+
+Next, we check the presence and orientation of these primers in the data. I started doing this for ITS data because of primer read-through but I really like the general idea of doing it just to make sure nothing funny is going of with the data.
+
+To do this we will create all orientations of the input primer sequences. In other words the *Forward*, *Complement*, *Reverse*, and *Reverse Complement* variations.
+
+```{r}
+allOrients <- function(primer) {
+    require(Biostrings)
+    dna <- DNAString(primer)
+    orients <- c(Forward = dna,
+                 Complement = complement(dna),
+                 Reverse = reverse(dna),
+                 RevComp = reverseComplement(dna))
+    return(sapply(orients, toString))
+}
+FWD.orients <- allOrients(FWD)
+REV.orients <- allOrients(REV)
+FWD.orients
+REV.orients
+```
+
+```
+              Forward            Complement               Reverse
+"GTGCCAGCMGCCGCGGTAA" "CACGGTCGKCGGCGCCATT" "AATGGCGCCGMCGACCGTG"
+              RevComp
+"TTACCGCGGCKGCTGGCAC"
+               Forward             Complement                Reverse
+"GGACTACHVGGGTWTCTAAT" "CCTGATGDBCCCAWAGATTA" "TAATCTWTGGGVHCATCAGG"
+               RevComp
+"ATTAGAWACCCBDGTAGTCC"
+```
+
+Now we do a little pre-filter step to eliminate ambiguous bases (*Ns*) because *Ns* make mapping of short primer sequences difficult. This step removes any reads with *Ns*. Again, set some files paths, this time for the filtered reads.
+
+```{r}
+fnFs.filtN <- file.path(path, "filtN", basename(fnFs))
+filterAndTrim(fnFs, fnFs.filtN,
+              maxN = 0, multithread = TRUE)
+```
+
+Nice.  Time to assess the number of times a primer (and all possible primer orientation) appear in the forward and reverse reads. According to the workflow, counting the primers on one set of paired end fastq files is sufficient to see if there is a problem. This assumes that all the files were created using the same library prep. Basically for both primers, we will search for all four orientations in both forward and reverse reads. Since this is 16S rRNA we do not anticipate any issues but it is worth checking.
+
+```{r, echo=FALSE, eval=TRUE}
+sampnum <- 2
+```
+
+
+```{r}
+primerHits <- function(primer, fn) {
+    # Counts number of reads in which the primer is found
+    nhits <- vcountPattern(primer, sread(readFastq(fn)), fixed = FALSE)
+    return(sum(nhits > 0))
+}
+```
+
+#### Forward primers
+
+```{r}
+rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits,
+                                fn = fnFs.filtN[[sampnum]]))
+```
+
+```
+                 Forward Complement Reverse RevComp
+FWD.ForwardReads   74707          0       0       0
+```
+
+#### Reverse primers
+
+```{r}
+rbind(REV.ForwardReads = sapply(REV.orients, primerHits,
+                                fn = fnFs.filtN[[sampnum]]))
+```
+
+```
+                 Forward Complement Reverse RevComp
+REV.ForwardReads       0          0       0     165
+```
+
+As expected, forward primers predominantly in the forward reads and very little evidence of reverse primers.
+
+## 3. Remove Primers
+
+Now we can run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] to remove the primers from the fastq sequences. A little setup first. If this command executes successfully it means R has found cutadapt.
+
+```{r}
+cutadapt <- "/Users/rad/miniconda3/envs/cutadapt/bin/cutadapt"
+system2(cutadapt, args = "--version") # Run shell commands from R
+```
+
+```
+2.8
+```
+
+We set paths and trim the forward primer and the reverse-complement of the reverse primer off of R1 (forward reads) and trim the reverse primer and the reverse-complement of the forward primer off of R2 (reverse reads).
+
+```{r}
+path.cut <- file.path(path, "cutadapt")
+if(!dir.exists(path.cut)) dir.create(path.cut)
+fnFs.cut <- file.path(path.cut, basename(fnFs))
+
+FWD.RC <- dada2:::rc(FWD)
+REV.RC <- dada2:::rc(REV)
+
+R1.flags <- paste("-g", FWD, "-a", REV.RC)
+
+for(i in seq_along(fnFs)) {system2(cutadapt,
+                                   args = c(R1.flags,
+                                            "-m", 20, "-n", 2, "-e", 0.12,
+                                            "-o", fnFs.cut[i],
+                                            fnFs.filtN[i]))}
+```
+
+```
+This is cutadapt 2.8 with Python 3.7.6
+Command line parameters: -g GTGCCAGCMGCCGCGGTAA -a ATTAGAWACCCBDGTAGTCC -m 20 -n 2 -e 0.12 -o RAW/cutadapt/P1_R1.fastq.gz RAW/filtN/P1_R1.fastq.gz
+```
+
+*Note*. If the code above removes all of the base pairs in a sequence, you will get downstream errors unless you set the `-m` flag. This flag sets the minimum length and reads shorter than this will be discarded. Without this flag, reads of length 0 will be kept and cause issues. *Also, a lot of output will be written to the screen by cutadapt!*.
+
+We can now count the number of primers in the sequences from the output of cutadapt.
+
+```{r}
+rbind(
+  FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[sampnum]]),
+  REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.cut[[sampnum]]))
+```
+
+```
+                 Forward Complement Reverse RevComp
+FWD.ForwardReads       0          0       0       0
+REV.ForwardReads       0          0       0       0
+```
+
+Basically, primers are no longer detected in the cutadapted reads. Now, for each sample, we can take a look at how the pre-filtering step and primer removal affected the total number of raw reads.
+
+```{r, echo=FALSE}
+temp1 <- read.table("files/dada2/tables/ssu18_read_changes.txt", header = TRUE)
+temp1[, 4:6] <- list(NULL)
+write.table(temp1, "files/dada2/tables/ssu18_cut.txt", sep = "\t", quote = FALSE)
+```
+
+<br/>
+
+```{r echo=FALSE, eval=TRUE}
+cut_t <- read.table("files/dada2/tables/ssu18_cut.txt",
+                       header = TRUE)
+datatable(cut_t, width = "80%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+## 4. Quality Assessment & Filtering
+
+We need the forward and reverse fastq file names and the sample names.
+
+```{r}
+cutFs <- sort(list.files(path.cut, pattern = "_R1.fastq.gz",
+                         full.names = TRUE))
+get.sample.name <- function(fname) strsplit(basename(fname), "_")[[1]][1]
+sample.names <- unname(sapply(cutFs, get.sample.name))
+head(sample.names)
+```
+
+```{r, eval=TRUE}
+c("P1", "P1-8C", "P10", "P2", "P3", "P3-8C")
+```
+
+First let's look at the quality of our reads. The numbers in brackets specify which samples to view. Here we are looking at an aggregate plot of all data (except the negative control)
+
+### Quality plots
+
+```{r, warning=FALSE}
+p1 <- plotQualityProfile(cutFs[1:15], aggregate = TRUE)
+ggsave("ssu18_plot_qscores.png", p1, width = 7, height = 3)
+ggsave("ssu18_plot_qscores.png", p1)
+```
+
+```{r, echo=FALSE, layout="l-body", warning=FALSE, fig.height=2, eval=TRUE}
+system("cp files/dada2/figures/ssu18_plot_qscores_b.png include/dada2/ssu18_plot_qscores_b.png")
+knitr::include_graphics("include/dada2/ssu18_plot_qscores_b.png")
+```
+<small><em>Aggregated quality score plots for forward reads.</em></small>
+
+The forward reads look good.
+
+### Filtering
+
+First, we again make some path variables and setup a new directory of filtered reads.
+
+```{r}
+filtFs <- file.path(path.cut, "filtered", basename(cutFs))
+```
+
+And then we trim the reads.
+
+```{r}
+out <- filterAndTrim(cutFs, filtFs,
+                     maxN = 0, maxEE = 2,
+                     truncQ = 2, rm.phix = TRUE,
+                     compress = TRUE, multithread = 20)
+out
+```
+
+<aside>
+These parameters should be set based on the anticipated length of the amplicon and the read quality.
+</aside>
+
+And here is a table of how the filtering step affected the number of reads in each sample. As you can see, there are a few samples that started with a low read count to begin with---we will likely remove those samples at some point.
+
+<br/>
+
+```{r, echo=FALSE, eval=TRUE}
+out <- read.table("files/dada2/tables/ssu18_out_T.txt",
+                       header = TRUE)
+datatable(out, width = "80%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+## 5. Learn Error Rates
+
+Now it is time to assess the error rate of the data. The DADA2 algorithm uses a parametric error model. Every amplicon data set has a different set of error rates and the `learnErrors` method learns this error model *from the data*. It does this by alternating estimation of the error rates and inference of sample composition until they converge on a jointly consistent solution. The algorithm begins with an initial guess, for which the maximum possible error rates in the data are used.
+
+#### Forward Reads
+
+```{r}
+errF <- learnErrors(filtFs, multithread = FALSE)
+```
+
+```
+103002523 total bases in 443994 reads from 6 samples will be used for learning the error rates.
+```
+
+```{r, warning=FALSE, layout="l-body-outset"}
+plotErrors(errF, nominalQ=TRUE)
+```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+system("cp files/dada2/figures/ssu18_plot_errorF_1.png include/dada2/ssu18_plot_errorF_1.png")
+knitr::include_graphics("include/dada2/ssu18_plot_errorF_1.png")
+```
+
+The error rates for each possible transition (A to C, A to G, etc.) are shown. Points are the observed error rates for each consensus quality score. The black line shows the estimated error rates after convergence of the machine-learning algorithm. The red line shows the error rates expected under the nominal definition of the Q-score. Here the estimated error rates (black line) are a good fit to the observed rates (points), and the error rates drop with increased quality as expected.
+
+## 6. Dereplicate Reads
+
+Now we can use `derepFastq` to identify the unique sequences in the forward and reverse fastq files.
+
+#### Forward Reads
+
+```{r, echo=FALSE, eval=TRUE}
+# TO run and cache the derepFastq you must set
+# `cache.lazy=FALSE`
+# For both code blocks
+```
+
+```{r}
+derepFs <- derepFastq(filtFs)
+names(derepFs) <- sample.names
+```
+
+<details markdown="1">
+<summary>Detailed results of `derep` forward reads</summary>
+<pre><code>
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P1_R1.fastq.gz
+Encountered 39950 unique sequences from 79804 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P1-8C_R1.fastq.gz
+Encountered 31163 unique sequences from 72760 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P10_R1.fastq.gz
+Encountered 35274 unique sequences from 62598 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P2_R1.fastq.gz
+Encountered 42119 unique sequences from 81240 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P3_R1.fastq.gz
+Encountered 40336 unique sequences from 86732 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P3-8C_R1.fastq.gz
+Encountered 31104 unique sequences from 60860 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P4_R1.fastq.gz
+Encountered 35169 unique sequences from 63037 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P5_R1.fastq.gz
+Encountered 27752 unique sequences from 54127 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P5-8C_R1.fastq.gz
+Encountered 49045 unique sequences from 109421 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P6_R1.fastq.gz
+Encountered 46853 unique sequences from 94740 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P7_R1.fastq.gz
+Encountered 35363 unique sequences from 71678 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P7-8C_R1.fastq.gz
+Encountered 35567 unique sequences from 73639 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P8_R1.fastq.gz
+Encountered 38518 unique sequences from 72263 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P9_R1.fastq.gz
+Encountered 43426 unique sequences from 89315 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P9-8C_R1.fastq.gz
+Encountered 13673 unique sequences from 33000 total sequences read.
+</code></pre>
+</details>
+
+<br/>
+
+## 7. DADA2 & ASV Inference
+
+At this point we are ready to apply the core sample inference algorithm (dada) to the filtered and trimmed sequence data. DADA2 offers three options for whether and how to pool samples for ASV inference. 
+
+If `pool = TRUE`, the algorithm will pool together all samples prior to sample inference.  
+If `pool = FALSE`, sample inference is performed on each sample individually.  
+If `pool = "pseudo"`, the algorithm will perform pseudo-pooling between individually processed samples.
+
+We tested all three methods through the full pipeline. Click the `+` to see the results of the test. For our final analysis, we chose `pool = FALSE` for this data set. 
+
+<details markdown="1">
+<summary>Show/hide  Results of `dada` pooling options </summary>
+
+Here are a few summary tables of results from the tests. Values are from the final sequence table prodcuced by each option. 
+
+<br/>
+
+*Total number of reads, total number of ASV, minimum and maximum ASVs, followed by the number of singletons, doubletons, etc.*
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+dada_pool_comp <- read.table("files/dada2/tables/ssu18_dada_compare.txt",
+                        header = TRUE, sep = "\t", row.names = 1)
+knitr::kable(dada_pool_comp)
+```
+
+*Total number of reads by sample.*
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+dada_pool_reads <- read.table("files/dada2/tables/ssu18_dada_compare_final_reads.txt",
+                        header = TRUE, sep = "\t", row.names = 1)
+knitr::kable(dada_pool_reads)
+```
+
+*Total number of ASVs by sample.*
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+dada_pool_asvs <- read.table("files/dada2/tables/ssu18_dada_compare_final_asvs.txt",
+                        header = TRUE, sep = "\t", row.names = 1)
+knitr::kable(dada_pool_asvs)
+```
+</details>
+
+
+```{r}
+dadaFs <- dada(derepFs, err = errF, multithread = TRUE, pool = FALSE)
+```
+
+<details markdown="1">
+<summary>Detailed results of `dada` on forward reads</summary>
+<pre><code>
+Sample 1 - 79804 reads in 39950 unique sequences.
+Sample 2 - 72760 reads in 31163 unique sequences.
+Sample 3 - 62598 reads in 35274 unique sequences.
+Sample 4 - 81240 reads in 42119 unique sequences.
+Sample 5 - 86732 reads in 40336 unique sequences.
+Sample 6 - 60860 reads in 31104 unique sequences.
+Sample 7 - 63037 reads in 35169 unique sequences.
+Sample 8 - 54127 reads in 27752 unique sequences.
+Sample 9 - 109421 reads in 49045 unique sequences.
+Sample 10 - 94740 reads in 46853 unique sequences.
+Sample 11 - 71678 reads in 35363 unique sequences.
+Sample 12 - 73639 reads in 35567 unique sequences.
+Sample 13 - 72263 reads in 38518 unique sequences.
+Sample 14 - 89315 reads in 43426 unique sequences.
+Sample 15 - 33000 reads in 13673 unique sequences.
+</code></pre>
+</details>
+
+As an example, we can inspect the returned `dada-class` object for the forward and reverse reads from the sample #`r sampnum`:
+
+```{r}
+dadaFs[[sampnum]]
+```
+
+```
+dada-class: object describing DADA2 denoising results
+1759 sequence variants were inferred from 31163 input unique sequences.
+Key parameters: OMEGA_A = 1e-40, OMEGA_C = 1e-40, BAND_SIZE = 16
+```
+
+This output tells us how many true sequence variants the DADA2 algorithm inferred from the  unique sequences, in this case the sample 2.
+
+## 8. Construct Sequence Table
+
+Now we construct an amplicon sequence variant (ASV) table.
+
+```{r}
+seqtab <- makeSequenceTable(dadaFs)
+dim(seqtab)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seqtab <- c(15, 14985)
+seqtab
+```
+
+```{r}
+table(nchar(getSequences(seqtab)))
+```
+
+```
+   22    23    24    25    27    41    66    73   120   149   185   190   193 
+    2     1     1     2     1     1     1     1     1     1     1     9     1 
+  198   200   201   202   208   209   211   215   217   220   221   222   223 
+    1     1     1     1     1     1     1     1     2     4    14    21     8 
+  224   225   227   228   229   230   231   232   233   234   238   251 
+    3     4     6     4     5     9    20 21342   190    12     2     8 
+```
+
+The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants. We have `r (seqtab)[2]` sequence variants but also a range of sequence lengths. Since many of these sequence variants are singletons or doubletons, we can just select a range that corresponds to the expected amplicon length and eliminate the spurious reads.
+
+```{r, echo=FALSE}
+read_length <-  data.frame(nchar(getSequences(seqtab)))
+colnames(read_length) <- "length"
+plot_a <- qplot(length, data = read_length,
+                geom = "histogram", binwidth = 1,
+                xlab = "read length",
+                ylab = "total variants",
+                xlim = c(200, 275))
+ggsave("read_length_before.png", plot_a, width = 7, height = 3)
+```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+system("cp files/dada2/figures/ssu18_read_length_before.png include/dada2/ssu18_read_length_before.png")
+knitr::include_graphics("include/dada2/ssu18_read_length_before.png")
+```
+
+```{r}
+seqtab.2 <- seqtab[,nchar(colnames(seqtab)) %in% seq(230,235)]
+dim(seqtab.2)
+```
+
+<aside>
+The values you select should be based on the sequence table generated above.
+</aside>
+
+```{r, echo=FALSE, eval=TRUE}
+seqtab2 <-  c(15, 21573)
+seqtab2
+```
+
+```{r}
+table(nchar(getSequences(seqtab.2)))
+```
+
+```
+  230   231   232   233   234 
+    9    20 21342   190    12 
+```
+
+After removing the extreme length variants, we have `r (seqtab2)[2]`, a reduction of `r (seqtab)[2] - (seqtab2)[2]` sequence variants.
+
+```{r, echo=FALSE}
+saveRDS(seqtab.2, "ssu18_seqtab.rds")
+```
+
+## 9. Remove Chimeras
+
+Even though the `dada` method corrects substitution and indel errors,  chimeric sequences remain. According to the DADA2 documentation, the accuracy of sequence variants after denoising makes identifying chimeric ASVs simpler than when dealing with fuzzy OTUs. Chimeric sequences are identified if they can be *exactly reconstructed* by combining a left-segment and a right-segment from two more abundant *parent* sequences.
+
+```{r}
+seqtab.nochim <- removeBimeraDenovo(seqtab.2,
+                                    method = "consensus",
+                                    multithread = 20,
+                                    verbose = TRUE)
+dim(seqtab.nochim)
+```
+
+```
+Identified 1241 bimeras out of 21573 input sequences.
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seqtab3 <- c(15, 20332)
+seqtab3
+```
+
+```{r}
+sum(seqtab.nochim)/sum(seqtab.2)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+chim_rem <- 0.9596595
+0.9596595
+```
+
+Chimera checking removed an additional `r (seqtab2)[2] - (seqtab3)[2]` sequence variants however, when we account for the abundances of each variant, we see chimeras accounts for about `r 100*(1-chim_rem)`% of the merged sequence reads. Not bad.
+
+The last thing we want to do is write the sequence table to an `RDS` file.
+
+```{r}
+saveRDS(seqtab.nochim, "ssu18_seqtab.nochim.rds")
+```
+
+## 10. Track Reads through Workflow
+
+At this point we can look at the number of reads that made it through each step of the workflow for every sample.
+
+```{r}
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out,
+               sapply(dadaFs, getN),
+               rowSums(seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedF", "nonchim")
+rownames(track) <- sample.names
+```
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+#X# NOTE. For some reason this datatable was being given the same
+#X# elementId as the first table. So I had to add elementId
+trackT <- read.table("files/dada2/tables/ssu18_read_changes.txt")
+datatable(trackT, width = "100%", escape = FALSE,
+          elementId = "5becfm0ylbqxfrglu40z",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+
+And we can save a copy of the table for later use.
+
+```{r}
+write.table(track, "ssu18_read_changes.txt",
+            sep = "\t", quote = FALSE, col.names=NA)
+```
+
+```{r save_image_part_11, echo=FALSE}
+save.image("pre_tax_16s_2018.rdata")
+```
+
+## 11. Assign Taxonomy
+
+The `assignTaxonomy` command implements the naive Bayesian classifier, so for reproducible results you need to set a random number seed (see issue [#538](https://github.com/benjjneb/dada2/issues/538)). We did this at the beginning of the workflow. For taxonomic assignment, we are using the Silva version 138 [@quast2012silva]. The developers of DADA2 maintain a [formatted version of the database](https://benjjneb.github.io/dada2/training.html).
+
+We will read in the `RDS` file containing the sequence table saved above. We also need to run `remove(list = ls())` command, otherwise the final image we save will be huge. This way, the image only contains the sample data, seqtab, and taxtab *after* running `removeBimeraDenovo`.
+
+```{r}
+remove(list = ls())
+seqtab <- readRDS("ssu18_seqtab.nochim.rds")
+```
+
+And then native Bayesian classifier against the Silva database.
+
+```{r}
+tax_silva <- assignTaxonomy(
+  seqtab, "silva_nr_v138_train_set.fa.gz", multithread = TRUE)
+```
+
+## 12. Save Image
+
+And finally, we save an image for use in the analytic part of the workflow. This R data file will be needed as the input for the phyloseq portion of the workflow. See the [Data Availability](data-availability.html) page for complete details on where to get this file.
+
+```{r}
+save.image("ssu18_dada2_wf.rdata")
+```
+
+```{r, echo=FALSE}
+# Classify with IdTAX db
+remove(list = ls())
+seqtab <- readRDS("ssu18_seqtab.nochim.rds")
+
+tax_silva <- assignTaxonomy(seqtab, "silva_nr_v138_train_set.fa.gz", multithread = TRUE)
+
+dna <- DNAStringSet(getSequences(seqtab)) # Create a DNAStringSet from the ASVs
+load("SILVA_SSU_r138_2018.RData")
+ids <- IdTaxa(dna, trainingSet, strand = "top", processors = NULL, verbose = FALSE) # use all processors
+ranks <- c("domain", "phylum", "class", "order", "family", "genus") # ranks of interest
+# Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
+tax_id <- t(sapply(ids, function(x) {
+        m <- match(ranks, x$rank)
+        taxa <- x$taxon[m]
+        taxa[startsWith(taxa, "unclassified_")] <- NA
+        taxa
+}))
+colnames(tax_id) <- ranks; rownames(tax_id) <- getSequences(seqtab)
+
+save.image("ssu18_data_prep_wf_ALT.rdata")
+saveRDS(seqtab, "ssu18_seqtab.nochim.2.rds")
+saveRDS(tax_silva, "ssu18_tax_silva.rds")
+saveRDS(tax_id, "ssu18_tax_id.rds")
+```
+
+## R Session Information & Code
+
+This workflow was run on the [Smithsonian High Performance Cluster (SI/HPC)](https://doi.org/10.25572/SIHPC), Smithsonian Institution. Below are the specific packages and versions used in this workflow using both `sessionInfo()` and `devtools::session_info()`. Click the arrow to see the details.
+
+<details markdown="1">
+<summary>Show/hide  R Session Info</summary>
+```
+sessionInfo()
+R version 4.0.0 (2020-04-24)
+Platform: x86_64-conda_cos6-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /home/scottjj/miniconda3/envs/R-4/lib/libopenblasp-r0.3.9.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+
+attached base packages:
+ [1] grid      stats4    parallel  stats     graphics  grDevices utils
+ [8] datasets  methods   base
+
+other attached packages:
+ [1] gridExtra_2.3               ggplot2_3.3.0
+ [3] ShortRead_1.46.0            GenomicAlignments_1.24.0
+ [5] SummarizedExperiment_1.18.1 DelayedArray_0.14.0
+ [7] matrixStats_0.56.0          Biobase_2.48.0
+ [9] Rsamtools_2.4.0             GenomicRanges_1.40.0
+[11] GenomeInfoDb_1.24.0         Biostrings_2.56.0
+[13] XVector_0.28.0              IRanges_2.22.1
+[15] S4Vectors_0.26.0            BiocParallel_1.22.0
+[17] BiocGenerics_0.34.0         dada2_1.16.0
+[19] Rcpp_1.0.4.6
+
+loaded via a namespace (and not attached):
+ [1] plyr_1.8.6             RColorBrewer_1.1-2     pillar_1.4.4
+ [4] compiler_4.0.0         bitops_1.0-6           tools_4.0.0
+ [7] zlibbioc_1.34.0        lifecycle_0.2.0        tibble_3.0.1
+[10] gtable_0.3.0           lattice_0.20-41        png_0.1-7
+[13] pkgconfig_2.0.3        rlang_0.4.6            Matrix_1.2-18
+[16] GenomeInfoDbData_1.2.3 withr_2.2.0            stringr_1.4.0
+[19] hwriter_1.3.2          vctrs_0.3.0            glue_1.4.1
+[22] R6_2.4.1               jpeg_0.1-8.1           latticeExtra_0.6-29
+[25] reshape2_1.4.4         magrittr_1.5           scales_1.1.1
+[28] ellipsis_0.3.1         colorspace_1.4-1       stringi_1.4.6
+[31] RCurl_1.98-1.2         RcppParallel_5.0.1     munsell_0.5.0
+[34] crayon_1.3.4
+
+devtools::session_info()
+─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.0.0 (2020-04-24)
+ os       CentOS Linux 7 (Core)
+ system   x86_64, linux-gnu
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/New_York
+ date     2020-06-17
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package              * version  date       lib source
+ assertthat             0.2.1    2019-03-21 [1] CRAN (R 4.0.0)
+ backports              1.1.7    2020-05-13 [1] CRAN (R 4.0.0)
+ Biobase              * 2.48.0   2020-04-27 [1] Bioconductor
+ BiocGenerics         * 0.34.0   2020-04-27 [1] Bioconductor
+ BiocParallel         * 1.22.0   2020-04-27 [1] Bioconductor
+ Biostrings           * 2.56.0   2020-04-27 [1] Bioconductor
+ bitops                 1.0-6    2013-08-17 [1] CRAN (R 4.0.0)
+ callr                  3.4.3    2020-03-28 [1] CRAN (R 4.0.0)
+ cli                    2.0.2    2020-02-28 [1] CRAN (R 4.0.0)
+ colorspace             1.4-1    2019-03-18 [1] CRAN (R 4.0.0)
+ crayon                 1.3.4    2017-09-16 [1] CRAN (R 4.0.0)
+ dada2                * 1.16.0   2020-04-27 [1] Bioconductor
+ DelayedArray         * 0.14.0   2020-04-27 [1] Bioconductor
+ desc                   1.2.0    2018-05-01 [1] CRAN (R 4.0.0)
+ devtools               2.3.0    2020-04-10 [1] CRAN (R 4.0.0)
+ digest                 0.6.25   2020-02-23 [1] CRAN (R 4.0.0)
+ ellipsis               0.3.1    2020-05-15 [1] CRAN (R 4.0.0)
+ fansi                  0.4.1    2020-01-08 [1] CRAN (R 4.0.0)
+ fs                     1.4.1    2020-04-04 [1] CRAN (R 4.0.0)
+ GenomeInfoDb         * 1.24.0   2020-04-27 [1] Bioconductor
+ GenomeInfoDbData       1.2.3    2020-05-22 [1] Bioconductor
+ GenomicAlignments    * 1.24.0   2020-04-27 [1] Bioconductor
+ GenomicRanges        * 1.40.0   2020-04-27 [1] Bioconductor
+ ggplot2              * 3.3.0    2020-03-05 [1] CRAN (R 4.0.0)
+ glue                   1.4.1    2020-05-13 [1] CRAN (R 4.0.0)
+ gridExtra            * 2.3      2017-09-09 [1] CRAN (R 4.0.0)
+ gtable                 0.3.0    2019-03-25 [1] CRAN (R 4.0.0)
+ hwriter                1.3.2    2014-09-10 [1] CRAN (R 4.0.0)
+ IRanges              * 2.22.1   2020-04-28 [1] Bioconductor
+ jpeg                   0.1-8.1  2019-10-24 [1] CRAN (R 4.0.0)
+ lattice                0.20-41  2020-04-02 [1] CRAN (R 4.0.0)
+ latticeExtra           0.6-29   2019-12-19 [1] CRAN (R 4.0.0)
+ lifecycle              0.2.0    2020-03-06 [1] CRAN (R 4.0.0)
+ magrittr               1.5      2014-11-22 [1] CRAN (R 4.0.0)
+ Matrix                 1.2-18   2019-11-27 [1] CRAN (R 4.0.0)
+ matrixStats          * 0.56.0   2020-03-13 [1] CRAN (R 4.0.0)
+ memoise                1.1.0    2017-04-21 [1] CRAN (R 4.0.0)
+ munsell                0.5.0    2018-06-12 [1] CRAN (R 4.0.0)
+ pillar                 1.4.4    2020-05-05 [1] CRAN (R 4.0.0)
+ pkgbuild               1.0.8    2020-05-07 [1] CRAN (R 4.0.0)
+ pkgconfig              2.0.3    2019-09-22 [1] CRAN (R 4.0.0)
+ pkgload                1.0.2    2018-10-29 [1] CRAN (R 4.0.0)
+ plyr                   1.8.6    2020-03-03 [1] CRAN (R 4.0.0)
+ png                    0.1-7    2013-12-03 [1] CRAN (R 4.0.0)
+ prettyunits            1.1.1    2020-01-24 [1] CRAN (R 4.0.0)
+ processx               3.4.2    2020-02-09 [1] CRAN (R 4.0.0)
+ ps                     1.3.3    2020-05-08 [1] CRAN (R 4.0.0)
+ R6                     2.4.1    2019-11-12 [1] CRAN (R 4.0.0)
+ RColorBrewer           1.1-2    2014-12-07 [1] CRAN (R 4.0.0)
+ Rcpp                 * 1.0.4.6  2020-04-09 [1] CRAN (R 4.0.0)
+ RcppParallel           5.0.1    2020-05-06 [1] CRAN (R 4.0.0)
+ RCurl                  1.98-1.2 2020-04-18 [1] CRAN (R 4.0.0)
+ remotes                2.1.1    2020-02-15 [1] CRAN (R 4.0.0)
+ reshape2               1.4.4    2020-04-09 [1] CRAN (R 4.0.0)
+ rlang                  0.4.6    2020-05-02 [1] CRAN (R 4.0.0)
+ rprojroot              1.3-2    2018-01-03 [1] CRAN (R 4.0.0)
+ Rsamtools            * 2.4.0    2020-04-27 [1] Bioconductor
+ S4Vectors            * 0.26.0   2020-04-27 [1] Bioconductor
+ scales                 1.1.1    2020-05-11 [1] CRAN (R 4.0.0)
+ sessioninfo            1.1.1    2018-11-05 [1] CRAN (R 4.0.0)
+ ShortRead            * 1.46.0   2020-04-27 [1] Bioconductor
+ stringi                1.4.6    2020-02-17 [1] CRAN (R 4.0.0)
+ stringr                1.4.0    2019-02-10 [1] CRAN (R 4.0.0)
+ SummarizedExperiment * 1.18.1   2020-04-30 [1] Bioconductor
+ testthat               2.3.2    2020-03-02 [1] CRAN (R 4.0.0)
+ tibble                 3.0.1    2020-04-20 [1] CRAN (R 4.0.0)
+ usethis                1.6.1    2020-04-29 [1] CRAN (R 4.0.0)
+ vctrs                  0.3.0    2020-05-11 [1] CRAN (R 4.0.0)
+ withr                  2.2.0    2020-04-20 [1] CRAN (R 4.0.0)
+ XVector              * 0.28.0   2020-04-27 [1] Bioconductor
+ zlibbioc               1.34.0   2020-04-27 [1] Bioconductor
+```
+</details>
+
+<br/>
+
+# ITS Data
+
+```{r, include=FALSE}
+remove(list = ls())
+```
+
+## Overview
+
+### Sequence Files & Samples
+
+We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table <- read.table("files/dada2/tables/its18_sample_seq_info.txt",
+                        header = TRUE, sep = "\t")
+datatable(seq_table, width = "100%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+### Workflow
+
+Our workflow is pretty much ripped from the [DADA2 ITS Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html) on the DADA2 website. That webpage contains thorough explanations for each step so we will not repeat most of that here. For more details, check out the post. The workflow consists of the following steps:
+
+| Step | Command                | What we’re doing                                           |
+|------|------------------------|------------------------------------------------------------|
+| 1    | multiple               | prepare input file names & paths                           |
+| 2    | multiple               | Define  primers (all orientations)                         |
+| 3    | `cutadapt`             | Remove  primers                                            |
+| 4    | `filterAndTrim()`      | assess quality & filter reads                              |
+| 5    | `learnErrors()`        | generate an error model for the data                       |
+| 6    | `derepFastq`           | dereplicate sequences                                      |
+| 7    | `dada()`               | infer ASVs on both forward & reverse reads independently   |
+| 8    | `mergePairs()`         | merge forward & reverse reads to further refine ASVs       |
+| 9    | `makeSequenceTable()`  | generate a count table                                     |
+| 10   | `removeBimeraDenovo()` | screen for & remove chimeras                               |
+| 11   |                        | track reads through workflow                               |
+| 12   | `assignTaxonomy()`     | assign taxonomy & finish workflow                          |
+| 13   | `save.image()`         | save an image of seqtab & taxtab for next part of workflow |
+
+
+## 1. Set Working Environment
+
+Next, we need to setup the working environment by renaming the fastq files and defining a path for the working directory.
+
+#### Rename samples
+
+To make the parsing easier, we will eliminate the lane and well number from each sample. If you do not wish to do that you will need to adjust the code accordingly. I am *positive* there are more elegant ways of doing this.
+
+> CAUTION. You should check that this code works on a few backup files before proceeding.
+
+```{r, warning=FALSE}
+setwd("RAW")
+orig_fastq <- list.files(pattern = "*.fastq.gz")
+newname_fastq <- gsub("_S.*_L001", "", orig_fastq)
+newname_fastq <- gsub("_001", "", newname_fastq)
+file.rename(orig_fastq, newname_fastq)
+setwd("../")
+```
+
+```{r}
+path <- "RAW"
+head(list.files(path))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+c("P1_R1.fastq.gz", "P1_R2.fastq.gz", "P1-8C_R1.fastq.gz",
+  "P1-8C_R2.fastq.gz", "P10_R1.fastq.gz", "P10_R2.fastq.gz")
+```
+
+Then, we generate matched lists of the forward and reverse read files. We also parse out the sample name.
+
+```{r}
+fnFs <- sort(list.files(path, pattern = "_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern = "_R2.fastq.gz", full.names = TRUE))
+```
+
+## 2. Define Primers
+
+Before we start the DADA2 workflow we need to run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] on all `fastq.gz` files to trim the primers. For this part of the study we used  the primer pair ITS1f (CTTGGTCATTTAGAGGAAGTAA) and ITS2   (GCTGCGTTCTTCATCGATGC)[REF] which should yield variable amplicon lengths between 100 to 400 bp. What we are looking for is potential read-through scenarios that are possible when sequencing the length variable ITS region as described in the [DADA2 ITS Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html). Please refer to this document for a complete explanation.
+
+First we define the primers.
+
+```{r}
+FWD <- "CTTGGTCATTTAGAGGAAGTAA"
+REV <- "GCTGCGTTCTTCATCGATGC"
+```
+
+Next, we check the presence and orientation of these primers in the data. To do this we will create all orientations of the input primer sequences. In other words the *Forward*, *Complement*, *Reverse*, and *Reverse Complement* variations.
+
+```{r}
+allOrients <- function(primer) {
+    require(Biostrings)
+    dna <- DNAString(primer)
+    orients <- c(Forward = dna,
+                 Complement = complement(dna),
+                 Reverse = reverse(dna),
+                 RevComp = reverseComplement(dna))
+    return(sapply(orients, toString))
+}
+FWD.orients <- allOrients(FWD)
+REV.orients <- allOrients(REV)
+FWD.orients
+REV.orients
+```
+
+```
+                 Forward               Complement                  Reverse
+"CTTGGTCATTTAGAGGAAGTAA" "GAACCAGTAAATCTCCTTCATT" "AATGAAGGAGATTTACTGGTTC"
+                 RevComp
+"TTACTTCCTCTAAATGACCAAG"
+               Forward             Complement                Reverse
+"GCTGCGTTCTTCATCGATGC" "CGACGCAAGAAGTAGCTACG" "CGTAGCTACTTCTTGCGTCG"
+               RevComp
+"GCATCGATGAAGAACGCAGC"
+```
+
+Now we do a little pre-filter step to eliminate ambiguous bases (*Ns*) because *Ns* make mapping of short primer sequences difficult. This step removes any reads with *Ns*. Again, set some files paths, this time for the filtered reads.
+
+```{r}
+fnFs.filtN <- file.path(path, "filtN", basename(fnFs))
+fnRs.filtN <- file.path(path, "filtN", basename(fnRs))
+filterAndTrim(fnFs, fnFs.filtN, fnRs, fnRs.filtN,
+              maxN = 0, multithread = TRUE)
+```
+
+Sweet. Time to assess the number of times a primer (and all possible primer orientation) appear in the forward and reverse reads. According to the workflow, counting the primers on one set of paired end fastq files is sufficient to see if there is a problem. This assumes that all the files were created using the same library prep. Basically for both primers, we will search for all four orientations in both forward and reverse reads
+
+```{r primer_assess}
+sampnum <- 1
+primerHits <- function(primer, fn) {
+    # Counts number of reads in which the primer is found
+    nhits <- vcountPattern(primer, sread(readFastq(fn)), fixed = FALSE)
+    return(sum(nhits > 0))
+}
+```
+
+#### Forward primers
+
+```{r}
+rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits,
+                                fn = fnFs.filtN[[sampnum]]),
+    FWD.ReverseReads = sapply(FWD.orients, primerHits,
+                              fn = fnRs.filtN[[sampnum]]))
+```
+
+```
+                 Forward Complement Reverse RevComp
+FWD.ForwardReads   48467          0       0       0
+FWD.ReverseReads       0          0       0    5078
+```
+
+#### Reverse primers
+
+```{r}
+rbind(REV.ForwardReads = sapply(REV.orients, primerHits,
+                                fn = fnFs.filtN[[sampnum]]),
+       REV.ReverseReads = sapply(REV.orients, primerHits,
+                                 fn = fnRs.filtN[[sampnum]]))
+```
+
+```
+                 Forward Complement Reverse RevComp
+REV.ForwardReads       0          0       0    6237
+REV.ReverseReads   43902          0       0       0
+```
+
+```{r, echo=FALSE}
+fnFsXX <- sort(list.files(path, pattern = "_R1.fastq.gz", full.names = FALSE))
+qsamp <- fnFsXX[sampnum]
+qsamp <- sapply(strsplit(qsamp, "_"), `[`, 1)
+### add this for inline calc `r countLines(fnFs.filtN[[sampnum]])/4`
+```
+
+What does this table mean? I wondered the same thing. Let's break it down. Sample P1 had  50,894 sequences after the original filtering described earlier. The code searched the forward and reverse fastq files for all 8 primers. If we look at the two outputs, we see the forward primer is found in the forward reads in its forward orientation but also in some reverse reads in its reverse-complement orientation. The reverse primer is found in the reverse reads in its forward orientation but also in some forward reads in its reverse-complement orientation. This is due to read-through when the ITS region is short.
+
+## 3. Remove Primers
+
+Now we can run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] to remove the primers from the fastq sequences. A little setup first. If this command executes successfully it means R has found cutadapt.
+
+```{r}
+cutadapt <- "/PATH/to/cutadapt"
+system2(cutadapt, args = "--version") # Run shell commands from R
+```
+
+```
+2.8
+```
+
+We set paths and trim the forward primer and the reverse-complement of the reverse primer off of R1 (forward reads) and trim the reverse primer and the reverse-complement of the forward primer off of R2 (reverse reads).
+
+```{r}
+path.cut <- file.path(path, "cutadapt")
+if(!dir.exists(path.cut)) dir.create(path.cut)
+fnFs.cut <- file.path(path.cut, basename(fnFs))
+fnRs.cut <- file.path(path.cut, basename(fnRs))
+
+FWD.RC <- dada2:::rc(FWD)
+REV.RC <- dada2:::rc(REV)
+
+R1.flags <- paste("-g", FWD, "-a", REV.RC)
+R2.flags <- paste("-G", REV, "-A", FWD.RC)
+
+for(i in seq_along(fnFs)) {system2(cutadapt,
+                                   args = c(R1.flags, R2.flags,
+                                            "-m", 20, "-n", 2,
+                                            "-o", fnFs.cut[i],
+                                            "-p", fnRs.cut[i],
+                                            fnFs.filtN[i], fnRs.filtN[i]))}
+```
+
+```
+This is cutadapt 2.8 with Python 3.7.6
+Command line parameters: -g CTTGGTCATTTAGAGGAAGTAA -a GCATCGATGAAGAACGCAGC -G GCTGCGTTCTTCATCGATGC -A TTACTTCCTCTAAATGACCAAG -m 20 -n 2 -o RAW/cutadapt/P1_R1.fastq.gz -p RAW/cutadapt/P1_R2.fastq.gz RAW/filtN/P1_R1.fastq.gz RAW/filtN/P1_R2.fastq.gz
+```
+
+*Note*. If the code above removes all of the base pairs in a sequence, you will get downstream errors unless you set the `-m` flag. This flag sets the minimum length and reads shorter than this will be discarded. Without this flag, reads of length 0 will be kept and cause issues. *Also, a lot of output will be written to the screen by cutadapt!*
+
+We can now count the number of primers in the sequences from the output of cutadapt.
+
+```{r}
+rbind(
+  FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[sampnum]]),
+  FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.cut[[sampnum]]),
+  REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.cut[[sampnum]]),
+  REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.cut[[sampnum]]))
+```
+
+```
+                 Forward Complement Reverse RevComp
+FWD.ForwardReads       0          0       0       0
+FWD.ReverseReads       0          0       0       0
+REV.ForwardReads       0          0       0       0
+REV.ReverseReads       0          0       0       0
+```
+
+Basically, primers are no longer detected in the cutadapted reads. Now, for each sample, we can take a look at how the pre-filtering step and primer removal affected the total number of raw reads.
+
+```{r, echo=FALSE}
+temp1 <- read.table("files/dada2/tables/its18_read_changes.txt", header = TRUE)
+temp1[, 4:8] <- list(NULL)
+write.table(temp1, "files/dada2/tables/its18_cut.txt", sep = "\t", quote = FALSE)
+```
+
+<br/>
+
+```{r, echo=FALSE, eval=TRUE}
+out <- read.table("files/dada2/tables/its18_cut.txt",
+                       header = TRUE)
+datatable(out, width = "80%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+## 4. Quality Assessment & Filtering
+
+We need the forward and reverse fastq file names and the sample names.
+
+```{r}
+cutFs <- sort(list.files(path.cut, pattern = "_R1.fastq.gz",
+                         full.names = TRUE))
+cutRs <- sort(list.files(path.cut, pattern = "_R2.fastq.gz",
+                         full.names = TRUE))
+
+get.sample.name <- function(fname) strsplit(basename(fname), "_")[[1]][1]
+sample.names <- unname(sapply(cutFs, get.sample.name))
+head(sample.names)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+c("P1", "P1-8C", "P10", "P2", "P3", "P3-8C")
+```
+
+### Quality plots
+
+Then we inspect read quality.
+
+```{r}
+p1 <- plotQualityProfile(cutFs[1:15], aggregate = TRUE)
+p2 <- plotQualityProfile(cutRs[1:15], aggregate = TRUE)
+
+p3 <- grid.arrange(p1, p2, nrow = 1)
+ggsave("plot_qscores_2018.png", p3, width = 7, height = 3)
+```
+
+```{r, echo=FALSE, layout="l-body-outset", warning=FALSE, fig.height=3, eval=TRUE}
+#system("cp files/dada2/figures/its18_plot_qscores.png include/dada2/its18_plot_qscores.png")
+knitr::include_graphics("include/dada2/its18_plot_qscores.png")
+```
+<small><em>Aggregated quality score plots for forward (left) & reverse (right) reads.</em></small>
+
+### Filtering
+
+```{r}
+filtFs <- file.path(path.cut, "filtered", basename(cutFs))
+filtRs <- file.path(path.cut, "filtered", basename(cutRs))
+```
+
+We use a `minLen` value to get rid of very short length sequences.
+
+```{r}
+out <- filterAndTrim(cutFs, filtFs, cutRs, filtRs,
+                     maxN = 0, maxEE = c(2, 2), truncQ = 2,
+                     minLen = 50, rm.phix = TRUE,
+                     compress = TRUE, multithread = TRUE)
+out
+```
+
+<aside>
+These parameters should be set based on the anticipated length of the amplicon and the read quality.
+</aside>
+
+And here is a table of how the filtering step affected the number of reads in each sample.
+
+<br/>
+
+```{r, echo=FALSE, eval=TRUE}
+out_T <- read.table("files/dada2/tables/its18_out.txt",
+                       header = TRUE)
+datatable(out_T, width = "80%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+## 5. Learn Error Rates
+
+Time to assess the error rate of the data. The rest of the workflow is very similar to the 16S workflows presented previously. So I will basically stop talking.
+
+#### Forward Reads
+
+```{r}
+errF <- learnErrors(filtFs, multithread = TRUE)
+```
+
+```
+108788735 total bases in 495784 reads from 11 samples will be used for learning the error rates.
+109358094 total bases in 495784 reads from 11 samples will be used for learning the error rates.
+```
+
+```{r}
+plotErrors(errF, nominalQ = TRUE)
+```
+
+```{r, echo=FALSE}
+p3 <- plotErrors(errF, nominalQ = TRUE)
+ggsave("plot_errorF_1.png", p3, width = 7, height = 5)
+ggsave("plot_errorF_2.png", p3)
+```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+#system("cp files/dada2/figures/its18_plot_errorF_1.png include/dada2/its18_plot_errorF_1.png")
+knitr::include_graphics("include/dada2/its18_plot_errorF_1.png")
+```
+
+#### Reverse Reads
+
+```{r}
+errR <- learnErrors(filtRs, multithread = TRUE)
+```
+
+```
+109358094 total bases in 495784 reads from 11 samples will be used for learning the error rates.
+```
+
+```{r}
+plotErrors(errR, nominalQ = TRUE)
+```
+
+```{r, echo=FALSE}
+p4 <- plotErrors(errR, nominalQ = TRUE)
+ggsave("plot_errorR_1.png", p4, width = 7, height = 5)
+ggsave("plot_errorR_2.png", p4)
+```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+#system("cp files/dada2/figures/its18_plot_errorR_1.png include/dada2/its18_plot_errorR_1.png")
+knitr::include_graphics("include/dada2/its18_plot_errorR_1.png")
+```
+
+## 6. Dereplicate Reads
+
+#### Forward Reads
+
+```{r}
+derepFs <- derepFastq(filtFs, verbose = TRUE)
+names(derepFs) <- sample.names
+```
+
+<br/>
+
+<details markdown="1">
+<summary>Detailed results of derep forward reads</summary>
+<pre><code>
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P1_R1.fastq.gz
+Encountered 7277 unique sequences from 35999 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P1-8C_R1.fastq.gz
+Encountered 11366 unique sequences from 48230 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P10_R1.fastq.gz
+Encountered 11714 unique sequences from 80877 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P2_R1.fastq.gz
+Encountered 13088 unique sequences from 58956 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P3_R1.fastq.gz
+Encountered 10180 unique sequences from 42563 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P3-8C_R1.fastq.gz
+Encountered 4480 unique sequences from 17548 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P4_R1.fastq.gz
+Encountered 12259 unique sequences from 68259 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P5_R1.fastq.gz
+Encountered 160 unique sequences from 308 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P5-8C_R1.fastq.gz
+Encountered 10436 unique sequences from 48518 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P6_R1.fastq.gz
+Encountered 11230 unique sequences from 51055 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P7_R1.fastq.gz
+Encountered 10316 unique sequences from 43471 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P7-8C_R1.fastq.gz
+Encountered 2121 unique sequences from 9488 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P8_R1.fastq.gz
+Encountered 9236 unique sequences from 41563 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P9_R1.fastq.gz
+Encountered 9000 unique sequences from 35722 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P9-8C_R1.fastq.gz
+Encountered 42 unique sequences from 85 total sequences read.
+</code></pre>
+</details>
+
+<br/>
+
+#### Reverse Reads
+
+```{r}
+derepRs <- derepFastq(filtRs, verbose = TRUE)
+names(derepRs) <- sample.names
+```
+
+<br/>
+
+<details markdown="1">
+<summary>Detailed results of derep reverse reads</summary>
+<pre><code>
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P1_R2.fastq.gz
+Encountered 13081 unique sequences from 35999 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P1-8C_R2.fastq.gz
+Encountered 17965 unique sequences from 48230 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P10_R2.fastq.gz
+Encountered 18610 unique sequences from 80877 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P2_R2.fastq.gz
+Encountered 19600 unique sequences from 58956 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P3_R2.fastq.gz
+Encountered 16145 unique sequences from 42563 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P3-8C_R2.fastq.gz
+Encountered 7496 unique sequences from 17548 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P4_R2.fastq.gz
+Encountered 19933 unique sequences from 68259 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P5_R2.fastq.gz
+Encountered 199 unique sequences from 308 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P5-8C_R2.fastq.gz
+Encountered 18495 unique sequences from 48518 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P6_R2.fastq.gz
+Encountered 17216 unique sequences from 51055 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P7_R2.fastq.gz
+Encountered 17111 unique sequences from 43471 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P7-8C_R2.fastq.gz
+Encountered 3809 unique sequences from 9488 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P8_R2.fastq.gz
+Encountered 14140 unique sequences from 41563 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P9_R2.fastq.gz
+Encountered 14856 unique sequences from 35722 total sequences read.
+Dereplicating sequence entries in Fastq file: RAW/cutadapt/filtered/P9-8C_R2.fastq.gz
+Encountered 45 unique sequences from 85 total sequences read.
+</code></pre>
+</details>
+
+<br/>
+
+## 7. DADA2 & ASV Inference
+
+At this point we are ready to apply the core sample inference algorithm (dada) to the filtered and trimmed sequence data. DADA2 offers three options for whether and how to pool samples for ASV inference. 
+
+If `pool = TRUE`, the algorithm will pool together all samples prior to sample inference.  
+If `pool = FALSE`, sample inference is performed on each sample individually.  
+If `pool = "pseudo"`, the algorithm will perform pseudo-pooling between individually processed samples.
+
+We tested all three methods through the full pipeline. Click the `+` to see the results of the test. For our final analysis, we chose `pool = TRUE` for this data set. 
+
+<details markdown="1">
+<summary>Show/hide  Results of `dada` pooling options </summary>
+
+Here are a few summary tables of results from the tests. Values are from the final sequence table prodcuced by each option. 
+
+<br/>
+
+*Total number of reads, total number of ASV, minimum and maximum ASVs, followed by the number of singletons, doubletons, etc.*
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+dada_pool_comp <- read.table("files/dada2/tables/its18_dada_compare.txt",
+                        header = TRUE, sep = "\t", row.names = 1)
+knitr::kable(dada_pool_comp)
+```
+
+*Total number of reads by sample.*
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+dada_pool_reads <- read.table("files/dada2/tables/its18_dada_compare_final_reads.txt",
+                        header = TRUE, sep = "\t", row.names = 1)
+knitr::kable(dada_pool_reads)
+```
+
+*Total number of ASVs by sample.*
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+dada_pool_asvs <- read.table("files/dada2/tables/its18_dada_compare_final_asvs.txt",
+                        header = TRUE, sep = "\t", row.names = 1)
+knitr::kable(dada_pool_asvs)
+```
+</details>
+
+#### Forward Reads
+
+```{r}
+dadaFs <- dada(derepFs, err = errF, pool = TRUE, multithread = TRUE)
+```
+
+```
+15 samples were pooled: 582642 reads in 102887 unique sequences.
+```
+
+```{r}
+dadaFs[[sampnum]]
+```
+
+```
+dada-class: object describing DADA2 denoising results
+1175 sequence variants were inferred from 7277 input unique sequences.
+Key parameters: OMEGA_A = 1e-40, OMEGA_C = 1e-40, BAND_SIZE = 16
+```
+
+#### Reverse  Reads
+
+```{r}
+dadaRs <- dada(derepRs, err = errR, pool = TRUE, multithread = TRUE)
+```
+
+```
+15 samples were pooled: 582642 reads in 174866 unique sequences.
+```
+
+
+```{r}
+dadaRs[[sampnum]]
+```
+
+```
+dada-class: object describing DADA2 denoising results
+1116 sequence variants were inferred from 13081 input unique sequences.
+Key parameters: OMEGA_A = 1e-40, OMEGA_C = 1e-40, BAND_SIZE = 16
+```
+
+```{r}
+save.image("pre_merge_its_2018.rdata")
+```
+
+## 8. Merge Paired Reads
+
+```{r}
+mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose=TRUE)
+```
+
+
+<details markdown="1">
+<summary>Detailed results of merging reads</summary>
+<pre><code>
+29795 paired-reads (in 946 unique pairings) successfully merged out of 32193 (in 1177 pairings) input.
+41880 paired-reads (in 719 unique pairings) successfully merged out of 46715 (in 941 pairings) input.
+64805 paired-reads (in 815 unique pairings) successfully merged out of 66771 (in 1015 pairings) input.
+Duplicate sequences in merged output.
+51144 paired-reads (in 1011 unique pairings) successfully merged out of 57613 (in 1325 pairings) input.
+38442 paired-reads (in 767 unique pairings) successfully merged out of 41985 (in 994 pairings) input.
+14188 paired-reads (in 349 unique pairings) successfully merged out of 16981 (in 452 pairings) input.
+56594 paired-reads (in 1018 unique pairings) successfully merged out of 64411 (in 1306 pairings) input.
+296 paired-reads (in 95 unique pairings) successfully merged out of 301 (in 100 pairings) input.
+35713 paired-reads (in 619 unique pairings) successfully merged out of 41006 (in 786 pairings) input.
+45851 paired-reads (in 955 unique pairings) successfully merged out of 50174 (in 1240 pairings) input.
+36121 paired-reads (in 870 unique pairings) successfully merged out of 41541 (in 1135 pairings) input.
+Duplicate sequences in merged output.
+9172 paired-reads (in 335 unique pairings) successfully merged out of 9403 (in 402 pairings) input.
+38392 paired-reads (in 704 unique pairings) successfully merged out of 40897 (in 886 pairings) input.
+29155 paired-reads (in 748 unique pairings) successfully merged out of 34979 (in 990 pairings) input.
+Duplicate sequences in merged output.
+80 paired-reads (in 14 unique pairings) successfully merged out of 82 (in 16 pairings) input.
+</code></pre>
+</details>
+
+<br/>
+
+``` {r, echo=FALSE}
+head(mergers[[1]])
+```
+
+## 9. Construct Sequence Table
+
+```{r}
+seqtabF <- makeSequenceTable(mergers)
+dim(seqtabF)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seqtabX <- c(15, 3364)
+seqtabX
+```
+
+```{r}
+table(nchar(getSequences(seqtabF)))
+```
+
+```
+130 131 132 133 136 139 140 141 143 144 146 147 148 149 150 151 152 153 154 155 
+  2   2   1   1   1   1   1   3   2   1   3   5   5   4   5   5   3   2   5   4 
+156 159 160 161 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 
+  1   2   1   1   2   2   4   9   2   1   2   5   5   5   8   9   2   5  10  13 
+179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 
+ 13  14  11  14  12  15  19  12  12  13   9  22  11  11  12  15  17  13  10  11 
+199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 
+ 22  16  10  11  13  17  10   8  10  12  13   7  20  18  24  30  39  38  20  19 
+219 220 221 222 223 224 225 226 228 229 230 231 232 233 234 235 236 237 238 239 
+ 12  18  21  23  23  29  32  32   6  48   4  73  20  27  29  19  31  33  30  29 
+240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255 256 257 258 259 
+ 35  21  36  16  16  18  17  25  22  29  17  27  28  22  20  18  28  19  28  25 
+260 261 262 263 264 265 266 267 268 269 270 271 272 273 274 275 276 277 278 279 
+ 23  11  15  13  16  18  23  17  12  12  16  15  32  17  22  21  21  18  16  17 
+280 281 282 283 284 285 286 287 288 289 290 291 292 293 294 295 296 297 298 299 
+ 13  22  13  18  12  13  13  18  17  15  14  18   8  11  13  17  12  11  13   9 
+300 301 302 303 304 305 306 307 308 309 310 311 312 313 314 315 316 317 318 319 
+ 16  10   9   3   8  12   8  13  20  15   8  13  16  11  10   8  18  10   8  12 
+320 321 322 323 324 325 326 327 328 329 330 331 332 333 334 335 336 337 338 339 
+  8   5  12  17  13   9   8   8   9  12  16  13  14  11  12  13  18  10  11  10 
+340 341 342 343 344 345 346 347 348 349 350 351 352 353 354 355 356 357 358 359 
+  9  11   8   8   5  15   8  16  11  15   4   9   7   9  12  14   5  12  11   5 
+360 361 362 363 364 365 366 367 368 369 370 371 372 373 374 375 376 377 378 379 
+  2   4  11   5   2  14   6  12   7   5   6   4   3   9   5  10   8   9   4   6 
+380 381 382 383 384 385 386 387 388 389 390 391 392 393 394 395 396 397 398 399 
+  5   3   7   7   4   2   3   4   3   5   5   1   3   4   3   6   5   4   3   2 
+400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 416 417 418 421 
+ 11   5   3   3   3   3   2   1   2   3   3   1   3   3   1   2   2   1   2   2 
+422 423 424 427 430 431 432 434 436 437 439 440 441 442 443 446 447 448 
+  2   3   2   1   3   2   4   2   1   2   4   3   1   2   1   1   2   1 
+
+```
+
+```{r, echo=FALSE}
+read_length <-  data.frame(nchar(getSequences(seqtab)))
+colnames(read_length) <- "length"
+plot_a <- qplot(length, data = read_length,
+                geom = "histogram", binwidth = 1,
+                xlab = "read length",
+                ylab = "total variants",
+                xlim = c(200, 300))
+ggsave("read_length_before.png", plot_a, width = 7, height = 3)
+```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+#system("cp files/dada2/figures/its18_read_length_before.png include/dada2/its18_read_length_before.png")
+knitr::include_graphics("include/dada2/its18_read_length_before.png")
+```
+
+As expected, a wide range of length variability in the the amplified ITS region.
+
+```{r}
+seqtab <- seqtabF[,nchar(colnames(seqtabF)) %in% seq(100,450)]
+dim(seqtab)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seqtabY <- c(15, 3364)
+seqtabY
+```
+
+After removing the extreme length variants, we have `r (seqtabY)[2]`, a reduction of `r (seqtabX)[2] - (seqtabY)[2]` sequence variants.
+
+```{r}
+table(nchar(getSequences(seqtab)))
+```
+
+```{r, echo=FALSE}
+saveRDS(seqtab, "its18_seqtab.rds")
+```
+
+## 10. Remove Chimeras
+
+```{r}
+seqtab.nochim <- removeBimeraDenovo(seqtab,
+                                    method = "consensus",
+                                    multithread = TRUE, verbose = TRUE)
+dim(seqtab.nochim)
+```
+
+```
+Identified 7 bimeras out of 3364 input sequences.
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seqtabZ <- c(15, 3357)
+seqtabZ
+```
+
+```{r}
+sum(seqtab.nochim)/sum(seqtab.2)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+chim_rem <- 0.9990135
+0.9990135
+```
+
+
+Chimera checking removed an additional `r (seqtabY)[2] - (seqtabZ)[2]` sequence variants however, when we account for the abundances of each variant, we see chimeras accounts for about `r 100*(1-chim_rem)`% of the merged sequence reads. Curious.
+
+```{r}
+table(colSums(seqtab.nochim>0))
+```
+
+```
+   1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+1247  711  443  289  204  123  102   86   49   32   24   15   23    7    2
+```
+
+```{r}
+table(colSums(seqtab.nochim>0))
+```
+
+```
+  14   95  335  349  616  702  719  745  765  812  867  945  954 1011 1017
+   1    1    1    1    1    1    1    1    1    1    1    1    1    1    1
+```
+
+
+The last thing we want to do is write the sequence table to an `RDS` file.
+
+```{r}
+saveRDS(seqtab.nochim, "its18_seqtab.nochim.rds")
+```
+
+```{r, echo=FALSE}
+table(nchar(getSequences(seqtab.nochim)))
+```
+
+## 11. Track Reads through Workflow
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+sum_2018 <- read.table("files/dada2/tables/its18_read_changes.txt",
+                       header = TRUE)
+datatable(sum_2018, width = "80%",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )
+```
+
+```{r, echo=FALSE}
+save.image("pre_tax_its_2018.rdata")
+```
+
+## 12. Assign Taxonomy
+
+For taxonomic classification, we used the UNITE [@nilsson2019unite] database, specifically the [UNITE general FASTA release for Fungi (v. 04.02.2020)](https://plutof.ut.ee/#/doi/10.15156/BIO/786368) [@abarenkov2020unite].
+
+```{r, echo=FALSE}
+remove(list = ls())
+seqtab <- readRDS("its18_seqtab.nochim.rds")
+```
+
+```{r}
+tax <- assignTaxonomy(seqtab,
+                      "sh_general_release_dynamic_s_04.02.2020_dev.fasta",
+                      multithread = 20, tryRC = TRUE)
+saveRDS(tax, "its18_tax_its.rds")
+```
+
+```
+UNITE fungal taxonomic reference detected.
+```
+
+## 13. Save Image
+
+```{r}
+save.image("its18_dada2_wf.rdata")
+```
+
+## R Session Information & Code
+
+This workflow was run on the [Smithsonian High Performance Cluster (SI/HPC)](https://doi.org/10.25572/SIHPC), Smithsonian Institution. Below are the specific packages and versions used in this workflow using both `sessionInfo()` and `devtools::session_info()`. Click the arrow to see the details.
+
+<details markdown="1">
+<summary>Show/hide  R Session Info</summary>
+```
+sessionInfo()
+R version 4.0.0 (2020-04-24)
+Platform: x86_64-conda_cos6-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS/LAPACK: /home/scottjj/miniconda3/envs/R-4/lib/libopenblasp-r0.3.9.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+
+attached base packages:
+ [1] grid      stats4    parallel  stats     graphics  grDevices utils
+ [8] datasets  methods   base
+
+other attached packages:
+ [1] gridExtra_2.3               ggplot2_3.3.0
+ [3] ShortRead_1.46.0            GenomicAlignments_1.24.0
+ [5] SummarizedExperiment_1.18.1 DelayedArray_0.14.0
+ [7] matrixStats_0.56.0          Biobase_2.48.0
+ [9] Rsamtools_2.4.0             GenomicRanges_1.40.0
+[11] GenomeInfoDb_1.24.0         Biostrings_2.56.0
+[13] XVector_0.28.0              IRanges_2.22.1
+[15] S4Vectors_0.26.0            BiocParallel_1.22.0
+[17] BiocGenerics_0.34.0         dada2_1.16.0
+[19] Rcpp_1.0.4.6
+
+loaded via a namespace (and not attached):
+ [1] plyr_1.8.6             RColorBrewer_1.1-2     pillar_1.4.4
+ [4] compiler_4.0.0         bitops_1.0-6           tools_4.0.0
+ [7] zlibbioc_1.34.0        lifecycle_0.2.0        tibble_3.0.1
+[10] gtable_0.3.0           lattice_0.20-41        png_0.1-7
+[13] pkgconfig_2.0.3        rlang_0.4.6            Matrix_1.2-18
+[16] GenomeInfoDbData_1.2.3 withr_2.2.0            stringr_1.4.0
+[19] hwriter_1.3.2          vctrs_0.3.0            glue_1.4.1
+[22] R6_2.4.1               jpeg_0.1-8.1           latticeExtra_0.6-29
+[25] reshape2_1.4.4         magrittr_1.5           scales_1.1.1
+[28] ellipsis_0.3.1         colorspace_1.4-1       stringi_1.4.6
+[31] RCurl_1.98-1.2         RcppParallel_5.0.1     munsell_0.5.0
+[34] crayon_1.3.4
+
+devtools::session_info()
+─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.0.0 (2020-04-24)
+ os       CentOS Linux 7 (Core)
+ system   x86_64, linux-gnu
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/New_York
+ date     2020-06-04
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package              * version  date       lib source
+ assertthat             0.2.1    2019-03-21 [1] CRAN (R 4.0.0)
+ backports              1.1.7    2020-05-13 [1] CRAN (R 4.0.0)
+ Biobase              * 2.48.0   2020-04-27 [1] Bioconductor
+ BiocGenerics         * 0.34.0   2020-04-27 [1] Bioconductor
+ BiocParallel         * 1.22.0   2020-04-27 [1] Bioconductor
+ Biostrings           * 2.56.0   2020-04-27 [1] Bioconductor
+ bitops                 1.0-6    2013-08-17 [1] CRAN (R 4.0.0)
+ callr                  3.4.3    2020-03-28 [1] CRAN (R 4.0.0)
+ cli                    2.0.2    2020-02-28 [1] CRAN (R 4.0.0)
+ colorspace             1.4-1    2019-03-18 [1] CRAN (R 4.0.0)
+ crayon                 1.3.4    2017-09-16 [1] CRAN (R 4.0.0)
+ dada2                * 1.16.0   2020-04-27 [1] Bioconductor
+ DelayedArray         * 0.14.0   2020-04-27 [1] Bioconductor
+ desc                   1.2.0    2018-05-01 [1] CRAN (R 4.0.0)
+ devtools               2.3.0    2020-04-10 [1] CRAN (R 4.0.0)
+ digest                 0.6.25   2020-02-23 [1] CRAN (R 4.0.0)
+ ellipsis               0.3.1    2020-05-15 [1] CRAN (R 4.0.0)
+ fansi                  0.4.1    2020-01-08 [1] CRAN (R 4.0.0)
+ fs                     1.4.1    2020-04-04 [1] CRAN (R 4.0.0)
+ GenomeInfoDb         * 1.24.0   2020-04-27 [1] Bioconductor
+ GenomeInfoDbData       1.2.3    2020-05-22 [1] Bioconductor
+ GenomicAlignments    * 1.24.0   2020-04-27 [1] Bioconductor
+ GenomicRanges        * 1.40.0   2020-04-27 [1] Bioconductor
+ ggplot2              * 3.3.0    2020-03-05 [1] CRAN (R 4.0.0)
+ glue                   1.4.1    2020-05-13 [1] CRAN (R 4.0.0)
+ gridExtra            * 2.3      2017-09-09 [1] CRAN (R 4.0.0)
+ gtable                 0.3.0    2019-03-25 [1] CRAN (R 4.0.0)
+ hwriter                1.3.2    2014-09-10 [1] CRAN (R 4.0.0)
+ IRanges              * 2.22.1   2020-04-28 [1] Bioconductor
+ jpeg                   0.1-8.1  2019-10-24 [1] CRAN (R 4.0.0)
+ lattice                0.20-41  2020-04-02 [1] CRAN (R 4.0.0)
+ latticeExtra           0.6-29   2019-12-19 [1] CRAN (R 4.0.0)
+ lifecycle              0.2.0    2020-03-06 [1] CRAN (R 4.0.0)
+ magrittr               1.5      2014-11-22 [1] CRAN (R 4.0.0)
+ Matrix                 1.2-18   2019-11-27 [1] CRAN (R 4.0.0)
+ matrixStats          * 0.56.0   2020-03-13 [1] CRAN (R 4.0.0)
+ memoise                1.1.0    2017-04-21 [1] CRAN (R 4.0.0)
+ munsell                0.5.0    2018-06-12 [1] CRAN (R 4.0.0)
+ pillar                 1.4.4    2020-05-05 [1] CRAN (R 4.0.0)
+ pkgbuild               1.0.8    2020-05-07 [1] CRAN (R 4.0.0)
+ pkgconfig              2.0.3    2019-09-22 [1] CRAN (R 4.0.0)
+ pkgload                1.0.2    2018-10-29 [1] CRAN (R 4.0.0)
+ plyr                   1.8.6    2020-03-03 [1] CRAN (R 4.0.0)
+ png                    0.1-7    2013-12-03 [1] CRAN (R 4.0.0)
+ prettyunits            1.1.1    2020-01-24 [1] CRAN (R 4.0.0)
+ processx               3.4.2    2020-02-09 [1] CRAN (R 4.0.0)
+ ps                     1.3.3    2020-05-08 [1] CRAN (R 4.0.0)
+ R6                     2.4.1    2019-11-12 [1] CRAN (R 4.0.0)
+ RColorBrewer           1.1-2    2014-12-07 [1] CRAN (R 4.0.0)
+ Rcpp                 * 1.0.4.6  2020-04-09 [1] CRAN (R 4.0.0)
+ RcppParallel           5.0.1    2020-05-06 [1] CRAN (R 4.0.0)
+ RCurl                  1.98-1.2 2020-04-18 [1] CRAN (R 4.0.0)
+ remotes                2.1.1    2020-02-15 [1] CRAN (R 4.0.0)
+ reshape2               1.4.4    2020-04-09 [1] CRAN (R 4.0.0)
+ rlang                  0.4.6    2020-05-02 [1] CRAN (R 4.0.0)
+ rprojroot              1.3-2    2018-01-03 [1] CRAN (R 4.0.0)
+ Rsamtools            * 2.4.0    2020-04-27 [1] Bioconductor
+ S4Vectors            * 0.26.0   2020-04-27 [1] Bioconductor
+ scales                 1.1.1    2020-05-11 [1] CRAN (R 4.0.0)
+ sessioninfo            1.1.1    2018-11-05 [1] CRAN (R 4.0.0)
+ ShortRead            * 1.46.0   2020-04-27 [1] Bioconductor
+ stringi                1.4.6    2020-02-17 [1] CRAN (R 4.0.0)
+ stringr                1.4.0    2019-02-10 [1] CRAN (R 4.0.0)
+ SummarizedExperiment * 1.18.1   2020-04-30 [1] Bioconductor
+ testthat               2.3.2    2020-03-02 [1] CRAN (R 4.0.0)
+ tibble                 3.0.1    2020-04-20 [1] CRAN (R 4.0.0)
+ usethis                1.6.1    2020-04-29 [1] CRAN (R 4.0.0)
+ vctrs                  0.3.0    2020-05-11 [1] CRAN (R 4.0.0)
+ withr                  2.2.0    2020-04-20 [1] CRAN (R 4.0.0)
+ XVector              * 0.28.0   2020-04-27 [1] Bioconductor
+ zlibbioc               1.34.0   2020-04-27 [1] Bioconductor
+```
+</details>
+
+<br/>
+
+
+The end!
+
+```{r include=FALSE, eval=TRUE}
+remove(list = ls())
+```
+
+##  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/dada2.Rmd). Please note, that in order to process the data *and*  build the website, we needed to run the workflow and get the results. Then hard code the results and turn off the individual commands. So the raw file for this page is a bit messy---you have been warned.
+
+## Data Availability {.appendix}
+
+Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [XXXXXXXX](). Output files from this workflow available on figshare  5at [XXXXXXXX.]().

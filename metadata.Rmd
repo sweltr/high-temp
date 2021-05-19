@@ -1,0 +1,3679 @@
+---
+title: "9. Metadata Analysis"
+description: |
+  Workflow for ...
+author:
+#  - name: Jarrod J Scott
+#    url: https://example.com/norajones
+#    affiliation: Spacely Sprockets
+#    affiliation_url: https://example.com/spacelysprokets
+bibliography: assets/cite.bib
+---
+
+<details markdown="1">
+<summary>Click here for setup information.</summary>
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+set.seed(119)
+#library(conflicted)
+#pacman::p_depends(vegan, local = TRUE)  
+#pacman::p_depends_reverse(vegan, local = TRUE)  
+
+library(phyloseq); packageVersion("phyloseq")
+pacman::p_load(ape, bestNormalize, DT, tidyverse, gdata, mctoolsr, 
+               ggpubr, ggvegan, ggfortify, vegan,
+               install = FALSE, update = FALSE)
+
+options(scipen=999)
+knitr::opts_current$get(c(
+  "cache",
+  "cache.path",
+  "cache.rebuild",
+  "dependson",
+  "autodep"
+))
+```
+</details>
+
+<br/>
+
+> Hit the *Hide Code* button to collapse the R code (visible by default).
+
+<aside>
+```{r, echo=FALSE, results='asis', eval=TRUE}
+codefolder::generic(init = "show", query = "pre.sourceCode",
+  style = "position: absolute; right: 14%; z-index: 200")
+```
+</aside>
+
+```{r, echo=FALSE, eval=TRUE}
+xaringanExtra::use_panelset()
+```
+
+```{r master_load_ssu18, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/metadata_ssu18_wf.rdata")
+```
+
+```{r, echo=FALSE}
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+tmp_1 <- ssu18_ps_work_mc$data_loaded
+tmp_2 <- ssu18_ps_pime_mc$data_loaded
+
+tmp_1 <- tmp_1 %>% tibble::rownames_to_column("ID")
+tmp_2 <- tmp_2 %>% tibble::rownames_to_column("ID")
+tmp_3 <- left_join(tmp_2, tmp_1, by = "ID")
+tmp_3 <- tmp_3[ , order(names(tmp_3))]
+write.table(tmp_3, "tmp_3.txt", sep = "\t", quote = FALSE)
+```
+
+# Multivariate Analysis Overview
+
+In this workflow we compare the environmental metadata with the microbial community data. Part 1 involves the [16S rRNA](#s-rrna) community data and Part 2 deals with the [ITS](#its) community data. Each workflow contains the same major steps:
+
+1) Metadata Normality Tests: Shapiro-Wilk Normality Test to test whether each matadata parameter is normally distributed.
+2) Normalize Parameters: R package `bestNormalize` to find and execute the best normalizing transformation. 
+3) Split Metadata parameters into groups: a) Environmental and edaphic properties, b) Microbial functional responses, and c) Temperature adaptation properties.
+4) Autocorrelation Tests: Test all possible pair-wise comparisons, on both normalized and non-normalized data sets, for each group.
+5) Remove autocorrelated parameters from each group.
+6) Dissimilarity Correlation Tests: Use Mantel Tests to see if any on the metadata groups are significantly correlated with the community data.
+7) Best Subset of Variables: Determine which of the metadata parameters from each group are the most strongly correlated with the community data. For this we use the `bioenv` function from the `vegan` package.
+8) Distance-based Redundancy Analysis: Ordination analysis of samples and metadata vector overlays using `capscale`.  
+
+# Metadata  
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+metad <- read.table("files/metadata/tables/metadata.txt",
+                        header = TRUE, sep = "\t")
+datatable(metad, width = "100%", caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Metadata summary for each sample.')),
+          elementId = "hgiy1zr42yw7eymtlich",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )%>%
+    DT::formatStyle(columns = colnames(metad),
+                    fontSize = '80%')
+```
+
+
+# 16s rRNA
+
+## Data Formating 
+
+```{r initial_load_ssu18, include=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+set.seed(119)
+ssu18_ps_work <- readRDS("files/alpha/rdata/ssu18_ps_work.rds")
+ssu18_ps_pime <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
+ssu18_ps_perfect <- readRDS("files/alpha/rdata/ssu18_ps_perfect.rds")
+ssu18_ps_work_otu <- readRDS("files/alpha/rdata/ssu18_ps_work_otu.rds")
+ssu18_ps_pime_otu <- readRDS("files/alpha/rdata/ssu18_ps_pime_otu.rds")
+ssu18_ps_perfect_otu <- readRDS("files/alpha/rdata/ssu18_ps_perfect_otu.rds")
+```
+
+### Transform `ps` Objects
+
+```{r}
+samp_ps <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
+             "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
+     tmp_ps@phy_tree <- NULL
+     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
+     tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE, tip.label = taxa_names(tmp_ps))
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
+     print(tmp_name)
+     assign(tmp_name, tmp_ps)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### Format for `mctoolsr`
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
+     tmp_tax <- data.frame(tax_table(tmp_get))
+     tmp_tax$ASV_SEQ <- NULL
+     
+     tmp_col_names <- colnames(tmp_tax)
+     tmp_tax_merge <- tmp_tax %>% tidyr::unite(taxonomy, 
+                                               all_of(tmp_col_names), 
+                                               sep = ";")
+     tmp_tax_merge <- tmp_tax_merge %>% tibble::rownames_to_column("#OTU_ID")
+     tmp_otu <- data.frame(t(otu_table(tmp_get)))
+     tmp_otu <- tmp_otu %>% tibble::rownames_to_column("#OTU_ID")
+     tmp_otu_tax <- dplyr::left_join(tmp_otu, tmp_tax_merge, by = "#OTU_ID")
+
+     tmp_samp <- data.frame(sample_data(tmp_get))
+     tmp_samp[,c(1,3)] <- NULL
+     tmp_samp <- tmp_samp %>% tibble::rownames_to_column("#SampleID")
+
+     tmp_metad <- metad %>% dplyr::rename("#SampleID" = "id")
+     tmp_metad[,2:5] <- NULL
+     tmp_md <- dplyr::left_join(tmp_samp, tmp_metad, by = "#SampleID")
+     
+     tmp_otu_name <- purrr::map_chr(i, ~ paste0(., "_otu_tax"))
+     print(tmp_otu_name)
+     assign(tmp_otu_name, tmp_otu_tax)
+
+     tmp_md_name <- purrr::map_chr(i, ~ paste0(., "_md"))
+     print(tmp_md_name)
+     assign(tmp_md_name, tmp_md)
+
+     tmp_path <- file.path("files/metadata/tables/")
+     write_delim(tmp_otu_tax, paste(tmp_path, tmp_otu_name, ".txt", sep = ""), delim = "\t")
+     write_delim(tmp_md, paste(tmp_path, tmp_md_name, ".txt", sep = ""), delim = "\t")
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+for (i in samp_ps) {
+     tmp_path <- file.path("files/metadata/tables/")
+     tmp_otu_name <- purrr::map_chr(i, ~ paste0(., "_otu_tax"))
+     tmp_md_name <- purrr::map_chr(i, ~ paste0(., "_md"))
+     tmp_tax_table_fp <- paste(tmp_path, tmp_otu_name, ".txt", sep = "")
+     tmp_map_fp <- paste(tmp_path, tmp_md_name, ".txt", sep = "")
+     tmp_input <- load_taxa_table(tmp_tax_table_fp, tmp_map_fp)
+     tmp_input_name <- purrr::map_chr(i, ~ paste0(., "_mc"))
+     print(tmp_input_name)
+     assign(tmp_input_name, tmp_input)
+     rm(list = ls(pattern = "tmp_"))
+}
+rm(list = ls(pattern = "_md"))
+rm(list = ls(pattern = "_otu_tax"))
+```
+
+## Choose Data Set
+
+At this point in the code we need to choose a data set to use, formatted with `mctoolsr`. Remember, there are four choices:
+
+1) Complete ASV data set.
+2) PIME filtered ASV data set.
+3) PERfect filtered ASV data set.
+4) Complete OTU data set.
+5) PIME filtered OTU data set.
+6) PERfect filtered OTU data set.
+
+This way, if we want to test other data sets we only need to change the name here.
+
+```{r}
+objects(pattern = "_mc")
+ssu18_select_mc <- ssu18_ps_pime_mc
+```
+
+## Normality Tests
+
+Before proceeding, we need to test each parameter in the metadata to see which ones are and are not normally distributed. For that, we use the Shapiro-Wilk Normality Test. Here we only need one of the metadata files.
+
+```{r}
+temp_md <- ssu18_select_mc$map_loaded
+temp_md[,1:9] <- NULL
+shap_results <- NULL
+
+for (i in colnames(temp_md)) {
+  tmp_shap <- shapiro.test(temp_md[[i]])
+  tmp_p <- round(tmp_shap$p.value, digits = 5)
+  tmp_res <- eval(isTRUE(tmp_shap$p.value < 0.05))
+  shap_results <- rbind(shap_results, data.frame(i, tmp_p, tmp_res))
+  rm(list = ls(pattern = "tmp_"))
+}
+colnames(shap_results) <- c("parameter", "p-value", "tranform")
+shap_results
+dplyr::filter(shap_results, tranform == "TRUE")
+md_to_tranform <- shap_results$parameter[shap_results$tranform == TRUE]
+rm(list = ls(pattern = "temp_md"))
+```
+<details markdown="1">
+<summary>Click here to see the results of each normality test for metadata parameters</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+shap_results
+```
+</details>
+
+Looks like we need to transform `r length(md_to_tranform)` metadata parameters.
+
+## Normalize Parameters
+
+Here we use the R package [`bestNormalize`](https://cran.r-project.org/web/packages/bestNormalize/vignettes/bestNormalize.html) to find and execute the best normalizing transformation. The function will test the following normalizing transformations:
+
+- `arcsinh_x` performs an arcsinh transformation.
+
+- `boxcox` Perform a Box-Cox transformation and center/scale a vector to attempt normalization. `boxcox` estimates the optimal value of lambda for the Box-Cox transformation. The function will return an error if a user attempt to transform nonpositive data.
+
+- `yeojohnson` Perform a Yeo-Johnson Transformation and center/scale a vector to attempt normalization. `yeojohnson` estimates the optimal value of lambda for the Yeo-Johnson transformation. The Yeo-Johnson is similar to the Box-Cox method, however it allows for the transformation of nonpositive data as well. 
+
+- `orderNorm` The Ordered Quantile (ORQ) normalization transformation, `orderNorm()`, is a rank-based procedure by which the values of a vector are mapped to their percentile, which is then mapped to the same percentile of the normal distribution. Without the presence of ties, this essentially guarantees that the transformation leads to a uniform distribution.
+
+- `log_x` performs a simple log transformation. The parameter a is essentially estimated by the training set by default (estimated as the minimum possible to some extent epsilon), while the base must be specified beforehand. The default base of the log is 10.
+
+- `sqrt_x` performs a simple square-root transformation. The parameter a is essentially estimated by the training set by default (estimated as the minimum possible), while the base must be specified beforehand.
+
+-	`exp_x` performs a simple exponential transformation.
+
+See this GitHub issue ([#5](https://github.com/petersonR/bestNormalize/issues/5)) for a description on getting reproducible results. Apparently, you can get different results because the `bestNormalize()` function uses repeated cross-validation (and doesn't automatically set the seed), so the results will be slightly different each time the function is executed.
+
+```{r}
+set.seed(119)
+
+for (i in md_to_tranform) {
+  tmp_md <- ssu18_select_mc$map_loaded
+  tmp_best_norm <- bestNormalize(tmp_md[[i]], r = 1, k = 5, loo = TRUE)
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_best_norm_test"))
+  assign(tmp_name, tmp_best_norm)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+<details markdown="1">
+<summary>Click here to see the chosen transformations</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in md_to_tranform) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_best_norm_test")))
+  tmp_print <- c("bestNormalize Chosen transformation of", i)
+  cat("\n")
+  cat("##", tmp_print, "##", "\n")
+  print(tmp_get$chosen_transform)
+  cat("_____________________________________")
+  cat("\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+</details>
+
+<details markdown="1">
+<summary>Click here to see complete `bestNormalize` results</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in md_to_tranform) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_best_norm_test")))
+  tmp_print <- c("Results of bestNormalize for", i)
+  cat("\n")
+  cat("##", tmp_print, "##", "\n")
+  print(tmp_get)
+  cat("_____________________________________")
+  cat("\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+</details>
+
+Great, now we can add the normalized transformed data back to our `mctoolsr` metadata file. 
+
+```{r}
+ssu18_select_mc_norm <- ssu18_select_mc
+
+for (i in md_to_tranform) {
+      tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_best_norm_test")))
+      tmp_new_data <- tmp_get$x.t
+      ssu18_select_mc_norm$map_loaded[[i]] <- tmp_new_data
+      rm(list = ls(pattern = "tmp_"))
+}     
+```
+
+And rerun the Shapiro Tests. 
+
+```{r}
+temp_md_norm <- ssu18_select_mc_norm$map_loaded
+temp_md_norm[,1:9] <- NULL
+shap_results_norm <- NULL
+
+for (i in colnames(temp_md_norm)) {
+  tmp_shap <- shapiro.test(temp_md_norm[[i]])
+  tmp_p <- round(tmp_shap$p.value, digits = 5)
+  tmp_res <- eval(isTRUE(tmp_shap$p.value < 0.05))
+  shap_results_norm <- rbind(shap_results_norm, data.frame(i, tmp_p, tmp_res))
+  rm(list = ls(pattern = "tmp_"))
+}
+colnames(shap_results_norm) <- c("parameter", "p-value", "tranform")
+shap_results_norm
+rm(list = ls(pattern = "temp_md_norm"))
+```
+
+And check if there are any parameters that are still significant for the normality test.
+
+```{r, eval=TRUE}
+shap_results$parameter[shap_results_norm$tranform == TRUE]
+```
+
+Ok. Looks like `bestNormalize` was unable to find a suitable transformation for `Al` and `Fe`. This is likely because there is very little variation in these metadata and/or there are too few significant digits.
+
+## Normalized Metadata
+
+Finally, here is a new summary table that includes all of the normalized data.
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+metad_norm <- ssu18_select_mc_norm$map_loaded
+metad_norm <- metad_norm %>% tibble::rownames_to_column("id")
+metad_norm[,6:8] <- NULL
+
+datatable(metad_norm, width = "100%", caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Metadata summary for each sample.')),
+          elementId = "ffn29i70ljbq7tir2u6u",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )%>%
+    DT::formatRound(columns = c(8:10,12:14,19:20,24:25,29,31,35,39:43,45,47:48,54,57:58,60,62,65:67),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(metad_norm),
+                    fontSize = '80%')
+```
+
+
+```{r, echo=FALSE}
+# Code to run individual transformations for each metadata and generate histograms
+##for (i in md_to_tranform) {
+##     tmp_data <- ssu18_select_mc$map_loaded
+##     tmp_no_transform_obj <- no_transform(tmp_data[[i]])
+##     tmp_arcsinh_obj <- arcsinh_x(tmp_data[[i]])
+##     #tmp_boxcox_obj <- boxcox(tmp_data[[i]])
+##     tmp_yeojohnson_obj <- yeojohnson(tmp_data[[i]])
+##     tmp_orderNorm_obj <- orderNorm(tmp_data[[i]])
+##     tmp_log_obj <- log_x(tmp_data[[i]])
+##     tmp_sqrt_x_obj <- sqrt_x(tmp_data[[i]])
+##     tmp_exp_x_obj <- exp_x(tmp_data[[i]])
+##     
+##     tmp_plot_no_transform <- hist(tmp_no_transform_obj$x.t, main = i, breaks = 6, xlab = "no_transform")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_no_transform"))
+##     assign(tmp_plot_name, tmp_plot_no_transform)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_arcsinh <- hist(tmp_arcsinh_obj$x.t, main = i, breaks = 6, xlab = "arcsinh")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_arcsinh"))
+##     assign(tmp_plot_name, tmp_plot_arcsinh)
+##     print(tmp_plot_name)
+##     # cannot run because of Al and Fe
+##     #tmp_plot_boxcox <- hist(tmp_boxcox_obj$x.t, main = i, breaks = 6, xlab = "boxcox")
+##     #tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_boxcox"))
+##     #assign(tmp_plot_name, tmp_plot_boxcox)
+##     #print(tmp_plot_name)
+##     
+##     tmp_plot_yeojohnson <- hist(tmp_yeojohnson_obj$x.t, main = i, breaks = 6, xlab = "yeojohnson")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_yeojohnson"))
+##     assign(tmp_plot_name, tmp_plot_yeojohnson)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_orderNorm <- hist(tmp_orderNorm_obj$x.t, main = i, breaks = 6, xlab = "orderNorm")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_orderNorm"))
+##     assign(tmp_plot_name, tmp_plot_orderNorm)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_log <- hist(tmp_log_obj$x.t, main = i, breaks = 6, xlab = "log")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_log"))
+##     assign(tmp_plot_name, tmp_plot_log)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_sqrt <- hist(tmp_sqrt_x_obj$x.t, main = i, breaks = 6, xlab = "sqrt")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_sqrt"))
+##     assign(tmp_plot_name, tmp_plot_sqrt)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_exp <- hist(tmp_exp_x_obj$x.t, main = i, breaks = 6, xlab = "exp")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_exp"))
+##     assign(tmp_plot_name, tmp_plot_exp)
+##     print(tmp_plot_name)
+##
+##     rm(list = ls(pattern = "tmp_"))
+##}
+```
+
+
+## Autocorrelation Tests
+
+Next, we  test the metadata for autocorrelations. Do we do this on the original data or the transformed data? No idea, so let's do both.
+
+### Split Metadata
+
+We need to split the data into different groups.
+
+A) Environmental and edaphic properties
+B) Microbial functional responses
+C) Temperature adaptation properties
+
+We first create lists of metadata parameters. 
+
+```{r}
+div <- c("PLOT", "TREAT", "TEMP", "PAIR", "Observed", "Shannon_exp", 
+         "InvSimpson", "ATAP")
+
+edaphic <- c("AST", "H2O", "N", "P", "Al", 
+             "Ca", "Fe", "K", "Mg", "Mn", "Na", "TEB", "ECEC", "pH", 
+             "NH4", "NO3", "resinP", "DOC", "DON", "DOCN")
+
+soil_funct <- c("micC", "micN", "micP", "micCN", "micCP", "micNP", 
+                "AG_ST", "BG_ST", "BIS_ST", "CEL_ST", "MUP_ST", "NA_ST", 
+                "S_ST", "XYL_ST",  "LEU_ST", "POX_ST", "avCO2", 
+                "enzCN", "enzCP", "enzNP")
+
+temp_adapt <- c("AG_Q10", "BG_Q10", "BIS_Q10", "CEL_Q10", "MUP_Q10", "NA_Q10", 
+                "S_Q10", "XYL_Q10", "LEU_Q10", "POX_Q10", "CUEcn", "CUEcp", 
+                "NUE","PUE", "Tmin", "SI")
+
+md_groups <- c("edaphic", "soil_funct", "temp_adapt")
+```
+
+And then use the lists to split the data sets by metadata  group. Here, we do this for the original metadata and the metadata after normalization.
+
+```{r}
+select_md <- c("ssu18_select_mc", "ssu18_select_mc_norm")
+for (i in select_md) {
+   #tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_mc")))
+   tmp_get <- get(i)
+   tmp_md_all <- tmp_get$map_loaded
+   tmp_div <- tmp_md_all %>% dplyr::select(all_of(div))
+   tmp_div <- tmp_div %>% tibble::rownames_to_column("SampleID")
+## edaphic      
+   tmp_sub_edaphic <- tmp_md_all %>% dplyr::select(all_of(edaphic))
+   tmp_sub_edaphic <- tmp_sub_edaphic %>% tibble::rownames_to_column("SampleID")
+   tmp_edaphic <- dplyr::left_join(tmp_div, tmp_sub_edaphic, by = "SampleID")
+   tmp_edaphic <- tmp_edaphic %>% tibble::column_to_rownames("SampleID")
+## soil_funct
+   tmp_sub_soil_funct <- tmp_md_all %>% dplyr::select(all_of(soil_funct))
+   tmp_sub_soil_funct <- tmp_sub_soil_funct %>% tibble::rownames_to_column("SampleID")
+   tmp_soil_funct <- dplyr::left_join(tmp_div, tmp_sub_soil_funct, by = "SampleID")
+   tmp_soil_funct <- tmp_soil_funct %>% tibble::column_to_rownames("SampleID")      
+## temp_adapt
+   tmp_sub_temp_adapt <- tmp_md_all %>% dplyr::select(all_of(temp_adapt))
+   tmp_sub_temp_adapt <- tmp_sub_temp_adapt %>% tibble::rownames_to_column("SampleID")
+   tmp_temp_adapt <- dplyr::left_join(tmp_div, tmp_sub_temp_adapt, by = "SampleID")
+   tmp_temp_adapt <- tmp_temp_adapt %>% tibble::column_to_rownames("SampleID")      
+## combine
+   tmp_list <- list(data_loaded = ssu18_select_mc$data_loaded, 
+                    map_loaded = ssu18_select_mc$map_loaded, 
+                    taxonomy_loaded = ssu18_select_mc$taxonomy_loaded,
+                    edaphic = tmp_edaphic, 
+                    soil_funct = tmp_soil_funct, 
+                    temp_adapt = tmp_temp_adapt)
+   tmp_name <- purrr::map_chr(i, ~ paste0(., "_split"))
+   print(tmp_name)
+   assign(tmp_name, tmp_list)
+   rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### Generate Autocorrelation Plots
+
+A little housekeeping to get rid of parameters we don't need (e.g., plot number, pair, etc.).
+
+```{r}
+edaphic_cor <- ssu18_select_mc_split$edaphic
+edaphic_cor[,1:8] <- NULL
+edaphic_norm_cor <- ssu18_select_mc_norm_split$edaphic
+edaphic_norm_cor[,1:8] <- NULL
+
+soil_funct_cor <- ssu18_select_mc_split$soil_funct
+soil_funct_cor[,1:8] <- NULL
+soil_funct_norm_cor <- ssu18_select_mc_norm_split$soil_funct
+soil_funct_norm_cor[,1:8] <- NULL
+
+temp_adapt_cor <- ssu18_select_mc_split$temp_adapt
+temp_adapt_cor[,1:8] <- NULL
+temp_adapt_norm_cor <- ssu18_select_mc_norm_split$temp_adapt
+temp_adapt_norm_cor[,1:8] <- NULL
+```
+
+And finally the code to create the plots. 
+
+```{r}
+for (i in objects(pattern = "_cor$")) {
+  tmp_get <- get(i)
+  tmp_cormat <- round(cor(tmp_get), 2)
+  tmp_melted_cormat <- reshape2::melt(tmp_cormat)
+  
+  tmp_get_lower_tri <- function(tmp_cormat){
+    tmp_cormat[upper.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  # Get upper triangle of the correlation matrix
+  tmp_get_upper_tri <- function(tmp_cormat){
+    tmp_cormat[lower.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  tmp_upper_tri <- tmp_get_upper_tri(tmp_cormat)
+  tmp_melted_cormat <- reshape2::melt(tmp_upper_tri, na.rm = TRUE)
+  ggplot(data = tmp_melted_cormat, aes(x = Var1, y = Var2, fill = value)) + 
+    geom_tile()
+  
+  tmp_ggheatmap <- ggplot(data = tmp_melted_cormat, aes(Var2, Var1, fill = value)) +
+    geom_tile(color = "white") +
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name="Pearson\nCorrelation") +
+    theme_minimal() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                     size = 7, hjust = 1),
+          axis.text.y = element_text(vjust = 1, size = 7, hjust = 1)) + 
+    coord_fixed() + 
+    geom_text(aes(Var2, Var1, label = value), color = "black", size = 1.75) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank(),
+      legend.justification = c(1, 0),
+      legend.position = c(0.6, 0.7),
+      legend.direction = "horizontal") +
+      guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                                   title.position = "top", 
+                                   title.hjust = 0.5))
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_ggheatmap"))
+  assign(tmp_name, tmp_ggheatmap)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}  
+objects(pattern = "_ggheatmap")
+```
+
+## Autocorrelation Plots
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+#### Edaphic properties
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+edaphic_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Edaphic properties (normalized)
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+edaphic_norm_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Functional responses
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+soil_funct_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Functional responses (normalized)
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+soil_funct_norm_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Temperature adaptation 
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+temp_adapt_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Temperature adaptation (normalized)
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+temp_adapt_norm_cor_ggheatmap
+```
+:::
+:::
+:::
+
+
+```{r, echo=FALSE}
+auto_cor_figs <- ggarrange(
+  edaphic_cor_ggheatmap, edaphic_norm_cor_ggheatmap,
+  soil_funct_cor_ggheatmap, soil_funct_norm_cor_ggheatmap,
+  temp_adapt_cor_ggheatmap, temp_adapt_norm_cor_ggheatmap,
+  ncol = 2, nrow = 3, common.legend = FALSE)
+auto_cor_figs
+dev.off()
+png("files/metadata/figures/ssu18_auto_cor_figs.png",
+    height = 32, width = 24, units = 'cm', res = 600, bg = "white")
+auto_cor_figs
+dev.off()
+pdf("files/metadata/figures/ssu18_auto_cor_figs.pdf",
+    height = 10, width = 12)
+auto_cor_figs
+dev.off()
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=FALSE, fig.cap='**Top row** = Environmental and edaphic; **middle row** = Microbial functional responses; **bottom row** = Temperature adaptation. **Left** = Original data; **right** = Normalized data.'}
+system("cp files/metadata/figures/ssu18_auto_cor_figs.png include/metadata/ssu18_auto_cor_figs.png")
+knitr::include_graphics("include/metadata/ssu18_auto_cor_figs.png")
+```
+
+
+Now we can remove parameters based on the autocorrelation analysis:
+
+A) Environmental and edaphic properties: TEB, DON, Na, Al, Ca.
+B) Microbial functional responses: micN, micNP, enzCN, enzCP, BIS_ST, CEL_ST, LEU_ST, NA_ST, MUP_ST.
+C) Temperature adaptation properties: NUE, PUE.
+
+```{r, eval=FALSE, echo=FALSE}
+objects(pattern = "_cor_ggheatmap")
+edaphic_norm_cor_ggheatmap
+soil_funct_norm_cor_ggheatmap
+
+dim(edaphic_norm_cor)
+dim(soil_funct_norm_cor)
+dim(temp_adapt_norm_cor)
+
+tmp_res <- soil_funct_cor_ggheatmap$data
+tmp_res %>% filter(value > 0.7 | value < -0.7) %>% filter_("Var1 != Var2")
+
+#tmp_res %>% filter(Var1 == "DOCN" | Var2 == "DOCN") %>% filter_("Var1 != Var2")
+write.table(tmp_res %>% filter(value > 0.7 | value < -0.7) %>% 
+              filter_("Var1 != Var2"), 
+            "soil_funct_norm7.txt", sep = "\t", 
+            quote = FALSE, row.names = FALSE)
+```
+
+```{r}
+edaphic_remove <- c("TEB", "DON", "Na", "Al", "Ca")
+soil_funct_remove <- c("micN", "micNP", "enzCN", "enzCP", "BIS_ST", 
+                       "CEL_ST", "LEU_ST", "NA_ST", "MUP_ST")
+temp_adapt_remove <- c("NUE", "PUE")
+```
+
+```{r}
+tmp_df <- ssu18_select_mc_split
+tmp_df$edaphic <- tmp_df$edaphic[, ! names(tmp_df$edaphic) %in%  edaphic_remove]
+tmp_df$soil_funct <- tmp_df$soil_funct[, ! names(tmp_df$soil_funct) %in%  soil_funct_remove]
+tmp_df$temp_adapt <- tmp_df$temp_adapt[, ! names(tmp_df$temp_adapt) %in%  temp_adapt_remove]
+ssu18_select_mc_split_no_ac <- tmp_df
+rm(list = ls(pattern = "tmp_"))
+
+tmp_df <- ssu18_select_mc_norm_split
+tmp_df$edaphic <- tmp_df$edaphic[, ! names(tmp_df$edaphic) %in%  edaphic_remove]
+tmp_df$soil_funct <- tmp_df$soil_funct[, ! names(tmp_df$soil_funct) %in%  soil_funct_remove]
+tmp_df$temp_adapt <- tmp_df$temp_adapt[, ! names(tmp_df$temp_adapt) %in%  temp_adapt_remove]
+ssu18_select_mc_norm_split_no_ac <- tmp_df
+rm(list = ls(pattern = "tmp_"))
+```
+
+## Dissimilarity Correlation Tests
+
+Let's see if any on the metadata groups are significantly correlated with the community data. Basically, we create distance matrices for the community data and each metadata group and then run Mantel tests for all comparisons. For the community data we calculate Bray-Curtis distances for the community data and  Euclidean distances for the metadata. We use the function `mantel.test` from the `ape` package and `mantel` from the `vegan` package for the analyses. 
+
+In summary, we test both `mantel.test` and `mantel` on  Bray-Curtis distance community distances against Euclidean distances for each metadata group (`edaphic`, `soil_funct`, `temp_adapt`)  **a**) before normalizing and before removing autocorrelated parameters, **b**) before normalizing and after removing autocorrelated parameters, **c**) after normalizing and before removing autocorrelated parameters, and **d**) after normalizing and after removing autocorrelated parameters.
+
+```{r}
+man_df <- c("ssu18_select_mc_split", "ssu18_select_mc_split_no_ac", 
+            "ssu18_select_mc_norm_split", "ssu18_select_mc_norm_split_no_ac")
+
+for (i in man_df) {
+  tmp_get <- get(i)
+  tmp_dm_otu <- as.matrix(vegdist(t(tmp_get$data_loaded), 
+                             method = "bray", binary = FALSE, 
+                             diag = TRUE, upper = TRUE, na.rm = FALSE))
+# EDAPHIC
+  tmp_dm_md_edaphic <- as.matrix(vegdist(tmp_get$edaphic[, 8:ncol(tmp_get$edaphic)], 
+                                    method ="euclidean", binary = FALSE, 
+                                    diag = TRUE, upper = TRUE, na.rm = FALSE))
+
+  tmp_man1_edaphic <- mantel.test(tmp_dm_otu, tmp_dm_md_edaphic, nperm = 999, 
+                             graph = FALSE, alternative = "two.sided")
+  tmp_man2_edaphic <- mantel(tmp_dm_otu, tmp_dm_md_edaphic, permutations = 999)
+# SOIL FUNCT
+  tmp_dm_md_soil_funct <- as.matrix(vegdist(tmp_get$soil_funct[, 8:ncol(tmp_get$soil_funct)], 
+                                       method = "euclidean", binary = FALSE, 
+                                       diag = TRUE, upper = TRUE, na.rm = FALSE))
+
+  tmp_man1_soil_funct <- mantel.test(tmp_dm_otu, tmp_dm_md_soil_funct, nperm = 999, 
+                                graph = FALSE, alternative = "two.sided")
+  tmp_man2_soil_funct <- mantel(tmp_dm_otu, tmp_dm_md_soil_funct, permutations = 999)
+
+# TEMP ADAPT
+  tmp_dm_md_temp_adapt <- as.matrix(vegdist(tmp_get$temp_adapt[, 8:ncol(tmp_get$temp_adapt)], 
+                                       method = "euclidean", binary = FALSE, 
+                                       diag = TRUE, upper = TRUE, na.rm = FALSE))
+
+  tmp_man1_temp_adapt <- mantel.test(tmp_dm_otu, tmp_dm_md_temp_adapt, nperm = 999, 
+                                graph = FALSE, alternative = "two.sided")
+  tmp_man2_temp_adapt <- mantel(tmp_dm_otu, tmp_dm_md_temp_adapt, permutations = 999)
+
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_mantel_tests"))
+  tmp_df <- list(edaphic_ape_man = tmp_man1_edaphic, 
+                 edaphic_vegan_man = tmp_man2_edaphic,
+                 soil_funct_ape_man = tmp_man1_soil_funct, 
+                 soil_funct_vegan_man = tmp_man2_soil_funct,
+                 temp_adapt_ape_man = tmp_man1_temp_adapt, 
+                 temp_adapt_vegan_man = tmp_man2_temp_adapt)
+  assign(tmp_name, tmp_df)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+tmp_objects <- c("ssu18_select_mc_split_mantel_tests", 
+                 "ssu18_select_mc_split_no_ac_mantel_tests",
+                 "ssu18_select_mc_norm_split_mantel_tests",
+                 "ssu18_select_mc_norm_split_no_ac_mantel_tests")
+
+tmp_norm <- data.frame(c("no", "no", "yes", "yes"))
+tmp_ac <- data.frame(c("no", "yes", "no", "yes"))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(tmp_norm, tmp_ac) %>%
+                         dplyr::rename("normalized?" = 1) %>%
+                         dplyr::rename("AC removed?" = 2)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$edaphic_ape_man$p,
+                           get(tmp_objects[2])$edaphic_ape_man$p,
+                           get(tmp_objects[3])$edaphic_ape_man$p,
+                           get(tmp_objects[4])$edaphic_ape_man$p))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(ssu18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("edaphic_ape" = 3)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$edaphic_vegan_man$signif,
+                           get(tmp_objects[2])$edaphic_vegan_man$signif,
+                           get(tmp_objects[3])$edaphic_vegan_man$signif,
+                           get(tmp_objects[4])$edaphic_vegan_man$signif))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(ssu18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("edaphic_vegan" = 4)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$soil_funct_ape_man$p,
+                           get(tmp_objects[2])$soil_funct_ape_man$p,
+                           get(tmp_objects[3])$soil_funct_ape_man$p,
+                           get(tmp_objects[4])$soil_funct_ape_man$p))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(ssu18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("soil_funct_ape" = 5)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$soil_funct_vegan_man$signif,
+                           get(tmp_objects[2])$soil_funct_vegan_man$signif,
+                           get(tmp_objects[3])$soil_funct_vegan_man$signif,
+                           get(tmp_objects[4])$soil_funct_vegan_man$signif))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(ssu18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("soil_funct_vegan" = 6)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$temp_adapt_ape_man$p,
+                           get(tmp_objects[2])$temp_adapt_ape_man$p,
+                           get(tmp_objects[3])$temp_adapt_ape_man$p,
+                           get(tmp_objects[4])$temp_adapt_ape_man$p))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(ssu18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("temp_adapt_ape" = 7)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$temp_adapt_vegan_man$signif,
+                           get(tmp_objects[2])$temp_adapt_vegan_man$signif,
+                           get(tmp_objects[3])$temp_adapt_vegan_man$signif,
+                           get(tmp_objects[4])$temp_adapt_vegan_man$signif))
+ssu18_ps_pime_mantel_summary <- dplyr::bind_cols(ssu18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("temp_adapt_vegan" = 8)
+
+rm(list = ls(pattern = "tmp_"))
+ssu18_ps_pime_mantel_summary
+```
+
+### Dissimilarity Correlation Results
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+knitr::kable(ssu18_ps_pime_mantel_summary)
+```
+
+Moving on.
+
+## Best Subset of Variables
+
+Now we want to know which of the metadata parameters are the most strongly correlated with the community data. For this we use the `bioenv` function from the `vegan` package. `bioenv`---*Best Subset of Environmental Variables with Maximum (Rank) Correlation with Community Dissimilarities*---finds the best subset of environmental variables, so that the Euclidean distances of scaled environmental variables have the maximum (rank) correlation with community dissimilarities. 
+
+Since we know that each of the Mantel tests we ran above are significant, here we will use the metadata set where autocorrelated parameters were removed and the remainder of the parameters were normalized (where applicable based on the Shapiro tests). 
+
+We run `bioenv` against the three groups of metadata parameters. We then run `bioenv` again, but this time against the individual parameters identified as significantly correlated.
+
+### Edaphic Properties
+
+```{r}
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$edaphic)
+tmp_env[,1:8] <- NULL
+
+edaphic_bioenv <- bioenv(wisconsin(tmp_comm), tmp_env, 
+                         method = "spearman", index = "bray", 
+                         upto = ncol(tmp_env), metric = "euclidean")
+
+bioenv_list <- edaphic_bioenv$models[[edaphic_bioenv$whichbest]]$best
+bioenv_best <- bioenvdist(edaphic_bioenv, which = "best")
+
+for (i in bioenv_list) {
+       tmp_dp <- data.frame(edaphic_bioenv$x)
+       tmp_md <- as.matrix(vegdist(tmp_dp[[i]], 
+                                   method = "euclidean", binary = FALSE, 
+                                   diag = TRUE, upper = TRUE, na.rm = FALSE))
+       tmp_man <- mantel(bioenv_best, tmp_md, 
+                         permutations = 999, method = "spearman")
+       tmp_md_name <- names(tmp_dp)[[i]]
+       tmp_name <- purrr::map_chr(tmp_md_name, ~ paste0(., "_bioenv_mantel_test"))
+       assign(tmp_name, tmp_man)
+       rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+edaphic_bioenv_ind_mantel <- list(AST = AST_bioenv_mantel_test)
+rm(list = ls(pattern = "_bioenv_mantel_test"))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_bioenv
+```
+
+<details markdown="1">
+<summary>Click here for the results of individual edaphic metadata Mantel tests</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_bioenv_ind_mantel
+```
+</details>
+
+`bioenv` found the following edaphic properties significantly correlated with the community data: 
+**`r row.names(summary(edaphic_bioenv_ind_mantel))`**
+
+### Soil Functional Response
+
+```{r}
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$soil_funct)
+tmp_env[,1:8] <- NULL
+
+soil_funct_bioenv <- bioenv(wisconsin(tmp_comm), tmp_env, 
+                         method = "spearman", index = "bray", 
+                         upto = ncol(tmp_env), metric = "euclidean")
+
+bioenv_list <- soil_funct_bioenv$models[[soil_funct_bioenv$whichbest]]$best
+bioenv_best <- bioenvdist(soil_funct_bioenv, which = "best")
+
+for (i in bioenv_list) {
+       tmp_dp <- data.frame(soil_funct_bioenv$x)
+       tmp_md <- as.matrix(vegdist(tmp_dp[[i]], 
+                                   method = "euclidean", binary = FALSE, 
+                                   diag = TRUE, upper = TRUE, na.rm = FALSE))
+       tmp_man <- mantel(bioenv_best, tmp_md, 
+                         permutations = 999, method = "spearman")
+       tmp_md_name <- names(tmp_dp)[[i]]
+       tmp_name <- purrr::map_chr(tmp_md_name, ~ paste0(., "_bioenv_mantel_test"))
+       assign(tmp_name, tmp_man)
+       rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bioenv_mantel_test")
+```
+
+```{r}
+soil_funct_bioenv_ind_mantel <- list(AG_ST = AG_ST_bioenv_mantel_test, 
+                                     enzNP = enzNP_bioenv_mantel_test, 
+                                     S_ST = S_ST_bioenv_mantel_test, 
+                                     POX_ST = POX_ST_bioenv_mantel_test,
+                                     XYL_ST = XYL_ST_bioenv_mantel_test)
+rm(list = ls(pattern = "_bioenv_mantel_test"))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_bioenv
+```
+
+<details markdown="1">
+<summary>Click here for the results of individual functional response metadata Mantel tests</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_bioenv_ind_mantel
+```
+</details>
+
+`bioenv` found the following soil functions  significantly correlated with the community data: 
+**`r row.names(summary(soil_funct_bioenv_ind_mantel))`**
+
+### Temperature Adaptation
+
+```{r}
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$temp_adapt)
+tmp_env[,1:8] <- NULL
+
+temp_adapt_bioenv <- bioenv(wisconsin(tmp_comm), tmp_env, 
+                         method = "spearman", index = "bray", 
+                         upto = ncol(tmp_env), metric = "euclidean")
+
+bioenv_list <- temp_adapt_bioenv$models[[temp_adapt_bioenv$whichbest]]$best
+bioenv_best <- bioenvdist(temp_adapt_bioenv, which = "best")
+
+for (i in bioenv_list) {
+       tmp_dp <- data.frame(temp_adapt_bioenv$x)
+       tmp_md <- as.matrix(vegdist(tmp_dp[[i]], 
+                                   method = "euclidean", binary = FALSE, 
+                                   diag = TRUE, upper = TRUE, na.rm = FALSE))
+       tmp_man <- mantel(bioenv_best, tmp_md, 
+                         permutations = 999, method = "spearman")
+       tmp_md_name <- names(tmp_dp)[[i]]
+       tmp_name <- purrr::map_chr(tmp_md_name, ~ paste0(., "_bioenv_mantel_test"))
+       assign(tmp_name, tmp_man)
+       rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bioenv_mantel_test")
+```
+
+```{r}
+temp_adapt_bioenv_ind_mantel <- list(CUEcp = CUEcp_bioenv_mantel_test, 
+                                     LEU_Q10 = LEU_Q10_bioenv_mantel_test, 
+                                     MUP_Q10 = MUP_Q10_bioenv_mantel_test, 
+                                     S_Q10 = S_Q10_bioenv_mantel_test, 
+                                     SI = SI_bioenv_mantel_test)
+rm(list = ls(pattern = "_bioenv_mantel_test"))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_bioenv
+```
+
+<details markdown="1">
+<summary>Click here for the results of individual temperature adaptation metadata Mantel tests</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_bioenv_ind_mantel
+```
+</details>
+
+
+`bioenv` found the following temperature adaptations significantly correlated with the community data: 
+**`r row.names(summary(temp_adapt_bioenv_ind_mantel))`**
+
+## Distance-based Redundancy
+
+Now we turn our attention to distance-based redundancy analysis (dbRDA), an ordination method similar to Redundancy Analysis (rda) but it allows non-Euclidean dissimilarity indices, such as Manhattan or Bray–Curtis distance. For this, we use `capscale` from the `vegan` package. `capscale`  is a constrained versions of metric scaling (principal coordinates analysis), which are based on the Euclidean distance but can be used, and are more useful, with other dissimilarity measures. The functions can also perform unconstrained principal coordinates analysis, optionally using extended dissimilarities.
+
+For each of the three metadata subsets, we perform the following steps:
+
+1) Run `rankindex` to compare metadata and community dissimilarity indices for gradient detection. This will help us select the best dissimilarity metric to use.
+2) Run `capscale` for distance-based redundancy analysis.
+3) Run `envfit` to fit environmental parameters onto the ordination. This function basically calculates correlation scores between the metadata parameters and the ordination axes. 
+4) Select metadata parameters significant for `bioenv` (see above) and/or `envfit` analyses.
+5) Run `envfit` on ASVs.
+6) Plot the ordination and vector overlays. 
+
+### Edaphic Properties
+
+```{r}
+tmp_md <- ssu18_select_mc_norm_split_no_ac$edaphic
+tmp_md$TEMP <- as.character(tmp_md$TEMP)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+edaphic_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_rank
+```
+
+Looks like we should either use Kulczynski or Bray-Curtis. Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(ssu18_select_mc_norm_split_no_ac$edaphic) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
+
+* Starting properties: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, resinP, DOC, DON, DOCN  
+* Autocorrelated removed: TEB, DON, Na, Al, Ca
+* Remove for capscale: Mg, Mn
+
+```{r, echo=FALSE}
+# All edaphic: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, resinP, DOC, DON, DOCN
+# REMOVED edaphic: TEB, DON, Na, Al, Ca
+# Remaining edaphic: AST, H2O, N, P, Fe, K, Mg, Mn, ECEC, pH, NH4, NO3, resinP, DOC, DOCN
+# 16 total, only works with 13
+# Removed  Mg + Mn
+# TEST with , metaMDSdist = TRUE AND/OR , metaMDS = TRUE
+```
+
+```{r}
+edaphic_cap <- capscale(tmp_comm ~ AST + H2O + N + P + Fe + K + ECEC + 
+                                   pH + NH4 + NO3 + resinP + DOC + DOCN, 
+                        tmp_md, dist = "bray")
+colnames(tmp_md)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_cap
+```
+
+Now we can look at the variance against each principal component. 
+
+```{r, echo=FALSE, eval=TRUE}
+stats::screeplot(edaphic_cap)
+```
+
+And then make some quick and dirty plots. This will also come in handy later when we need to parse out data a better plot visualization. The `ggplot` function `autoplot` stores these data in a more accessible way than the raw results from `capscale`
+
+```{r stuff2, eval=TRUE}
+base::plot(edaphic_cap) 
+tmp_auto_plt <- ggplot2::autoplot(edaphic_cap, arrows = TRUE)
+tmp_auto_plt
+```
+
+```{r, echo=FALSE}
+anova(edaphic_cap) # overall test of the significant of the analysis
+anova(edaphic_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(edaphic_cap, by = "terms", permu = 500) # test for sign. environ. variables
+```
+
+Next, we need to grab capscale scores for the samples and create a data frame of the first two dimensions. We will also need to add some of the sample details to the data frame. For this we use the vegan function `scores` which gets species or site scores from the ordination.
+
+```{r}
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+edaphic_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, by = "SampleID")
+```
+
+Now we have a new data frame that contains sample details and capscale values. 
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_plot_data
+```
+
+We can then do the same with the metadata vectors. Here though we only need the scores and parameter name. 
+
+```{r}
+edaphic_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+edaphic_md_scores[,1] <- NULL
+edaphic_md_scores <- edaphic_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_md_scores
+```
+
+Let's run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function `envfit`.
+
+```{r}
+tmp_samp_scores_sub <- edaphic_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- edaphic_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_edaphic_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_edaphic_md
+```
+
+```{r}
+edaphic_md_signif_hits <- base::subset(envfit_edaphic_md$vectors$pvals, 
+                                  c(envfit_edaphic_md$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_md$vectors$r > 0.4))
+edaphic_md_signif_hits <- data.frame(edaphic_md_signif_hits)
+edaphic_md_signif_hits <- rownames(edaphic_md_signif_hits)
+edaphic_md_signif <- edaphic_md_scores[edaphic_md_scores$parameters %in% edaphic_md_signif_hits,]
+edaphic_md_signif$parameters
+```
+
+`envfit` found that `r edaphic_md_signif$parameters` were significantly correlated. 
+
+Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+```{r eval=TRUE, echo=FALSE, results='hold', comment=''}
+print("Significant parameters from bioenv analysis.")
+row.names(summary(edaphic_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+edaphic_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(edaphic_bioenv_ind_mantel)), 
+                       edaphic_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(edaphic_md_signif$parameters, 
+              row.names(summary(edaphic_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+edaphic_sig_diff <- base::union(edaphic_md_signif$parameters, 
+              row.names(summary(edaphic_bioenv_ind_mantel)))
+edaphic_sig_diff
+```
+
+```{r}
+new_edaphic_md_signif_hits <- edaphic_sig_diff
+#new_edaphic_md_signif_hits <- append(edaphic_md_signif_hits, edaphic_sig_diff)
+edaphic_md_signif_all <- edaphic_md_scores[edaphic_md_scores$parameters %in% new_edaphic_md_signif_hits,]
+```
+
+Check. Next, we run `envfit` for the ASVs.
+
+```{r}
+envfit_edaphic_asv <- envfit(tmp_samp_scores_sub, 
+                             tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                             perm = 1000, choices = c(1, 2))
+edaphic_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+edaphic_asv_scores <- edaphic_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+edaphic_asv_scores[,1] <- NULL
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_edaphic_asv
+```
+
+```{r}
+edaphic_asv_signif_hits <- base::subset(envfit_edaphic_asv$vectors$pvals, 
+                                  c(envfit_edaphic_asv$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_asv$vectors$r > 0.5))
+edaphic_asv_signif_hits <- data.frame(edaphic_asv_signif_hits)
+edaphic_asv_signif_hits <- rownames(edaphic_asv_signif_hits)
+edaphic_asv_signif <- edaphic_asv_scores[edaphic_asv_scores$parameters %in% edaphic_asv_signif_hits,]
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_asv_signif
+```
+ 
+
+```{r}
+edaphic_md_signif_all$variable_type <- "metadata"
+edaphic_asv_signif$variable_type <- "ASV"
+edaphic_bioplot_data <- rbind(edaphic_md_signif_all, edaphic_asv_signif)
+```
+
+The last thing to do is categorize parameters scores and ASV scores into different variable types for plotting.
+
+```{r}
+edaphic_bioplot_data_md <- subset(edaphic_bioplot_data, 
+                                  edaphic_bioplot_data$variable_type == "metadata")
+edaphic_bioplot_data_asv <- subset(edaphic_bioplot_data, 
+                                   edaphic_bioplot_data$variable_type == "ASV")
+```
+
+<details markdown="1">
+<summary>Click here to see the code for the plot</summary>
+
+```{r, echo=FALSE}
+edaphic_cap_vals <- data.frame(edaphic_cap$CCA$eig[1:2])
+edaphic_cap1 <- signif((edaphic_cap_vals[1,] * 100), digits=3)
+edaphic_cap2 <- signif((edaphic_cap_vals[2,] * 100), digits=3)
+
+cpa1_lab <- paste("CAP1", " (", edaphic_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", edaphic_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+edaphic_plot <- ggplot(edaphic_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2, shape = TREAT,
+                           colour = TEMP), size = 4) +
+  scale_colour_manual(values = swel_col) +
+#  geom_text(data = edaphic_plot_data, aes(x = CAP1, y = CAP2, #UNCOMMENT to add sample labels
+#                              label = SampleID), size = 3) + 
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = edaphic_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.4, 
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = edaphic_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 3, 
+            nudge_x = 0.1, nudge_y = 0.05) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = edaphic_bioplot_data_asv, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")),  size = 0.2, 
+               color = "#676767") +
+  geom_text(data = edaphic_bioplot_data_asv, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 2.5,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(title = "Capscale Analysis",
+       subtitle = "Edaphic properties", 
+       x = cpa1_lab, 
+       y = cpa2_lab)
+edaphic_plot <- edaphic_plot + coord_fixed() + theme(aspect.ratio=1)
+edaphic_plot
+png("files/metadata/figures/ssu18_edaphic_capscale.png",
+    height = 16, width = 20, units = 'cm', res = 600, bg = "white")
+edaphic_plot$labels
+invisible(dev.off())
+pdf("files/metadata/figures/ssu18_edaphic_capscale.pdf",
+    height = 5, width = 6)
+edaphic_plot
+dev.off()
+```
+</details>
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for edaphic properties.'}
+system("cp files/metadata/figures/ssu18_edaphic_capscale.png include/metadata/ssu18_edaphic_capscale.png")
+knitr::include_graphics("include/metadata/ssu18_edaphic_capscale.png")
+```
+
+```{r, echo=FALSE}
+rm(list = ls(pattern = "tmp_"))
+```
+
+### Soil Functional Response
+
+```{r}
+tmp_md <- ssu18_select_mc_norm_split_no_ac$soil_funct
+tmp_md$TEMP <- as.character(tmp_md$TEMP)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+soil_funct_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_rank
+```
+
+Looks like we should either use Kulczynski or Bray-Curtis. Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(ssu18_select_mc_norm_split_no_ac$soil_funct) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
+
+* Starting properties: micC, micN, micP, micCN, micCP, micNP, AG_ST, BG_ST, BIS_ST, CEL_ST, MUP_ST, NA_ST, S_ST, XYL_ST, LEU_ST, POX_ST, avCO2, enzCN, enzCP, enzNP
+* Autocorrelated removed: micN, micNP, enzCN, enzCP, BIS_ST, CEL_ST, LEU_ST, NA_ST, MUP_ST
+* Remove for capscale: NONE
+
+```{r, echo=FALSE}
+# All soil prop: micC, micN, micP, micCN, micCP, micNP, AG_ST, BG_ST, BIS_ST, CEL_ST, MUP_ST, NA_ST, S_ST, XYL_ST, LEU_ST, POX_ST, avCO2, enzCN, enzCP, enzNP
+# REMOVED soil prop: micN, micNP, enzCN, enzCP, BIS_ST, CEL_ST, LEU_ST, NA_ST, MUP_ST
+# Remaining soil prop: micC, micP, micCN, micCP, AG_ST, BG_ST, S_ST, XYL_ST, POX_ST, avCO2, enzNP
+# 11 total, only works with 13
+# capscale Removed  NONE
+```
+
+
+```{r}
+soil_funct_cap <- capscale(tmp_comm ~ micC + micP + micCN + micCP + AG_ST + 
+                             BG_ST + S_ST + XYL_ST + POX_ST + avCO2 + enzNP, 
+                           tmp_md, dist = "bray")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_cap
+```
+
+Now we can look at the variance against each principal component. 
+
+```{r, echo=FALSE, eval=TRUE}
+screeplot(soil_funct_cap)
+```
+
+
+And then make some quick and dirty plots. This will also come in handy later when we need to parse out data a better plot visualization. The `ggplot` function `autoplot` stores these data in a more accessible way than the raw results from `capscale`
+
+```{r, eval=TRUE}
+base::plot(soil_funct_cap) 
+tmp_auto_plt <- autoplot(soil_funct_cap, arrows = TRUE)
+tmp_auto_plt
+```
+
+```{r, echo=FALSE}
+anova(soil_funct_cap) # overall test of the significant of the analysis
+anova(soil_funct_cap, by = "axis", perm.max=500) # test axes for significance
+anova(soil_funct_cap, by = "terms", permu=500) # test for sign. environ. variables
+```
+
+Next, we need to grab capscale scores for the samples and create a data frame of the first two dimensions. We will also need to add some of the sample details to the data frame. For this we use the vegan function `scores` which gets species or site scores from the ordination.
+
+```{r}
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+soil_funct_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+```
+
+Now we have a new data frame that contains sample details and capscale values. 
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_plot_data
+```
+
+We can then do the same with the metadata vectors. Here though we only need the scores and parameter name. 
+
+```{r}
+soil_funct_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+soil_funct_md_scores[,1] <- NULL
+soil_funct_md_scores <- soil_funct_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_md_scores
+```
+
+Let's run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function `envfit`.
+
+```{r}
+tmp_samp_scores_sub <- soil_funct_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- soil_funct_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_soil_funct_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_soil_funct_md
+```
+
+```{r}
+soil_funct_md_signif_hits <- base::subset(envfit_soil_funct_md$vectors$pvals, 
+                                  c(envfit_soil_funct_md$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_md$vectors$r > 0.4))
+soil_funct_md_signif_hits <- data.frame(soil_funct_md_signif_hits)
+soil_funct_md_signif_hits <- rownames(soil_funct_md_signif_hits)
+soil_funct_md_signif <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                               soil_funct_md_signif_hits,]
+soil_funct_md_signif$parameters
+```
+
+`envfit` found that `r soil_funct_md_signif$parameters` were significantly correlated. 
+
+Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+print("Significant parameters from bioenv analysis.")
+row.names(summary(soil_funct_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+soil_funct_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(soil_funct_bioenv_ind_mantel)), 
+                       soil_funct_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(soil_funct_md_signif$parameters, 
+              row.names(summary(soil_funct_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+soil_funct_sig_diff <- base::union(soil_funct_md_signif$parameters, 
+                                   row.names(summary(soil_funct_bioenv_ind_mantel)))
+soil_funct_sig_diff
+```
+
+
+
+```{r}
+#new_soil_funct_md_signif_hits <- append(soil_funct_md_signif_hits, soil_funct_sig_diff)
+new_soil_funct_md_signif_hits <- soil_funct_sig_diff
+soil_funct_md_signif_all <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                                   new_soil_funct_md_signif_hits,]
+```
+
+Check. Next, we run `envfit` for the ASVs.
+
+```{r}
+envfit_soil_funct_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10], 
+                                perm = 1000, choices = c(1, 2))
+soil_funct_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+soil_funct_asv_scores <- soil_funct_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+soil_funct_asv_scores[,1] <- NULL
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_soil_funct_asv
+```
+
+```{r}
+soil_funct_asv_signif_hits <- base::subset(envfit_soil_funct_asv$vectors$pvals, 
+                                  c(envfit_soil_funct_asv$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_asv$vectors$r > 0.5))
+soil_funct_asv_signif_hits <- data.frame(soil_funct_asv_signif_hits)
+soil_funct_asv_signif_hits <- rownames(soil_funct_asv_signif_hits)
+soil_funct_asv_signif <- soil_funct_asv_scores[soil_funct_asv_scores$parameters %in% 
+                                                 soil_funct_asv_signif_hits,]
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_asv_signif
+```
+
+```{r}
+soil_funct_md_signif_all$variable_type <- "metadata"
+soil_funct_asv_signif$variable_type <- "ASV"
+soil_funct_bioplot_data <- rbind(soil_funct_md_signif_all, soil_funct_asv_signif)
+```
+
+The last thing to do is categorize parameters scores and ASV scores into different variable types for plotting.
+
+```{r}
+soil_funct_bioplot_data_md <- subset(soil_funct_bioplot_data, 
+                                  soil_funct_bioplot_data$variable_type == "metadata")
+soil_funct_bioplot_data_asv <- subset(soil_funct_bioplot_data, 
+                                   soil_funct_bioplot_data$variable_type == "ASV")
+```
+
+
+<details markdown="1">
+<summary>Click here to see the code for the plot</summary>
+
+```{r}
+soil_funct_cap_vals <- data.frame(soil_funct_cap$CCA$eig[1:2])
+soil_funct_cap1 <- signif((soil_funct_cap_vals[1,] * 100), digits=3)
+soil_funct_cap2 <- signif((soil_funct_cap_vals[2,] * 100), digits=3)
+
+cpa1_lab <- paste("CAP1", " (", soil_funct_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", soil_funct_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+soil_funct_plot <- ggplot(soil_funct_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2, shape = TREAT,
+                           colour = TEMP), size = 4) +
+  scale_colour_manual(values = swel_col) +
+#  geom_text(data = soil_funct_plot_data, aes(x = CAP1, y = CAP2, #UNCOMMENT to add sample labels
+#                              label = SampleID), size = 3) + 
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = soil_funct_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.4, 
+               color = "#191919") +
+  geom_text(data = soil_funct_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 3,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = soil_funct_bioplot_data_asv, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.2,
+               color = "#676767") +
+  geom_text(data = soil_funct_bioplot_data_asv, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 2.5,
+            nudge_x = 0.05, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(title = "Capscale Analysis",
+       subtitle = "Soil Functional Response", 
+       x = cpa1_lab, 
+       y = cpa2_lab)
+soil_funct_plot <- soil_funct_plot + coord_fixed() + theme(aspect.ratio=1)
+soil_funct_plot
+png("files/metadata/figures/ssu18_soil_funct_capscale.png",
+    height = 16, width = 20, units = 'cm', res = 600, bg = "white")
+soil_funct_plot
+invisible(dev.off())
+pdf("files/metadata/figures/ssu18_soil_funct_capscale.pdf",
+    height = 5, width = 6)
+soil_funct_plot
+dev.off()
+```
+</details>
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for soil functional response'}
+system("cp files/metadata/figures/ssu18_soil_funct_capscale.png include/metadata/ssu18_soil_funct_capscale.png")
+knitr::include_graphics("include/metadata/ssu18_soil_funct_capscale.png")
+```
+
+
+```{r, echo=FALSE}
+rm(list = ls(pattern = "tmp_"))
+```
+
+### Temperature Adaptation
+
+```{r}
+tmp_md <- ssu18_select_mc_norm_split_no_ac$temp_adapt
+tmp_md$TEMP <- as.character(tmp_md$TEMP)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_rank
+```
+
+Looks like we should either use Kulczynski or Bray-Curtis. Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(ssu18_select_mc_norm_split_no_ac$temp_adapt) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
+
+* Starting properties: AG_Q10, BG_Q10, BIS_Q10, CEL_Q10, MUP_Q10, NA_Q10, S_Q10, XYL_Q10, LEU_Q10, POX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI 
+* Autocorrelated removed: NUE, PUE
+* Remove for capscale: Tmin
+
+```{r, echo=FALSE}
+# All temp_adapt: AG_Q10, BG_Q10, BIS_Q10, CEL_Q10, MUP_Q10, NA_Q10, S_Q10, XYL_Q10, LEU_Q10, POX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI 
+# REMOVED edaphic: NUE, PUE
+# Remaining edaphic: AG_Q10, BG_Q10, BIS_Q10, CEL_Q10, MUP_Q10, NA_Q10, S_Q10, XYL_Q10, LEU_Q10, POX_Q10, CUEcn, CUEcp, Tmin, SI 
+# 14 total, only works with 13
+# Removed:  Tmin
+```
+
+```{r}
+temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BIS_Q10 + CEL_Q10 + 
+                             MUP_Q10 + NA_Q10 + S_Q10 + XYL_Q10 + LEU_Q10 + 
+                             POX_Q10 + CUEcn + CUEcp + SI , 
+                             tmp_md, dist = "bray")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_cap
+```
+
+Now we can look at the variance against each principal component. 
+
+```{r, echo=FALSE, eval=TRUE}
+screeplot(temp_adapt_cap)
+```
+
+
+And then make some quick and dirty plots. This will also come in handy later when we need to parse out data a better plot visualization. The `ggplot` function `autoplot` stores these data in a more accessible way than the raw results from `capscale`
+
+```{r, eval=TRUE}
+base::plot(temp_adapt_cap) 
+tmp_auto_plt <- autoplot(temp_adapt_cap, arrows = TRUE)
+tmp_auto_plt
+```
+
+```{r, echo=FALSE}
+anova(temp_adapt_cap) # overall test of the significant of the analysis
+anova(temp_adapt_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(temp_adapt_cap, by = "terms", permu = 500) # test for sign. environ. variables
+```
+
+Next, we need to grab capscale scores for the samples and create a data frame of the first two dimensions. We will also need to add some of the sample details to the data frame. For this we use the vegan function `scores` which gets species or site scores from the ordination.
+
+```{r}
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+temp_adapt_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+```
+
+Now we have a new data frame that contains sample details and capscale values. 
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_plot_data
+```
+
+We can then do the same with the metadata vectors. Here though we only need the scores and parameter name. 
+
+```{r}
+temp_adapt_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+temp_adapt_md_scores[,1] <- NULL
+temp_adapt_md_scores <- temp_adapt_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_md_scores
+```
+
+Let's run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function `envfit`.
+
+```{r}
+tmp_samp_scores_sub <- temp_adapt_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- temp_adapt_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_temp_adapt_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_temp_adapt_md
+```
+
+```{r}
+temp_adapt_md_signif_hits <- base::subset(envfit_temp_adapt_md$vectors$pvals, 
+                                  c(envfit_temp_adapt_md$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_md$vectors$r > 0.4))
+temp_adapt_md_signif_hits <- data.frame(temp_adapt_md_signif_hits)
+temp_adapt_md_signif_hits <- rownames(temp_adapt_md_signif_hits)
+temp_adapt_md_signif <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                               temp_adapt_md_signif_hits,]
+```
+
+`envfit` found that `r temp_adapt_md_signif$parameters` were significantly correlated. 
+
+Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+print("Significant parameters from bioenv analysis.")
+row.names(summary(temp_adapt_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+temp_adapt_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(temp_adapt_bioenv_ind_mantel)), 
+                       temp_adapt_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(temp_adapt_md_signif$parameters, 
+              row.names(summary(temp_adapt_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and  bioenv.")
+temp_adapt_sig_diff <- base::union(temp_adapt_md_signif$parameters, 
+                                   row.names(summary(temp_adapt_bioenv_ind_mantel)))
+temp_adapt_sig_diff
+```
+
+```{r}
+#new_temp_adapt_md_signif_hits <- base::append(temp_adapt_md_signif_hits, temp_adapt_sig_diff)
+new_temp_adapt_md_signif_hits <- temp_adapt_sig_diff
+temp_adapt_md_signif_all <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                                   new_temp_adapt_md_signif_hits,]
+```
+
+Check. Next, we run `envfit` for the ASVs.
+
+```{r}
+envfit_temp_adapt_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                                perm = 1000, choices = c(1, 2))
+
+temp_adapt_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+
+temp_adapt_asv_scores <- temp_adapt_asv_scores %>% 
+                         dplyr::mutate(parameters = Label, .before = CAP1) %>%
+                         tibble::column_to_rownames("Label")
+temp_adapt_asv_scores[,1] <- NULL
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_temp_adapt_asv
+```
+
+```{r}
+temp_adapt_asv_signif_hits <- base::subset(envfit_temp_adapt_asv$vectors$pvals, 
+                                  c(envfit_temp_adapt_asv$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_asv$vectors$r > 0.5))
+temp_adapt_asv_signif_hits <- data.frame(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif_hits <- rownames(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif <- temp_adapt_asv_scores[temp_adapt_asv_scores$parameters %in% 
+                                                 temp_adapt_asv_signif_hits,]
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_asv_signif
+```
+ 
+
+```{r}
+temp_adapt_md_signif_all$variable_type <- "metadata"
+temp_adapt_asv_signif$variable_type <- "ASV"
+temp_adapt_bioplot_data <- rbind(temp_adapt_md_signif_all, temp_adapt_asv_signif)
+```
+
+The last thing to do is categorize parameters scores and ASV scores into different variable types for plotting.
+
+```{r}
+temp_adapt_bioplot_data_md <- subset(temp_adapt_bioplot_data, 
+                                  temp_adapt_bioplot_data$variable_type == "metadata")
+temp_adapt_bioplot_data_asv <- subset(temp_adapt_bioplot_data, 
+                                   temp_adapt_bioplot_data$variable_type == "ASV")
+```
+
+<details markdown="1">
+<summary>Click here to see the code for the plot</summary>
+
+```{r}
+temp_adapt_cap_vals <- data.frame(temp_adapt_cap$CCA$eig[1:2])
+temp_adapt_cap1 <- signif((temp_adapt_cap_vals[1,] * 100), digits=3)
+temp_adapt_cap2 <- signif((temp_adapt_cap_vals[2,] * 100), digits=3)
+
+cpa1_lab <- paste("CAP1", " (", temp_adapt_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", temp_adapt_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+temp_adapt_plot <- ggplot(temp_adapt_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2, shape = TREAT,
+                           colour = TEMP), size = 4) +
+  scale_colour_manual(values = swel_col) +
+#  geom_text(data = temp_adapt_plot_data, aes(x = CAP1, y = CAP2, #UNCOMMENT to add sample labels
+#                              label = SampleID), size = 3) + 
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.4,
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = temp_adapt_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 3,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_asv, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.2,
+               color = "#676767") +
+  geom_text(data = temp_adapt_bioplot_data_asv, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 2.5,
+            nudge_x = 0.05, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(title = "Capscale Analysis",
+       subtitle = "Temperature Adaptation",
+       x = cpa1_lab, 
+       y = cpa2_lab)
+temp_adapt_plot <- temp_adapt_plot + coord_fixed() + theme(aspect.ratio=1)
+temp_adapt_plot
+png("files/metadata/figures/ssu18_temp_adapt_capscale.png",
+    height = 16, width = 20, units = 'cm', res = 600, bg = "white")
+temp_adapt_plot
+invisible(dev.off())
+pdf("files/metadata/figures/ssu18_temp_adapt_capscale.pdf",
+    height = 5, width = 6)
+temp_adapt_plot
+dev.off()
+```
+</details>
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for temperature adaptation'}
+system("cp files/metadata/figures/ssu18_temp_adapt_capscale.png include/metadata/ssu18_temp_adapt_capscale.png")
+knitr::include_graphics("include/metadata/ssu18_temp_adapt_capscale.png")
+```
+
+
+```{r, echo=FALSE}
+rm(list = ls(pattern = "tmp_"))
+```
+
+## Capscale Plots
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+#### Edaphic properties
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+edaphic_plot
+```
+:::
+
+::: {.panel}
+#### Soil Functional Response
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+soil_funct_plot
+```
+:::
+
+::: {.panel}
+#### Temperature Adaptation
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+temp_adapt_plot
+```
+:::
+:::
+:::
+
+```{r, echo=FALSE}
+ssu18_capscale_plots <- ggarrange(
+  edaphic_plot,
+  soil_funct_plot,
+  temp_adapt_plot,
+  ncol = 3, nrow = 1, common.legend = TRUE, legend = "bottom")
+ssu18_capscale_plots
+dev.off()
+png("files/metadata/figures/ssu18_capscale_plots.png", height = 12, width = 36,
+    units = 'cm', res = 600, bg = "white")
+ssu18_capscale_plots
+dev.off()
+pdf("files/metadata/figures/ssu18_capscale_plots.pdf", height = 6, width = 18)
+ssu18_capscale_plots
+dev.off()
+```
+
+## PERMANOVA 
+
+```{r, echo=FALSE}
+tmp_md_groups <- c("edpahic", "soil_funct", "temp_adapt")
+tmp_data <- ssu18_select_mc_norm_split_no_ac
+tmp_data$edaphic$TEMP <- as.character(tmp_data$edaphic$TEMP)
+
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+
+tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$edaphic)
+#tmp_env$edaphic$TEMP <- as.character(tmp_env$edaphic$TEMP)
+edpahic_adonis2 <- adonis2(tmp_comm ~ TEMP* AST, data = tmp_data$edaphic)
+
+tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$soil_funct)
+soil_funct_adonis2 <- adonis2(soil_funct_cap$call$formula, data = tmp_data$soil_funct)
+
+tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$temp_adapt)
+temp_adapt_adonis2 <- adonis2(temp_adapt_cap$call$formula, data = tmp_data$temp_adapt)
+
+
+### Soil Functional Response
+ 
+### Temperature Adaptation
+temp_adapt_cap
+
+```
+
+```{r, echo=FALSE}
+save.image("page_build/metadata_ssu18_wf.rdata")
+```
+
+# ITS
+
+```{r master_load_its18, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/metadata_its18_wf.rdata")
+```
+
+## Data Formating 
+
+```{r initial_load_its18, include=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+set.seed(119)
+its18_ps_work <- readRDS("files/alpha/rdata/its18_ps_work.rds")
+its18_ps_pime <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
+its18_ps_perfect <- readRDS("files/alpha/rdata/its18_ps_perfect.rds")
+its18_ps_work_otu <- readRDS("files/alpha/rdata/its18_ps_work_otu.rds")
+its18_ps_pime_otu <- readRDS("files/alpha/rdata/its18_ps_pime_otu.rds")
+its18_ps_perfect_otu <- readRDS("files/alpha/rdata/its18_ps_perfect_otu.rds")
+```
+
+### Transform `ps` Objects
+
+```{r}
+samp_ps <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
+             "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
+     tmp_ps@phy_tree <- NULL
+     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
+     print(tmp_name)
+     assign(tmp_name, tmp_ps)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### Format for `mctoolsr`
+
+```{r}
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
+     tmp_tax <- data.frame(tax_table(tmp_get))
+     tmp_tax$ASV_SEQ <- NULL
+     
+     tmp_col_names <- colnames(tmp_tax)
+     tmp_tax_merge <- tmp_tax %>% tidyr::unite(taxonomy, 
+                                               all_of(tmp_col_names), 
+                                               sep = ";")
+     tmp_tax_merge <- tmp_tax_merge %>% tibble::rownames_to_column("#OTU_ID")
+     tmp_otu <- data.frame(t(otu_table(tmp_get)))
+     tmp_otu <- tmp_otu %>% tibble::rownames_to_column("#OTU_ID")
+     tmp_otu_tax <- dplyr::left_join(tmp_otu, tmp_tax_merge, by = "#OTU_ID")
+
+     tmp_samp <- data.frame(sample_data(tmp_get))
+     tmp_samp[,c(1,3)] <- NULL
+     tmp_samp <- tmp_samp %>% tibble::rownames_to_column("#SampleID")
+
+     tmp_metad <- metad %>% dplyr::rename("#SampleID" = "id")
+     tmp_metad[,2:5] <- NULL
+     tmp_md <- dplyr::left_join(tmp_samp, tmp_metad, by = "#SampleID")
+     
+     tmp_otu_name <- purrr::map_chr(i, ~ paste0(., "_otu_tax"))
+     print(tmp_otu_name)
+     assign(tmp_otu_name, tmp_otu_tax)
+
+     tmp_md_name <- purrr::map_chr(i, ~ paste0(., "_md"))
+     print(tmp_md_name)
+     assign(tmp_md_name, tmp_md)
+
+     tmp_path <- file.path("files/metadata/tables/")
+     write_delim(tmp_otu_tax, paste(tmp_path, tmp_otu_name, ".txt", sep = ""), delim = "\t")
+     write_delim(tmp_md, paste(tmp_path, tmp_md_name, ".txt", sep = ""), delim = "\t")
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r}
+for (i in samp_ps) {
+     tmp_path <- file.path("files/metadata/tables/")
+     tmp_otu_name <- purrr::map_chr(i, ~ paste0(., "_otu_tax"))
+     tmp_md_name <- purrr::map_chr(i, ~ paste0(., "_md"))
+     tmp_tax_table_fp <- paste(tmp_path, tmp_otu_name, ".txt", sep = "")
+     tmp_map_fp <- paste(tmp_path, tmp_md_name, ".txt", sep = "")
+     tmp_input <- load_taxa_table(tmp_tax_table_fp, tmp_map_fp)
+     tmp_input_name <- purrr::map_chr(i, ~ paste0(., "_mc"))
+     print(tmp_input_name)
+     assign(tmp_input_name, tmp_input)
+     rm(list = ls(pattern = "tmp_"))
+}
+rm(list = ls(pattern = "_md"))
+rm(list = ls(pattern = "_otu_tax"))
+```
+
+## Choose Data Set
+
+At this point in the code we need to choose a data set to use, formatted with `mctoolsr`. Remember, there are four choices:
+
+1) Complete ASV data set.
+2) PIME filtered ASV data set.
+3) PERfect filtered ASV data set.
+4) Complete OTU data set.
+5) PIME filtered OTU data set.
+6) PERfect filtered OTU data set.
+
+This way, if we want to test other data sets we only need to change the name here.
+
+```{r}
+objects(pattern = "_mc")
+its18_select_mc <- its18_ps_pime_mc
+```
+
+## Normality Tests
+
+Before proceeding, we need to test each parameter in the metadata to see which ones are and are not normally distributed. For that, we use the Shapiro-Wilk Normality Test. Here we only need one of the metadata files.
+
+```{r}
+temp_md <- its18_select_mc$map_loaded
+temp_md[,1:9] <- NULL
+shap_results <- NULL
+
+for (i in colnames(temp_md)) {
+  tmp_shap <- shapiro.test(temp_md[[i]])
+  tmp_p <- round(tmp_shap$p.value, digits = 5)
+  tmp_res <- eval(isTRUE(tmp_shap$p.value < 0.05))
+  shap_results <- rbind(shap_results, data.frame(i, tmp_p, tmp_res))
+  rm(list = ls(pattern = "tmp_"))
+}
+colnames(shap_results) <- c("parameter", "p-value", "tranform")
+shap_results
+dplyr::filter(shap_results, tranform == "TRUE")
+md_to_tranform <- shap_results$parameter[shap_results$tranform == TRUE]
+rm(list = ls(pattern = "temp_md"))
+```
+<details markdown="1">
+<summary>Click here to see the results of each normality test for metadata parameters</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+shap_results
+```
+</details>
+
+Looks like we need to transform `r length(md_to_tranform)` metadata parameters.
+
+## Normalize Parameters
+
+Here we use the R package [`bestNormalize`](https://cran.r-project.org/web/packages/bestNormalize/vignettes/bestNormalize.html) to find and execute the best normalizing transformation. The function will test the following normalizing transformations:
+
+- `arcsinh_x` performs an arcsinh transformation.
+
+- `boxcox` Perform a Box-Cox transformation and center/scale a vector to attempt normalization. `boxcox` estimates the optimal value of lambda for the Box-Cox transformation. The function will return an error if a user attempt to transform nonpositive data.
+
+- `yeojohnson` Perform a Yeo-Johnson Transformation and center/scale a vector to attempt normalization. `yeojohnson` estimates the optimal value of lambda for the Yeo-Johnson transformation. The Yeo-Johnson is similar to the Box-Cox method, however it allows for the transformation of nonpositive data as well. 
+
+- `orderNorm` The Ordered Quantile (ORQ) normalization transformation, `orderNorm()`, is a rank-based procedure by which the values of a vector are mapped to their percentile, which is then mapped to the same percentile of the normal distribution. Without the presence of ties, this essentially guarantees that the transformation leads to a uniform distribution.
+
+- `log_x` performs a simple log transformation. The parameter a is essentially estimated by the training set by default (estimated as the minimum possible to some extent epsilon), while the base must be specified beforehand. The default base of the log is 10.
+
+- `sqrt_x` performs a simple square-root transformation. The parameter a is essentially estimated by the training set by default (estimated as the minimum possible), while the base must be specified beforehand.
+
+-	`exp_x` performs a simple exponential transformation.
+
+See this GitHub issue ([#5](https://github.com/petersonR/bestNormalize/issues/5)) for a description on getting reproducible results. Apparently, you can get different results because the `bestNormalize()` function uses repeated cross-validation (and doesn't automatically set the seed), so the results will be slightly different each time the function is executed.
+
+```{r}
+set.seed(119)
+
+for (i in md_to_tranform) {
+  tmp_md <- its18_select_mc$map_loaded
+  tmp_best_norm <- bestNormalize(tmp_md[[i]], r = 1, k = 5, loo = TRUE)
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_best_norm_test"))
+  assign(tmp_name, tmp_best_norm)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+<details markdown="1">
+<summary>Click here to see the chosen transformations</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in md_to_tranform) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_best_norm_test")))
+  tmp_print <- c("bestNormalize Chosen transformation of", i)
+  cat("\n")
+  cat("##", tmp_print, "##", "\n")
+  print(tmp_get$chosen_transform)
+  cat("_____________________________________")
+  cat("\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+</details>
+
+<details markdown="1">
+<summary>Click here to see complete `bestNormalize` results</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in md_to_tranform) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_best_norm_test")))
+  tmp_print <- c("Results of bestNormalize for", i)
+  cat("\n")
+  cat("##", tmp_print, "##", "\n")
+  print(tmp_get)
+  cat("_____________________________________")
+  cat("\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+</details>
+
+Great, now we can add the normalized transformed data back to our `mctoolsr` metadata file. 
+
+```{r}
+its18_select_mc_norm <- its18_select_mc
+
+for (i in md_to_tranform) {
+      tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_best_norm_test")))
+      tmp_new_data <- tmp_get$x.t
+      its18_select_mc_norm$map_loaded[[i]] <- tmp_new_data
+      rm(list = ls(pattern = "tmp_"))
+}     
+```
+
+And rerun the Shapiro Tests. 
+
+```{r}
+temp_md_norm <- its18_select_mc_norm$map_loaded
+temp_md_norm[,1:9] <- NULL
+shap_results_norm <- NULL
+
+for (i in colnames(temp_md_norm)) {
+  tmp_shap <- shapiro.test(temp_md_norm[[i]])
+  tmp_p <- round(tmp_shap$p.value, digits = 5)
+  tmp_res <- eval(isTRUE(tmp_shap$p.value < 0.05))
+  shap_results_norm <- rbind(shap_results_norm, data.frame(i, tmp_p, tmp_res))
+  rm(list = ls(pattern = "tmp_"))
+}
+colnames(shap_results_norm) <- c("parameter", "p-value", "tranform")
+shap_results_norm
+rm(list = ls(pattern = "temp_md_norm"))
+```
+
+And check if there are any parameters that are still significant for the normality test.
+
+```{r, eval=TRUE}
+shap_results$parameter[shap_results_norm$tranform == TRUE]
+```
+
+Ok. Looks like `bestNormalize` was unable to find a suitable transformation for `Al` and `Fe`. This is likely because there is very little variation in these metadata and/or there are too few significant digits.
+
+## Normalized Metadata
+
+Finally, here is a new summary table that includes all of the normalized data.
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+metad_norm <- its18_select_mc_norm$map_loaded
+metad_norm <- metad_norm %>% tibble::rownames_to_column("id")
+metad_norm[,6:8] <- NULL
+
+datatable(metad_norm, width = "100%", caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Metadata summary for each sample.')),
+          elementId = "ffn29i70ljbq7tir2u6u",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )%>%
+    DT::formatRound(columns = c(8:10,12:14,19:20,24:25,29,31,35,39:43,45,47:48,54,57:58,60,62,65:67),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(metad_norm),
+                    fontSize = '80%')
+```
+
+
+```{r, echo=FALSE}
+# Code to run individual transformations for each metadata and generate histograms
+##for (i in md_to_tranform) {
+##     tmp_data <- its18_select_mc$map_loaded
+##     tmp_no_transform_obj <- no_transform(tmp_data[[i]])
+##     tmp_arcsinh_obj <- arcsinh_x(tmp_data[[i]])
+##     #tmp_boxcox_obj <- boxcox(tmp_data[[i]])
+##     tmp_yeojohnson_obj <- yeojohnson(tmp_data[[i]])
+##     tmp_orderNorm_obj <- orderNorm(tmp_data[[i]])
+##     tmp_log_obj <- log_x(tmp_data[[i]])
+##     tmp_sqrt_x_obj <- sqrt_x(tmp_data[[i]])
+##     tmp_exp_x_obj <- exp_x(tmp_data[[i]])
+##     
+##     tmp_plot_no_transform <- hist(tmp_no_transform_obj$x.t, main = i, breaks = 6, xlab = "no_transform")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_no_transform"))
+##     assign(tmp_plot_name, tmp_plot_no_transform)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_arcsinh <- hist(tmp_arcsinh_obj$x.t, main = i, breaks = 6, xlab = "arcsinh")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_arcsinh"))
+##     assign(tmp_plot_name, tmp_plot_arcsinh)
+##     print(tmp_plot_name)
+##     # cannot run because of Al and Fe
+##     #tmp_plot_boxcox <- hist(tmp_boxcox_obj$x.t, main = i, breaks = 6, xlab = "boxcox")
+##     #tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_boxcox"))
+##     #assign(tmp_plot_name, tmp_plot_boxcox)
+##     #print(tmp_plot_name)
+##     
+##     tmp_plot_yeojohnson <- hist(tmp_yeojohnson_obj$x.t, main = i, breaks = 6, xlab = "yeojohnson")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_yeojohnson"))
+##     assign(tmp_plot_name, tmp_plot_yeojohnson)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_orderNorm <- hist(tmp_orderNorm_obj$x.t, main = i, breaks = 6, xlab = "orderNorm")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_orderNorm"))
+##     assign(tmp_plot_name, tmp_plot_orderNorm)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_log <- hist(tmp_log_obj$x.t, main = i, breaks = 6, xlab = "log")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_log"))
+##     assign(tmp_plot_name, tmp_plot_log)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_sqrt <- hist(tmp_sqrt_x_obj$x.t, main = i, breaks = 6, xlab = "sqrt")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_sqrt"))
+##     assign(tmp_plot_name, tmp_plot_sqrt)
+##     print(tmp_plot_name)
+##     
+##     tmp_plot_exp <- hist(tmp_exp_x_obj$x.t, main = i, breaks = 6, xlab = "exp")
+##     tmp_plot_name <- purrr::map_chr(i, ~ paste0(., "_hist_plot_exp"))
+##     assign(tmp_plot_name, tmp_plot_exp)
+##     print(tmp_plot_name)
+##
+##     rm(list = ls(pattern = "tmp_"))
+##}
+```
+
+
+## Autocorrelation Tests
+
+Next, we  test the metadata for autocorrelations. Do we do this on the original data or the transformed data? No idea, so let's do both.
+
+### Split Metadata
+
+We need to split the data into different groups.
+
+A) Environmental and edaphic properties
+B) Microbial functional responses
+C) Temperature adaptation properties
+
+We first create lists of metadata parameters. 
+
+```{r}
+div <- c("PLOT", "TREAT", "TEMP", "PAIR", "Observed", "Shannon_exp", 
+         "InvSimpson", "ATAP")
+
+edaphic <- c("AST", "H2O", "N", "P", "Al", 
+             "Ca", "Fe", "K", "Mg", "Mn", "Na", "TEB", "ECEC", "pH", 
+             "NH4", "NO3", "resinP", "DOC", "DON", "DOCN")
+
+soil_funct <- c("micC", "micN", "micP", "micCN", "micCP", "micNP", 
+                "AG_ST", "BG_ST", "BIS_ST", "CEL_ST", "MUP_ST", "NA_ST", 
+                "S_ST", "XYL_ST",  "LEU_ST", "POX_ST", "avCO2", 
+                "enzCN", "enzCP", "enzNP")
+
+temp_adapt <- c("AG_Q10", "BG_Q10", "BIS_Q10", "CEL_Q10", "MUP_Q10", "NA_Q10", 
+                "S_Q10", "XYL_Q10", "LEU_Q10", "POX_Q10", "CUEcn", "CUEcp", 
+                "NUE","PUE", "Tmin", "SI")
+
+md_groups <- c("edaphic", "soil_funct", "temp_adapt")
+```
+
+And then use the lists to split the data sets by metadata  group. Here, we do this for the original metadata and the metadata after normalization.
+
+```{r}
+select_md <- c("its18_select_mc", "its18_select_mc_norm")
+for (i in select_md) {
+   #tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_mc")))
+   tmp_get <- get(i)
+   tmp_md_all <- tmp_get$map_loaded
+   tmp_div <- tmp_md_all %>% dplyr::select(all_of(div))
+   tmp_div <- tmp_div %>% tibble::rownames_to_column("SampleID")
+## edaphic      
+   tmp_sub_edaphic <- tmp_md_all %>% dplyr::select(all_of(edaphic))
+   tmp_sub_edaphic <- tmp_sub_edaphic %>% tibble::rownames_to_column("SampleID")
+   tmp_edaphic <- dplyr::left_join(tmp_div, tmp_sub_edaphic, by = "SampleID")
+   tmp_edaphic <- tmp_edaphic %>% tibble::column_to_rownames("SampleID")
+## soil_funct
+   tmp_sub_soil_funct <- tmp_md_all %>% dplyr::select(all_of(soil_funct))
+   tmp_sub_soil_funct <- tmp_sub_soil_funct %>% tibble::rownames_to_column("SampleID")
+   tmp_soil_funct <- dplyr::left_join(tmp_div, tmp_sub_soil_funct, by = "SampleID")
+   tmp_soil_funct <- tmp_soil_funct %>% tibble::column_to_rownames("SampleID")      
+## temp_adapt
+   tmp_sub_temp_adapt <- tmp_md_all %>% dplyr::select(all_of(temp_adapt))
+   tmp_sub_temp_adapt <- tmp_sub_temp_adapt %>% tibble::rownames_to_column("SampleID")
+   tmp_temp_adapt <- dplyr::left_join(tmp_div, tmp_sub_temp_adapt, by = "SampleID")
+   tmp_temp_adapt <- tmp_temp_adapt %>% tibble::column_to_rownames("SampleID")      
+## combine
+   tmp_list <- list(data_loaded = its18_select_mc$data_loaded, 
+                    map_loaded = its18_select_mc$map_loaded, 
+                    taxonomy_loaded = its18_select_mc$taxonomy_loaded,
+                    edaphic = tmp_edaphic, 
+                    soil_funct = tmp_soil_funct, 
+                    temp_adapt = tmp_temp_adapt)
+   tmp_name <- purrr::map_chr(i, ~ paste0(., "_split"))
+   print(tmp_name)
+   assign(tmp_name, tmp_list)
+   rm(list = ls(pattern = "tmp_"))
+}
+```
+
+### Generate Autocorrelation Plots
+
+A little housekeeping to get rid of parameters we don't need (e.g., plot number, pair, etc.).
+
+```{r}
+edaphic_cor <- its18_select_mc_split$edaphic
+edaphic_cor[,1:8] <- NULL
+edaphic_norm_cor <- its18_select_mc_norm_split$edaphic
+edaphic_norm_cor[,1:8] <- NULL
+
+soil_funct_cor <- its18_select_mc_split$soil_funct
+soil_funct_cor[,1:8] <- NULL
+soil_funct_norm_cor <- its18_select_mc_norm_split$soil_funct
+soil_funct_norm_cor[,1:8] <- NULL
+
+temp_adapt_cor <- its18_select_mc_split$temp_adapt
+temp_adapt_cor[,1:8] <- NULL
+temp_adapt_norm_cor <- its18_select_mc_norm_split$temp_adapt
+temp_adapt_norm_cor[,1:8] <- NULL
+```
+
+And finally the code to create the plots. 
+
+```{r}
+for (i in objects(pattern = "_cor$")) {
+  tmp_get <- get(i)
+  tmp_cormat <- round(cor(tmp_get), 2)
+  tmp_melted_cormat <- reshape2::melt(tmp_cormat)
+  
+  tmp_get_lower_tri <- function(tmp_cormat){
+    tmp_cormat[upper.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  # Get upper triangle of the correlation matrix
+  tmp_get_upper_tri <- function(tmp_cormat){
+    tmp_cormat[lower.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  tmp_upper_tri <- tmp_get_upper_tri(tmp_cormat)
+  tmp_melted_cormat <- reshape2::melt(tmp_upper_tri, na.rm = TRUE)
+  ggplot(data = tmp_melted_cormat, aes(x = Var1, y = Var2, fill = value)) + 
+    geom_tile()
+  
+  tmp_ggheatmap <- ggplot(data = tmp_melted_cormat, aes(Var2, Var1, fill = value)) +
+    geom_tile(color = "white") +
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name="Pearson\nCorrelation") +
+    theme_minimal() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                     size = 7, hjust = 1),
+          axis.text.y = element_text(vjust = 1, size = 7, hjust = 1)) + 
+    coord_fixed() + 
+    geom_text(aes(Var2, Var1, label = value), color = "black", size = 1.75) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank(),
+      legend.justification = c(1, 0),
+      legend.position = c(0.6, 0.7),
+      legend.direction = "horizontal") +
+      guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                                   title.position = "top", 
+                                   title.hjust = 0.5))
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_ggheatmap"))
+  assign(tmp_name, tmp_ggheatmap)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}  
+objects(pattern = "_ggheatmap")
+```
+
+## Autocorrelation Plots
+<br/>
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+#### Edaphic properties
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+edaphic_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Edaphic properties (normalized)
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+edaphic_norm_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Functional responses
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+soil_funct_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Functional responses (normalized)
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+soil_funct_norm_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Temperature adaptation 
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+temp_adapt_cor_ggheatmap
+```
+:::
+
+::: {.panel}
+#### Temperature adaptation (normalized)
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+temp_adapt_norm_cor_ggheatmap
+```
+:::
+:::
+:::
+
+
+```{r, echo=FALSE}
+auto_cor_figs <- ggarrange(
+  edaphic_cor_ggheatmap, edaphic_norm_cor_ggheatmap,
+  soil_funct_cor_ggheatmap, soil_funct_norm_cor_ggheatmap,
+  temp_adapt_cor_ggheatmap, temp_adapt_norm_cor_ggheatmap,
+  ncol = 2, nrow = 3, common.legend = FALSE)
+auto_cor_figs
+dev.off()
+png("files/metadata/figures/its18_auto_cor_figs.png",
+    height = 32, width = 24, units = 'cm', res = 600, bg = "white")
+auto_cor_figs
+dev.off()
+pdf("files/metadata/figures/its18_auto_cor_figs.pdf",
+    height = 10, width = 12)
+auto_cor_figs
+dev.off()
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=FALSE, fig.cap='**Top row** = Environmental and edaphic; **middle row** = Microbial functional responses; **bottom row** = Temperature adaptation. **Left** = Original data; **right** = Normalized data.'}
+system("cp files/metadata/figures/its18_auto_cor_figs.png include/metadata/its18_auto_cor_figs.png")
+knitr::include_graphics("include/metadata/its18_auto_cor_figs.png")
+```
+
+
+Now we can remove parameters based on the autocorrelation analysis:
+
+A) Environmental and edaphic properties: TEB, DON, Ca.
+B) Microbial functional responses: micN, micNP, enzCN, enzCP, BIS_ST, CEL_ST, LEU_ST, NA_ST, MUP_ST.
+C) Temperature adaptation properties: NUE, PUE, MUP_Q10, Tmin.
+
+```{r, eval=FALSE, echo=FALSE}
+objects(pattern = "_cor_ggheatmap")
+tmp_res <- soil_funct_norm_cor_ggheatmap$data
+value_choice <- 0.7
+tmp_res %>% filter(value > value_choice | value < -value_choice) %>% filter_("Var1 != Var2")
+
+#tmp_res %>% filter(Var1 == "DOCN" | Var2 == "DOCN") %>% filter_("Var1 != Var2")
+write.table(tmp_res %>% filter(value > value_choice | value < -value_choice) %>% 
+              filter_("Var1 != Var2"), 
+            "soil_funct_norm.txt", sep = "\t", 
+            quote = FALSE, row.names = FALSE)
+```
+
+```{r}
+edaphic_remove <- c("TEB", "DON", "Na", "Al", "Ca")
+soil_funct_remove <- c("micN", "micNP", "enzCN", "enzCP", "BIS_ST", 
+                       "CEL_ST", "LEU_ST", "NA_ST", "MUP_ST")
+temp_adapt_remove <- c("NUE", "PUE")
+```
+
+```{r}
+tmp_df <- its18_select_mc_split
+tmp_df$edaphic <- tmp_df$edaphic[, ! names(tmp_df$edaphic) %in%  edaphic_remove]
+tmp_df$soil_funct <- tmp_df$soil_funct[, ! names(tmp_df$soil_funct) %in%  soil_funct_remove]
+tmp_df$temp_adapt <- tmp_df$temp_adapt[, ! names(tmp_df$temp_adapt) %in%  temp_adapt_remove]
+its18_select_mc_split_no_ac <- tmp_df
+rm(list = ls(pattern = "tmp_"))
+
+tmp_df <- its18_select_mc_norm_split
+tmp_df$edaphic <- tmp_df$edaphic[, ! names(tmp_df$edaphic) %in%  edaphic_remove]
+tmp_df$soil_funct <- tmp_df$soil_funct[, ! names(tmp_df$soil_funct) %in%  soil_funct_remove]
+tmp_df$temp_adapt <- tmp_df$temp_adapt[, ! names(tmp_df$temp_adapt) %in%  temp_adapt_remove]
+its18_select_mc_norm_split_no_ac <- tmp_df
+rm(list = ls(pattern = "tmp_"))
+```
+
+## Dissimilarity Correlation Tests
+
+Let's see if any on the metadata groups are significantly correlated with the community data. Basically, we create distance matrices for the community data and each metadata group and then run Mantel tests for all comparisons. For the community data we calculate Bray-Curtis distances for the community data and  Euclidean distances for the metadata. We use the function `mantel.test` from the `ape` package and `mantel` from the `vegan` package for the analyses. 
+
+In summary, we test both `mantel.test` and `mantel` on  Bray-Curtis distance community distances against Euclidean distances for each metadata group (`edaphic`, `soil_funct`, `temp_adapt`)  **a**) before normalizing and before removing autocorrelated parameters, **b**) before normalizing and after removing autocorrelated parameters, **c**) after normalizing and before removing autocorrelated parameters, and **d**) after normalizing and after removing autocorrelated parameters.
+
+```{r}
+man_df <- c("its18_select_mc_split", "its18_select_mc_split_no_ac", 
+            "its18_select_mc_norm_split", "its18_select_mc_norm_split_no_ac")
+
+for (i in man_df) {
+  tmp_get <- get(i)
+  tmp_dm_otu <- as.matrix(vegdist(t(tmp_get$data_loaded), 
+                             method = "bray", binary = FALSE, 
+                             diag = TRUE, upper = TRUE, na.rm = FALSE))
+# EDAPHIC
+  tmp_dm_md_edaphic <- as.matrix(vegdist(tmp_get$edaphic[, 8:ncol(tmp_get$edaphic)], 
+                                    method ="euclidean", binary = FALSE, 
+                                    diag = TRUE, upper = TRUE, na.rm = FALSE))
+
+  tmp_man1_edaphic <- mantel.test(tmp_dm_otu, tmp_dm_md_edaphic, nperm = 999, 
+                             graph = FALSE, alternative = "two.sided")
+  tmp_man2_edaphic <- mantel(tmp_dm_otu, tmp_dm_md_edaphic, permutations = 999)
+# SOIL FUNCT
+  tmp_dm_md_soil_funct <- as.matrix(vegdist(tmp_get$soil_funct[, 8:ncol(tmp_get$soil_funct)], 
+                                       method = "euclidean", binary = FALSE, 
+                                       diag = TRUE, upper = TRUE, na.rm = FALSE))
+
+  tmp_man1_soil_funct <- mantel.test(tmp_dm_otu, tmp_dm_md_soil_funct, nperm = 999, 
+                                graph = FALSE, alternative = "two.sided")
+  tmp_man2_soil_funct <- mantel(tmp_dm_otu, tmp_dm_md_soil_funct, permutations = 999)
+
+# TEMP ADAPT
+  tmp_dm_md_temp_adapt <- as.matrix(vegdist(tmp_get$temp_adapt[, 8:ncol(tmp_get$temp_adapt)], 
+                                       method = "euclidean", binary = FALSE, 
+                                       diag = TRUE, upper = TRUE, na.rm = FALSE))
+
+  tmp_man1_temp_adapt <- mantel.test(tmp_dm_otu, tmp_dm_md_temp_adapt, nperm = 999, 
+                                graph = FALSE, alternative = "two.sided")
+  tmp_man2_temp_adapt <- mantel(tmp_dm_otu, tmp_dm_md_temp_adapt, permutations = 999)
+
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_mantel_tests"))
+  tmp_df <- list(edaphic_ape_man = tmp_man1_edaphic, 
+                 edaphic_vegan_man = tmp_man2_edaphic,
+                 soil_funct_ape_man = tmp_man1_soil_funct, 
+                 soil_funct_vegan_man = tmp_man2_soil_funct,
+                 temp_adapt_ape_man = tmp_man1_temp_adapt, 
+                 temp_adapt_vegan_man = tmp_man2_temp_adapt)
+  assign(tmp_name, tmp_df)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+tmp_objects <- c("its18_select_mc_split_mantel_tests", 
+                 "its18_select_mc_split_no_ac_mantel_tests",
+                 "its18_select_mc_norm_split_mantel_tests",
+                 "its18_select_mc_norm_split_no_ac_mantel_tests")
+
+tmp_norm <- data.frame(c("no", "no", "yes", "yes"))
+tmp_ac <- data.frame(c("no", "yes", "no", "yes"))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(tmp_norm, tmp_ac) %>%
+                         dplyr::rename("normalized?" = 1) %>%
+                         dplyr::rename("AC removed?" = 2)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$edaphic_ape_man$p,
+                           get(tmp_objects[2])$edaphic_ape_man$p,
+                           get(tmp_objects[3])$edaphic_ape_man$p,
+                           get(tmp_objects[4])$edaphic_ape_man$p))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(its18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("edaphic_ape" = 3)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$edaphic_vegan_man$signif,
+                           get(tmp_objects[2])$edaphic_vegan_man$signif,
+                           get(tmp_objects[3])$edaphic_vegan_man$signif,
+                           get(tmp_objects[4])$edaphic_vegan_man$signif))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(its18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("edaphic_vegan" = 4)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$soil_funct_ape_man$p,
+                           get(tmp_objects[2])$soil_funct_ape_man$p,
+                           get(tmp_objects[3])$soil_funct_ape_man$p,
+                           get(tmp_objects[4])$soil_funct_ape_man$p))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(its18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("soil_funct_ape" = 5)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$soil_funct_vegan_man$signif,
+                           get(tmp_objects[2])$soil_funct_vegan_man$signif,
+                           get(tmp_objects[3])$soil_funct_vegan_man$signif,
+                           get(tmp_objects[4])$soil_funct_vegan_man$signif))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(its18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("soil_funct_vegan" = 6)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$temp_adapt_ape_man$p,
+                           get(tmp_objects[2])$temp_adapt_ape_man$p,
+                           get(tmp_objects[3])$temp_adapt_ape_man$p,
+                           get(tmp_objects[4])$temp_adapt_ape_man$p))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(its18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("temp_adapt_ape" = 7)
+tmp_pvalue <- data.frame(c(get(tmp_objects[1])$temp_adapt_vegan_man$signif,
+                           get(tmp_objects[2])$temp_adapt_vegan_man$signif,
+                           get(tmp_objects[3])$temp_adapt_vegan_man$signif,
+                           get(tmp_objects[4])$temp_adapt_vegan_man$signif))
+its18_ps_pime_mantel_summary <- dplyr::bind_cols(its18_ps_pime_mantel_summary, tmp_pvalue) %>%
+                         dplyr::rename("temp_adapt_vegan" = 8)
+
+rm(list = ls(pattern = "tmp_"))
+```
+
+### Dissimilarity Correlation Results
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+knitr::kable(its18_ps_pime_mantel_summary)
+```
+
+Moving on.
+
+## Best Subset of Variables
+
+Now we want to know which of the metadata parameters are the most strongly correlated with the community data. For this we use the `bioenv` function from the `vegan` package. `bioenv`---*Best Subset of Environmental Variables with Maximum (Rank) Correlation with Community Dissimilarities*---finds the best subset of environmental variables, so that the Euclidean distances of scaled environmental variables have the maximum (rank) correlation with community dissimilarities. 
+
+Since we know that each of the Mantel tests we ran above are significant, here we will use the metadata set where autocorrelated parameters were removed and the remainder of the parameters were normalized (where applicable based on the Shapiro tests). 
+
+We run `bioenv` against the three groups of metadata parameters. We then run `bioenv` again, but this time against the individual parameters identified as significantly correlated.
+
+### Edaphic Properties
+
+```{r}
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$edaphic)
+tmp_env[,1:8] <- NULL
+
+edaphic_bioenv <- bioenv(wisconsin(tmp_comm), tmp_env, 
+                         method = "spearman", index = "bray", 
+                         upto = ncol(tmp_env), metric = "euclidean")
+
+bioenv_list <- edaphic_bioenv$models[[edaphic_bioenv$whichbest]]$best
+bioenv_best <- bioenvdist(edaphic_bioenv, which = "best")
+
+for (i in bioenv_list) {
+       tmp_dp <- data.frame(edaphic_bioenv$x)
+       tmp_md <- as.matrix(vegdist(tmp_dp[[i]], 
+                                   method = "euclidean", binary = FALSE, 
+                                   diag = TRUE, upper = TRUE, na.rm = FALSE))
+       tmp_man <- mantel(bioenv_best, tmp_md, 
+                         permutations = 999, method = "spearman")
+       tmp_md_name <- names(tmp_dp)[[i]]
+       tmp_name <- purrr::map_chr(tmp_md_name, ~ paste0(., "_bioenv_mantel_test"))
+       assign(tmp_name, tmp_man)
+       rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bioenv_mantel_test")
+```
+
+```{r}
+edaphic_bioenv_ind_mantel <- list(AST = AST_bioenv_mantel_test)
+rm(list = ls(pattern = "_bioenv_mantel_test"))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_bioenv
+```
+
+<details markdown="1">
+<summary>Click here for the results of individual edaphic metadata Mantel tests</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_bioenv_ind_mantel
+```
+</details>
+
+`bioenv` found the following edaphic properties significantly correlated with the community data: 
+**`r row.names(summary(edaphic_bioenv_ind_mantel))`**
+
+### Soil Functional Response
+
+```{r}
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$soil_funct)
+tmp_env[,1:8] <- NULL
+
+soil_funct_bioenv <- bioenv(wisconsin(tmp_comm), tmp_env, 
+                         method = "spearman", index = "bray", 
+                         upto = ncol(tmp_env), metric = "euclidean")
+
+bioenv_list <- soil_funct_bioenv$models[[soil_funct_bioenv$whichbest]]$best
+bioenv_best <- bioenvdist(soil_funct_bioenv, which = "best")
+
+for (i in bioenv_list) {
+       tmp_dp <- data.frame(soil_funct_bioenv$x)
+       tmp_md <- as.matrix(vegdist(tmp_dp[[i]], 
+                                   method = "euclidean", binary = FALSE, 
+                                   diag = TRUE, upper = TRUE, na.rm = FALSE))
+       tmp_man <- mantel(bioenv_best, tmp_md, 
+                         permutations = 999, method = "spearman")
+       tmp_md_name <- names(tmp_dp)[[i]]
+       tmp_name <- purrr::map_chr(tmp_md_name, ~ paste0(., "_bioenv_mantel_test"))
+       assign(tmp_name, tmp_man)
+       rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bioenv_mantel_test")
+```
+
+```{r}
+soil_funct_bioenv_ind_mantel <- list(enzNP = enzNP_bioenv_mantel_test, 
+                                     POX_ST = POX_ST_bioenv_mantel_test,
+                                     XYL_ST = XYL_ST_bioenv_mantel_test)
+rm(list = ls(pattern = "_bioenv_mantel_test"))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_bioenv
+```
+
+<details markdown="1">
+<summary>Click here for the results of individual functional response metadata Mantel tests</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_bioenv_ind_mantel
+```
+</details>
+
+`bioenv` found the following soil functions  significantly correlated with the community data: 
+**`r row.names(summary(soil_funct_bioenv_ind_mantel))`**
+
+### Temperature Adaptation
+
+```{r}
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$temp_adapt)
+tmp_env[,1:8] <- NULL
+
+temp_adapt_bioenv <- bioenv(wisconsin(tmp_comm), tmp_env, 
+                         method = "spearman", index = "bray", 
+                         upto = ncol(tmp_env), metric = "euclidean")
+
+bioenv_list <- temp_adapt_bioenv$models[[temp_adapt_bioenv$whichbest]]$best
+bioenv_best <- bioenvdist(temp_adapt_bioenv, which = "best")
+
+for (i in bioenv_list) {
+       tmp_dp <- data.frame(temp_adapt_bioenv$x)
+       tmp_md <- as.matrix(vegdist(tmp_dp[[i]], 
+                                   method = "euclidean", binary = FALSE, 
+                                   diag = TRUE, upper = TRUE, na.rm = FALSE))
+       tmp_man <- mantel(bioenv_best, tmp_md, 
+                         permutations = 999, method = "spearman")
+       tmp_md_name <- names(tmp_dp)[[i]]
+       tmp_name <- purrr::map_chr(tmp_md_name, ~ paste0(., "_bioenv_mantel_test"))
+       assign(tmp_name, tmp_man)
+       rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bioenv_mantel_test")
+```
+
+```{r}
+temp_adapt_bioenv_ind_mantel <- list(LEU_Q10 = LEU_Q10_bioenv_mantel_test,
+                                     MUP_Q10 = MUP_Q10_bioenv_mantel_test,
+                                     XYL_Q10 = XYL_Q10_bioenv_mantel_test, 
+                                     Tmin = Tmin_bioenv_mantel_test,
+                                     SI = SI_bioenv_mantel_test)
+rm(list = ls(pattern = "_bioenv_mantel_test"))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_bioenv
+```
+
+<details markdown="1">
+<summary>Click here for the results of individual temperature adaptation metadata Mantel tests</summary>
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_bioenv_ind_mantel
+```
+</details>
+
+
+`bioenv` found the following temperature adaptations significantly correlated with the community data: 
+**`r row.names(summary(temp_adapt_bioenv_ind_mantel))`**
+
+## Distance-based Redundancy
+
+Now we turn our attention to distance-based redundancy analysis (dbRDA), an ordination method similar to Redundancy Analysis (rda) but it allows non-Euclidean dissimilarity indices, such as Manhattan or Bray–Curtis distance. For this, we use `capscale` from the `vegan` package. `capscale`  is a constrained versions of metric scaling (principal coordinates analysis), which are based on the Euclidean distance but can be used, and are more useful, with other dissimilarity measures. The functions can also perform unconstrained principal coordinates analysis, optionally using extended dissimilarities.
+
+For each of the three metadata subsets, we perform the following steps:
+
+1) Run `rankindex` to compare metadata and community dissimilarity indices for gradient detection. This will help us select the best dissimilarity metric to use.
+2) Run `capscale` for distance-based redundancy analysis.
+3) Run `envfit` to fit environmental parameters onto the ordination. This function basically calculates correlation scores between the metadata parameters and the ordination axes. 
+4) Select metadata parameters significant for `bioenv` (see above) and/or `envfit` analyses.
+5) Run `envfit` on ASVs.
+6) Plot the ordination and vector overlays. 
+
+### Edaphic Properties
+
+```{r}
+tmp_md <- its18_select_mc_norm_split_no_ac$edaphic
+tmp_md$TEMP <- as.character(tmp_md$TEMP)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+edaphic_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_rank
+```
+
+Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(its18_select_mc_norm_split_no_ac$edaphic) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
+
+* Starting properties: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, resinP, DOC, DON, DOCN  
+* Autocorrelated removed: TEB, DON, Ca
+* Remove for capscale: Mg, Mn, Na, Al, Fe, K
+
+```{r, echo=FALSE}
+# All edaphic: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, resinP, DOC, DON, DOCN  
+# REMOVED edaphic: TEB, DON, Na, Al, Ca
+# Remaining edaphic: AST, H2O, N, P, Fe, K, Mg, Mn, ECEC, pH, NH4, NO3, resinP, DOC, DOCN  
+# only works with 11
+# Removed  Mg + Mn + Fe + K
+# TEST with , metaMDSdist = TRUE AND/OR , metaMDS = TRUE
+```
+
+```{r}
+edaphic_cap <- capscale(tmp_comm ~ AST + H2O + N + P + ECEC + pH + 
+                                   NH4 + NO3 + resinP + DOC + DOCN, 
+                        tmp_md, dist = "bray")
+colnames(tmp_md)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_cap
+```
+
+Now we can look at the variance against each principal component. 
+
+```{r, echo=FALSE, eval=TRUE}
+stats::screeplot(edaphic_cap)
+```
+
+And then make some quick and dirty plots. This will also come in handy later when we need to parse out data a better plot visualization. The `ggplot` function `autoplot` stores these data in a more accessible way than the raw results from `capscale`
+
+```{r stuff, eval=TRUE}
+base::plot(edaphic_cap) 
+tmp_auto_plt <- ggplot2::autoplot(edaphic_cap, arrows = TRUE)
+tmp_auto_plt
+```
+
+```{r, echo=FALSE}
+anova(edaphic_cap) # overall test of the significant of the analysis
+anova(edaphic_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(edaphic_cap, by = "terms", permu = 500) # test for sign. environ. variables
+```
+
+Next, we need to grab capscale scores for the samples and create a data frame of the first two dimensions. We will also need to add some of the sample details to the data frame. For this we use the vegan function `scores` which gets species or site scores from the ordination.
+
+```{r}
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+edaphic_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, by = "SampleID")
+```
+
+Now we have a new data frame that contains sample details and capscale values. 
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_plot_data
+```
+
+We can then do the same with the metadata vectors. Here though we only need the scores and parameter name. 
+
+```{r}
+edaphic_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+edaphic_md_scores[,1] <- NULL
+edaphic_md_scores <- edaphic_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_md_scores
+```
+
+Let's run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function `envfit`.
+
+```{r}
+tmp_samp_scores_sub <- edaphic_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- edaphic_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_edaphic_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_edaphic_md
+```
+
+```{r}
+edaphic_md_signif_hits <- base::subset(envfit_edaphic_md$vectors$pvals, 
+                                  c(envfit_edaphic_md$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_md$vectors$r > 0.4))
+edaphic_md_signif_hits <- data.frame(edaphic_md_signif_hits)
+edaphic_md_signif_hits <- rownames(edaphic_md_signif_hits)
+edaphic_md_signif <- edaphic_md_scores[edaphic_md_scores$parameters %in% edaphic_md_signif_hits,]
+edaphic_md_signif$parameters
+```
+
+`envfit` found that `r edaphic_md_signif$parameters` were significantly correlated. 
+
+Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+```{r eval=TRUE, echo=FALSE, results='hold', comment=''}
+print("Significant parameters from bioenv analysis.")
+row.names(summary(edaphic_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+edaphic_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(edaphic_bioenv_ind_mantel)), 
+                       edaphic_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(edaphic_md_signif$parameters, 
+              row.names(summary(edaphic_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+edaphic_sig_diff <- base::union(edaphic_md_signif$parameters, 
+              row.names(summary(edaphic_bioenv_ind_mantel)))
+edaphic_sig_diff
+```
+
+```{r}
+new_edaphic_md_signif_hits <- edaphic_sig_diff
+#new_edaphic_md_signif_hits <- append(edaphic_md_signif_hits, edaphic_sig_diff)
+edaphic_md_signif_all <- edaphic_md_scores[edaphic_md_scores$parameters %in% new_edaphic_md_signif_hits,]
+```
+
+Check. Next, we run `envfit` for the ASVs.
+
+```{r}
+envfit_edaphic_asv <- envfit(tmp_samp_scores_sub, 
+                             tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                             perm = 1000, choices = c(1, 2))
+edaphic_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+edaphic_asv_scores <- edaphic_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+edaphic_asv_scores[,1] <- NULL
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_edaphic_asv
+```
+
+```{r}
+edaphic_asv_signif_hits <- base::subset(envfit_edaphic_asv$vectors$pvals, 
+                                  c(envfit_edaphic_asv$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_asv$vectors$r > 0.5))
+edaphic_asv_signif_hits <- data.frame(edaphic_asv_signif_hits)
+edaphic_asv_signif_hits <- rownames(edaphic_asv_signif_hits)
+edaphic_asv_signif <- edaphic_asv_scores[edaphic_asv_scores$parameters %in% edaphic_asv_signif_hits,]
+```
+
+```{r, echo=FALSE, eval=TRUE}
+edaphic_asv_signif
+```
+ 
+
+```{r}
+edaphic_md_signif_all$variable_type <- "metadata"
+edaphic_asv_signif$variable_type <- "ASV"
+edaphic_bioplot_data <- rbind(edaphic_md_signif_all, edaphic_asv_signif)
+```
+
+The last thing to do is categorize parameters scores and ASV scores into different variable types for plotting.
+
+```{r}
+edaphic_bioplot_data_md <- subset(edaphic_bioplot_data, 
+                                  edaphic_bioplot_data$variable_type == "metadata")
+edaphic_bioplot_data_asv <- subset(edaphic_bioplot_data, 
+                                   edaphic_bioplot_data$variable_type == "ASV")
+```
+
+<details markdown="1">
+<summary>Click here to see the code for the plot</summary>
+
+```{r, echo=FALSE}
+edaphic_cap_vals <- data.frame(edaphic_cap$CCA$eig[1:2])
+edaphic_cap1 <- signif((edaphic_cap_vals[1,] * 100), digits=3)
+edaphic_cap2 <- signif((edaphic_cap_vals[2,] * 100), digits=3)
+
+cpa1_lab <- paste("CAP1", " (", edaphic_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", edaphic_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+edaphic_plot <- ggplot(edaphic_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2, shape = TREAT,
+                           colour = TEMP), size = 4) +
+  scale_colour_manual(values = swel_col) +
+#  geom_text(data = edaphic_plot_data, aes(x = CAP1, y = CAP2, #UNCOMMENT to add sample labels
+#                              label = SampleID), size = 3) + 
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = edaphic_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.4, 
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = edaphic_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 3, 
+            nudge_x = 0.1, nudge_y = 0.05) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = edaphic_bioplot_data_asv, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")),  size = 0.2, 
+               color = "#676767") +
+  geom_text(data = edaphic_bioplot_data_asv, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 2.5,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(title = "Capscale Analysis",
+       subtitle = "Edaphic properties", 
+       x = cpa1_lab, 
+       y = cpa2_lab)
+edaphic_plot <- edaphic_plot + coord_fixed() + theme(aspect.ratio=1)
+edaphic_plot
+png("files/metadata/figures/its18_edaphic_capscale.png",
+    height = 16, width = 20, units = 'cm', res = 600, bg = "white")
+edaphic_plot$labels
+invisible(dev.off())
+pdf("files/metadata/figures/its18_edaphic_capscale.pdf",
+    height = 5, width = 6)
+edaphic_plot
+dev.off()
+```
+</details>
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for edaphic properties.'}
+system("cp files/metadata/figures/its18_edaphic_capscale.png include/metadata/its18_edaphic_capscale.png")
+knitr::include_graphics("include/metadata/its18_edaphic_capscale.png")
+```
+
+```{r, echo=FALSE}
+rm(list = ls(pattern = "tmp_"))
+```
+
+### Soil Functional Response
+
+```{r}
+tmp_md <- its18_select_mc_norm_split_no_ac$soil_funct
+tmp_md$TEMP <- as.character(tmp_md$TEMP)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+soil_funct_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_rank
+```
+
+Let's run `capscale` using Bray-Curtis Note, we have `r ncol(its18_select_mc_norm_split_no_ac$soil_funct) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
+
+* Starting properties: micC, micN, micP, micCN, micCP, micNP, AG_ST, BG_ST, BIS_ST, CEL_ST, MUP_ST, NA_ST, S_ST, XYL_ST, LEU_ST, POX_ST, avCO2, enzCN, enzCP, enzNP
+* Autocorrelated removed: micN, micNP, enzCN, enzCP, BIS_ST, CEL_ST, LEU_ST, NA_ST, MUP_ST
+* Remove for capscale: NONE
+
+```{r, echo=FALSE}
+# All soil prop: micC, micN, micP, micCN, micCP, micNP, AG_ST, BG_ST, BIS_ST, CEL_ST, MUP_ST, NA_ST, S_ST, XYL_ST, LEU_ST, POX_ST, avCO2, enzCN, enzCP, enzNP
+# REMOVED soil prop: micN, micNP, enzCN, enzCP, BIS_ST, CEL_ST, LEU_ST, NA_ST, MUP_ST
+# Remaining soil prop: micC, micP, micCN, micCP, AG_ST, BG_ST, S_ST, XYL_ST, POX_ST, avCO2, enzNP
+# only works with 11
+# capscale Removed  NONE
+```
+
+
+```{r}
+soil_funct_cap <- capscale(tmp_comm ~  micC + micP + micCN + micCP + AG_ST + 
+                                      BG_ST + S_ST + XYL_ST + POX_ST + avCO2 + enzNP, 
+                           tmp_md, dist = "bray")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_cap
+```
+
+Now we can look at the variance against each principal component. 
+
+```{r, echo=FALSE, eval=TRUE}
+screeplot(soil_funct_cap)
+```
+
+
+And then make some quick and dirty plots. This will also come in handy later when we need to parse out data a better plot visualization. The `ggplot` function `autoplot` stores these data in a more accessible way than the raw results from `capscale`
+
+```{r, eval=TRUE}
+base::plot(soil_funct_cap) 
+tmp_auto_plt <- autoplot(soil_funct_cap, arrows = TRUE)
+tmp_auto_plt
+```
+
+```{r, echo=FALSE}
+anova(soil_funct_cap) # overall test of the significant of the analysis
+anova(soil_funct_cap, by = "axis", perm.max=500) # test axes for significance
+anova(soil_funct_cap, by = "terms", permu=500) # test for sign. environ. variables
+```
+
+Next, we need to grab capscale scores for the samples and create a data frame of the first two dimensions. We will also need to add some of the sample details to the data frame. For this we use the vegan function `scores` which gets species or site scores from the ordination.
+
+```{r}
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+soil_funct_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+```
+
+Now we have a new data frame that contains sample details and capscale values. 
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_plot_data
+```
+
+We can then do the same with the metadata vectors. Here though we only need the scores and parameter name. 
+
+```{r}
+soil_funct_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+soil_funct_md_scores[,1] <- NULL
+soil_funct_md_scores <- soil_funct_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_md_scores
+```
+
+Let's run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function `envfit`.
+
+```{r}
+tmp_samp_scores_sub <- soil_funct_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- soil_funct_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_soil_funct_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_soil_funct_md
+```
+
+```{r}
+soil_funct_md_signif_hits <- base::subset(envfit_soil_funct_md$vectors$pvals, 
+                                  c(envfit_soil_funct_md$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_md$vectors$r > 0.4))
+soil_funct_md_signif_hits <- data.frame(soil_funct_md_signif_hits)
+soil_funct_md_signif_hits <- rownames(soil_funct_md_signif_hits)
+soil_funct_md_signif <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                               soil_funct_md_signif_hits,]
+soil_funct_md_signif$parameters
+```
+
+`envfit` found that `r soil_funct_md_signif$parameters` were significantly correlated. 
+
+Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+print("Significant parameters from bioenv analysis.")
+row.names(summary(soil_funct_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+soil_funct_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(soil_funct_bioenv_ind_mantel)), 
+                       soil_funct_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(soil_funct_md_signif$parameters, 
+              row.names(summary(soil_funct_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+soil_funct_sig_diff <- base::union(soil_funct_md_signif$parameters, 
+                                   row.names(summary(soil_funct_bioenv_ind_mantel)))
+soil_funct_sig_diff
+```
+
+
+
+```{r}
+#new_soil_funct_md_signif_hits <- append(soil_funct_md_signif_hits, soil_funct_sig_diff)
+new_soil_funct_md_signif_hits <- soil_funct_sig_diff
+soil_funct_md_signif_all <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                                   new_soil_funct_md_signif_hits,]
+```
+
+Check. Next, we run `envfit` for the ASVs.
+
+```{r}
+envfit_soil_funct_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10], 
+                                perm = 1000, choices = c(1, 2))
+soil_funct_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+soil_funct_asv_scores <- soil_funct_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+soil_funct_asv_scores[,1] <- NULL
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_soil_funct_asv
+```
+
+```{r}
+soil_funct_asv_signif_hits <- base::subset(envfit_soil_funct_asv$vectors$pvals, 
+                                  c(envfit_soil_funct_asv$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_asv$vectors$r > 0.5))
+soil_funct_asv_signif_hits <- data.frame(soil_funct_asv_signif_hits)
+soil_funct_asv_signif_hits <- rownames(soil_funct_asv_signif_hits)
+soil_funct_asv_signif <- soil_funct_asv_scores[soil_funct_asv_scores$parameters %in% 
+                                                 soil_funct_asv_signif_hits,]
+```
+
+```{r, echo=FALSE, eval=TRUE}
+soil_funct_asv_signif
+```
+
+```{r}
+soil_funct_md_signif_all$variable_type <- "metadata"
+soil_funct_asv_signif$variable_type <- "ASV"
+soil_funct_bioplot_data <- rbind(soil_funct_md_signif_all, soil_funct_asv_signif)
+```
+
+The last thing to do is categorize parameters scores and ASV scores into different variable types for plotting.
+
+```{r}
+soil_funct_bioplot_data_md <- subset(soil_funct_bioplot_data, 
+                                  soil_funct_bioplot_data$variable_type == "metadata")
+soil_funct_bioplot_data_asv <- subset(soil_funct_bioplot_data, 
+                                   soil_funct_bioplot_data$variable_type == "ASV")
+```
+
+
+<details markdown="1">
+<summary>Click here to see the code for the plot</summary>
+
+```{r}
+soil_funct_cap_vals <- data.frame(soil_funct_cap$CCA$eig[1:2])
+soil_funct_cap1 <- signif((soil_funct_cap_vals[1,] * 100), digits=3)
+soil_funct_cap2 <- signif((soil_funct_cap_vals[2,] * 100), digits=3)
+
+cpa1_lab <- paste("CAP1", " (", soil_funct_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", soil_funct_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+soil_funct_plot <- ggplot(soil_funct_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2, shape = TREAT,
+                           colour = TEMP), size = 4) +
+  scale_colour_manual(values = swel_col) +
+#  geom_text(data = soil_funct_plot_data, aes(x = CAP1, y = CAP2, #UNCOMMENT to add sample labels
+#                              label = SampleID), size = 3) + 
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = soil_funct_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.4, 
+               color = "#191919") +
+  geom_text(data = soil_funct_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 3,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = soil_funct_bioplot_data_asv, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.2,
+               color = "#676767") +
+  geom_text(data = soil_funct_bioplot_data_asv, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 2.5,
+            nudge_x = 0.05, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(title = "Capscale Analysis",
+       subtitle = "Soil Functional Response", 
+       x = cpa1_lab, 
+       y = cpa2_lab)
+soil_funct_plot <- soil_funct_plot + coord_fixed() + theme(aspect.ratio=1)
+soil_funct_plot
+png("files/metadata/figures/its18_soil_funct_capscale.png",
+    height = 16, width = 20, units = 'cm', res = 600, bg = "white")
+soil_funct_plot
+invisible(dev.off())
+pdf("files/metadata/figures/its18_soil_funct_capscale.pdf",
+    height = 5, width = 6)
+soil_funct_plot
+dev.off()
+```
+</details>
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for soil functional response'}
+system("cp files/metadata/figures/its18_soil_funct_capscale.png include/metadata/its18_soil_funct_capscale.png")
+knitr::include_graphics("include/metadata/its18_soil_funct_capscale.png")
+```
+
+
+```{r, echo=FALSE}
+rm(list = ls(pattern = "tmp_"))
+```
+
+### Temperature Adaptation
+
+```{r}
+tmp_md <- its18_select_mc_norm_split_no_ac$temp_adapt
+tmp_md$TEMP <- as.character(tmp_md$TEMP)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_rank
+```
+
+Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(its18_select_mc_norm_split_no_ac$temp_adapt) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
+
+* Starting properties: AG_Q10, BG_Q10, BIS_Q10, CEL_Q10, MUP_Q10, NA_Q10, S_Q10, XYL_Q10, LEU_Q10, POX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI 
+* Autocorrelated removed: NUE, PUE, MUP_Q10, Tmin
+* Remove for capscale: S_Q10
+
+```{r, echo=FALSE}
+# All temp_adapt: AG_Q10, BG_Q10, BIS_Q10, CEL_Q10, MUP_Q10, NA_Q10, S_Q10, XYL_Q10, LEU_Q10, POX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI 
+# REMOVED edaphic: NUE, PUE, MUP_Q10, Tmin
+# Remaining edaphic: AG_Q10, BG_Q10, BIS_Q10, CEL_Q10, NA_Q10, S_Q10, XYL_Q10, LEU_Q10, POX_Q10, CUEcn, CUEcp, SI
+# only works with 11
+# Removed:  S_Q10
+```
+
+```{r}
+temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BIS_Q10 + CEL_Q10 + 
+                                       NA_Q10 + XYL_Q10 + LEU_Q10 + 
+                                       POX_Q10 + CUEcn + CUEcp + SI, 
+                                       tmp_md, dist = "bray")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_cap
+```
+
+Now we can look at the variance against each principal component. 
+
+```{r, echo=FALSE, eval=TRUE}
+screeplot(temp_adapt_cap)
+```
+
+
+And then make some quick and dirty plots. This will also come in handy later when we need to parse out data a better plot visualization. The `ggplot` function `autoplot` stores these data in a more accessible way than the raw results from `capscale`
+
+```{r, eval=TRUE}
+base::plot(temp_adapt_cap) 
+tmp_auto_plt <- autoplot(temp_adapt_cap, arrows = TRUE)
+tmp_auto_plt
+```
+
+```{r, echo=FALSE}
+anova(temp_adapt_cap) # overall test of the significant of the analysis
+anova(temp_adapt_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(temp_adapt_cap, by = "terms", permu = 500) # test for sign. environ. variables
+```
+
+Next, we need to grab capscale scores for the samples and create a data frame of the first two dimensions. We will also need to add some of the sample details to the data frame. For this we use the vegan function `scores` which gets species or site scores from the ordination.
+
+```{r}
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+temp_adapt_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+```
+
+Now we have a new data frame that contains sample details and capscale values. 
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_plot_data
+```
+
+We can then do the same with the metadata vectors. Here though we only need the scores and parameter name. 
+
+```{r}
+temp_adapt_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+temp_adapt_md_scores[,1] <- NULL
+temp_adapt_md_scores <- temp_adapt_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_md_scores
+```
+
+Let's run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function `envfit`.
+
+```{r}
+tmp_samp_scores_sub <- temp_adapt_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- temp_adapt_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_temp_adapt_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_temp_adapt_md
+```
+
+```{r}
+temp_adapt_md_signif_hits <- base::subset(envfit_temp_adapt_md$vectors$pvals, 
+                                  c(envfit_temp_adapt_md$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_md$vectors$r > 0.4))
+temp_adapt_md_signif_hits <- data.frame(temp_adapt_md_signif_hits)
+temp_adapt_md_signif_hits <- rownames(temp_adapt_md_signif_hits)
+temp_adapt_md_signif <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                               temp_adapt_md_signif_hits,]
+```
+
+`envfit` found that `r temp_adapt_md_signif$parameters` were significantly correlated. 
+
+Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+print("Significant parameters from bioenv analysis.")
+row.names(summary(temp_adapt_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+temp_adapt_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(temp_adapt_bioenv_ind_mantel)), 
+                       temp_adapt_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(temp_adapt_md_signif$parameters, 
+              row.names(summary(temp_adapt_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and  bioenv.")
+temp_adapt_sig_diff <- base::union(temp_adapt_md_signif$parameters, 
+                                   row.names(summary(temp_adapt_bioenv_ind_mantel)))
+temp_adapt_sig_diff
+```
+
+```{r}
+#new_temp_adapt_md_signif_hits <- base::append(temp_adapt_md_signif_hits, temp_adapt_sig_diff)
+new_temp_adapt_md_signif_hits <- temp_adapt_sig_diff[1:4]
+temp_adapt_md_signif_all <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                                   new_temp_adapt_md_signif_hits,]
+```
+
+Check. Next, we run `envfit` for the ASVs.
+
+```{r}
+envfit_temp_adapt_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                                perm = 1000, choices = c(1, 2))
+
+temp_adapt_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+
+temp_adapt_asv_scores <- temp_adapt_asv_scores %>% 
+                         dplyr::mutate(parameters = Label, .before = CAP1) %>%
+                         tibble::column_to_rownames("Label")
+temp_adapt_asv_scores[,1] <- NULL
+```
+
+```{r, echo=FALSE, eval=TRUE}
+envfit_temp_adapt_asv
+```
+
+```{r}
+temp_adapt_asv_signif_hits <- base::subset(envfit_temp_adapt_asv$vectors$pvals, 
+                                  c(envfit_temp_adapt_asv$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_asv$vectors$r > 0.5))
+temp_adapt_asv_signif_hits <- data.frame(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif_hits <- rownames(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif <- temp_adapt_asv_scores[temp_adapt_asv_scores$parameters %in% 
+                                                 temp_adapt_asv_signif_hits,]
+```
+
+```{r, echo=FALSE, eval=TRUE}
+temp_adapt_asv_signif
+```
+ 
+
+```{r}
+temp_adapt_md_signif_all$variable_type <- "metadata"
+temp_adapt_asv_signif$variable_type <- "ASV"
+temp_adapt_bioplot_data <- rbind(temp_adapt_md_signif_all, temp_adapt_asv_signif)
+```
+
+The last thing to do is categorize parameters scores and ASV scores into different variable types for plotting.
+
+```{r}
+temp_adapt_bioplot_data_md <- subset(temp_adapt_bioplot_data, 
+                                  temp_adapt_bioplot_data$variable_type == "metadata")
+temp_adapt_bioplot_data_asv <- subset(temp_adapt_bioplot_data, 
+                                   temp_adapt_bioplot_data$variable_type == "ASV")
+```
+
+<details markdown="1">
+<summary>Click here to see the code for the plot</summary>
+
+```{r}
+temp_adapt_cap_vals <- data.frame(temp_adapt_cap$CCA$eig[1:2])
+temp_adapt_cap1 <- signif((temp_adapt_cap_vals[1,] * 100), digits=3)
+temp_adapt_cap2 <- signif((temp_adapt_cap_vals[2,] * 100), digits=3)
+
+cpa1_lab <- paste("CAP1", " (", temp_adapt_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", temp_adapt_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+temp_adapt_plot <- ggplot(temp_adapt_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2, shape = TREAT,
+                           colour = TEMP), size = 4) +
+  scale_colour_manual(values = swel_col) +
+#  geom_text(data = temp_adapt_plot_data, aes(x = CAP1, y = CAP2, #UNCOMMENT to add sample labels
+#                              label = SampleID), size = 3) + 
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.4,
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = temp_adapt_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 3,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_asv, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.2,
+               color = "#676767") +
+  geom_text(data = temp_adapt_bioplot_data_asv, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 2.5,
+            nudge_x = 0.05, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(title = "Capscale Analysis",
+       subtitle = "Temperature Adaptation",
+       x = cpa1_lab, 
+       y = cpa2_lab)
+temp_adapt_plot <- temp_adapt_plot + coord_fixed() + theme(aspect.ratio=1)
+temp_adapt_plot
+png("files/metadata/figures/its18_temp_adapt_capscale.png",
+    height = 16, width = 20, units = 'cm', res = 600, bg = "white")
+temp_adapt_plot
+invisible(dev.off())
+pdf("files/metadata/figures/its18_temp_adapt_capscale.pdf",
+    height = 5, width = 6)
+temp_adapt_plot
+dev.off()
+```
+</details>
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for temperature adaptation'}
+system("cp files/metadata/figures/its18_temp_adapt_capscale.png include/metadata/its18_temp_adapt_capscale.png")
+knitr::include_graphics("include/metadata/its18_temp_adapt_capscale.png")
+```
+
+
+```{r, echo=FALSE}
+rm(list = ls(pattern = "tmp_"))
+```
+
+## Capscale Plots
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+#### Edaphic properties
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+edaphic_plot
+```
+:::
+
+::: {.panel}
+#### Soil Functional Response
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+soil_funct_plot
+```
+:::
+
+::: {.panel}
+#### Temperature Adaptation
+
+```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
+temp_adapt_plot
+```
+:::
+:::
+:::
+
+```{r, echo=FALSE}
+its18_capscale_plots <- ggarrange(
+  edaphic_plot,
+  soil_funct_plot,
+  temp_adapt_plot,
+  ncol = 3, nrow = 1, common.legend = TRUE, legend = "bottom")
+its18_capscale_plots
+dev.off()
+png("files/metadata/figures/its18_capscale_plots.png", height = 12, width = 36,
+    units = 'cm', res = 600, bg = "white")
+its18_capscale_plots
+dev.off()
+pdf("files/metadata/figures/its18_capscale_plots.pdf", height = 6, width = 18)
+its18_capscale_plots
+dev.off()
+```
+
+## PERMANOVA 
+
+```{r, echo=FALSE}
+tmp_md_groups <- c("edpahic", "soil_funct", "temp_adapt")
+tmp_data <- its18_select_mc_norm_split_no_ac
+tmp_data$edaphic$TEMP <- as.character(tmp_data$edaphic$TEMP)
+
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+
+tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$edaphic)
+#tmp_env$edaphic$TEMP <- as.character(tmp_env$edaphic$TEMP)
+edpahic_adonis2 <- adonis2(tmp_comm ~ TEMP* AST, data = tmp_data$edaphic)
+
+tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$soil_funct)
+soil_funct_adonis2 <- adonis2(soil_funct_cap$call$formula, data = tmp_data$soil_funct)
+
+tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$temp_adapt)
+temp_adapt_adonis2 <- adonis2(temp_adapt_cap$call$formula, data = tmp_data$temp_adapt)
+
+
+### Soil Functional Response
+ 
+### Temperature Adaptation
+temp_adapt_cap
+
+```
+
+```{r, echo=FALSE}
+save.image("page_build/metadata_its18_wf.rdata")
+```
+
+```{r include=FALSE, eval=TRUE}
+remove(list = ls())
+```
+
+
+##  Source Code {.appendix}
+
+You can find the source code for this page by [clicking this link](https://github.com/sweltr/high-temp/blob/master/metadata.Rmd).
+
+## Data Availability {.appendix}
+
+Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [XXXXXXXX](). Output files from this workflow available on figshare at [XXXXXXXX.]().

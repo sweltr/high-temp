@@ -1,0 +1,70 @@
+name: "web"
+title: "sweltr"
+base_url: https://sweltr.github.io/
+repository_url: https://github.com/sweltr/high-temp/
+description: |
+  sweltr
+output_dir: "public_build"
+creative_commons: CC BY
+exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build"]
+navbar:
+  icon: icon.png
+  title: ""
+  source_url: false
+  search: false
+  left:
+#    - text: "Home"
+    - icon: fa-home
+      href: index.html
+#    - text: "Introduction"
+#      icon: fa-info
+#      href: temp.html
+#    - text: "Field Analyses"
+#      icon: fa-flask
+#      href: temp.html
+    - text: "A. Processing Workflows"
+      menu:
+        - text: "1. DADA2"
+          href: dada2.html
+        - text: "2. Data Set Prep"
+          href: data-prep.html
+        - text: "3. OTU Clustering"
+          href: otu.html
+        - text: "---------"
+        - text: "Filtering"
+        - text: "4a. PIME Filtering"
+          href: pime.html
+        - text: "4b. PERFect Filtering"
+          href: perfect.html
+    - text: "B. Diversity Workflows"
+      menu:
+        - text: "5. Taxonomic"
+          href: taxa.html
+        - text: "6. Alpha Diversity"
+          href: alpha.html
+        - text: "7. Beta Diversity"
+          href: beta.html
+        - text: "8. DA ASVs & OTUs"
+          href: da.html
+        - text: "9. Metadata"
+          href: metadata.html
+#    - text: "SOM"
+#      icon:
+#      href: supplemental-material.html
+#    - icon: fa-code fa-lg
+#      href: raw_code.txt
+  right:
+    - text: "Data"
+#      icon: fa-user-friends
+      href: temp.html
+    - icon: fa-github fa-lg
+      href: https://github.com/sweltr/high-temp/
+output:
+    distill::distill_article:
+      highlight_downlit: false
+      highlight: haddock
+      css: assets/styles.css
+      toc: true
+      toc_depth: 2
+      toc_float: true
+compare_updates_url: https://github.com/sweltr/high-temp/compare/pubv1...master
