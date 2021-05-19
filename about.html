@@ -22,7 +22,7 @@
   <!--radix_placeholder_meta_tags-->
   <title>sweltr: Notes About this site</title>
 
-  <meta property="description" itemprop="description" content="Page for Notes on how I did stuff..."/>
+  <meta property="description" itemprop="description" content="Notes on how I built the site &amp; hosted on GH-Pages."/>
 
   <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
 
@@ -30,20 +30,20 @@
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
   <meta property="og:title" content="sweltr: Notes About this site"/>
   <meta property="og:type" content="article"/>
-  <meta property="og:description" content="Page for Notes on how I did stuff..."/>
+  <meta property="og:description" content="Notes on how I built the site &amp; hosted on GH-Pages."/>
   <meta property="og:locale" content="en_US"/>
   <meta property="og:site_name" content="sweltr"/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
   <meta property="twitter:title" content="sweltr: Notes About this site"/>
-  <meta property="twitter:description" content="Page for Notes on how I did stuff..."/>
+  <meta property="twitter:description" content="Notes on how I built the site &amp; hosted on GH-Pages."/>
 
   <!--/radix_placeholder_meta_tags-->
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description"]}},"value":[{"type":"character","attributes":{},"value":["Notes About this site"]},{"type":"character","attributes":{},"value":["Page for Notes on how I did stuff..."]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","output"]}},"value":[{"type":"character","attributes":{},"value":["Notes About this site"]},{"type":"character","attributes":{},"value":["Notes on how I built the site & hosted on GH-Pages.\n"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -1966,7 +1966,7 @@
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Notes About this site","description":"Page for Notes on how I did stuff...","authors":[]}
+{"title":"Notes About this site","description":"Notes on how I built the site & hosted on GH-Pages.","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2026,45 +2026,98 @@ B. Diversity Workflows
 <h1>Notes About this site</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
-<p><p>Page for Notes on how I did stuff…</p></p>
+<p><p>Notes on how I built the site &amp; hosted on GH-Pages.</p></p>
 </div>
 
 
 <div class="d-article">
-<div class="d-contents d-contents-float">
-<nav class="l-text toc figcaption" id="TOC">
-<h3>Contents</h3>
-<ul>
-<li><a href="#github-pages-site-deployment">GitHub Pages Site Deployment</a></li>
-</ul>
-</nav>
-</div>
 <h2 id="github-pages-site-deployment">GitHub Pages Site Deployment</h2>
 <h3 id="initial-setup">Initial Setup</h3>
-<p><em>This works for a site setup from an organization</em>. See <a href="https://gohugo.io/hosting-and-deployment/hosting-on-github/#github-user-or-organization-pages">here for an explaination</a>. Only needs to be done once.</p>
+<p>This is how I built a <code>gh-pages</code> site for the high-temp SWELTR study. Check out <a href="https://www.thinkful.com/learn/a-guide-to-using-github-pages/">A guide to using Github Pages</a> for more information.</p>
 <ol type="1">
 <li>Create <code>sweltr</code> organization on github.</li>
-<li>Create <code>swelter-web</code> repo for source code. Initial repo is private. <strong>MUST initialize repo with a README</strong>. This creates a master branch.</li>
-<li>Create a github.io repo for <code>sweltr.github.io</code>. Initial repo is public. <strong>MUST initialize repo with a README</strong>.</li>
-<li>Cloned the source code repo <code>git clone https://github.com/sweltr/sweltr-web.git</code>.</li>
-<li><code>cd swelter-web/</code></li>
-<li>Move or copy source code files to repo directory. If build directory is present, remove it <code>rm -rf public</code>.</li>
-<li>Creates a git <a href="https://github.com/blog/2104-working-with-submodules">submodule</a>. Now when you build your site to public, the created public directory will have a different remote origin (i.e. hosted GitHub repository).</li>
+<li>Create <code>high-temp</code> repo for source code. Make sure repo public. <strong>MUST initialize repo with a README</strong>. This creates a master branch.</li>
+<li>Create a github.io repo for <code>sweltr.github.io</code>. Make sure repo public. <strong>MUST initialize repo with a README</strong>.</li>
+<li>Clone the source code repo.</li>
 </ol>
-<ul>
-<li><code>git submodule add -b master https://github.com/sweltr/sweltr.github.io.git public</code></li>
-</ul>
-<p>To setup password protected site I used the method described <a href="https://github.com/matteobrusa/Password-protection-for-static-pages">here</a>.</p>
-<ol type="1">
-<li>Add the <code>index.html</code> from the GitHub repo and a background image to the <code>public/</code> directory.</li>
-<li>cd into <code>public/</code> and run <code>git add --all &amp;&amp; git commit -m "SOME MESSAGE" &amp;&amp; git push origin master</code></li>
-<li>Load <code>https://sweltr.github.io/</code> into a browser and enter a novel password.</li>
-<li>It will show “wrong password”, never mind. Copy the section of the URL after the # sign.</li>
-<li>Create a folder with that name in the <code>public/</code> directory.</li>
-<li>Change the <code>output_dir</code> in the <code>_site.yml</code> to <code>public/HASH_CODE</code></li>
-<li>Rebuild site.</li>
-<li>Rerun git commands and commit site.</li>
+<pre><code>git clone https://github.com/sweltr/high-temp.git
+cd high-temp/</code></pre>
+<ol start="5" type="1">
+<li>At this point the directory should be empty except for the README file and <code>.git</code> directory.</li>
+<li>Create a <code>.gitignore</code> file.</li>
 </ol>
+<pre><code>echo public/ &gt;&gt; .gitignore # Add items as needed.</code></pre>
+<ol start="7" type="1">
+<li>Now run</li>
+</ol>
+<pre><code>git status
+git add --all
+git status
+git commit -a -m &quot;initial commit&quot;
+git push origin main</code></pre>
+<ol start="8" type="1">
+<li>Run the following commands to create <code>gh-pages</code> branch. Make sure there is no <code>public</code> directory yet.</li>
+</ol>
+<pre><code>git checkout --orphan gh-pages
+git reset --hard
+git commit --allow-empty -m &quot;Initializing gh-pages branch&quot;
+git push origin gh-pages
+git checkout main
+rm -rf public
+git worktree add -B gh-pages public origin/gh-pages</code></pre>
+<ol start="9" type="1">
+<li>Now there should be a <code>public</code> directory. Run the following to make sure there is a <code>.git</code> directory.</li>
+</ol>
+<pre><code>ls -al public/</code></pre>
+<h3 id="site-build">Site Build</h3>
+<ol start="10" type="1">
+<li>Time to build the site. First, in the <code>_site.tml</code> file make sure the following are set:</li>
+</ol>
+<pre><code>base_url: https://sweltr.github.io/
+repository_url: https://github.com/sweltr/high-temp/
+output_dir: &quot;public_build&quot;
+exclude: [&quot;public&quot;, &quot;README.html&quot;, &quot;README.md&quot;, &quot;hack_code&quot;, &quot;page_build&quot;, &quot;files&quot;, &quot;public_build&quot;]</code></pre>
+<p>When we render the site, R Markdown will overwrite everything in the output directory, which removes the <code>.git</code> directory. Not cool. To avoid this, we use an intermediate directory, <code>public_build</code>, to generate the site. Also, <strong>be sure</strong> to exclude directories and files you do not want as part of the rendered site, including <code>public</code>, <code>public_build</code>, and any other diretories that are not needed to build the site.</p>
+<ol start="11" type="1">
+<li>To build the site run:</li>
+</ol>
+<pre><code>rmarkdown::render_site()</code></pre>
+<p>To build individual pages run:</p>
+<pre><code>rmarkdown::render_site(&quot;about.Rmd&quot;)</code></pre>
+<ol start="12" type="1">
+<li>Once the site is built in <code>public_build</code>, run the following to copy all the files to <code>public</code></li>
+</ol>
+<pre><code>cp -r public_build/* public/</code></pre>
+<ol start="13" type="1">
+<li>Sweet. Get the website files on GitHub.</li>
+</ol>
+<pre><code>cd public
+git status
+git add --all
+git status
+git commit -m &quot;Publishing to gh-pages initial commit&quot;
+git push origin gh-pages</code></pre>
+<ol start="14" type="1">
+<li>And now the build files to the repo. Make sure you are in the repo directory (i.e., not <code>public</code>) and add the following to the <code>.gitignore</code> file :</li>
+</ol>
+<pre><code>.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+files/
+include/
+assets/
+page_build/
+public_build/</code></pre>
+<ol start="15" type="1">
+<li>Then commit and push the files.</li>
+</ol>
+<pre><code>cd ../
+git status
+git add --all
+git status
+git commit -m &quot;Publishing to gh-pages initial commit&quot;
+git push origin main</code></pre>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
