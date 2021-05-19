@@ -1,0 +1,198 @@
+---
+title: "The S.W.E.L.T.R Microbial Cookbook"
+description: |
+  **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest
+author:
+  - name: "Andrew Nottingham"
+#    url: https://github.com/rich-iannone
+    affiliation: University of Edinburgh
+#    affiliation_url: https://www.ed.ac.uk/
+  - name: "Kristin Saltonstall"
+#    url: https://stri.si.edu/scientist/kristin-saltonstall
+    affiliation: STRI
+#    affiliation_url: https://stri.si.edu/
+  - name: "Kirk Broders"
+#    url: https://stri.si.edu/scientist/kristin-saltonstall
+    affiliation: STRI
+#    affiliation_url: https://stri.si.edu/
+  - name: "Jarrod J Scott"
+#    url: https://github.com/jjallaire
+    affiliation: STRI
+    #affiliation_url: https://www.rstudio.com
+bibliography: assets/cite.bib
+site: distill::distill_website
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+Welcome. I created this site to share information with other people involved in the project. This way I can alert you to any updates without needing to fill your inbox with a bunch of files. The site is updated regularly so please check back or look out for update emails.
+
+> **The site is password protected.** If you find anything that is publicly accessible, please let me know.
+
+To access any material on the site, you should need a password or have access to the GitHub repo.
+
+<details markdown="1"><summary><strong>Show/hide</strong> detailed results of Significance tests for the FULL data set</summary>
+
+This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR data sets. Most (if not all) steps were performed in R. With the exception of the DADA2 workflows, which were processed using Hydra, all workflows can be run on a laptop. Workflows are have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can easily be copied for use in reference management software. Generally, all R code is available for each workflow. In some cases the code is hidden but there is a button towards the top of the page that says *Show Code* that will unfold each code block. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
+
+```{r, eval=FALSE, echo=TRUE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+ssu18_ps_work_adonis2_jsd
+cat("\n")
+
+cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
+summary(ssu18_ps_work_anosim_unifrac)
+cat("\n")
+
+cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
+summary(ssu18_ps_work_anosim_wunifrac)
+cat("\n")
+```
+</details>
+
+
+# Site Overview
+
+This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR data sets. Most (if not all) steps were performed in R. With the exception of the DADA2 workflows, which were processed using Hydra, all workflows can be run on a laptop. Workflows are have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can easily be copied for use in reference management software. Generally, all R code is available for each workflow. In some cases the code is hidden but there is a button towards the top of the page that says *Show Code* that will unfold each code block. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
+
+# Data Availability
+
+In order to run a complete pipeline, you either need the *raw* fastq files, available on the figshare project site, or the *trimmed* fastq files, available from the ENA under project accession number ... See the specific pipeline or [Data Availability](data-availability.html) page for complete details.
+
+Each workflow page within a pipeline also contains a Data Availability appendix (see below for an example) that links to specific data packets require for the workflow. Or again, you can visit the [Data Availability](data-availability.html) page for more information.
+
+# Pipelines & Workflows
+
+There are 8 pipelines in total---one for each of the 6 data sets plus two additional pipelines for comparing the 2018 and 2019 where applicable. The pipelines are:
+
+* 16S rRNA data from 2019
+* 16S rRNA data from 2018
+* 16S comparison between 2019 & 2018
+* ITS data from 2019
+* ITS data from 2018
+* ITS comparison between 2019 & 2018
+* 18S rRNA AMF data from 2019
+* ITS Oomycete data from 2019
+
+Each pipeline contains three successive ***workflows***. These workflows are complete, reproducible, and designed to be run in order. That said, each ends with the creation of R data packages that can be used as input for the next workflow, allowing you to skip any individual section.
+
+Workflows all follow the same general structure.
+
+1) **Processing** with [catadapt](https://github.com/marcelm/cutadapt)[@martin2011cutadapt] and [DADA2](https://benjjneb.github.io/dada2/)[@callahan2016dada2]. Workflow begins with raw fastq files and goes through the process of primer removal, filtering, quality screening, trimming, error correction, chimera removal, and taxonomic assignment. The workflow ends with the generation of an Rdata file for the next step. Depending on the DADA2 version you have installed, you may get [slightly different results](https://github.com/benjjneb/dada2/issues/532) due to fundamental changes in the code-base. This is unavoidable at times and the developers do the best they can to maintain fidelity across versions. We set random number seeds at the beginning of each workflow to ensure reproducibility. To see the package versions of tools used in each workflow, please see the R Session Information section on the bottom of each page.
+2) **Data Preparation**. Workflow begins with the initial sequence and taxonomy tables from the DADA2 workflow and uses [phyloseq](https://joey711.github.io/phyloseq/)[@mcmurdie2013phyloseq] to define samples and sample groups, create phyloseq objects, and curate data sets. Summary data is provided throughout the workflow. Again, workflow ends with the generation of an Rdata file for the next step.
+3) **Community Analysis**. These sections cover the distribution of reads across samples (inc. histograms of read counts & rarefaction curves), estimates of alpha diversity (inc. normality tests, significance tests, & diversity plots), estimates of beta diversity (ordination plots & PERMANOVA), and taxonomic diversity (inc. heatmaps of abundant ASVs, ASV box plots, & taxon bar charts). Each workflow also has links to download ASV by sample tables, taxonomic assignments, and sample metadata.
+
+Though the workflows are annotated, they are not meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into. See the [Resources](#resources) section below for some of the sites we used. We also reference many assets on individual workflow pages.
+
+# Primers
+
+Here is a description of the primers used in each pipeline. Primer information can also be found of the individual workflow pages.
+
+
+```{r, echo=FALSE, eval=TRUE}
+pipeline <- c("16S rRNA (2019)",
+              "16S rRNA (2018)",
+              "16S rRNA 2019 v. 2018",
+              "ITS (2019)",
+              "ITS (2018)",
+              "ITS 2019 v. 2018",
+              "18S rRNA AMF (2019)",
+              "ITS Oomycete (2019)")
+FWD <- c("515F",
+         "515F",
+         "515F",
+         "ITS1f",
+         "ITS1f",
+         "ITS1f",
+         "AMV4.5NF",
+         "ITS1oo_IL")
+FWD_sequence <- c("GTGCCAGCMGCCGCGGTAA",
+                  "GTGCCAGCMGCCGCGGTAA",
+                  "GTGCCAGCMGCCGCGGTAA",
+                  "CTTGGTCATTTAGAGGAAGTAA",
+                  "CTTGGTCATTTAGAGGAAGTAA",
+                  "CTTGGTCATTTAGAGGAAGTAA",
+                  "AAGCTCGTAGTTGAATTTCG",
+                  "GGAAGGATCATTACCACA")
+REV <- c("806R",
+         "806R",
+         "",
+         "ITS2",
+         "ITS2",
+         "ITS2",
+         "AMDGR",
+         "ITS2_IL")
+REV_sequence <- c("GGACTACHVGGGTWTCTAAT",
+                  "GGACTACHVGGGTWTCTAAT",
+                  "",
+                  "GCTGCGTTCTTCATCGATGC",
+                  "GCTGCGTTCTTCATCGATGC",
+                  "GCTGCGTTCTTCATCGATGC",
+                  "CCCAACTATCCCTATTAATCAT",
+                  "GCTGCGTTCTTCATCGATGC")
+length <- c("", "", "", "", "", "", "", "")
+ref <- c("[@caporaso2011global]",
+         "[@caporaso2011global]",
+         "[@caporaso2011global]",
+         "",
+         "",
+         "",
+         "[@sato2005new]",
+         "")
+```
+
+```{r, layout='l-page', echo=FALSE}
+primer_tab <- data.frame(pipeline, FWD, FWD_sequence,
+                         REV, REV_sequence, length, ref)
+knitr::kable(primer_tab, escape = TRUE)
+```
+
+<br/>
+
+# Resources
+
+## 16S rRNA
+
+Here are some general resources we used in pipeline and workflow construction for the 16S data. Other tools and programs can be found in the Reference sections.
+
+- Earth Microbiome Project [16S Illumina Amplicon Protocol](https://earthmicrobiome.org/protocols-and-standards/16s/) for primer description and amplification protocols.
+- [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) for 16S rRNA read processing.
+- [Another DADA2 16S rRNA tutorial](https://github.com/amoliverio/dada2_fiererlab).
+
+## ITS
+
+Here are some general resources we used in pipeline and workflow construction for the ITS data sets. Other tools and programs can be found in the Reference sections.
+
+- Earth Microbiome Project [ITS Illumina Amplicon Protocol](https://www.earthmicrobiome.org/protocols-and-standards/its/) for primer description and amplification protocols.
+- [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html) for ITS read processing.
+
+# Quick Summaries
+
+## Diversity estimates
+
+Table showing the results of significance tests for alpha and beta diversity across treatments (warm v. control). These results are for rarefied and non-rarefied data sets. For the 2019 data sets we also tested just the top sample layers only (00-010 & 10-020 cm).
+
+| Data set                           | Alpha diversity         | Beta diversity    |
+|------------------------------------|-------------------------|-------------------|
+| 16S rRNA data (2019)               | Not significant         | Not significant   |
+| 16S rRNA data (2019, top only)     | Not significant         | Not significant   |
+| 16S rRNA data (2018)               | **Significant**         | **Significant**   |
+| 16S comparison (2019 & 2018)       | Pending                 | Pending           |
+| ITS data (2019)                    | Not significant         | **Significant**   |
+| ITS data (2019, top only)          | Not significant         | **Significant**   |
+| ITS data  (2018)                   | Not significant         | **Significant**   |
+| ITS comparison (2019 & 2018)       | Pending                 | Pending           |
+| 18S rRNA AMF data (2019)           | Not significant         | **Significant**   |
+| 18S rRNA AMF data (2019, top only) | Not significant         | **Significant**   |
+| ITS Oomycete data (2019)           | Pending                 | Pending           |
+
+
+##  Source Code {.appendix}
+
+You can find the source code for this page by [clicking this link](https://github.com/sweltr/high-temp/blob/master/index.Rmd).
+
+## Data Availability {.appendix}
+
+Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [XXXXXXXX](). Output files from this workflow available on figshare at [XXXXXXXX.]().

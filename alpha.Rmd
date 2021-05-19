@@ -1,0 +1,2197 @@
+---
+title: "6 Alpha Diversity Estimates"
+descriptiokabn: |
+  Reproducible workflow for ... In this workflow, ....
+author:
+#  - name: Jarrod J Scott
+#    url: https://example.com/norajones
+#    affiliation: Spacely Sprockets
+#    affiliation_nrl: https://example.com/spacelysprokets
+bibliography: assets/cite.bib
+output:
+    distill::distill_article:
+      css: assets/styles.css
+      toc: true
+      toc_depth: 3
+---
+
+<details markdown="1">
+<summary>Click here for setup information.</summary>
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+set.seed(119)
+#library(conflicted)
+library(phyloseq); packageVersion("phyloseq")
+library(Biostrings); packageVersion("Biostrings")
+pacman::p_load(tidyverse, DT, ampvis2, hilldiv, 
+               microbiome, phytools, phangorn, 
+               pairwiseAdonis, codefolder, naniar, 
+               labdsv, patchwork, agricolae, 
+               install = FALSE, update = FALSE)
+
+#pacman::p_depends(agricolae, local = TRUE)  
+#pacman::p_depends_reverse(agricolae, local = TRUE)  
+
+source("hack_code/div_test_plot_jjs.R")
+source("hack_code/div_test_jjs.R")
+
+options(scipen=999)
+knitr::opts_current$get(c(
+  "cache",
+  "cache.path",
+  "cache.rebuild",
+  "dependson",
+  "autodep"
+))
+```
+
+</details>
+
+</br>
+
+> Hit the *Hide Code* button to collapse the R code (visible by default).
+
+<aside>
+```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
+codefolder::generic(init = "show", query = "pre.sourceCode",
+  style = "position: absolute; right: 14%; z-index: 200")
+```
+</aside>
+
+# Synopsis
+
+This workflow contains diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) **and** the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation workflow. See the [Data Availability](data-availability.html) page for complete details.
+
+In this workflow...
+
+# 16s rRNA
+
+```{r, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/alpha_ssu18_alpha_wf.rdata")
+```
+
+```{r, include=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+set.seed(119)
+## ASV FULL AND PIME AND PERfect
+ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
+ssu18_ps_pime <- readRDS("files/pime/rdata/ssu18_ps_pime.rds")
+ssu18_ps_perfect <- readRDS("files/perfect/rdata/ssu18_ps_perfect.rds")
+
+## OTU FULL AND PIME AND PERfect
+ssu18_ps_work_otu <- readRDS("files/otu/rdata/ssu18_ps_work_otu.rds")
+ssu18_ps_pime_otu <- readRDS("files/pime/rdata/ssu18_ps_pime_otu.rds")
+ssu18_ps_perfect_otu <- readRDS("files/perfect/rdata/ssu18_ps_perfect_otu.rds")
+
+## DATA for Hist & RARE
+ssu18_amp_data <- readRDS("files/data-prep/rdata/ssu18_amp_data.rds")
+ssu18_samp_data <- readRDS("files/data-prep/rdata/ssu18_samp_data.rds")
+ssu18_samp_data$coverage <- NULL
+ssu18_amp_pime <- readRDS("files/pime/rdata/ssu18_amp_pime.rds")
+ssu18_samp_pime <- readRDS("files/pime/rdata/ssu18_samp_pime_otu.rds")
+ssu18_samp_pime$coverage <- NULL
+ssu18_amp_perfect <- readRDS("files/perfect/rdata/ssu18_amp_perfect.rds")
+ssu18_amp_perfect_otu <- readRDS("files/perfect/rdata/ssu18_amp_perfect_otu.rds")
+objects()
+```
+
+
+```{r, echo=FALSE}
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+```
+
+## Read Distribution
+
+### Histogram of Read Counts
+
+```{r, warning=FALSE}
+ssu18_max <- max(ssu18_samp_data$total_reads) +
+  (0.2 * max(ssu18_samp_data$total_reads))
+ssu18_p_hist <- ggplot(ssu18_samp_data,
+       aes(ssu18_samp_data$total_reads)) +
+         geom_histogram(breaks = seq(0, ssu18_max, by = 5000),
+                        col = "black", fill = "grey") +
+         labs(title = "Distribution of total reads",
+              caption = "Bin width equals 5000 reads") +
+  labs(x = "No. of reads", y = "No. of samples") +
+  theme_classic()
+```
+
+```{r, fig.height=2, echo=FALSE, layout='l-body-outset', eval=TRUE}
+ssu18_p_hist
+```
+
+### Rarefaction Curves
+
+```{r}
+ssu18_rare_curve1 <- amp_rarecurve(
+  ssu18_amp_data,
+  stepsize = 1000,
+  color_by = "TEMP"
+) + scale_colour_manual(values = swel_col)
+```
+
+
+```{r fig.height=2.5, layout='l-body-outset', eval=TRUE, echo=FALSE}
+ssu18_rare_curve1
+```
+
+For a quick comparison, we can facet the above data by Temperature.
+
+```{r}
+ssu18_rare_curve2 <- amp_rarecurve(
+  ssu18_amp_data,
+  stepsize = 1000,
+  color_by = "TEMP",
+  facet_by = "TEMP",
+  facet_scales = "free"
+)  + scale_colour_manual(values = swel_col)
+```
+
+```{r fig.height=3, layout='l-body-outset', eval=TRUE, echo=FALSE}
+ssu18_rare_curve2
+```
+
+In the **full data set**, there was a minimum read count of `r min(ssu18_amp_data$metadata$total_reads)`, a median of `r median(ssu18_amp_data$metadata$total_reads)` reads, and a maximum of `r max(ssu18_amp_data$metadata$total_reads)` reads. 
+
+After **PIME** filtering, there was a minimum read count of `r min(min(ssu18_amp_pime$metadata$total_reads))`, a median of `r median(min(ssu18_amp_pime$metadata$total_reads))` reads, and a maximum of `r max(min(ssu18_amp_pime$metadata$total_reads))` reads
+
+After **PERfect** filtering, there was a minimum read count of `r min(ssu18_amp_perfect$metadata$total_reads)`, a median of `r median(ssu18_amp_perfect$metadata$total_reads)` reads, and a maximum of `r max(ssu18_amp_perfect$metadata$total_reads)` reads
+
+## Alpha Diversity
+
+To account for presence of rare sequence variants caused by sequencing errors or other technical artifacts, we use Hill numbers [@alberdi2019guide]. Hill numbers allow the weight put on rare versus abundant sequence variants to be scaled while providing intuitive comparisons of diversity levels using “effective number of ASVs” as a measuring unit. This approach allows for balancing the over representation of rare ASVs that might be inflated due to sequencing errors.
+
+We will then use Shapiro-Wilk tests to test for normalcy and then, depending on the results, either use  parametric ANOVA or non-parametric Kruskal-Wallis to compare alpha diversity among treatments.
+
+### Calculate Hill Numbers
+
+To calculate Hill numbers, we use the R package `hilldiv` [@alberdi2019hilldiv]. We calculate three metrics that put more or less weight on common species:
+
+1) Observed richness, where `q-value = 0`.
+2) Shannon exponential, which weighs ASVs by their frequency,  where `q-value = 1`.
+3) Simpson multiplicative inverse, which over weighs abundant ASVs,  where `q-value = 2`.
+
+We perform each analysis against the full data set, the PIME filtered data set, and the PERfect filtered data set using the function `hill_div`.
+
+The command is as follows:
+
+`hill_div(count = x, qvalue = i, tree = ultrametric_tree)`, where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree (see below).
+
+We first transform all the data to relative abundance values, and compute new trees.
+
+```{r}
+ssu18_alpha_ds <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
+                    "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+objects()
+ssu18_ps_work@phy_tree <- NULL
+ssu18_ps_pime@phy_tree <- NULL
+ssu18_ps_perfect@phy_tree <- NULL
+ssu18_ps_work_otu@phy_tree <- NULL
+ssu18_ps_pime_otu@phy_tree <- NULL
+ssu18_ps_perfect_otu@phy_tree <- NULL
+```
+
+
+```{r}
+#  tmp_ps <- transform_sample_counts(get(i), function(otu) 1e5 otu/sum(otu))
+for (i in ssu18_alpha_ds) {
+  tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
+  tmp_ps@phy_tree <- NULL
+  tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+                      tip.label = taxa_names(tmp_ps))
+  tmp_ps_norm <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
+  tmp_asv <- data.frame(t(otu_table(tmp_ps_norm)))
+  tmp_ps_name <- purrr::map_chr(i, ~ paste0(., "_norm"))
+  assign(tmp_ps_name, tmp_ps_norm)
+  tmp_asv_name <- purrr::map_chr(i, ~ paste0(., "_tu"))
+  assign(tmp_asv_name, tmp_asv)
+  rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+#### No phylogenetic tree
+
+Next, we run the analysis for all three metrics on the data sets without a tree.
+
+```{r, results='hide'}
+qvalue <- c(0,1,2)
+for (i in qvalue) {
+  for (j in ssu18_alpha_ds) {
+     tmp_asv <- get(purrr::map_chr(j, ~ paste0(., "_tu")))
+     tmp_df <- data.frame(hill_div(tmp_asv, qvalue = i))
+     tmp_df <- tmp_df %>% dplyr::rename("tmp_name" = 1) %>%
+                              tibble::rownames_to_column("SamName")
+     tmp_name <- purrr::map_chr(j, ~ paste0(., "_h", i))
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+  }
+}
+objects(pattern = "_h")
+```
+
+And make summary tables to add back into each `ps` object.
+
+```{r}
+for (i in ssu18_alpha_ds) {
+     tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_h0")))
+     tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_h1")))
+     tmp_sim <- get(purrr::map_chr(i, ~ paste0(., "_h2")))
+     tmp_hill <- dplyr::left_join(tmp_obs, tmp_sha, by = "SamName") %>%
+       dplyr::left_join(., tmp_sim, by = "SamName") %>%
+       dplyr::rename("Observed" = 2, "Shannon_exp" = 3, "InvSimpson" = 4)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_hill"))
+     assign(tmp_name, tmp_hill)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_hill")
+```
+
+And then create the new objects with the diversity data.
+
+```{r, echo=FALSE}
+for (i in ssu18_alpha_ds) {
+     tmp_ps <- get(i)
+     tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+                      tip.label = taxa_names(tmp_ps))
+     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
+     tmp_hill <- get(purrr::map_chr(i, ~ paste0(., "_hill")))
+     tmp_hill_samp <- dplyr::left_join(data.frame(sample_data(tmp_ps)),
+                                         tmp_hill, by = "SamName")
+     tmp_hill_samp$ID <- tmp_hill_samp$SamName
+     tmp_hill_samp <- tmp_hill_samp %>%  tibble::column_to_rownames("ID")
+     tmp_ps2 <- merge_phyloseq(otu_table(tmp_ps),
+                                sample_data(tmp_hill_samp),
+                                tax_table(tmp_ps),
+                                phy_tree(tmp_ps))
+     assign(i, tmp_ps2)
+     tmp_path <- file.path("files/alpha/rdata/")
+     saveRDS(tmp_ps2, paste(tmp_path, i, ".rds", sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+#### With a phylogenetic tree
+
+We can also run the tests using the phylogenetic tree to assess **lineage** diversity rather than ASV diversity for the filtered data sets. We do a quick check	to ensure	the	ASV	names	in	the	ASV	table	and	the	tip	names	in	the	new phylogenetic tree	are	identical.
+
+```{r, echo=FALSE}
+ssu18_ps_pime_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_pime_tree_ult.rds")
+ssu18_ps_pime_otu_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_pime_otu_tree_ult.rds")
+ssu18_ps_perfect_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_perfect_tree_ult.rds")
+ssu18_ps_perfect_otu_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_perfect_otu_tree_ult.rds")
+
+is.ultrametric(ssu18_ps_pime_tree_ult) 
+is.ultrametric(ssu18_ps_pime_otu_tree_ult)
+is.ultrametric(ssu18_ps_perfect_tree_ult) 
+is.ultrametric(ssu18_ps_perfect_otu_tree_ult)
+```
+
+
+```{r, echo=FALSE}
+rm(i)
+ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", 
+                         "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
+for (i in ssu18_alpha_ds_tree) {
+     tmp_ps <- get(i)
+     tmp_tree <- tmp_ps@phy_tree
+     tmp_tree_ult <- force.ultrametric(tmp_tree, method = c("nnls"))
+     print(is.ultrametric(tmp_tree_ult))
+     tmp_tree_name <- purrr::map_chr(i, ~ paste0(., "_tree_ult"))
+     assign(tmp_tree_name, tmp_tree_ult)
+     tmp_path <- file.path("files/alpha/rdata/")
+     saveRDS(tmp_tree_ult, paste(tmp_path, tmp_tree_name, ".rds", sep = ""))
+     tmp_tmp_asv <- get(purrr::map_chr(i, ~ paste0(., "_tu")))
+     print(identical(sort(rownames(tmp_tmp_asv)), sort(tmp_tree_ult$tip.label)))
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, results='hide'}
+rm(i, j)
+ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", 
+                         "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
+qvalue <- c(0,1,2)
+for (i in qvalue) {
+  for (j in ssu18_alpha_ds_tree) {
+     tmp_asv <- get(purrr::map_chr(j, ~ paste0(., "_tu")))
+     tmp_tree <- get(purrr::map_chr(j, ~ paste0(., "_tree_ult")))
+     tmp_df <- data.frame(hill_div(tmp_asv, qvalue = i, tree = tmp_tree))
+     tmp_df <- tmp_df %>% dplyr::rename("tmp_name" = 1) %>%
+                              tibble::rownames_to_column("SamName")
+     tmp_name <- purrr::map_chr(j, ~ paste0(., "_ht", i))
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+  }
+}
+```
+
+```{r}
+ssu18_alpha_ds_tree_pime <- c("ssu18_ps_pime", "ssu18_ps_pime_otu")
+for (i in ssu18_alpha_ds_tree_pime) {
+     tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_ht0")))
+     tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_ht1")))
+     tmp_sim <- get(purrr::map_chr(i, ~ paste0(., "_ht2")))
+     tmp_hill <- dplyr::left_join(tmp_obs, tmp_sha, by = "SamName") %>%
+       dplyr::left_join(., tmp_sim, by = "SamName") %>%
+       dplyr::rename("Observed_pit" = 2, "Shannon_exp_pit" = 3, "InvSimpson_pit" = 4)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_hill_t"))
+     assign(tmp_name, tmp_hill)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+ssu18_alpha_ds_tree_perfect <- c("ssu18_ps_perfect", "ssu18_ps_perfect_otu")
+for (i in ssu18_alpha_ds_tree_perfect) {
+     tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_ht0")))
+     tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_ht1")))
+     tmp_sim <- get(purrr::map_chr(i, ~ paste0(., "_ht2")))
+     tmp_hill <- dplyr::left_join(tmp_obs, tmp_sha, by = "SamName") %>%
+       dplyr::left_join(., tmp_sim, by = "SamName") %>%
+       dplyr::rename("Observed_pet" = 2, "Shannon_exp_pet" = 3, "InvSimpson_pet" = 4)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_hill_t"))
+     assign(tmp_name, tmp_hill)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+rm(i)
+for (i in ssu18_alpha_ds_tree) {
+     tmp_ps <- get(i)
+     tmp_hill <- get(purrr::map_chr(i, ~ paste0(., "_hill_t")))
+     tmp_hill_samp <- dplyr::left_join(data.frame(sample_data(tmp_ps)),
+                                         tmp_hill, by = "SamName")
+     tmp_hill_samp$ID <- tmp_hill_samp$SamName
+     tmp_hill_samp <- tmp_hill_samp %>%  tibble::column_to_rownames("ID")
+     tmp_ps2 <- merge_phyloseq(otu_table(tmp_ps),
+                                sample_data(tmp_hill_samp),
+                                tax_table(tmp_ps),
+                                phy_tree(tmp_ps))
+     assign(i, tmp_ps2)
+     tmp_path <- file.path("files/alpha/rdata/")
+     saveRDS(tmp_ps2, paste(tmp_path, i, ".rds", sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+
+### Sample Summary
+
+Now we summarize the data for each sample against all three metrics. The table contains the results of ASV diversity estimates from the full data set and the PIME filtered data set, as well as the lineage diversity from the PIME data set.
+
+The suffix `_pi` indicates metrics for the PIME data set and the suffix `_pit` indicates the lineage diversity for the PIME data set.
+
+The suffix `_pe` indicates metrics for the PERfect data set and the suffix `_pet` indicates the lineage diversity for the PERfect data set.
+
+```{r, echo=FALSE}
+######################### PIME ASV
+ssu18_pime_hill_samp <- ssu18_ps_pime_hill %>% dplyr::rename("Observed_pi" = 2,
+                                                             "Shannon_exp_pi" = 3,
+                                                             "InvSimpson_pi" = 4)
+ssu18_pime_hill_samp <- dplyr::left_join(ssu18_pime_hill_samp, ssu18_ps_pime_hill_t)
+ssu18_pime_hill_samp <- ssu18_pime_hill_samp[,c(1:2,5,3,6,4,7)]
+######################### PERfect ASV
+ssu18_perfect_hill_samp <- ssu18_ps_perfect_hill %>% dplyr::rename("Observed_pe" = 2,
+                                                             "Shannon_exp_pe" = 3,
+                                                             "InvSimpson_pe" = 4)
+ssu18_perfect_hill_samp <- dplyr::left_join(ssu18_perfect_hill_samp, ssu18_ps_perfect_hill_t)
+ssu18_perfect_hill_samp <- ssu18_perfect_hill_samp[,c(1:2,5,3,6,4,7)]
+######################### ASV TABLE
+ssu18_samp_data_tab <- dplyr::left_join(data.frame(sample_data(ssu18_ps_work)), ssu18_pime_hill_samp) %>%
+                       dplyr::left_join(., ssu18_perfect_hill_samp)
+
+ssu18_samp_data_tab <- ssu18_samp_data_tab[,c(1:7,10,16,11,17,8,12:13,18:19,9,14:15,20:21)]
+ssu18_samp_data_tab <- ssu18_samp_data_tab %>% dplyr::rename("sample_id" = "SamName")
+ssu18_samp_data_tab <- ssu18_samp_data_tab[order(ssu18_samp_data_tab$sample_id), ]
+######################### ######################### ######################### ######################### 
+######################### PIME OTU
+ssu18_pime_otu_hill_samp <- ssu18_ps_pime_otu_hill %>% dplyr::rename("Observed_pi" = 2,
+                                                                     "Shannon_exp_pi" = 3,
+                                                                     "InvSimpson_pi" = 4)
+ssu18_pime_otu_hill_samp <- dplyr::left_join(ssu18_pime_otu_hill_samp, ssu18_ps_pime_otu_hill_t)
+ssu18_pime_otu_hill_samp <- ssu18_pime_otu_hill_samp[,c(1:2,5,3,6,4,7)]
+######################### PERfect OTU
+ssu18_perfect_otu_hill_samp <- ssu18_ps_perfect_otu_hill %>% dplyr::rename("Observed_pe" = 2,
+                                                                     "Shannon_exp_pe" = 3,
+                                                                     "InvSimpson_pe" = 4)
+ssu18_perfect_otu_hill_samp <- dplyr::left_join(ssu18_perfect_otu_hill_samp, ssu18_ps_perfect_otu_hill_t)
+ssu18_perfect_otu_hill_samp <- ssu18_perfect_otu_hill_samp[,c(1:2,5,3,6,4,7)]
+######################### OTU TABLE
+ssu18_samp_data_otu_tab <- dplyr::left_join(data.frame(sample_data(ssu18_ps_work_otu)), ssu18_pime_otu_hill_samp) %>%
+                       dplyr::left_join(., ssu18_perfect_otu_hill_samp)
+ssu18_samp_data_otu_tab <- ssu18_samp_data_otu_tab[,c(1:7,10,16,11,17,8,12:13,18:19,9,14:15,20:21)]
+ssu18_samp_data_otu_tab <- ssu18_samp_data_otu_tab %>% dplyr::rename("sample_id" = "SamName")
+ssu18_samp_data_otu_tab <- ssu18_samp_data_otu_tab[order(ssu18_samp_data_otu_tab$sample_id), ]
+```
+
+### ASV Hill Summary
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+## elementId https://www.random.org/strings/
+datatable(ssu18_samp_data_tab, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Sample summary table including
+            ASV diversity indices for FULL and PIME filtered data.
+            Use the buttons to navigate through the table or
+            download a copy.')),
+          elementId = "ldbyiw77yhl3z0epbzg8",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c(10:ncol(ssu18_samp_data_tab)),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_samp_data_tab),
+                    fontSize = '80%')
+```
+
+### OTU Hill Summary
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+## elementId https://www.random.org/strings/
+datatable(ssu18_samp_data_otu_tab, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Sample summary table including
+            OTU diversity indices for FULL and PIME filtered data.
+            Use the buttons to navigate through the table or
+            download a copy.')),
+          elementId = "cq9rn3363xwmkpwkl5e5",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c(10:ncol(ssu18_samp_data_tab)),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_samp_data_tab),
+                    fontSize = '80%')
+```
+
+### Normality Tests
+
+Before running significance tests, we need to know if data is normally distributed, which will tell use whether to use a parametric or non-parametric test. To test if the data are normally distributed, we use the Shapiro-Wilk Normality test and the Bartlett Test of Homogeneity of Variances.
+
+If the p-values are both **not significant** (p > 0.05) from the tests, we accept the null hypothesis (that the results are normally distributed) and test for significance between samples using an ANOVA. If the p-values are both **significant** (p < 0.05), we reject the null hypothesis (that the results are normally distributed) and test for significance between samples using Kruskal-Wallis (non-parametric equivalent of ANOVA).
+
+The commands are as follows:
+
+`shapiro.test(x)`, where `x` is a numeric vector of alpha diversity  values from the sample data table.
+
+`bartlett.test(Value ~ Group, data = df)` Where `Value` is the metric of interest, `Group` in the treatment to compare, and `df` is the data frame.  
+
+First the Shapiro-Wilk Normality test.
+
+```{r}
+ssu18_div_tab <- ssu18_samp_data_tab
+ssu18_shap_tests_asv <- c()
+for (i in colnames(ssu18_div_tab[,7:ncol(ssu18_div_tab)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("ssu18_shap_asv_", .))
+   ssu18_shap_tests_asv <- append(ssu18_shap_tests_asv, tmp_name)
+   tmp_test <- eval(shapiro.test(ssu18_div_tab[[i]]))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+
+ssu18_div_tab <- ssu18_samp_data_otu_tab
+ssu18_shap_tests_otu <- c()
+for (i in colnames(ssu18_div_tab[,7:ncol(ssu18_div_tab)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("ssu18_shap_otu_", .))
+   ssu18_shap_tests_otu <- append(ssu18_shap_tests_otu, tmp_name)
+   tmp_test <- eval(shapiro.test(ssu18_div_tab[[i]]))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "shap_")
+```
+
+And then the Bartlett Test of Homogeneity of Variances.
+
+```{r}
+ssu18_div_tab_asv <- ssu18_samp_data_tab
+ssu18_bart_tests_asv <- c()
+for (i in colnames(ssu18_div_tab_asv[,7:ncol(ssu18_div_tab_asv)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("ssu18_bart_asv_", .))
+   ssu18_bart_tests_asv <- append(ssu18_bart_tests_asv, tmp_name)
+   tmp_test <- eval(bartlett.test(ssu18_div_tab_asv[[i]] ~ TEMP, data = ssu18_div_tab_asv))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+
+ssu18_div_tab_otu <- ssu18_samp_data_otu_tab
+ssu18_bart_tests_otu <- c()
+for (i in colnames(ssu18_div_tab_otu[,7:ncol(ssu18_div_tab_otu)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("ssu18_bart_otu_", .))
+   ssu18_bart_tests_otu <- append(ssu18_bart_tests_otu, tmp_name)
+   tmp_test <- eval(bartlett.test(ssu18_div_tab_otu[[i]] ~ TEMP, data = ssu18_div_tab_otu))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bart_")
+```
+
+Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not for the ASV analysis?
+
+```{r, eval=TRUE}
+for (i in colnames(ssu18_div_tab_asv[,7:15])) {
+  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("ssu18_shap_asv_", .)))
+  tmp_shap_p <- round(tmp_get_shap[[2]], 4)
+  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("ssu18_bart_asv_", .)))
+  tmp_bart_p <- round(tmp_get_bart[[3]], 4)
+  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
+  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
+                 "Bartlett p-value =", tmp_bart_p, 
+                 "Are both p-values > 0.05?", tmp_res)
+  cat(tmp_print,"\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+And which of the metrics are significant for the OTU analysis?
+
+```{r, eval=TRUE}
+for (i in colnames(ssu18_div_tab_otu[,7:15])) {
+  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("ssu18_shap_otu_", .)))
+  tmp_shap_p <- round(tmp_get_shap[[2]], 4)
+  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("ssu18_bart_otu_", .)))
+  tmp_bart_p <- round(tmp_get_bart[[3]], 4)
+  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
+  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
+                 "Bartlett p-value =", tmp_bart_p, 
+                 "Are both p-values > 0.05?", tmp_res)
+  cat(tmp_print,"\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
+
+### Significance Tests
+
+To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).
+
+```{r}
+ssu18_hill_hier <- ssu18_samp_data_tab
+ssu18_hill_hier <- ssu18_hill_hier %>% dplyr::select("sample_id", "TEMP") %>%
+  tibble::remove_rownames()
+ssu18_hill_hier <- ssu18_hill_hier[order(ssu18_hill_hier$TEMP), ]
+ssu18_hill_hier$TEMP = paste(ssu18_hill_hier$TEMP, 'C', sep='')
+ssu18_hill_hier <- ssu18_hill_hier %>% tibble::remove_rownames()
+saveRDS(ssu18_hill_hier, "files/alpha/rdata/ssu18_hill_hier.rds")
+```
+
+Again, we start by testing significance of ASV diversity for the full data set against each of the three metrics using the `div_test` function.
+
+The command is as follows:
+
+`div_test(countable = x, qvalue = i, hierarchy = hier, tree = ultrametric_tree, posthoc = TRUE)`, where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (see below), and `posthoc` indicates whether to run post hoc pairwise analyses.
+
+```{r, results='hide'}
+qvalue <- c(0,1,2)
+for (i in ssu18_alpha_ds) {
+     for (j in qvalue) {
+         tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_tu")))
+         tmp_test <- div_test(tmp_get, qvalue = j,
+                      hierarchy = ssu18_hill_hier,
+                      posthoc = TRUE)
+         tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+         print(tmp_name)
+         assign(tmp_name, tmp_test)
+         rm(list = ls(pattern = "tmp_"))
+ }
+}
+```
+
+And then test significance of lineage diversity for the PIME filtered data sets.
+
+```{r, results='hide'}
+ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
+qvalue <- c(0,1,2)
+for (i in ssu18_alpha_ds_tree) {
+     for (j in qvalue) {
+         tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_tu")))
+         tmp_tree <- get(purrr::map_chr(i, ~ paste0(., "_tree_ult")))
+         tmp_test <- div_test(tmp_get, qvalue = j,
+                      hierarchy = ssu18_hill_hier,
+                      posthoc = TRUE,
+                      tree = tmp_tree)
+         tmp_name <- purrr::map_chr(i, ~ paste0(., "_t_q", j, "_adt"))
+         print(tmp_name)
+         assign(tmp_name, tmp_test)
+         rm(list = ls(pattern = "tmp_"))
+ }
+}
+```
+
+
+```{r, echo=FALSE}
+tmp_objects <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
+                 "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu", 
+                 "ssu18_ps_pime_t" ,"ssu18_ps_pime_otu_t", 
+                 "ssu18_ps_perfect_t" ,"ssu18_ps_perfect_otu_t")
+
+tmp_metric <- data.frame(c("Observed", "Shannon exponential", "Inverse Simpson"))
+tmp_qvalue <- data.frame(c("0", "1", "2"))
+
+qvalue <- c(0,1,2)
+for (i in tmp_objects) {
+
+  tmp_h_pvalue <- c()
+     for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$homogeneity.pvalue
+          tmp_h_pvalue <- c(append(tmp_h_pvalue, tmp_get))
+     }
+  tmp_h_pvalue <- data.frame(tmp_h_pvalue)
+
+  tmp_n_pvalue <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$normality.pvalue
+          tmp_n_pvalue <- c(append(tmp_n_pvalue, tmp_get))
+     }
+  tmp_n_pvalue <- data.frame(tmp_n_pvalue)
+
+  tmp_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$method
+          tmp_method <- c(append(tmp_method, tmp_get))
+     }
+  tmp_method <- data.frame(tmp_method)
+
+  tmp_phoc_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$posthoc.method
+          tmp_phoc_method <- c(append(tmp_phoc_method, tmp_get))
+     }
+  tmp_phoc_method <- data.frame(tmp_phoc_method)
+
+  tmp_df <- dplyr::bind_cols(tmp_metric, tmp_qvalue) %>%
+                     dplyr::bind_cols(., tmp_n_pvalue) %>%
+                     dplyr::bind_cols(., tmp_h_pvalue) %>%
+                     dplyr::bind_cols(., tmp_method) %>%
+                     dplyr::bind_cols(., tmp_phoc_method) %>%
+  dplyr::rename("metric" = 1, "q-value" = 2, "normality p-value" = 3, 
+                "homogeneity p-value" = 4, "method" = 5, "posthoc method" = 6)
+  tmp_name <- purrr::map_chr(i, ~ paste0(i, "_sig_tab"))
+  assign(tmp_name, tmp_df)
+}
+objects(pattern="_sig_tab")
+```
+
+
+```{r, echo=FALSE}
+## Format as follows:
+## FALSE Kruskal-Wallis Test = its18_pime_q1_adt$test[[3]]
+## TRUE Tukey post-hoc  = its18_ps_work_q0_adt$test[[1]][[1, 5]]
+#####################################################################################
+############### ASVs
+#####################################################################################
+
+############################### WORK ##################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_work_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_work_q1_adt$test[[1]][[1, 5]],
+                           ssu18_ps_work_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_work_sig_tab <- dplyr::bind_cols(ssu18_ps_work_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+################################ PIME ################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_pime_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_pime_q1_adt$test[[3]],
+                           ssu18_ps_pime_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_pime_sig_tab <- dplyr::bind_cols(ssu18_ps_pime_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_pime_t_q0_adt$test[[3]],
+                           ssu18_ps_pime_t_q1_adt$test[[3]],
+                           ssu18_ps_pime_t_q2_adt$test[[3]]))
+ssu18_ps_pime_t_sig_tab <- dplyr::bind_cols(ssu18_ps_pime_t_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_perfect_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_q1_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_perfect_sig_tab <- dplyr::bind_cols(ssu18_ps_perfect_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_perfect_t_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_t_q1_adt$test[[3]],
+                           ssu18_ps_perfect_t_q2_adt$test[[3]]))
+ssu18_ps_perfect_t_sig_tab <- dplyr::bind_cols(ssu18_ps_perfect_t_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+############### OTUS
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_work_otu_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_work_otu_q1_adt$test[[1]][[1, 5]],
+                           ssu18_ps_work_otu_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_work_otu_sig_tab <- dplyr::bind_cols(ssu18_ps_work_otu_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_pime_otu_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_pime_otu_q1_adt$test[[1]][[1, 5]],
+                           ssu18_ps_pime_otu_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_pime_otu_sig_tab <- dplyr::bind_cols(ssu18_ps_pime_otu_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_pime_otu_t_q0_adt$test[[3]],
+                           ssu18_ps_pime_otu_t_q1_adt$test[[3]],
+                           ssu18_ps_pime_otu_t_q2_adt$test[[3]]))
+ssu18_ps_pime_otu_t_sig_tab <- dplyr::bind_cols(ssu18_ps_pime_otu_t_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_perfect_otu_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_otu_q1_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_otu_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_perfect_otu_sig_tab <- dplyr::bind_cols(ssu18_ps_perfect_otu_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(ssu18_ps_perfect_otu_t_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_otu_t_q1_adt$test[[3]],
+                           ssu18_ps_perfect_otu_t_q2_adt$test[[3]]))
+ssu18_ps_perfect_otu_t_sig_tab <- dplyr::bind_cols(ssu18_ps_perfect_otu_t_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+rm(list = ls(pattern = "tmp_"))
+```
+
+```{r, echo=FALSE}
+ssu18_ps_work_sig_tab$dataset <- "FULL"
+ssu18_ps_work_sig_tab$type <- "ASV"
+ssu18_ps_work_sig_tab$lineage <- "No"
+ssu18_ps_work_sig_tab <- ssu18_ps_work_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_pime_sig_tab$dataset <- "PIME"
+ssu18_ps_pime_sig_tab$type <- "ASV"
+ssu18_ps_pime_sig_tab$lineage <- "No"
+ssu18_ps_pime_sig_tab <- ssu18_ps_pime_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_perfect_sig_tab$dataset <- "PERfect"
+ssu18_ps_perfect_sig_tab$type <- "ASV"
+ssu18_ps_perfect_sig_tab$lineage <- "No"
+ssu18_ps_perfect_sig_tab <- ssu18_ps_perfect_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_pime_t_sig_tab$dataset <- "PIME"
+ssu18_ps_pime_t_sig_tab$type <- "ASV"
+ssu18_ps_pime_t_sig_tab$lineage <- "Yes"
+ssu18_ps_pime_t_sig_tab <- ssu18_ps_pime_t_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_perfect_t_sig_tab$dataset <- "PERfect"
+ssu18_ps_perfect_t_sig_tab$type <- "ASV"
+ssu18_ps_perfect_t_sig_tab$lineage <- "Yes"
+ssu18_ps_perfect_t_sig_tab <- ssu18_ps_perfect_t_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_work_otu_sig_tab$dataset <- "FULL"
+ssu18_ps_work_otu_sig_tab$type <- "OTU"
+ssu18_ps_work_otu_sig_tab$lineage <- "No"
+ssu18_ps_work_otu_sig_tab <- ssu18_ps_work_otu_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_pime_otu_sig_tab$dataset <- "PIME"
+ssu18_ps_pime_otu_sig_tab$type <- "OTU"
+ssu18_ps_pime_otu_sig_tab$lineage <- "No"
+ssu18_ps_pime_otu_sig_tab <- ssu18_ps_pime_otu_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_perfect_otu_sig_tab$dataset <- "PERfect"
+ssu18_ps_perfect_otu_sig_tab$type <- "OTU"
+ssu18_ps_perfect_otu_sig_tab$lineage <- "No"
+ssu18_ps_perfect_otu_sig_tab <- ssu18_ps_perfect_otu_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_pime_otu_t_sig_tab$dataset <- "PIME"
+ssu18_ps_pime_otu_t_sig_tab$type <- "OTU"
+ssu18_ps_pime_otu_t_sig_tab$lineage <- "Yes"
+ssu18_ps_pime_otu_t_sig_tab <- ssu18_ps_pime_otu_t_sig_tab[,c(8:10,1:7)]
+
+ssu18_ps_perfect_otu_t_sig_tab$dataset <- "PERfect"
+ssu18_ps_perfect_otu_t_sig_tab$type <- "OTU"
+ssu18_ps_perfect_otu_t_sig_tab$lineage <- "Yes"
+ssu18_ps_perfect_otu_t_sig_tab <- ssu18_ps_perfect_otu_t_sig_tab[,c(8:10,1:7)]
+
+ssu18_sig_tab_all <- rbind(ssu18_ps_work_sig_tab, ssu18_ps_pime_sig_tab, ssu18_ps_perfect_sig_tab, 
+      ssu18_ps_pime_t_sig_tab, ssu18_ps_perfect_t_sig_tab, 
+      ssu18_ps_work_otu_sig_tab, ssu18_ps_pime_otu_sig_tab, ssu18_ps_perfect_otu_sig_tab, 
+      ssu18_ps_pime_otu_t_sig_tab, ssu18_ps_perfect_otu_t_sig_tab)
+```
+
+### Summary
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+knitr::kable(ssu18_sig_tab_all)
+```
+*Summary of significant tests.*
+
+<br/>
+
+### PostHoc Analyses (ASV data sets)
+
+First let's check the results of each posthoc analysis.
+
+<details markdown="1">
+<summary>Detailed results of PostHoc Analyses for each metric</summary>
+
+#### Observed (q-value = 0)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvf0_lab <- "FULL (Observed)"
+ssu18_asvf0_lab
+ssu18_ps_work_q0_adt$posthoc.method
+data.frame(ssu18_ps_work_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvp0_lab <- "PIME (Observed)"
+ssu18_asvp0_lab
+ssu18_ps_pime_q0_adt$posthoc.method
+data.frame(ssu18_ps_pime_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvr0_lab <- "PERfect (Observed)"
+ssu18_asvr0_lab
+ssu18_ps_perfect_q0_adt$posthoc.method
+data.frame(ssu18_ps_perfect_q0_adt$posthoc)
+```
+
+```{r eval=TRUE, echo=FALSE, results='hold', comment=''}
+ssu18_asvpt0_lab <- "PIME Lineage (Observed)"
+ssu18_asvpt0_lab
+ssu18_ps_pime_t_q0_adt$posthoc.method
+data.frame(ssu18_ps_pime_t_q0_adt$posthoc)
+```
+
+```{r eval=TRUE, echo=FALSE, results='hold', comment=''}
+ssu18_asvrt0_lab <- "PERfect Lineage (Observed)"
+ssu18_asvrt0_lab
+ssu18_ps_perfect_t_q0_adt$posthoc.method
+data.frame(ssu18_ps_perfect_t_q0_adt$posthoc)
+```
+
+#### Shannon exponential (q-value = 1)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvf1_lab <- "FULL (Shannon exponential)"
+ssu18_asvf1_lab
+ssu18_ps_work_q1_adt$posthoc.method
+data.frame(ssu18_ps_work_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvp1_lab <- "PIME (Shannon exponential)"
+ssu18_asvp1_lab
+ssu18_ps_pime_q1_adt$posthoc.method
+data.frame(ssu18_ps_pime_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvr1_lab <- "PERfect (Shannon exponential)"
+ssu18_asvr1_lab
+ssu18_ps_perfect_q1_adt$posthoc.method
+data.frame(ssu18_ps_perfect_q1_adt$posthoc)
+```
+
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvpt1_lab <- "PIME Lineage (Shannon exponential)"
+ssu18_asvpt1_lab
+ssu18_ps_pime_t_q1_adt$posthoc.method
+data.frame(ssu18_ps_pime_t_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvrt1_lab <- "PERfect Lineage (Shannon exponential)"
+ssu18_asvrt1_lab
+ssu18_ps_perfect_t_q1_adt$posthoc.method
+data.frame(ssu18_ps_perfect_t_q1_adt$posthoc)
+```
+
+#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvf2_lab <- "FULL (Inverse Simpson)"
+ssu18_asvf2_lab
+ssu18_ps_work_q2_adt$posthoc.method
+data.frame(ssu18_ps_work_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvp2_lab <- "PIME (Inverse Simpson)"
+ssu18_asvp2_lab
+ssu18_ps_pime_q2_adt$posthoc.method
+data.frame(ssu18_ps_pime_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvr2_lab <- "PERfect (Inverse Simpson)"
+ssu18_asvr2_lab
+ssu18_ps_perfect_q2_adt$posthoc.method
+data.frame(ssu18_ps_perfect_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvpt2_lab <- "PIME Lineage (Inverse Simpson)"
+ssu18_asvpt2_lab
+ssu18_ps_pime_t_q2_adt$posthoc.method
+data.frame(ssu18_ps_pime_t_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_asvrt2_lab <- "PERfect Lineage (Inverse Simpson)"
+ssu18_asvrt2_lab
+ssu18_ps_perfect_t_q2_adt$posthoc.method
+data.frame(ssu18_ps_perfect_t_q2_adt$posthoc)
+```
+</details>
+
+### PostHoc Analyses (OTU data sets)
+
+Again, let's check the results of each posthoc analysis.
+
+<details markdown="1">
+<summary>Detailed results of PostHoc Analyses for each metric</summary>
+
+#### Observed (q-value = 0)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otuf0_lab <- "FULL (Observed)"
+ssu18_otuf0_lab
+ssu18_ps_work_otu_q0_adt$posthoc.method
+data.frame(ssu18_ps_work_otu_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otup0_lab <- "PIME (Observed)"
+ssu18_otup0_lab
+ssu18_ps_pime_otu_q0_adt$posthoc.method
+data.frame(ssu18_ps_pime_otu_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otur0_lab <- "PERfect (Observed)"
+ssu18_otur0_lab
+ssu18_ps_perfect_otu_q0_adt$posthoc.method
+data.frame(ssu18_ps_perfect_otu_q0_adt$posthoc)
+```
+
+
+```{r eval=TRUE, echo=FALSE, results='hold', comment=''}
+ssu18_otupt0_lab <- "PIME Lineage  (Observed)"
+ssu18_otupt0_lab
+ssu18_ps_pime_otu_t_q0_adt$posthoc.method
+data.frame(ssu18_ps_pime_otu_t_q0_adt$posthoc)
+```
+
+```{r eval=TRUE, echo=FALSE, results='hold', comment=''}
+ssu18_oturt0_lab <- "PERfect Lineage (Observed)"
+ssu18_oturt0_lab
+ssu18_ps_perfect_otu_t_q0_adt$posthoc.method
+data.frame(ssu18_ps_perfect_otu_t_q0_adt$posthoc)
+```
+
+#### Shannon exponential (q-value = 1)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otuf1_lab <- "FULL (Shannon exponential)"
+ssu18_otuf1_lab
+ssu18_ps_work_otu_q1_adt$posthoc.method
+data.frame(ssu18_ps_work_otu_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otup1_lab <- "PIME (Shannon exponential)"
+ssu18_otup1_lab
+ssu18_ps_pime_otu_q1_adt$posthoc.method
+data.frame(ssu18_ps_pime_otu_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otur1_lab <- "PERfect (Shannon exponential)"
+ssu18_otur1_lab
+ssu18_ps_perfect_otu_q1_adt$posthoc.method
+data.frame(ssu18_ps_perfect_otu_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otupt1_lab <- "PIME Lineage  (Shannon exponential)"
+ssu18_otupt1_lab
+ssu18_ps_pime_otu_t_q1_adt$posthoc.method
+data.frame(ssu18_ps_pime_otu_t_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_oturt1_lab <- "PERfect Lineage (Shannon exponential)"
+ssu18_oturt1_lab
+ssu18_ps_perfect_otu_t_q1_adt$posthoc.method
+data.frame(ssu18_ps_perfect_otu_t_q1_adt$posthoc)
+```
+
+
+#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otuf2_lab <- "FULL (Inverse Simpson)"
+ssu18_otuf2_lab
+ssu18_ps_work_otu_q2_adt$posthoc.method
+data.frame(ssu18_ps_work_otu_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otup2_lab <- "PIME (Inverse Simpson)"
+ssu18_otup2_lab
+ssu18_ps_pime_otu_q2_adt$posthoc.method
+data.frame(ssu18_ps_pime_otu_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otur2_lab <- "PERfect (Inverse Simpson)"
+ssu18_otur2_lab
+ssu18_ps_perfect_otu_q2_adt$posthoc.method
+data.frame(ssu18_ps_perfect_otu_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_otupt2_lab <- "PIME Lineage  (Inverse Simpson)"
+ssu18_otupt2_lab
+ssu18_ps_pime_otu_t_q2_adt$posthoc.method
+data.frame(ssu18_ps_pime_otu_t_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+ssu18_oturt2_lab <- "PERfect Lineage (Inverse Simpson)"
+ssu18_oturt2_lab
+ssu18_ps_perfect_otu_t_q2_adt$posthoc.method
+data.frame(ssu18_ps_perfect_otu_t_q2_adt$posthoc)
+```
+</details>
+
+Now we can plot the results from the posthoc analyses for each metric and data set using the function `div_test_plot_jjs`. I modified the original function (`div_test_plot`) to control a little of the formatting.
+
+The command is as follows:
+
+`div_test_plot(divtest = x, chart = "type", colour = col.pal, posthoc = TRUE, threshold = value))`, where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin),`colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
+
+```{r}
+source("hack_code/div_test_plot_jjs.R")
+rm(list=ls(pattern="_adt_plot"))
+for (i in objects(pattern="_adt")) {
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
+     tmp_get <- get(i)
+     tmp_df <- div_test_plot_jjs(tmp_get, chart = "box",
+                                 colour	= swel_col, posthoc = TRUE)
+     tmp_df <- ggpar(tmp_df, legend = "none")
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE, eval=FALSE}
+ssu18_ps_work_q0_adt_plot <- ssu18_ps_work_q0_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(ssu18_asvf0_lab)
+ssu18_ps_pime_q0_adt_plot <- ssu18_ps_pime_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_asvp0_lab)
+ssu18_ps_perfect_q0_adt_plot <- ssu18_ps_perfect_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_asvr0_lab)
+ssu18_ps_pime_t_q0_adt_plot <- ssu18_ps_pime_t_q0_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_asvpt0_lab)
+ssu18_ps_perfect_t_q0_adt_plot <- ssu18_ps_perfect_t_q0_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_asvrt0_lab)
+
+ssu18_ps_work_q1_adt_plot <- ssu18_ps_work_q1_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(ssu18_asvf1_lab)
+ssu18_ps_pime_q1_adt_plot <- ssu18_ps_pime_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_asvp1_lab)
+ssu18_ps_perfect_q1_adt_plot <- ssu18_ps_perfect_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_asvr1_lab)
+
+ssu18_ps_pime_t_q1_adt_plot <- ssu18_ps_pime_t_q1_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_asvpt1_lab)
+ssu18_ps_perfect_t_q1_adt_plot <- ssu18_ps_perfect_t_q1_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_asvrt1_lab)
+
+ssu18_ps_work_q2_adt_plot <- ssu18_ps_work_q2_adt_plot +
+                             ggtitle(ssu18_asvf2_lab)
+ssu18_ps_pime_q2_adt_plot <- ssu18_ps_pime_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(ssu18_asvp2_lab)
+ssu18_ps_perfect_q2_adt_plot <- ssu18_ps_perfect_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(ssu18_asvr2_lab)
+ssu18_ps_pime_t_q2_adt_plot <- ssu18_ps_pime_t_q2_adt_plot +
+                               theme(axis.title.y = element_blank()) +
+                               ggtitle(ssu18_asvpt2_lab)
+ssu18_ps_perfect_t_q2_adt_plot <- ssu18_ps_perfect_t_q2_adt_plot +
+                               theme(axis.title.y = element_blank()) +
+                               ggtitle(ssu18_asvrt2_lab)
+ssu18_alph_div_plots_asv <- ggarrange(
+  ssu18_ps_work_q0_adt_plot, ssu18_ps_pime_q0_adt_plot, ssu18_ps_perfect_q0_adt_plot, ssu18_ps_pime_t_q0_adt_plot, ssu18_ps_perfect_t_q0_adt_plot,
+  ssu18_ps_work_q1_adt_plot, ssu18_ps_pime_q1_adt_plot, ssu18_ps_perfect_q1_adt_plot, ssu18_ps_pime_t_q1_adt_plot, ssu18_ps_perfect_t_q1_adt_plot,
+  ssu18_ps_work_q2_adt_plot, ssu18_ps_pime_q2_adt_plot, ssu18_ps_perfect_q2_adt_plot, ssu18_ps_pime_t_q2_adt_plot, ssu18_ps_perfect_t_q2_adt_plot, 
+  ncol=5, nrow = 3)
+
+ssu18_alph_div_plots_asv
+dev.off()
+png("files/alpha/figures/ssu18_alph_div_plots_asv.png",
+    height=32, width=60, units = 'cm', res = 600, bg = "white")
+ssu18_alph_div_plots_asv
+dev.off()
+pdf("files/alpha/figures/ssu18_alph_div_plots_asv.pdf",
+    height = 10, width = 22)
+ssu18_alph_div_plots_asv
+dev.off()
+```
+
+
+```{r, echo=FALSE, eval=FALSE}
+ssu18_ps_work_otu_q0_adt_plot <- ssu18_ps_work_otu_q0_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(ssu18_otuf0_lab)
+ssu18_ps_pime_otu_q0_adt_plot <- ssu18_ps_pime_otu_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_otup0_lab)
+ssu18_ps_perfect_otu_q0_adt_plot <- ssu18_ps_perfect_otu_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_otur0_lab)
+ssu18_ps_pime_otu_t_q0_adt_plot <- ssu18_ps_pime_otu_t_q0_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_otupt0_lab)
+ssu18_ps_perfect_otu_t_q0_adt_plot <- ssu18_ps_perfect_otu_t_q0_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_oturt0_lab)
+
+ssu18_ps_work_otu_q1_adt_plot <- ssu18_ps_work_otu_q1_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(ssu18_otuf1_lab)
+ssu18_ps_pime_otu_q1_adt_plot <- ssu18_ps_pime_otu_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_otup1_lab)
+ssu18_ps_perfect_otu_q1_adt_plot <- ssu18_ps_perfect_otu_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(ssu18_otur1_lab)
+
+ssu18_ps_pime_otu_t_q1_adt_plot <- ssu18_ps_pime_otu_t_q1_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_otupt1_lab)
+ssu18_ps_perfect_otu_t_q1_adt_plot <- ssu18_ps_perfect_otu_t_q1_adt_plot +
+                               theme(axis.title.y = element_blank(),
+                               axis.title.x = element_blank()) +
+                               ggtitle(ssu18_oturt1_lab)
+
+ssu18_ps_work_otu_q2_adt_plot <- ssu18_ps_work_otu_q2_adt_plot +
+                             ggtitle(ssu18_otuf2_lab)
+ssu18_ps_pime_otu_q2_adt_plot <- ssu18_ps_pime_otu_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(ssu18_otup2_lab)
+ssu18_ps_perfect_otu_q2_adt_plot <- ssu18_ps_perfect_otu_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(ssu18_otur2_lab)
+ssu18_ps_pime_otu_t_q2_adt_plot <- ssu18_ps_pime_otu_t_q2_adt_plot +
+                               theme(axis.title.y = element_blank()) +
+                               ggtitle(ssu18_otupt2_lab)
+ssu18_ps_perfect_otu_t_q2_adt_plot <- ssu18_ps_perfect_otu_t_q2_adt_plot +
+                               theme(axis.title.y = element_blank()) +
+                               ggtitle(ssu18_oturt2_lab)
+ssu18_alph_div_plots_otu <- ggarrange(
+  ssu18_ps_work_otu_q0_adt_plot, ssu18_ps_pime_otu_q0_adt_plot, ssu18_ps_perfect_otu_q0_adt_plot, ssu18_ps_pime_otu_t_q0_adt_plot, ssu18_ps_perfect_otu_t_q0_adt_plot,
+  ssu18_ps_work_otu_q1_adt_plot, ssu18_ps_pime_otu_q1_adt_plot, ssu18_ps_perfect_otu_q1_adt_plot, ssu18_ps_pime_otu_t_q1_adt_plot, ssu18_ps_perfect_otu_t_q1_adt_plot,
+  ssu18_ps_work_otu_q2_adt_plot, ssu18_ps_pime_otu_q2_adt_plot, ssu18_ps_perfect_otu_q2_adt_plot, ssu18_ps_pime_otu_t_q2_adt_plot, ssu18_ps_perfect_otu_t_q2_adt_plot, 
+  ncol=5, nrow = 3)
+
+ssu18_alph_div_plots_otu
+dev.off()
+png("files/alpha/figures/ssu18_alph_div_plots_otu.png",
+    height=32, width=60, units = 'cm', res = 600, bg = "white")
+ssu18_alph_div_plots_otu
+dev.off()
+pdf("files/alpha/figures/ssu18_alph_div_plots_otu.pdf",
+    height = 10, width = 22)
+ssu18_alph_div_plots_otu
+dev.off()
+```
+
+<br/>
+
+### Alpha Diversity Plots
+
+Posthoc adjusted p-values given for each pairwise comparison.
+
+#### ASV data sets
+
+```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
+system("cp files/alpha/figures/ssu18_alph_div_plots_asv.png include/alpha/ssu18_alph_div_plots_asv.png")
+knitr::include_graphics("include/alpha/ssu18_alph_div_plots_asv.png")
+```
+
+#### OTU data sets
+
+```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
+system("cp files/alpha/figures/ssu18_alph_div_plots_otu.png include/alpha/ssu18_alph_div_plots_otu.png")
+knitr::include_graphics("include/alpha/ssu18_alph_div_plots_otu.png")
+```
+
+
+```{r, echo=FALSE}
+save.image("page_build/alpha_ssu18_alpha_wf.rdata")
+```
+
+# ITS
+
+```{r, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/alpha_its18_alpha_wf.rdata")
+```
+
+```{r, include=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+set.seed(119)
+## ASV FULL AND PIME AND PERfect
+its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
+its18_ps_pime <- readRDS("files/pime/rdata/its18_ps_pime.rds")
+its18_ps_perfect <- readRDS("files/perfect/rdata/its18_ps_perfect.rds")
+
+## OTU FULL AND PIME AND PERfect
+its18_ps_work_otu <- readRDS("files/otu/rdata/its18_ps_work_otu.rds")
+its18_ps_pime_otu <- readRDS("files/pime/rdata/its18_ps_pime_otu.rds")
+its18_ps_perfect_otu <- readRDS("files/perfect/rdata/its18_ps_perfect_otu.rds")
+
+## DATA for Hist & RARE
+its18_amp_data <- readRDS("files/data-prep/rdata/its18_amp_data.rds")
+its18_samp_data <- readRDS("files/data-prep/rdata/its18_samp_data.rds")
+its18_samp_data$coverage <- NULL
+its18_amp_pime <- readRDS("files/pime/rdata/its18_amp_pime.rds")
+its18_samp_pime <- readRDS("files/pime/rdata/its18_samp_pime_otu.rds")
+its18_samp_pime$coverage <- NULL
+its18_amp_perfect <- readRDS("files/perfect/rdata/its18_amp_perfect.rds")
+its18_amp_perfect_otu <- readRDS("files/perfect/rdata/its18_amp_perfect_otu.rds")
+objects()
+```
+
+
+```{r, echo=FALSE}
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+```
+
+## Read Distribution
+
+### Histogram of Read Counts
+
+```{r, warning=FALSE}
+its18_max <- max(its18_samp_data$total_reads) +
+  (0.2 * max(its18_samp_data$total_reads))
+its18_p_hist <- ggplot(its18_samp_data,
+       aes(its18_samp_data$total_reads)) +
+         geom_histogram(breaks = seq(0, its18_max, by = 5000),
+                        col = "black", fill = "grey") +
+         labs(title = "Distribution of total reads",
+              caption = "Bin width equals 5000 reads") +
+  labs(x = "No. of reads", y = "No. of samples") +
+  theme_classic()
+```
+
+```{r, fig.height=2, echo=FALSE, layout='l-body-outset', eval=TRUE}
+its18_p_hist
+```
+
+### Rarefaction Curves
+
+```{r}
+its18_rare_curve1 <- amp_rarecurve(
+  its18_amp_data,
+  stepsize = 1000,
+  color_by = "TEMP"
+) + scale_colour_manual(values = swel_col)
+```
+
+
+```{r fig.height=2.5, layout='l-body-outset', eval=TRUE, echo=FALSE}
+its18_rare_curve1
+```
+
+For a quick comparison, we can facet the above data by Temperature.
+
+```{r}
+its18_rare_curve2 <- amp_rarecurve(
+  its18_amp_data,
+  stepsize = 1000,
+  color_by = "TEMP",
+  facet_by = "TEMP",
+  facet_scales = "free"
+)  + scale_colour_manual(values = swel_col)
+```
+
+```{r fig.height=3, layout='l-body-outset', eval=TRUE, echo=FALSE}
+its18_rare_curve2
+```
+
+In the **full data set**, there was a minimum read count of `r min(its18_amp_data$metadata$total_reads)`, a median of `r median(its18_amp_data$metadata$total_reads)` reads, and a maximum of `r max(its18_amp_data$metadata$total_reads)` reads. 
+
+After **PIME** filtering, there was a minimum read count of `r min(min(its18_amp_pime$metadata$total_reads))`, a median of `r median(min(its18_amp_pime$metadata$total_reads))` reads, and a maximum of `r max(min(its18_amp_pime$metadata$total_reads))` reads
+
+After **PERfect** filtering, there was a minimum read count of `r min(its18_amp_perfect$metadata$total_reads)`, a median of `r median(its18_amp_perfect$metadata$total_reads)` reads, and a maximum of `r max(its18_amp_perfect$metadata$total_reads)` reads
+
+## Alpha Diversity
+
+To account for presence of rare sequence variants caused by sequencing errors or other technical artifacts, we use Hill numbers [@alberdi2019guide]. Hill numbers allow the weight put on rare versus abundant sequence variants to be scaled while providing intuitive comparisons of diversity levels using “effective number of ASVs” as a measuring unit. This approach allows for balancing the over representation of rare ASVs that might be inflated due to sequencing errors.
+
+We will then use Shapiro-Wilk tests to test for normalcy and then, depending on the results, either use  parametric ANOVA or non-parametric Kruskal-Wallis to compare alpha diversity among treatments.
+
+### Calculate Hill Numbers
+
+To calculate Hill numbers, we use the R package `hilldiv` [@alberdi2019hilldiv]. We calculate three metrics that put more or less weight on common species:
+
+1) Observed richness, where `q-value = 0`.
+2) Shannon exponential, which weighs ASVs by their frequency,  where `q-value = 1`.
+3) Simpson multiplicative inverse, which over weighs abundant ASVs,  where `q-value = 2`.
+
+We perform each analysis against the full data set and the PIME filtered data set using the function `hill_div`.
+
+The command is as follows:
+
+`hill_div(count = x, qvalue = i, tree = ultrametric_tree)`, where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree (see below).
+
+We first transform all the data to relative abundance values, and compute new trees.
+
+```{r}
+its18_alpha_ds <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
+                    "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
+objects()
+its18_ps_work@phy_tree <- NULL
+its18_ps_pime@phy_tree <- NULL
+its18_ps_perfect@phy_tree <- NULL
+its18_ps_work_otu@phy_tree <- NULL
+its18_ps_pime_otu@phy_tree <- NULL
+its18_ps_perfect_otu@phy_tree <- NULL
+```
+
+
+```{r}
+#  tmp_ps <- transform_sample_counts(get(i), function(otu) 1e5 otu/sum(otu))
+for (i in its18_alpha_ds) {
+  tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
+  tmp_ps@phy_tree <- NULL
+  tmp_ps_norm <- merge_phyloseq(tmp_ps, sample_data)
+  tmp_asv <- data.frame(t(otu_table(tmp_ps_norm)))
+  tmp_ps_name <- purrr::map_chr(i, ~ paste0(., "_norm"))
+  assign(tmp_ps_name, tmp_ps_norm)
+  tmp_asv_name <- purrr::map_chr(i, ~ paste0(., "_tu"))
+  assign(tmp_asv_name, tmp_asv)
+  rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+Next, we run the analysis for all three metrics on the data sets without a tree.
+
+```{r, results='hide'}
+qvalue <- c(0,1,2)
+for (i in qvalue) {
+  for (j in its18_alpha_ds) {
+     tmp_asv <- get(purrr::map_chr(j, ~ paste0(., "_tu")))
+     tmp_df <- data.frame(hill_div(tmp_asv, qvalue = i))
+     tmp_df <- tmp_df %>% dplyr::rename("tmp_name" = 1) %>%
+                              tibble::rownames_to_column("SamName")
+     tmp_name <- purrr::map_chr(j, ~ paste0(., "_h", i))
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+  }
+}
+objects(pattern = "_h")
+```
+
+And make summary tables to add back into each `ps` object.
+
+```{r}
+for (i in its18_alpha_ds) {
+     tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_h0")))
+     tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_h1")))
+     tmp_sim <- get(purrr::map_chr(i, ~ paste0(., "_h2")))
+     tmp_hill <- dplyr::left_join(tmp_obs, tmp_sha, by = "SamName") %>%
+       dplyr::left_join(., tmp_sim, by = "SamName") %>%
+       dplyr::rename("Observed" = 2, "Shannon_exp" = 3, "InvSimpson" = 4)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_hill"))
+     assign(tmp_name, tmp_hill)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_hill")
+```
+
+And then create the new objects with the diversity data.
+
+```{r, echo=FALSE}
+for (i in its18_alpha_ds) {
+     tmp_ps <- get(i)
+     tmp_hill <- get(purrr::map_chr(i, ~ paste0(., "_hill")))
+     tmp_hill_samp <- dplyr::left_join(data.frame(sample_data(tmp_ps)),
+                                         tmp_hill, by = "SamName")
+     tmp_hill_samp$ID <- tmp_hill_samp$SamName
+     tmp_hill_samp <- tmp_hill_samp %>%  tibble::column_to_rownames("ID")
+     tmp_ps2 <- merge_phyloseq(otu_table(tmp_ps),
+                                sample_data(tmp_hill_samp),
+                                tax_table(tmp_ps))
+     assign(i, tmp_ps2)
+     tmp_path <- file.path("files/alpha/rdata/")
+     saveRDS(tmp_ps2, paste(tmp_path, i, ".rds", sep = ""))
+     rm(list = ls(pattern = "tmp_"))
+}
+objects()
+```
+
+### Sample Summary
+
+Now we summarize the data for each sample against all three metrics. The table contains the results of ASV diversity estimates from the full data set and the PIME filtered data set, as well as the lineage diversity from the PIME data set.
+
+The suffix `_pi` indicates metrics for the PIME data set and the suffix `_pe` indicates metrics for the PERfect data set.
+
+
+```{r, echo=FALSE}
+######################### PIME ASV
+its18_pime_hill_samp <- its18_ps_pime_hill %>% dplyr::rename("Observed_pi" = 2,
+                                                             "Shannon_exp_pi" = 3,
+                                                             "InvSimpson_pi" = 4)
+######################### PERfect ASV
+its18_perfect_hill_samp <- its18_ps_perfect_hill %>% dplyr::rename("Observed_pe" = 2,
+                                                             "Shannon_exp_pe" = 3,
+                                                             "InvSimpson_pe" = 4)
+######################### ASV TABLE
+its18_samp_data_tab <- dplyr::left_join(data.frame(sample_data(its18_ps_work)), its18_pime_hill_samp) %>%
+                       dplyr::left_join(., its18_perfect_hill_samp)
+
+its18_samp_data_tab <- its18_samp_data_tab[,c(1:7,10,13,8,11,14,9,12,15)]
+its18_samp_data_tab <- its18_samp_data_tab %>% dplyr::rename("sample_id" = "SamName")
+its18_samp_data_tab <- its18_samp_data_tab[order(its18_samp_data_tab$sample_id), ]
+######################### ######################### ######################### ######################### 
+######################### PIME OTU
+its18_pime_otu_hill_samp <- its18_ps_pime_otu_hill %>% dplyr::rename("Observed_pi" = 2,
+                                                                     "Shannon_exp_pi" = 3,
+                                                                     "InvSimpson_pi" = 4)
+######################### PERfect OTU
+its18_perfect_otu_hill_samp <- its18_ps_perfect_otu_hill %>% dplyr::rename("Observed_pe" = 2,
+                                                                     "Shannon_exp_pe" = 3,
+                                                                     "InvSimpson_pe" = 4)
+######################### OTU TABLE
+its18_samp_data_otu_tab <- dplyr::left_join(data.frame(sample_data(its18_ps_work_otu)), its18_pime_otu_hill_samp) %>%
+                       dplyr::left_join(., its18_perfect_otu_hill_samp)
+its18_samp_data_otu_tab <- its18_samp_data_otu_tab[,c(1:7,10,13,8,11,14,9,12,15)]
+its18_samp_data_otu_tab <- its18_samp_data_otu_tab %>% dplyr::rename("sample_id" = "SamName")
+its18_samp_data_otu_tab <- its18_samp_data_otu_tab[order(its18_samp_data_otu_tab$sample_id), ]
+```
+
+### ASV Hill Summary
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+## elementId https://www.random.org/strings/
+datatable(its18_samp_data_tab, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Sample summary table including
+            ASV diversity indices for FULL plus PIME & PERfect filtered data.
+            Use the buttons to navigate through the table or
+            download a copy.')),
+          elementId = "iq195q9miycqt7qj1e5y",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c(10:ncol(its18_samp_data_tab)),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_samp_data_tab),
+                    fontSize = '80%')
+```
+
+### OTU Hill Summary
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+## elementId https://www.random.org/strings/
+datatable(its18_samp_data_otu_tab, width = "100%", escape = FALSE,
+          rownames = FALSE, filter = 'top',
+          caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Sample summary table including
+            OTU diversity indices for FULL plus PIME & PERfect filtered data.
+            Use the buttons to navigate through the table or
+            download a copy.')),
+          elementId = "fnrcrxhsf5q7j1rswmja",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blfrtip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = 5,
+            lengthMenu = list(c(5, -1), c("5", "All"))
+            )
+          ) %>%
+    DT::formatRound(columns = c(10:ncol(its18_samp_data_tab)),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_samp_data_tab),
+                    fontSize = '80%')
+```
+
+### Normality Tests
+
+Before running significance tests, we need to know if data is normally distributed, which will tell use whether to use a parametric or non-parametric test. To test if the data are normally distributed, we use the Shapiro-Wilk Normality test and the Bartlett Test of Homogeneity of Variances.
+
+If the p-values are both **not significant** (p > 0.05) from the tests, we accept the null hypothesis (that the results are normally distributed) and test for significance between samples using an ANOVA. If the p-values are both **significant** (p < 0.05), we reject the null hypothesis (that the results are normally distributed) and test for significance between samples using Kruskal-Wallis (non-parametric equivalent of ANOVA).
+
+The commands are as follows:
+
+`shapiro.test(x)`, where `x` is a numeric vector of alpha diversity  values from the sample data table.
+
+`bartlett.test(Value ~ Group, data = df)` Where `Value` is the metric of interest, `Group` in the treatment to compare, and `df` is the data frame.  
+
+First the Shapiro-Wilk Normality test.
+
+```{r}
+its18_div_tab <- its18_samp_data_tab
+its18_shap_tests_asv <- c()
+for (i in colnames(its18_div_tab[,7:ncol(its18_div_tab)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("its18_shap_asv_", .))
+   its18_shap_tests_asv <- append(its18_shap_tests_asv, tmp_name)
+   tmp_test <- eval(shapiro.test(its18_div_tab[[i]]))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+
+its18_div_tab <- its18_samp_data_otu_tab
+its18_shap_tests_otu <- c()
+for (i in colnames(its18_div_tab[,7:ncol(its18_div_tab)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("its18_shap_otu_", .))
+   its18_shap_tests_otu <- append(its18_shap_tests_otu, tmp_name)
+   tmp_test <- eval(shapiro.test(its18_div_tab[[i]]))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "shap_")
+```
+
+And then the Bartlett Test of Homogeneity of Variances.
+
+```{r}
+its18_div_tab_asv <- its18_samp_data_tab
+its18_bart_tests_asv <- c()
+for (i in colnames(its18_div_tab_asv[,7:ncol(its18_div_tab_asv)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("its18_bart_asv_", .))
+   its18_bart_tests_asv <- append(its18_bart_tests_asv, tmp_name)
+   tmp_test <- eval(bartlett.test(its18_div_tab_asv[[i]] ~ TEMP, data = its18_div_tab_asv))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+
+its18_div_tab_otu <- its18_samp_data_otu_tab
+its18_bart_tests_otu <- c()
+for (i in colnames(its18_div_tab_otu[,7:ncol(its18_div_tab_otu)])) {
+   tmp_name <- purrr::map_chr(i, ~ paste0("its18_bart_otu_", .))
+   its18_bart_tests_otu <- append(its18_bart_tests_otu, tmp_name)
+   tmp_test <- eval(bartlett.test(its18_div_tab_otu[[i]] ~ TEMP, data = its18_div_tab_otu))
+   tmp_test$data.name <- tmp_name
+   assign(tmp_name, tmp_test)
+   rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_bart_")
+```
+
+Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not for the ASV analysis?
+
+```{r, eval=TRUE}
+for (i in colnames(its18_div_tab_asv[,7:15])) {
+  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_asv_", .)))
+  tmp_shap_p <- round(tmp_get_shap[[2]], 4)
+  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("its18_bart_asv_", .)))
+  tmp_bart_p <- round(tmp_get_bart[[3]], 4)
+  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
+  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
+                 "Bartlett p-value =", tmp_bart_p, 
+                 "Are both p-values > 0.05?", tmp_res)
+  cat(tmp_print,"\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+And which of the metrics are significant for the OTU analysis?
+
+```{r, eval=TRUE}
+for (i in colnames(its18_div_tab_otu[,7:15])) {
+  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_otu_", .)))
+  tmp_shap_p <- round(tmp_get_shap[[2]], 4)
+  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("its18_bart_otu_", .)))
+  tmp_bart_p <- round(tmp_get_bart[[3]], 4)
+  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
+  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
+                 "Bartlett p-value =", tmp_bart_p, 
+                 "Are both p-values > 0.05?", tmp_res)
+  cat(tmp_print,"\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
+
+### Significance Tests
+
+To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).
+
+```{r}
+its18_hill_hier <- its18_samp_data_tab
+its18_hill_hier <- its18_hill_hier %>% dplyr::select("sample_id", "TEMP") %>%
+  tibble::remove_rownames()
+its18_hill_hier <- its18_hill_hier[order(its18_hill_hier$TEMP), ]
+its18_hill_hier$TEMP = paste(its18_hill_hier$TEMP, 'C', sep='')
+its18_hill_hier <- its18_hill_hier %>% tibble::remove_rownames()
+saveRDS(its18_hill_hier, "files/alpha/rdata/its18_hill_hier.rds")
+```
+
+Again, we start by testing significance of ASV diversity for the full data set against each of the three metrics using the `div_test` function.
+
+The command is as follows:
+
+`div_test(countable = x, qvalue = i, hierarchy = hier, tree = ultrametric_tree, posthoc = TRUE)`, where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (see below), and `posthoc` indicates whether to run post hoc pairwise analyses.
+
+```{r, results='hide'}
+source("hack_code/div_test_jjs.R")
+library(FSA)
+qvalue <- c(0,1,2)
+for (i in its18_alpha_ds) {
+     for (j in qvalue) {
+         tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_tu")))
+         tmp_test <- div_test_jjs(tmp_get, qvalue = j,
+                      hierarchy = its18_hill_hier,
+                      posthoc = TRUE)
+         tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+         print(tmp_name)
+         assign(tmp_name, tmp_test)
+         rm(list = ls(pattern = "tmp_"))
+ }
+}
+objects()
+```
+
+
+```{r, echo=FALSE}
+tmp_objects <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
+                 "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
+
+tmp_metric <- data.frame(c("Observed", "Shannon exponential", "Inverse Simpson"))
+tmp_qvalue <- data.frame(c("0", "1", "2"))
+
+qvalue <- c(0,1,2)
+for (i in tmp_objects) {
+
+  tmp_h_pvalue <- c()
+     for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$homogeneity.pvalue
+          tmp_h_pvalue <- c(append(tmp_h_pvalue, tmp_get))
+     }
+  tmp_h_pvalue <- data.frame(tmp_h_pvalue)
+
+  tmp_n_pvalue <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$normality.pvalue
+          tmp_n_pvalue <- c(append(tmp_n_pvalue, tmp_get))
+     }
+  tmp_n_pvalue <- data.frame(tmp_n_pvalue)
+
+  tmp_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$method
+          tmp_method <- c(append(tmp_method, tmp_get))
+     }
+  tmp_method <- data.frame(tmp_method)
+
+  tmp_phoc_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$posthoc.method
+          tmp_phoc_method <- c(append(tmp_phoc_method, tmp_get))
+     }
+  tmp_phoc_method <- data.frame(tmp_phoc_method)
+
+  tmp_df <- dplyr::bind_cols(tmp_metric, tmp_qvalue) %>%
+                     dplyr::bind_cols(., tmp_n_pvalue) %>%
+                     dplyr::bind_cols(., tmp_h_pvalue) %>%
+                     dplyr::bind_cols(., tmp_method) %>%
+                     dplyr::bind_cols(., tmp_phoc_method) %>%
+  dplyr::rename("metric" = 1, "q-value" = 2, "normality p-value" = 3, 
+                "homogeneity p-value" = 4, "method" = 5, "posthoc method" = 6)
+  tmp_name <- purrr::map_chr(i, ~ paste0(i, "_sig_tab"))
+  assign(tmp_name, tmp_df)
+}
+objects(pattern="_sig_tab")
+its18_ps_pime_otu_sig_tab
+```
+
+
+```{r, echo=FALSE}
+## Format as follows:
+## FALSE Kruskal-Wallis Test = its18_pime_q1_adt$test[[3]]
+## TRUE Tukey post-hoc  = its18_ps_work_q0_adt$test[[1]][[1, 5]]
+#####################################################################################
+############### ASVs
+#####################################################################################
+
+############################### WORK ##################################################
+tmp_pvalue <- data.frame(c(its18_ps_work_q0_adt$test[[1]][[1, 5]],
+                           its18_ps_work_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_work_q2_adt$test[[1]][[1, 5]]))
+its18_ps_work_sig_tab <- dplyr::bind_cols(its18_ps_work_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+################################ PIME ################################################
+tmp_pvalue <- data.frame(c(its18_ps_pime_q0_adt$test[[1]][[1, 5]],
+                           its18_ps_pime_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_pime_q2_adt$test[[1]][[1, 5]]))
+its18_ps_pime_sig_tab <- dplyr::bind_cols(its18_ps_pime_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(its18_ps_perfect_q0_adt$test[[1]][[1, 5]],
+                           its18_ps_perfect_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_perfect_q2_adt$test[[1]][[1, 5]]))
+its18_ps_perfect_sig_tab <- dplyr::bind_cols(its18_ps_perfect_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+############### OTUS
+#####################################################################################
+tmp_pvalue <- data.frame(c(its18_ps_work_otu_q0_adt$test[[1]][[1, 5]],
+                           its18_ps_work_otu_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_work_otu_q2_adt$test[[1]][[1, 5]]))
+its18_ps_work_otu_sig_tab <- dplyr::bind_cols(its18_ps_work_otu_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(its18_ps_pime_otu_q0_adt$test[[3]],
+                           its18_ps_pime_otu_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_pime_otu_q2_adt$test[[1]][[1, 5]]))
+its18_ps_pime_otu_sig_tab <- dplyr::bind_cols(its18_ps_pime_otu_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+#####################################################################################
+tmp_pvalue <- data.frame(c(its18_ps_perfect_otu_q0_adt$test[[1]][[1, 5]],
+                           its18_ps_perfect_otu_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_perfect_otu_q2_adt$test[[1]][[1, 5]]))
+its18_ps_perfect_otu_sig_tab <- dplyr::bind_cols(its18_ps_perfect_otu_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+rm(list = ls(pattern = "tmp_"))
+```
+
+```{r, echo=FALSE}
+its18_ps_work_sig_tab$dataset <- "FULL"
+its18_ps_work_sig_tab$type <- "ASV"
+its18_ps_work_sig_tab$lineage <- "No"
+its18_ps_work_sig_tab <- its18_ps_work_sig_tab[,c(8:10,1:7)]
+
+its18_ps_pime_sig_tab$dataset <- "PIME"
+its18_ps_pime_sig_tab$type <- "ASV"
+its18_ps_pime_sig_tab$lineage <- "No"
+its18_ps_pime_sig_tab <- its18_ps_pime_sig_tab[,c(8:10,1:7)]
+
+its18_ps_perfect_sig_tab$dataset <- "PERfect"
+its18_ps_perfect_sig_tab$type <- "ASV"
+its18_ps_perfect_sig_tab$lineage <- "No"
+its18_ps_perfect_sig_tab <- its18_ps_perfect_sig_tab[,c(8:10,1:7)]
+
+its18_ps_work_otu_sig_tab$dataset <- "FULL"
+its18_ps_work_otu_sig_tab$type <- "OTU"
+its18_ps_work_otu_sig_tab$lineage <- "No"
+its18_ps_work_otu_sig_tab <- its18_ps_work_otu_sig_tab[,c(8:10,1:7)]
+
+its18_ps_pime_otu_sig_tab$dataset <- "PIME"
+its18_ps_pime_otu_sig_tab$type <- "OTU"
+its18_ps_pime_otu_sig_tab$lineage <- "No"
+its18_ps_pime_otu_sig_tab <- its18_ps_pime_otu_sig_tab[,c(8:10,1:7)]
+
+its18_ps_perfect_otu_sig_tab$dataset <- "PERfect"
+its18_ps_perfect_otu_sig_tab$type <- "OTU"
+its18_ps_perfect_otu_sig_tab$lineage <- "No"
+its18_ps_perfect_otu_sig_tab <- its18_ps_perfect_otu_sig_tab[,c(8:10,1:7)]
+
+its18_sig_tab_all <- rbind(its18_ps_work_sig_tab, its18_ps_pime_sig_tab, its18_ps_perfect_sig_tab, 
+      its18_ps_work_otu_sig_tab, its18_ps_pime_otu_sig_tab, its18_ps_perfect_otu_sig_tab)
+```
+
+#### Summary
+
+<br/>
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+knitr::kable(its18_sig_tab_all)
+```
+*Summary of significant tests.*
+
+<br/>
+
+### PostHoc Analyses (ASV data sets)
+
+First let's check the results of each posthoc analysis.
+
+<details markdown="1">
+<summary>Detailed results of PostHoc Analyses for each metric</summary>
+
+#### Observed (q-value = 0)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvf0_lab <- "FULL (Observed)"
+its18_asvf0_lab
+its18_ps_work_q0_adt$posthoc.method
+data.frame(its18_ps_work_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvp0_lab <- "PIME (Observed)"
+its18_asvp0_lab
+its18_ps_pime_q0_adt$posthoc.method
+data.frame(its18_ps_pime_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvr0_lab <- "PERfect (Observed)"
+its18_asvr0_lab
+its18_ps_perfect_q0_adt$posthoc.method
+data.frame(its18_ps_perfect_q0_adt$posthoc)
+```
+
+#### Shannon exponential (q-value = 1)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvf1_lab <- "FULL (Shannon exponential)"
+its18_asvf1_lab
+its18_ps_work_q1_adt$posthoc.method
+data.frame(its18_ps_work_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvp1_lab <- "PIME (Shannon exponential)"
+its18_asvp1_lab
+its18_ps_pime_q1_adt$posthoc.method
+data.frame(its18_ps_pime_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvr1_lab <- "PERfect (Shannon exponential)"
+its18_asvr1_lab
+its18_ps_perfect_q1_adt$posthoc.method
+data.frame(its18_ps_perfect_q1_adt$posthoc)
+```
+
+#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvf2_lab <- "FULL (Inverse Simpson)"
+its18_asvf2_lab
+its18_ps_work_q2_adt$posthoc.method
+data.frame(its18_ps_work_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvp2_lab <- "PIME (Inverse Simpson)"
+its18_asvp2_lab
+its18_ps_pime_q2_adt$posthoc.method
+data.frame(its18_ps_pime_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_asvr2_lab <- "PERfect (Inverse Simpson)"
+its18_asvr2_lab
+its18_ps_perfect_q2_adt$posthoc.method
+data.frame(its18_ps_perfect_q2_adt$posthoc)
+```
+</details>
+
+### PostHoc Analyses (OTU data sets)
+
+Again, let's check the results of each posthoc analysis.
+
+<details markdown="1">
+<summary>Detailed results of PostHoc Analyses for each metric</summary>
+
+#### Observed (q-value = 0)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otuf0_lab <- "FULL (Observed)"
+its18_otuf0_lab
+its18_ps_work_otu_q0_adt$posthoc.method
+data.frame(its18_ps_work_otu_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otup0_lab <- "PIME (Observed)"
+its18_otup0_lab
+its18_ps_pime_otu_q0_adt$posthoc.method
+data.frame(its18_ps_pime_otu_q0_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otur0_lab <- "PERfect (Observed)"
+its18_otur0_lab
+its18_ps_perfect_otu_q0_adt$posthoc.method
+data.frame(its18_ps_perfect_otu_q0_adt$posthoc)
+its18_ps_perfect_otu_q0_adt
+```
+
+#### Shannon exponential (q-value = 1)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otuf1_lab <- "FULL (Shannon exponential)"
+its18_otuf1_lab
+its18_ps_work_otu_q1_adt$posthoc.method
+data.frame(its18_ps_work_otu_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otup1_lab <- "PIME (Shannon exponential)"
+its18_otup1_lab
+its18_ps_pime_otu_q1_adt$posthoc.method
+data.frame(its18_ps_pime_otu_q1_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otur1_lab <- "PERfect (Shannon exponential)"
+its18_otur1_lab
+its18_ps_perfect_otu_q1_adt$posthoc.method
+data.frame(its18_ps_perfect_otu_q1_adt$posthoc)
+```
+
+#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otuf2_lab <- "FULL (Inverse Simpson)"
+its18_otuf2_lab
+its18_ps_work_otu_q2_adt$posthoc.method
+data.frame(its18_ps_work_otu_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otup2_lab <- "PIME (Inverse Simpson)"
+its18_otup2_lab
+its18_ps_pime_otu_q2_adt$posthoc.method
+data.frame(its18_ps_pime_otu_q2_adt$posthoc)
+```
+
+```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+its18_otur2_lab <- "PERfect (Inverse Simpson)"
+its18_otur2_lab
+its18_ps_perfect_otu_q2_adt$posthoc.method
+data.frame(its18_ps_perfect_otu_q2_adt$posthoc)
+```
+</details>
+
+Now we can plot the results from the posthoc analyses for each metric and data set using the function `div_test_plot_jjs`. I modified the orihginal function (`div_test_plot`) to control a little of the formatting.
+
+The command is as follows:
+
+`div_test_plot(divtest = x, chart = "type", colour = col.pal, posthoc = TRUE, threshold = value))`, where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin),`colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
+
+```{r}
+source("hack_code/div_test_plot_jjs_2.R")
+rm(list=ls(pattern="_adt_plot"))
+for (i in objects(pattern="_adt")) {
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
+     tmp_get <- get(i)
+     tmp_df <- div_test_plot_jjs_2(tmp_get, chart = "box",
+                                 colour	= swel_col, posthoc = TRUE)
+     tmp_df <- ggpar(tmp_df, legend = "none")
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+objects(pattern = "_adt")
+```
+
+```{r, echo=FALSE, eval=FALSE}
+its18_ps_work_q0_adt_plot <- its18_ps_work_q0_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(its18_asvf0_lab)
+its18_ps_pime_q0_adt_plot <- its18_ps_pime_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_asvp0_lab)
+its18_ps_perfect_q0_adt_plot <- its18_ps_perfect_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_asvr0_lab)
+
+its18_ps_work_q1_adt_plot <- its18_ps_work_q1_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(its18_asvf1_lab)
+its18_ps_pime_q1_adt_plot <- its18_ps_pime_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_asvp1_lab)
+its18_ps_perfect_q1_adt_plot <- its18_ps_perfect_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_asvr1_lab)
+
+its18_ps_work_q2_adt_plot <- its18_ps_work_q2_adt_plot +
+                             ggtitle(its18_asvf2_lab)
+its18_ps_pime_q2_adt_plot <- its18_ps_pime_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(its18_asvp2_lab)
+its18_ps_perfect_q2_adt_plot <- its18_ps_perfect_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(its18_asvr2_lab)
+
+its18_alph_div_plots_asv <- ggarrange(
+  its18_ps_work_q0_adt_plot, its18_ps_pime_q0_adt_plot, its18_ps_perfect_q0_adt_plot,
+  its18_ps_work_q1_adt_plot, its18_ps_pime_q1_adt_plot, its18_ps_perfect_q1_adt_plot,
+  its18_ps_work_q2_adt_plot, its18_ps_pime_q2_adt_plot, its18_ps_perfect_q2_adt_plot, 
+  ncol=3, nrow = 3)
+
+its18_alph_div_plots_asv
+dev.off()
+png("files/alpha/figures/its18_alph_div_plots_asv.png",
+    height=32, width=60, units = 'cm', res = 600, bg = "white")
+its18_alph_div_plots_asv
+dev.off()
+pdf("files/alpha/figures/its18_alph_div_plots_asv.pdf",
+    height = 10, width = 22)
+its18_alph_div_plots_asv
+dev.off()
+```
+
+
+```{r, echo=FALSE, eval=FALSE}
+its18_ps_work_otu_q0_adt_plot <- its18_ps_work_otu_q0_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(its18_otuf0_lab)
+its18_ps_pime_otu_q0_adt_plot <- its18_ps_pime_otu_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_otup0_lab)
+its18_ps_perfect_otu_q0_adt_plot <- its18_ps_perfect_otu_q0_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_otur0_lab)
+
+its18_ps_work_otu_q1_adt_plot <- its18_ps_work_otu_q1_adt_plot +
+                             theme(axis.title.x = element_blank()) +
+                             ggtitle(its18_otuf1_lab)
+its18_ps_pime_otu_q1_adt_plot <- its18_ps_pime_otu_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_otup1_lab)
+its18_ps_perfect_otu_q1_adt_plot <- its18_ps_perfect_otu_q1_adt_plot +
+                             theme(axis.title.y = element_blank(),
+                             axis.title.x = element_blank()) +
+                             ggtitle(its18_otur1_lab)
+
+its18_ps_work_otu_q2_adt_plot <- its18_ps_work_otu_q2_adt_plot +
+                             ggtitle(its18_otuf2_lab)
+its18_ps_pime_otu_q2_adt_plot <- its18_ps_pime_otu_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(its18_otup2_lab)
+its18_ps_perfect_otu_q2_adt_plot <- its18_ps_perfect_otu_q2_adt_plot +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(its18_otur2_lab)
+its18_alph_div_plots_otu <- ggarrange(
+  its18_ps_work_otu_q0_adt_plot, its18_ps_pime_otu_q0_adt_plot, its18_ps_perfect_otu_q0_adt_plot,
+  its18_ps_work_otu_q1_adt_plot, its18_ps_pime_otu_q1_adt_plot, its18_ps_perfect_otu_q1_adt_plot, 
+  its18_ps_work_otu_q2_adt_plot, its18_ps_pime_otu_q2_adt_plot, its18_ps_perfect_otu_q2_adt_plot, 
+  ncol=3, nrow = 3)
+
+its18_alph_div_plots_otu
+dev.off()
+png("files/alpha/figures/its18_alph_div_plots_otu.png",
+    height=32, width=60, units = 'cm', res = 600, bg = "white")
+its18_alph_div_plots_otu
+dev.off()
+pdf("files/alpha/figures/its18_alph_div_plots_otu.pdf",
+    height = 10, width = 22)
+its18_alph_div_plots_otu
+dev.off()
+```
+
+<br/>
+
+### Alpha Diversity Plots
+
+Posthoc adjusted p-values given for each pairwise comparison.
+
+#### ASV data sets
+
+```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
+system("cp files/alpha/figures/its18_alph_div_plots_asv.png include/alpha/its18_alph_div_plots_asv.png")
+knitr::include_graphics("include/alpha/its18_alph_div_plots_asv.png")
+```
+
+#### OTU data sets
+
+```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
+system("cp files/alpha/figures/its18_alph_div_plots_otu.png include/alpha/its18_alph_div_plots_otu.png")
+knitr::include_graphics("include/alpha/its18_alph_div_plots_otu.png")
+```
+
+```{r, echo=FALSE}
+save.image("page_build/alpha_its18_alpha_wf.rdata")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+remove(list = ls())
+```
+
+
+##  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/alpha.Rmd). Please note, that in order to process the data *and*  build the website, we needed to run the workflow and get the results. Then hard code the results and turn off the individual commands. So the raw file for this page is a bit messy---you have been warned.
