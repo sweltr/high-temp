@@ -102,7 +102,6 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
   <!--/radix_placeholder_meta_tags-->
   
-  <meta name="citation_reference" content="citation_title=DADA2: High-resolution sample inference from illumina amplicon data;citation_publication_date=2016;citation_volume=13;citation_author=Benjamin J Callahan;citation_author=Paul J McMurdie;citation_author=Michael J Rosen;citation_author=Andrew W Han;citation_author=Amy Jo A Johnson;citation_author=Susan P Holmes"/>
   <meta name="citation_reference" content="citation_title=Cutadapt removes adapter sequences from high-throughput sequencing reads;citation_publication_date=2011;citation_volume=17;citation_author=Marcel Martin"/>
   <meta name="citation_reference" content="citation_title=The SILVA ribosomal RNA gene database project: Improved data processing and web-based tools;citation_publication_date=2012;citation_volume=41;citation_author=Christian Quast;citation_author=Elmar Pruesse;citation_author=Pelin Yilmaz;citation_author=Jan Gerken;citation_author=Timmy Schweer;citation_author=Pablo Yarza;citation_author=Jörg Peplies;citation_author=Frank Oliver Glöckner"/>
   <meta name="citation_reference" content="citation_title=UNITE general FASTA release for fungi;citation_publication_date=2020;citation_publisher=UNITE Community;citation_author=Kessy Abarenkov;citation_author=Allan Zirk;citation_author=Timo Piirmann;citation_author=Raivo Pöhönen;citation_author=Filipp Ivanov;citation_author=R. Henrik Nilsson;citation_author=Urmas Kõljalg"/>
@@ -1897,7 +1896,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
      font-size: 0.80em;
      font-family: 'Monaco', 'PT Mono', monospace;
      overflow-x: scroll !important;
-     border-left: 6px solid #323232;
+     border-left: 6px solid #2271B2;
      border-top: 1px solid #B7B7B7;
      border-right: 1px solid #B7B7B7;
      border-bottom: 1px solid #B7B7B7;
@@ -1912,7 +1911,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
       font-size: 0.80em;
       font-family: 'Monaco', 'PT Mono', monospace;
       overflow-x: scroll !important;
-      border-left: 6px solid #FC6464;
+      border-left: 6px solid #B22271;
       border-top: 1px solid #B7B7B7;
       border-right: 1px solid #B7B7B7;
       border-bottom: 1px solid #B7B7B7;
@@ -1966,7 +1965,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   }
 
   .distill-site-nav {
-      background-color: #323232;
+      background-color: #113858;
       font-size: 16px;
       font-weight: 300;
   }
@@ -1984,7 +1983,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   /** DETAILS fold down**/
 
   details {
-    background-color: hsla(206, 95%, 20%, 0.2);
+    background-color: #f6f6f6;
     cursor: pointer;
     color: #2d2d2d;
     margin-bottom:1vh;
@@ -2092,9 +2091,9 @@ B. Diversity Workflows
 <a href="metadata.html">9. Metadata</a>
 </div>
 </div>
+<a href="data-availability.html">Data Products</a>
 </div>
 <div class="nav-right">
-<a href="temp.html">Data</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2203,35 +2202,6 @@ $autodep
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">remove</span>(<span class="at">list =</span> <span class="fu">ls</span>())</span></code></pre></div>
 </div>
 </details>
-<blockquote>
-<p>Hit the <em>Hide Code</em> button to collapse the R code (visible by default).</p>
-</blockquote>
-<aside>
-<div class="layout-chunk" data-layout="l-body">
-<input onclick="codefolder(&#39;pre.sourceCode&#39;);" type="button" value="Hide Code" id="codefolder-button" style="position: absolute; right: 14%; z-index: 200"/>
-<script>
-  function codefolder(query) {
-
-    var x = document.querySelectorAll(query);
-    if (x.length === 0) return;
-
-    function toggle_vis(o) {
-      var d = o.style.display;
-      o.style.display = (d === 'block' || d === '') ? 'none':'block';
-    }
-
-    for (i = 0; i < x.length; i++) {
-      var y = x[i];
-      toggle_vis(y);
-    }
-
-    var elem = document.getElementById("codefolder-button");
-    if (elem.value === "Hide Code") elem.value = "Show Code";
-    else elem.value = "Hide Code";
-  }
-</script>
-</div>
-</aside>
 <h1 id="prerequisites">Prerequisites</h1>
 <p>In order to run this workflow, you either need the <em>raw</em> data, available on the figshare project site, or the <em>trimmed</em> data, available from the ENA under project accession number … See the <a href="data-availability.html">Data Availability</a> page for complete details.</p>
 <p>This workflow is how we processed our 16S rRNA and ITS data sets using <a href="https://benjjneb.github.io/dada2/">DADA2</a> <span class="citation" data-cites="callahan2016dada2">(<a href="#ref-callahan2016dada2" role="doc-biblioref">Callahan et al. 2016</a>)</span> from samples collected in <strong>2018</strong>. Workflow construction is based on the <a href="https://benjjneb.github.io/dada2/tutorial_1_8.html">DADA2 Pipeline Tutorial (1.8)</a> and the primer identification section of the <a href="https://benjjneb.github.io/dada2/ITS_workflow.html">DADA2 ITS Pipeline Workflow (1.8)</a>.</p>
@@ -2329,7 +2299,7 @@ Because the workflows share many common variable names, you must either split th
 <h3 id="rename-samples">Rename samples</h3>
 <p>To make the parsing easier, we will eliminate the lane and well number from each sample. If you do not wish to do that you will need to adjust the code accordingly. I am <em>positive</em> there are more elegant ways of doing this.</p>
 <blockquote>
-<p>CAUTION. You should check that this code works on a few backup files before proceeding.</p>
+<p>CAUTION. If you use this for your own data, please check that this code works on a few backup files before proceeding.</p>
 </blockquote>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">&quot;RAW&quot;</span>)</span>

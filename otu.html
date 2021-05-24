@@ -1875,7 +1875,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
      font-size: 0.80em;
      font-family: 'Monaco', 'PT Mono', monospace;
      overflow-x: scroll !important;
-     border-left: 6px solid #323232;
+     border-left: 6px solid #2271B2;
      border-top: 1px solid #B7B7B7;
      border-right: 1px solid #B7B7B7;
      border-bottom: 1px solid #B7B7B7;
@@ -1890,7 +1890,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
       font-size: 0.80em;
       font-family: 'Monaco', 'PT Mono', monospace;
       overflow-x: scroll !important;
-      border-left: 6px solid #FC6464;
+      border-left: 6px solid #B22271;
       border-top: 1px solid #B7B7B7;
       border-right: 1px solid #B7B7B7;
       border-bottom: 1px solid #B7B7B7;
@@ -1944,7 +1944,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   }
 
   .distill-site-nav {
-      background-color: #323232;
+      background-color: #113858;
       font-size: 16px;
       font-weight: 300;
   }
@@ -1962,7 +1962,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   /** DETAILS fold down**/
 
   details {
-    background-color: hsla(206, 95%, 20%, 0.2);
+    background-color: #f6f6f6;
     cursor: pointer;
     color: #2d2d2d;
     margin-bottom:1vh;
@@ -2070,9 +2070,9 @@ B. Diversity Workflows
 <a href="metadata.html">9. Metadata</a>
 </div>
 </div>
+<a href="data-availability.html">Data Products</a>
 </div>
 <div class="nav-right">
-<a href="temp.html">Data</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2154,36 +2154,6 @@ $autodep
 [1] FALSE</code></pre>
 </div>
 </details>
-<p></br></p>
-<blockquote>
-<p>Hit the <em>Hide Code</em> button to collapse the R code (visible by default).</p>
-</blockquote>
-<aside>
-<div class="layout-chunk" data-layout="l-body">
-<input onclick="codefolder(&#39;pre.sourceCode&#39;);" type="button" value="Hide Code" id="codefolder-button" style="position: absolute; right: 14%; z-index: 200"/>
-<script>
-  function codefolder(query) {
-
-    var x = document.querySelectorAll(query);
-    if (x.length === 0) return;
-
-    function toggle_vis(o) {
-      var d = o.style.display;
-      o.style.display = (d === 'block' || d === '') ? 'none':'block';
-    }
-
-    for (i = 0; i < x.length; i++) {
-      var y = x[i];
-      toggle_vis(y);
-    }
-
-    var elem = document.getElementById("codefolder-button");
-    if (elem.value === "Hide Code") elem.value = "Show Code";
-    else elem.value = "Hide Code";
-  }
-</script>
-</div>
-</aside>
 <h2 id="synopsis">Synopsis</h2>
 <p>In order to run the workflow, you either need to first run the <a href="dada2.html">DADA2 Workflow for 2018 High Temp samples</a> and then the <a href="data-prep.html">Data Preparation workflow</a> <strong>or</strong> begin with the output files from the Data Preparation and PIME workflows. See the <a href="data-availability.html">Data Availability</a> page for complete details.</p>
 <p>In this workflow we cluster ASVs into operational taxonomic units (OTUs) using the <code>otu</code> function from the <code>kmer</code> package. Briefly, the workflow consists of XXX steps.</p>
@@ -2204,6 +2174,10 @@ $autodep
 </div>
 <h2 id="generate-fasta-file">1. Generate FASTA File</h2>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ps_list <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;ssu18_ps_work&quot;</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Get ASV data</span></span>
@@ -2245,10 +2219,15 @@ $autodep
 <span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;.fasta&quot;</span>))</span>
 <span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</details>
 </div>
 <h2 id="cluster-otus">2. Cluster OTUs</h2>
 <p>Code for clustering OTUs is based on the <a href="https://shaunpwilkinson.github.io/post/kmer-vignette/">kmer-vignette</a>. Important parameters are <code>threshold</code> (value between 0 and 1 giving the OTU identity cutoff) and <code>method</code> (<code>central</code>, <code>centroid</code>, <code>farthest</code>)</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  tmp_fasta_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;.fasta&quot;</span>))</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/otu/tables/&quot;</span>)</span>
@@ -2263,9 +2242,14 @@ $autodep
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_otu_name, tmp_df)</span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</details>
 </div>
 <h2 id="create-lookup-table">3. Create Lookup Table</h2>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  tmp_df <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_cluster_results&quot;</span>)))</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Make lookup table from results</span></span>
@@ -2291,9 +2275,14 @@ $autodep
 <span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(tmp_l_otu <span class="sc">-</span> tmp_l_asv)</span>
 <span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</details>
 </div>
 <h2 id="asv-to-otu-table">4. ASV to OTU Table</h2>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#https://riptutorial.com/data-table/example/13084/using--sd-and--sdcols</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
@@ -2325,9 +2314,14 @@ $autodep
 <span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;its&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <h2 id="make-taxonomy-files">5. Make Taxonomy Files</h2>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_otu_tax&quot;</span>))</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
@@ -2350,10 +2344,15 @@ $autodep
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_tax_name, tmp_tax_merge)</span>
 <span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</details>
 </div>
 <h2 id="create-phyloseq-objects">6. Create Phyloseq Objects</h2>
 <p>Now we can create phyloseq objects for the new OTU data. This is a little tricky because in the original <code>ps</code> objects, the ASVs are named in order of total abundance. However, the new OTU designations are not named in this fashion.</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  tmp_otu <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_otu_tab&quot;</span>)))</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  tmp_tax <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_otu_tax&quot;</span>)))</span>
@@ -2399,6 +2398,7 @@ $autodep
 <span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <p>OK, now we need to make sure that all of this fiddling with OTU names didn’t mess anything up. So we need to compare the following to make sure they are all identical:</p>
 <ol type="1">
@@ -2410,6 +2410,10 @@ $autodep
 </ol>
 <p>Specifically, we will compare the lineage and the DNA sequence from all three data frames. If they are equal, we are good to go. First the 16S rRNA data set.</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tmp_rn <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">row.names</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(ssu18_ps_work_otu))))    </span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>tmp_bind <span class="ot">&lt;-</span> <span class="fu">cbind</span>(ssu18_ps_work_org_names, tmp_rn)  </span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>tmp_bind <span class="ot">&lt;-</span> tmp_bind <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;NEW_ID&quot;</span> <span class="ot">=</span> <span class="dv">2</span>)    </span>
@@ -2440,6 +2444,7 @@ $autodep
 <span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))   </span>
 <span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>}   </span>
 <span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;temp_&quot;</span>))    </span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>[1] TRUE.
@@ -2447,6 +2452,10 @@ $autodep
 </div>
 <p>And then the ITS data.</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>tmp_rn <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">row.names</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(its18_ps_work_otu))))    </span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>tmp_bind <span class="ot">&lt;-</span> <span class="fu">cbind</span>(its18_ps_work_org_names, tmp_rn)  </span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>tmp_bind <span class="ot">&lt;-</span> tmp_bind <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;NEW_ID&quot;</span> <span class="ot">=</span> <span class="dv">2</span>)    </span>
@@ -2477,6 +2486,7 @@ $autodep
 <span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))   </span>
 <span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>}   </span>
 <span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;temp_&quot;</span>))    </span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>[1] TRUE.
@@ -2484,6 +2494,10 @@ $autodep
 </div>
 <p>The last step is to add an <code>OTU_ID</code> column to the new <code>ps</code> objects so they are the same as their ASV counterparts.</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tax_table</span>(ssu18_ps_work_otu) <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">tax_table</span>(ssu18_ps_work_otu), </span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                           <span class="fu">rownames</span>(<span class="fu">tax_table</span>(ssu18_ps_work_otu)))  </span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(<span class="fu">tax_table</span>(ssu18_ps_work_otu)) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Kingdom&quot;</span>, <span class="st">&quot;Phylum&quot;</span>, <span class="st">&quot;Class&quot;</span>,   </span>
@@ -2494,9 +2508,14 @@ $autodep
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(<span class="fu">tax_table</span>(its18_ps_work_otu)) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Kingdom&quot;</span>, <span class="st">&quot;Phylum&quot;</span>, <span class="st">&quot;Class&quot;</span>,   </span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">&quot;Order&quot;</span>, <span class="st">&quot;Family&quot;</span>, <span class="st">&quot;Genus&quot;</span>,   </span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">&quot;OTU_SEQ&quot;</span>, <span class="st">&quot;OTU_ID&quot;</span>)  </span></code></pre></div>
+</details>
 </div>
 <h2 id="create-ampvis2-objects">7. Create Ampvis2 Objects</h2>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list){</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_otu&quot;</span>)))</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_ps)))</span>
@@ -2514,8 +2533,13 @@ $autodep
 <span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_ps_otu_amp&quot;</span>)</span>
 <span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="fu">tax_table</span>(ssu18_ps_work_ps_otu_amp))</span>
 <span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_ps_otu_amp</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list){</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ps_otu_amp&quot;</span>)))</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    tmp_samp <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps))</span>
@@ -2535,6 +2559,7 @@ $autodep
 <span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_ps_otu_amp&quot;</span>))</span></code></pre></div>
+</details>
 </div>
 <h2 id="summary">Summary</h2>
 <div class="layout-chunk" data-layout="l-body">
@@ -2545,6 +2570,10 @@ The ssu18_ps_work_otu OTU phyloseq object has 936640 reads and 14848 OTUs. </cod
 </div>
 <h2 id="save-tables">8. Save Tables</h2>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>ps_list <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_work_otu&quot;</span>, <span class="st">&quot;its18_ps_work_otu&quot;</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_list) {</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="do">## Get ASV data</span></span>
@@ -2597,12 +2626,13 @@ The ssu18_ps_work_otu OTU phyloseq object has 936640 reads and 14848 OTUs. </cod
 <span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;.fasta&quot;</span>))</span>
 <span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save.image</span>(<span class="st">&quot;page_build/otu_wf.rdata&quot;</span>)</span></code></pre></div>
+
 </div>
 <div class="layout-chunk" data-layout="l-body">
 

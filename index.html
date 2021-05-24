@@ -18,67 +18,6 @@
  <!--radix_placeholder_import_source-->
  <!--/radix_placeholder_import_source-->
 
-<style type="text/css">code{white-space: pre;}</style>
-<style type="text/css" data-origin="pandoc">
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; } /* Alert */
-code span.an { color: #008000; } /* Annotation */
-code span.at { } /* Attribute */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #0000ff; } /* ControlFlow */
-code span.ch { color: #008080; } /* Char */
-code span.cn { } /* Constant */
-code span.co { color: #008000; } /* Comment */
-code span.cv { color: #008000; } /* CommentVar */
-code span.do { color: #008000; } /* Documentation */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.im { } /* Import */
-code span.in { color: #008000; } /* Information */
-code span.kw { color: #0000ff; } /* Keyword */
-code span.op { } /* Operator */
-code span.ot { color: #ff4000; } /* Other */
-code span.pp { color: #ff4000; } /* Preprocessor */
-code span.sc { color: #008080; } /* SpecialChar */
-code span.ss { color: #008080; } /* SpecialString */
-code span.st { color: #008080; } /* String */
-code span.va { } /* Variable */
-code span.vs { color: #008080; } /* VerbatimString */
-code span.wa { color: #008000; font-weight: bold; } /* Warning */
-</style>
 
   <!--radix_placeholder_meta_tags-->
   <title>sweltr: The S.W.E.L.T.R Microbial Cookbook</title>
@@ -106,6 +45,12 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
   <!--/radix_placeholder_meta_tags-->
   
+  <meta name="citation_reference" content="citation_title=DADA2: High-resolution sample inference from illumina amplicon data;citation_publication_date=2016;citation_volume=13;citation_author=Benjamin J Callahan;citation_author=Paul J McMurdie;citation_author=Michael J Rosen;citation_author=Andrew W Han;citation_author=Amy Jo A Johnson;citation_author=Susan P Holmes"/>
+  <meta name="citation_reference" content="citation_title=Cutadapt removes adapter sequences from high-throughput sequencing reads;citation_publication_date=2011;citation_volume=17;citation_author=Marcel Martin"/>
+  <meta name="citation_reference" content="citation_title=Phyloseq: An r package for reproducible interactive analysis and graphics of microbiome census data;citation_publication_date=2013;citation_volume=8;citation_author=Paul J McMurdie;citation_author=Susan Holmes"/>
+  <meta name="citation_reference" content="citation_title=A guide to the application of hill numbers to DNA-based diversity analyses;citation_publication_date=2019;citation_volume=19;citation_author=Antton Alberdi;citation_author=M Thomas P Gilbert"/>
+  <meta name="citation_reference" content="citation_title=PERFect: PERmutation filtering test for microbiome data;citation_publication_date=2019;citation_volume=20;citation_author=Ekaterina Smirnova;citation_author=Snehalata Huzurbazar;citation_author=Farhad Jafari"/>
+  <meta name="citation_reference" content="citation_title=PIME: A package for discovery of novel differences among microbial communities;citation_publication_date=2020;citation_volume=20;citation_author=Luiz Fernando W Roesch;citation_author=Priscila T Dobbler;citation_author=Victor S Pylro;citation_author=Bryan Kolaczkowski;citation_author=Jennifer C Drew;citation_author=Eric W Triplett"/>
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
@@ -1879,7 +1824,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
      font-size: 0.80em;
      font-family: 'Monaco', 'PT Mono', monospace;
      overflow-x: scroll !important;
-     border-left: 6px solid #323232;
+     border-left: 6px solid #2271B2;
      border-top: 1px solid #B7B7B7;
      border-right: 1px solid #B7B7B7;
      border-bottom: 1px solid #B7B7B7;
@@ -1894,7 +1839,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
       font-size: 0.80em;
       font-family: 'Monaco', 'PT Mono', monospace;
       overflow-x: scroll !important;
-      border-left: 6px solid #FC6464;
+      border-left: 6px solid #B22271;
       border-top: 1px solid #B7B7B7;
       border-right: 1px solid #B7B7B7;
       border-bottom: 1px solid #B7B7B7;
@@ -1948,7 +1893,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   }
 
   .distill-site-nav {
-      background-color: #323232;
+      background-color: #113858;
       font-size: 16px;
       font-weight: 300;
   }
@@ -1966,7 +1911,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   /** DETAILS fold down**/
 
   details {
-    background-color: hsla(206, 95%, 20%, 0.2);
+    background-color: #f6f6f6;
     cursor: pointer;
     color: #2d2d2d;
     margin-bottom:1vh;
@@ -2074,9 +2019,9 @@ B. Diversity Workflows
 <a href="metadata.html">9. Metadata</a>
 </div>
 </div>
+<a href="data-availability.html">Data Products</a>
 </div>
 <div class="nav-right">
-<a href="temp.html">Data</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2114,176 +2059,136 @@ B. Diversity Workflows
 <ul>
 <li><a href="#site-overview">Site Overview</a></li>
 <li><a href="#data-availability">Data Availability</a></li>
-<li><a href="#pipelines-workflows">Pipelines &amp; Workflows</a></li>
+<li><a href="#pipelines-workflows">Pipelines &amp; Workflows</a>
+<ul>
+<li><a href="#processing-workflow">Processing Workflow</a></li>
+<li><a href="#diversity-workflow">Diversity Workflow</a></li>
+</ul></li>
 <li><a href="#primers">Primers</a></li>
 <li><a href="#resources">Resources</a>
 <ul>
 <li><a href="#s-rrna">16S rRNA</a></li>
 <li><a href="#its">ITS</a></li>
-</ul></li>
-<li><a href="#quick-summaries">Quick Summaries</a>
-<ul>
-<li><a href="#diversity-estimates">Diversity estimates</a></li>
 <li><a href="#source-code">Source Code</a></li>
 <li><a href="#data-availability-1">Data Availability</a></li>
 </ul></li>
 </ul>
 </nav>
 </div>
-<p>Welcome. I created this site to share information with other people involved in the project. This way I can alert you to any updates without needing to fill your inbox with a bunch of files. The site is updated regularly so please check back or look out for update emails.</p>
-<blockquote>
-<p><strong>The site is password protected.</strong> If you find anything that is publicly accessible, please let me know.</p>
-</blockquote>
-<p>To access any material on the site, you should need a password or have access to the GitHub repo.</p>
-<details>
-<summary>
-<strong>Show/hide</strong> detailed results of Significance tests for the FULL data set
-</summary>
-<p>This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR data sets. Most (if not all) steps were performed in R. With the exception of the DADA2 workflows, which were processed using Hydra, all workflows can be run on a laptop. Workflows are have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can easily be copied for use in reference management software. Generally, all R code is available for each workflow. In some cases the code is hidden but there is a button towards the top of the page that says <em>Show Code</em> that will unfold each code block. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;***PERMANOVA for Jensen-Shannon Divergence, `jsd`***&quot;</span>, <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_adonis2_jsd</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;***ANOSIM for Unweighted UniFrac distance, `unifrac`***&quot;</span>, <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ssu18_ps_work_anosim_unifrac)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="st">&quot;***ANOSIM for Weighted-UniFrac distance, `wunifrac`***&quot;</span>, <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ssu18_ps_work_anosim_wunifrac)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-</div>
-</details>
 <h1 id="site-overview">Site Overview</h1>
-<p>This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR data sets. Most (if not all) steps were performed in R. With the exception of the DADA2 workflows, which were processed using Hydra, all workflows can be run on a laptop. Workflows are have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can easily be copied for use in reference management software. Generally, all R code is available for each workflow. In some cases the code is hidden but there is a button towards the top of the page that says <em>Show Code</em> that will unfold each code block. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.</p>
+<p>Welcome to the website of the <strong>S</strong>oil <strong>W</strong>arming <strong>E</strong>xperiment in <strong>L</strong>owland <strong>T</strong>ropical <strong>R</strong>ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR hig temperature experiment. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.</p>
 <h1 id="data-availability">Data Availability</h1>
-<p>In order to run a complete pipeline, you either need the <em>raw</em> fastq files, available on the figshare project site, or the <em>trimmed</em> fastq files, available from the ENA under project accession number … See the specific pipeline or <a href="data-availability.html">Data Availability</a> page for complete details.</p>
-<p>Each workflow page within a pipeline also contains a Data Availability appendix (see below for an example) that links to specific data packets require for the workflow. Or again, you can visit the <a href="data-availability.html">Data Availability</a> page for more information.</p>
+<p>In order to run a complete pipeline, you either need the <em>raw</em> fastq files, available on the figshare project site, or the <em>trimmed</em> fastq files, available from the European Nucleotide Archive (ENA) under project accession number <a href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074 (ERP129199)</a>. See the specific pipeline or <a href="data-availability.html">Data Availability</a> page for more details.</p>
+<p>Each workflow page within a pipeline also contains a Data Availability appendix that links to specific data packets require for the workflow. Or again, you can visit the <a href="data-availability.html">Data Availability</a> page for more information.</p>
 <h1 id="pipelines-workflows">Pipelines &amp; Workflows</h1>
-<p>There are 8 pipelines in total—one for each of the 6 data sets plus two additional pipelines for comparing the 2018 and 2019 where applicable. The pipelines are:</p>
-<ul>
-<li>16S rRNA data from 2019</li>
-<li>16S rRNA data from 2018</li>
-<li>16S comparison between 2019 &amp; 2018</li>
-<li>ITS data from 2019</li>
-<li>ITS data from 2018</li>
-<li>ITS comparison between 2019 &amp; 2018</li>
-<li>18S rRNA AMF data from 2019</li>
-<li>ITS Oomycete data from 2019</li>
-</ul>
-<p>Each pipeline contains three successive <strong><em>workflows</em></strong>. These workflows are complete, reproducible, and designed to be run in order. That said, each ends with the creation of R data packages that can be used as input for the next workflow, allowing you to skip any individual section.</p>
-<p>Workflows all follow the same general structure.</p>
+<p>There are 9 workflows in total. Each workflow contains code for processing the 16S rRNA and ITS data sets. These workflows are complete, reproducible, and designed to be run in order. That said, each ends with the creation of R data packages that can be used as input for the next workflow, allowing you to skip any individual section. In order, these are:</p>
+<h2 id="processing-workflow">Processing Workflow</h2>
 <ol type="1">
-<li><strong>Processing</strong> with <a href="https://github.com/marcelm/cutadapt">catadapt</a><span class="citation" data-cites="martin2011cutadapt">(<a href="#ref-martin2011cutadapt" role="doc-biblioref">Martin 2011</a>)</span> and <a href="https://benjjneb.github.io/dada2/">DADA2</a><span class="citation" data-cites="callahan2016dada2">(<a href="#ref-callahan2016dada2" role="doc-biblioref">Callahan et al. 2016</a>)</span>. Workflow begins with raw fastq files and goes through the process of primer removal, filtering, quality screening, trimming, error correction, chimera removal, and taxonomic assignment. The workflow ends with the generation of an Rdata file for the next step. Depending on the DADA2 version you have installed, you may get <a href="https://github.com/benjjneb/dada2/issues/532">slightly different results</a> due to fundamental changes in the code-base. This is unavoidable at times and the developers do the best they can to maintain fidelity across versions. We set random number seeds at the beginning of each workflow to ensure reproducibility. To see the package versions of tools used in each workflow, please see the R Session Information section on the bottom of each page.</li>
-<li><strong>Data Preparation</strong>. Workflow begins with the initial sequence and taxonomy tables from the DADA2 workflow and uses <a href="https://joey711.github.io/phyloseq/">phyloseq</a><span class="citation" data-cites="mcmurdie2013phyloseq">(<a href="#ref-mcmurdie2013phyloseq" role="doc-biblioref">McMurdie and Holmes 2013</a>)</span> to define samples and sample groups, create phyloseq objects, and curate data sets. Summary data is provided throughout the workflow. Again, workflow ends with the generation of an Rdata file for the next step.</li>
-<li><strong>Community Analysis</strong>. These sections cover the distribution of reads across samples (inc. histograms of read counts &amp; rarefaction curves), estimates of alpha diversity (inc. normality tests, significance tests, &amp; diversity plots), estimates of beta diversity (ordination plots &amp; PERMANOVA), and taxonomic diversity (inc. heatmaps of abundant ASVs, ASV box plots, &amp; taxon bar charts). Each workflow also has links to download ASV by sample tables, taxonomic assignments, and sample metadata.</li>
+<li><a href="dada2.html">DADA2</a>. Workflow begins with raw fastq files and goes through the process of primer removal (using <a href="https://github.com/marcelm/cutadapt">catadapt</a> <span class="citation" data-cites="martin2011cutadapt">(<a href="#ref-martin2011cutadapt" role="doc-biblioref">Martin 2011</a>)</span>), filtering, quality screening, trimming, error correction, chimera removal, and taxonomic assignment using <a href="https://benjjneb.github.io/dada2/">DADA2</a> <span class="citation" data-cites="callahan2016dada2">(<a href="#ref-callahan2016dada2" role="doc-biblioref">Callahan et al. 2016</a>)</span>. The workflow ends with the generation of an Rdata file for the next step. Depending on the DADA2 version you have installed, you may get <a href="https://github.com/benjjneb/dada2/issues/532">slightly different results</a> due to fundamental changes in the code-base. This is unavoidable at times and the developers do the best they can to maintain fidelity across versions. We set random number seeds at the beginning of each workflow to ensure reproducibility. To see the package versions of tools used in each workflow, please see the R Session Information section on the bottom of each page.</li>
+<li><a href="data-prep.html">Data Set Prep</a>. Workflow begins with the initial sequence and taxonomy tables from the DADA2 workflow and uses <a href="https://joey711.github.io/phyloseq/">phyloseq</a> <span class="citation" data-cites="mcmurdie2013phyloseq">(<a href="#ref-mcmurdie2013phyloseq" role="doc-biblioref">McMurdie and Holmes 2013</a>)</span> to define samples and sample groups, create phyloseq objects, and curate data sets. Summary data is provided throughout the workflow. Again, workflow ends with the generation of an Rdata file for the next step.</li>
+<li><a href="otu.html">OTU Clustering</a>. Cluster ASVs into operational taxonomic units (OTUs) using the <a href="https://github.com/shaunpwilkinson/kmer"><code>kmer</code> package</a>.<br />
+</li>
+<li>Filtering<br />
+4a. <a href="pime.html">PIME Filtering</a>. In Part A, we used PIME <a href="https://github.com/microEcology/pime">(Prevalence Interval for Microbiome Evaluation)</a> <span class="citation" data-cites="roesch2020pime">(<a href="#ref-roesch2020pime" role="doc-biblioref">Roesch et al. 2020</a>)</span> to filter the FULL 16S rRNA (ASV &amp; OTU) and ITS (ASV &amp; OTU) data sets.<br />
+4b. <a href="perfect.html">PERFect Filtering</a>. In Part B we use PERFect <a href="https://github.com/katiasmirn/PERFect">(PERmutation Filtering test for microbiome data)</a> <span class="citation" data-cites="smirnova2019perfect">(<a href="#ref-smirnova2019perfect" role="doc-biblioref">Smirnova, Huzurbazar, and Jafari 2019</a>)</span> to filter the same data sets.</li>
 </ol>
-<p>Though the workflows are annotated, they are not meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into. See the <a href="#resources">Resources</a> section below for some of the sites we used. We also reference many assets on individual workflow pages.</p>
+<h2 id="diversity-workflow">Diversity Workflow</h2>
+<ol start="5" type="1">
+<li><a href="taxa.html">Taxonomic</a>. Taxonomic diversity primarily focused on taxon bar charts.</li>
+<li><a href="alpha.html">Alpha Diversity</a>. This section covers the distribution of reads across samples and includes histograms of read counts &amp; rarefaction curves. Also covers estimates of alpha diversity using Hill numbers <span class="citation" data-cites="alberdi2019guide">(<a href="#ref-alberdi2019guide" role="doc-biblioref">Alberdi and Gilbert 2019</a>)</span> and includes normality tests, significance tests, &amp; diversity plots.</li>
+<li><a href="beta.html">Beta Diversity</a> Estimates of beta diversity including significance tests, beta dispersion, and ordination plots.</li>
+<li><a href="da.html">DA ASVs &amp; OTUs</a>. Results and visualizations from Indicator Analysis and LEfSe.</li>
+<li><a href="metadata.html">Metadata</a>. Multivariate Analysis Overview of environmental metadata and community composition. Includes metadata Normality Tests, Normalization, Autocorrelation Tests, Dissimilarity Correlation Tests, Best Subset of Variables, Distance-based Redundancy, and Capscale analysis.</li>
+</ol>
+<p>Though the workflows are annotated, they are not necessarily meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into. See the <a href="#resources">Resources</a> section below for some of the sites we used. We also reference other sources on individual workflow pages.</p>
 <h1 id="primers">Primers</h1>
-<p>Here is a description of the primers used in each pipeline. Primer information can also be found of the individual workflow pages.</p>
+<p>Here is a description of the primers used in this study. Primer information can also be found of the individual workflow pages.</p>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <div class="layout-chunk" data-layout="l-page">
-
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 6%" />
+<col style="width: 24%" />
+<col style="width: 5%" />
+<col style="width: 22%" />
+<col style="width: 8%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">pipeline</th>
+<th style="text-align: left;">FWD</th>
+<th style="text-align: left;">FWD_sequence</th>
+<th style="text-align: left;">REV</th>
+<th style="text-align: left;">REV_sequence</th>
+<th style="text-align: left;">length</th>
+<th style="text-align: left;">ref</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">16S rRNA</td>
+<td style="text-align: left;">515F</td>
+<td style="text-align: left;">GTGCCAGCMGCCGCGGTAA</td>
+<td style="text-align: left;">806R</td>
+<td style="text-align: left;">GGACTACHVGGGTWTCTAAT</td>
+<td style="text-align: left;">253</td>
+<td style="text-align: left;"><span class="citation" data-cites="caporaso2011global">(<a href="#ref-caporaso2011global" role="doc-biblioref">Caporaso et al. 2011</a>)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ITS</td>
+<td style="text-align: left;">ITS1f</td>
+<td style="text-align: left;">CTTGGTCATTTAGAGGAAGTAA</td>
+<td style="text-align: left;">ITS2</td>
+<td style="text-align: left;">GCTGCGTTCTTCATCGATGC</td>
+<td style="text-align: left;">100-450</td>
+<td style="text-align: left;">insert ref</td>
+</tr>
+</tbody>
+</table>
 </div>
 <p><br/></p>
 <h1 id="resources">Resources</h1>
+<p>Here are some general resources we used in workflow construction. Specific tools and programs can be found in the Reference sections of individual workflows.</p>
 <h2 id="s-rrna">16S rRNA</h2>
-<p>Here are some general resources we used in pipeline and workflow construction for the 16S data. Other tools and programs can be found in the Reference sections.</p>
 <ul>
 <li>Earth Microbiome Project <a href="https://earthmicrobiome.org/protocols-and-standards/16s/">16S Illumina Amplicon Protocol</a> for primer description and amplification protocols.</li>
 <li><a href="https://benjjneb.github.io/dada2/tutorial_1_8.html">DADA2 Pipeline Tutorial (1.8)</a> for 16S rRNA read processing.</li>
 <li><a href="https://github.com/amoliverio/dada2_fiererlab">Another DADA2 16S rRNA tutorial</a>.</li>
 </ul>
 <h2 id="its">ITS</h2>
-<p>Here are some general resources we used in pipeline and workflow construction for the ITS data sets. Other tools and programs can be found in the Reference sections.</p>
 <ul>
 <li>Earth Microbiome Project <a href="https://www.earthmicrobiome.org/protocols-and-standards/its/">ITS Illumina Amplicon Protocol</a> for primer description and amplification protocols.</li>
 <li><a href="https://benjjneb.github.io/dada2/ITS_workflow.html">DADA2 ITS Pipeline Workflow (1.8)</a> for ITS read processing.</li>
 </ul>
-<h1 id="quick-summaries">Quick Summaries</h1>
-<h2 id="diversity-estimates">Diversity estimates</h2>
-<p>Table showing the results of significance tests for alpha and beta diversity across treatments (warm v. control). These results are for rarefied and non-rarefied data sets. For the 2019 data sets we also tested just the top sample layers only (00-010 &amp; 10-020 cm).</p>
-<table>
-<thead>
-<tr class="header">
-<th>Data set</th>
-<th>Alpha diversity</th>
-<th>Beta diversity</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>16S rRNA data (2019)</td>
-<td>Not significant</td>
-<td>Not significant</td>
-</tr>
-<tr class="even">
-<td>16S rRNA data (2019, top only)</td>
-<td>Not significant</td>
-<td>Not significant</td>
-</tr>
-<tr class="odd">
-<td>16S rRNA data (2018)</td>
-<td><strong>Significant</strong></td>
-<td><strong>Significant</strong></td>
-</tr>
-<tr class="even">
-<td>16S comparison (2019 &amp; 2018)</td>
-<td>Pending</td>
-<td>Pending</td>
-</tr>
-<tr class="odd">
-<td>ITS data (2019)</td>
-<td>Not significant</td>
-<td><strong>Significant</strong></td>
-</tr>
-<tr class="even">
-<td>ITS data (2019, top only)</td>
-<td>Not significant</td>
-<td><strong>Significant</strong></td>
-</tr>
-<tr class="odd">
-<td>ITS data (2018)</td>
-<td>Not significant</td>
-<td><strong>Significant</strong></td>
-</tr>
-<tr class="even">
-<td>ITS comparison (2019 &amp; 2018)</td>
-<td>Pending</td>
-<td>Pending</td>
-</tr>
-<tr class="odd">
-<td>18S rRNA AMF data (2019)</td>
-<td>Not significant</td>
-<td><strong>Significant</strong></td>
-</tr>
-<tr class="even">
-<td>18S rRNA AMF data (2019, top only)</td>
-<td>Not significant</td>
-<td><strong>Significant</strong></td>
-</tr>
-<tr class="odd">
-<td>ITS Oomycete data (2019)</td>
-<td>Pending</td>
-<td>Pending</td>
-</tr>
-</tbody>
-</table>
 <h2 class="appendix" id="source-code">Source Code</h2>
 <p>You can find the source code for this page by <a href="https://github.com/sweltr/high-temp/blob/master/index.Rmd">clicking this link</a>.</p>
 <h2 class="appendix" id="data-availability-1">Data Availability</h2>
 <p>Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number <a href="">XXXXXXXX</a>. Output files from this workflow available on figshare at <a href="">XXXXXXXX.</a>.</p>
 <div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<div id="ref-alberdi2019guide" class="csl-entry" role="doc-biblioentry">
+Alberdi, Antton, and M Thomas P Gilbert. 2019. <span>“A Guide to the Application of Hill Numbers to DNA-Based Diversity Analyses.”</span> <em>Molecular Ecology Resources</em> 19 (4): 804–17. <a href="https://doi.org/10.1111/1755‐0998.13014">https://doi.org/10.1111/1755‐0998.13014</a>.
+</div>
 <div id="ref-callahan2016dada2" class="csl-entry" role="doc-biblioentry">
 Callahan, Benjamin J, Paul J McMurdie, Michael J Rosen, Andrew W Han, Amy Jo A Johnson, and Susan P Holmes. 2016. <span>“Dada2: High-Resolution Sample Inference from Illumina Amplicon Data.”</span> <em>Nature Methods</em> 13 (7): 581. <a href="https://doi.org/10.1038/nmeth.3869">https://doi.org/10.1038/nmeth.3869</a>.
+</div>
+<div id="ref-caporaso2011global" class="csl-entry" role="doc-biblioentry">
+Caporaso, J Gregory, Christian L Lauber, William A Walters, Donna Berg-Lyons, Catherine A Lozupone, Peter J Turnbaugh, Noah Fierer, and Rob Knight. 2011. <span>“Global Patterns of 16s rRNA Diversity at a Depth of Millions of Sequences Per Sample.”</span> <em>Proceedings of the National Academy of Sciences</em> 108: 4516–22. <a href="https://doi.org/10.1073/pnas.1000080107">https://doi.org/10.1073/pnas.1000080107</a>.
 </div>
 <div id="ref-martin2011cutadapt" class="csl-entry" role="doc-biblioentry">
 Martin, Marcel. 2011. <span>“Cutadapt Removes Adapter Sequences from High-Throughput Sequencing Reads.”</span> <em>EMBnet. Journal</em> 17 (1): 10–12. <a href="https://doi.org/10.14806/ej.17.1.200">https://doi.org/10.14806/ej.17.1.200</a>.
 </div>
 <div id="ref-mcmurdie2013phyloseq" class="csl-entry" role="doc-biblioentry">
 McMurdie, Paul J, and Susan Holmes. 2013. <span>“Phyloseq: An r Package for Reproducible Interactive Analysis and Graphics of Microbiome Census Data.”</span> <em>PLoS One</em> 8 (4): e61217. <a href="https://doi.org/10.1371/journal.pone.0061217">https://doi.org/10.1371/journal.pone.0061217</a>.
+</div>
+<div id="ref-roesch2020pime" class="csl-entry" role="doc-biblioentry">
+Roesch, Luiz Fernando W, Priscila T Dobbler, Victor S Pylro, Bryan Kolaczkowski, Jennifer C Drew, and Eric W Triplett. 2020. <span>“PIME: A Package for Discovery of Novel Differences Among Microbial Communities.”</span> <em>Molecular Ecology Resources</em> 20 (2): 415–28. <a href="https://doi.org/10.1111/1755-0998.13116">https://doi.org/10.1111/1755-0998.13116</a>.
+</div>
+<div id="ref-smirnova2019perfect" class="csl-entry" role="doc-biblioentry">
+Smirnova, Ekaterina, Snehalata Huzurbazar, and Farhad Jafari. 2019. <span>“PERFect: PERmutation Filtering Test for Microbiome Data.”</span> <em>Biostatistics</em> 20 (4): 615–31. <a href="https://doi.org/10.1093/biostatistics/kxy020">https://doi.org/10.1093/biostatistics/kxy020</a>.
 </div>
 </div>
 <!--radix_placeholder_article_footer-->

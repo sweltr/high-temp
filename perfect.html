@@ -102,7 +102,6 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
   <!--/radix_placeholder_meta_tags-->
   
-  <meta name="citation_reference" content="citation_title=PERFect: PERmutation filtering test for microbiome data;citation_publication_date=2019;citation_volume=20;citation_author=Ekaterina Smirnova;citation_author=Snehalata Huzurbazar;citation_author=Farhad Jafari"/>
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
@@ -1896,7 +1895,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
      font-size: 0.80em;
      font-family: 'Monaco', 'PT Mono', monospace;
      overflow-x: scroll !important;
-     border-left: 6px solid #323232;
+     border-left: 6px solid #2271B2;
      border-top: 1px solid #B7B7B7;
      border-right: 1px solid #B7B7B7;
      border-bottom: 1px solid #B7B7B7;
@@ -1911,7 +1910,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
       font-size: 0.80em;
       font-family: 'Monaco', 'PT Mono', monospace;
       overflow-x: scroll !important;
-      border-left: 6px solid #FC6464;
+      border-left: 6px solid #B22271;
       border-top: 1px solid #B7B7B7;
       border-right: 1px solid #B7B7B7;
       border-bottom: 1px solid #B7B7B7;
@@ -1965,7 +1964,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   }
 
   .distill-site-nav {
-      background-color: #323232;
+      background-color: #113858;
       font-size: 16px;
       font-weight: 300;
   }
@@ -1983,7 +1982,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   /** DETAILS fold down**/
 
   details {
-    background-color: hsla(206, 95%, 20%, 0.2);
+    background-color: #f6f6f6;
     cursor: pointer;
     color: #2d2d2d;
     margin-bottom:1vh;
@@ -2091,9 +2090,9 @@ B. Diversity Workflows
 <a href="metadata.html">9. Metadata</a>
 </div>
 </div>
+<a href="data-availability.html">Data Products</a>
 </div>
 <div class="nav-right">
-<a href="temp.html">Data</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2182,36 +2181,6 @@ $autodep
 [1] FALSE</code></pre>
 </div>
 </details>
-<p><br/></p>
-<blockquote>
-<p>Hit the <em>Hide Code</em> button to collapse the R code (visible by default).</p>
-</blockquote>
-<aside>
-<div class="layout-chunk" data-layout="l-body">
-<input onclick="codefolder(&#39;pre.sourceCode&#39;);" type="button" value="Hide Code" id="codefolder-button" style="position: absolute; right: 14%; z-index: 200"/>
-<script>
-  function codefolder(query) {
-
-    var x = document.querySelectorAll(query);
-    if (x.length === 0) return;
-
-    function toggle_vis(o) {
-      var d = o.style.display;
-      o.style.display = (d === 'block' || d === '') ? 'none':'block';
-    }
-
-    for (i = 0; i < x.length; i++) {
-      var y = x[i];
-      toggle_vis(y);
-    }
-
-    var elem = document.getElementById("codefolder-button");
-    if (elem.value === "Hide Code") elem.value = "Show Code";
-    else elem.value = "Hide Code";
-  }
-</script>
-</div>
-</aside>
 <p>In this workflow, we used PERFect <a href="https://github.com/katiasmirn/PERFect">(PERmutation Filtering test for microbiome data)</a> <span class="citation" data-cites="smirnova2019perfect">(<a href="#ref-smirnova2019perfect" role="doc-biblioref">Smirnova, Huzurbazar, and Jafari 2019</a>)</span> to filter the FULL 16S rRNA (ASV &amp; OTU) and ITS (ASV &amp; OTU) data sets.</p>
 <p>The first step in the PERFect process is to rarefy the data and then proceed with the filtering. Here is a summary of the results. Tables show comparisons of ASV vs. OTU data sets. Tables are duplicated in the relevant sections below.</p>
 <h2 id="s-rrna-asv-vs.-otu">16S rRNA ASV vs. OTU</h2>
@@ -2308,6 +2277,10 @@ $autodep
 <h2 id="setup">Setup</h2>
 <p>To run PERFect, we need the ASV/OTU tables in data frame format with samples as rows and ASVs/OTUs as columns. PERFect is sensitive to the order of ASVs/OTUs, so here we test a) the default order in the phyloseq object and b) ASVs/OTUs ordered by decreasing abundance.</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>samp_ps_filt <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="st">&quot;ssu18_ps_work_otu&quot;</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
@@ -2336,6 +2309,7 @@ $autodep
 <span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
 <span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <h2 id="filter">Filter</h2>
 <p>Next we run the filtering analysis using <a href="https://rdrr.io/github/katiasmirn/PERFect/man/PERFect_sim.html"><code>PERFect_sim</code></a>. The other option is <a href="https://rdrr.io/github/katiasmirn/PERFect/man/PERFect_perm.html"><code>PERFect_perm</code></a> however I could not get this to work as of this writing. The process never finished :/</p>
@@ -2344,6 +2318,10 @@ $autodep
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>per_pval <span class="ot">&lt;-</span> <span class="fl">0.05</span></span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>)))</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  tmp_get_ord <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect&quot;</span>)))</span>
@@ -2366,6 +2344,7 @@ $autodep
 <span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_sim&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -2374,8 +2353,8 @@ $autodep
 
 </div>
 <p>Now let’s take a look at how many ASVs/OTUs were retained.</p>
-<p>First the ASV data set. Default ordering resulted in 20172 ASVs and reordering the data resulted in 4466 ASVs.</p>
-<p>And the OTU data set. Default ordering resulted in 14847 OTUs and reordering the data resulted in 3865 OTUs.</p>
+<p>First the ASV data set. Default ordering resulted in <strong>20172</strong> ASVs and reordering the data resulted in <strong>4466</strong> ASVs.</p>
+<p>And the OTU data set. Default ordering resulted in <strong>14847</strong> OTUs and reordering the data resulted in <strong>3865</strong> OTUs.</p>
 <p>For some reason, the package does not remove based on the p value cutoff that we set earlier (<code>0.05</code>). So we need to filter out the ASVs/OTUs that have a higher p value than the cutoff.</p>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>Total ASVs with p value less than 0.05 
@@ -2389,6 +2368,10 @@ Total OTUs with p value less than 0.05
 <p>Now we can make phyloseq objects. Manual inspection of the results from <code>PERFect_sim</code> indicated that using the decrease order and filtering p values &lt; 0.05 resulted in the best results. This approach limited the number of ASVs/OTUs found in only 1 or 2 samples.</p>
 <p>So first we filter out ASVs/OTUs with p values &lt; 0.05 and then make the objects.</p>
 <div class="layout-chunk" data-layout="l-body">
+<details>
+<summary>
+Show code
+</summary>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect&quot;</span>)))</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    tmp_get_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect_sim&quot;</span>)))</span>
@@ -2428,19 +2411,16 @@ Total OTUs with p value less than 0.05
 <span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>}  </span>
 <span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span>
 <span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_filt&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;ASV phyloseq object&quot;</span>)</span></code></pre></div>
 <pre><code>[1] &quot;ASV phyloseq object&quot;</code></pre>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_perf_filt</span></code></pre></div>
 <pre><code>phyloseq-class experiment-level object
 otu_table()   OTU Table:         [ 1659 taxa and 15 samples ]
 sample_data() Sample Data:       [ 15 samples by 6 sample variables ]
 tax_table()   Taxonomy Table:    [ 1659 taxa by 8 taxonomic ranks ]
 phy_tree()    Phylogenetic Tree: [ 1659 tips and 1658 internal nodes ]</code></pre>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;OTU phyloseq object&quot;</span>)</span></code></pre></div>
 <pre><code>[1] &quot;OTU phyloseq object&quot;</code></pre>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_otu_perf_filt</span></code></pre></div>
 <pre><code>phyloseq-class experiment-level object
 otu_table()   OTU Table:         [ 1862 taxa and 15 samples ]
 sample_data() Sample Data:       [ 15 samples by 6 sample variables ]
@@ -2455,7 +2435,7 @@ phy_tree()    Phylogenetic Tree: [ 1862 tips and 1861 internal nodes ]</code></p
 
 </div>
 <p><br/></p>
-<div class="layout-chunk" data-layout="l-body-outset">
+<div class="layout-chunk" data-layout="l-body">
 <table>
 <thead>
 <tr class="header">
@@ -2499,91 +2479,116 @@ phy_tree()    Phylogenetic Tree: [ 1862 tips and 1861 internal nodes ]</code></p
 </table>
 </div>
 <p></br></p>
-<p>And finally save Phyloseq PERfect objects.</p>
+<p>And finally save the phyloseq PERfect objects.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect <span class="ot">&lt;-</span> ssu18_ps_work_perf_filt</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_ps_perfect, <span class="st">&quot;files/perfect/rdata/ssu18_ps_perfect.rds&quot;</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_otu <span class="ot">&lt;-</span> ssu18_ps_work_otu_perf_filt</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_ps_perfect_otu, <span class="st">&quot;files/perfect/rdata/ssu18_ps_perfect_otu.rds&quot;</span>)</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect <span class="ot">&lt;-</span> ssu18_ps_work_perf_filt</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_ps_perfect, <span class="st">&quot;files/perfect/rdata/ssu18_ps_perfect.rds&quot;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_otu <span class="ot">&lt;-</span> ssu18_ps_work_otu_perf_filt</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_ps_perfect_otu, <span class="st">&quot;files/perfect/rdata/ssu18_ps_perfect_otu.rds&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <h2 id="create-ampvis2-perfect-objects">Create Ampvis2 PERfect Objects</h2>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>ps_filt_obj <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;ssu18_ps_perfect_otu&quot;</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    tmp_otu[] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(tmp_otu, as.numeric)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_otu)</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get)))</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    tmp_samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    tmp_ps_amp <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_otu, <span class="at">taxa_are_rows =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tax_table</span>(tmp_tax),</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">sample_data</span>(tmp_samples), <span class="fu">phy_tree</span>(tmp_get))</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>))</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_ps_name, tmp_ps_amp)</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_prep&quot;</span>)</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>ps_filt_obj <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;ssu18_ps_perfect_otu&quot;</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    tmp_otu[] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(tmp_otu, as.numeric)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_otu)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get)))</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    tmp_samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    tmp_ps_amp <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_otu, <span class="at">taxa_are_rows =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tax_table</span>(tmp_tax),</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">sample_data</span>(tmp_samples), <span class="fu">phy_tree</span>(tmp_get))</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>))</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_ps_name, tmp_ps_amp)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_prep&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>)))</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">otu_table</span>(tmp_ps))</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv <span class="ot">&lt;-</span> tmp_amp_asv <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_ps))</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax <span class="ot">&lt;-</span> tmp_amp_tax <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax[<span class="dv">8</span><span class="sc">:</span><span class="fu">ncol</span>(tmp_amp_tax)] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax<span class="sc">$</span>Species <span class="ot">&lt;-</span> tmp_amp_tax<span class="sc">$</span>OTU</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv_tax_perfect <span class="ot">&lt;-</span> <span class="fu">left_join</span>(tmp_amp_asv, tmp_amp_tax, <span class="at">by =</span> <span class="st">&quot;OTU&quot;</span>)</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  tmp_samp_data_t <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps))</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  tmp_amp_data_perfect <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(tmp_amp_asv_tax_perfect, <span class="at">metadata =</span> tmp_samp_data_t, <span class="at">tree =</span> <span class="fu">phy_tree</span>(tmp_ps))</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  tmp_otu_tax_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp_otutax_tab&quot;</span>))</span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_otu_tax_name, tmp_amp_asv_tax_perfect)</span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp&quot;</span>))</span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_amp_data_perfect)</span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>}  </span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_amp&quot;</span>)</span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>)))</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">otu_table</span>(tmp_ps))</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv <span class="ot">&lt;-</span> tmp_amp_asv <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_ps))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax <span class="ot">&lt;-</span> tmp_amp_tax <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax[<span class="dv">8</span><span class="sc">:</span><span class="fu">ncol</span>(tmp_amp_tax)] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax<span class="sc">$</span>Species <span class="ot">&lt;-</span> tmp_amp_tax<span class="sc">$</span>OTU</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv_tax_perfect <span class="ot">&lt;-</span> <span class="fu">left_join</span>(tmp_amp_asv, tmp_amp_tax, <span class="at">by =</span> <span class="st">&quot;OTU&quot;</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  tmp_samp_data_t <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps))</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  tmp_amp_data_perfect <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(tmp_amp_asv_tax_perfect, <span class="at">metadata =</span> tmp_samp_data_t, <span class="at">tree =</span> <span class="fu">phy_tree</span>(tmp_ps))</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  tmp_otu_tax_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp_otutax_tab&quot;</span>))</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_otu_tax_name, tmp_amp_asv_tax_perfect)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp&quot;</span>))</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_amp_data_perfect)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>}  </span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_amp&quot;</span>)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <h2 id="summary">Summary</h2>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(ssu18_ps_perfect_amp,</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(ssu18_ps_perfect_amp_otutax_tab,</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">metadata =</span> tmp_diversity_perfect, </span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">tree =</span> <span class="fu">phy_tree</span>(ssu18_ps_perfect))</span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(tmp_diversity_perfect)</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(ssu18_ps_perfect_otu_amp, </span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
-<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_otu_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(ssu18_ps_perfect_otu_amp_otutax_tab,</span>
-<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">metadata =</span> tmp_diversity_perfect, </span>
-<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">tree =</span> <span class="fu">phy_tree</span>(ssu18_ps_perfect_otu))</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(ssu18_ps_perfect_amp,</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(ssu18_ps_perfect_amp_otutax_tab,</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">metadata =</span> tmp_diversity_perfect, </span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">tree =</span> <span class="fu">phy_tree</span>(ssu18_ps_perfect))</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(tmp_diversity_perfect)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(ssu18_ps_perfect_otu_amp, </span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_otu_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(ssu18_ps_perfect_otu_amp_otutax_tab,</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">metadata =</span> tmp_diversity_perfect, </span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">tree =</span> <span class="fu">phy_tree</span>(ssu18_ps_perfect_otu))</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ssu18_amp_perfect <span class="ot">&lt;-</span> ssu18_ps_perfect_amp</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(ssu18_ps_perfect_amp)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_amp_perfect, <span class="st">&quot;files/perfect/rdata/ssu18_amp_perfect.rds&quot;</span>)</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>ssu18_amp_perfect_otu <span class="ot">&lt;-</span> ssu18_ps_perfect_otu_amp</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(ssu18_ps_perfect_otu_amp)</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_amp_perfect_otu, <span class="st">&quot;files/perfect/rdata/ssu18_amp_perfect_otu.rds&quot;</span>)</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>ssu18_amp_perfect <span class="ot">&lt;-</span> ssu18_ps_perfect_amp</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(ssu18_ps_perfect_amp)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_amp_perfect, <span class="st">&quot;files/perfect/rdata/ssu18_amp_perfect.rds&quot;</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>ssu18_amp_perfect_otu <span class="ot">&lt;-</span> ssu18_ps_perfect_otu_amp</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(ssu18_ps_perfect_otu_amp)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_amp_perfect_otu, <span class="st">&quot;files/perfect/rdata/ssu18_amp_perfect_otu.rds&quot;</span>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <p>Let’s take a look at a table of sample information. Any header with the <code>_p</code> suffix is the <em>PERfect filtered</em> data.</p>
 <p><br/></p>
@@ -2601,65 +2606,75 @@ phy_tree()    Phylogenetic Tree: [ 1862 tips and 1861 internal nodes ]</code></p
 <h2 id="setup-1">Setup</h2>
 <p>To run PERFect, we need the ASV/OTU tables in data frame format with samples as rows and ASVs/OTUs as columns. PERFect is sensitive to the order of ASVs/OTUs, so here we test a) the default order in the phyloseq object and b) ASVs/OTUs ordered by decreasing abundance.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>samp_ps_filt <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;its18_ps_work_otu&quot;</span>)</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> tmp_get_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> jamba<span class="sc">::</span><span class="fu">mixedSortDF</span>(tmp_get_tab, <span class="at">decreasing =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">useRownames =</span> <span class="cn">FALSE</span>, <span class="at">byCols =</span> <span class="dv">1</span>)</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> tmp_get_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>() </span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> tmp_get_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get_tab))</span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> tmp_get_tab_ord <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> jamba<span class="sc">::</span><span class="fu">mixedSortDF</span>(tmp_get_tab_ord, <span class="at">decreasing =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">useRownames =</span> <span class="cn">FALSE</span>, <span class="at">byCols =</span> <span class="dv">1</span>)</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> tmp_get_tab_ord <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>() </span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> tmp_get_tab_ord <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get_tab_ord))</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  tmp_tab_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>))</span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_tab_name, tmp_get_tab)</span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>  tmp_tab_ord_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect&quot;</span>))</span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_tab_ord_name, tmp_get_tab_ord)</span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>samp_ps_filt <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;its18_ps_work_otu&quot;</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> tmp_get_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> jamba<span class="sc">::</span><span class="fu">mixedSortDF</span>(tmp_get_tab, <span class="at">decreasing =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">useRownames =</span> <span class="cn">FALSE</span>, <span class="at">byCols =</span> <span class="dv">1</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> tmp_get_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>() </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> tmp_get_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get_tab))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> tmp_get_tab_ord <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> jamba<span class="sc">::</span><span class="fu">mixedSortDF</span>(tmp_get_tab_ord, <span class="at">decreasing =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">useRownames =</span> <span class="cn">FALSE</span>, <span class="at">byCols =</span> <span class="dv">1</span>)</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> tmp_get_tab_ord <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>() </span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> tmp_get_tab_ord <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  tmp_get_tab_ord <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get_tab_ord))</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  tmp_tab_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>))</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_tab_name, tmp_get_tab)</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  tmp_tab_ord_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect&quot;</span>))</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_tab_ord_name, tmp_get_tab_ord)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <h2 id="filter-1">Filter</h2>
 <p>Next we run the filtering analysis using <a href="https://rdrr.io/github/katiasmirn/PERFect/man/PERFect_sim.html"><code>PERFect_sim</code></a>. The other option is <a href="https://rdrr.io/github/katiasmirn/PERFect/man/PERFect_perm.html"><code>PERFect_perm</code></a> however as of this writing, I could not get this function to work. The process never finished :/</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set a pvalue cutoff</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>per_pval <span class="ot">&lt;-</span> <span class="fl">0.1</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set a pvalue cutoff</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>per_pval <span class="ot">&lt;-</span> <span class="fl">0.1</span></span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>)))</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  tmp_get_ord <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect&quot;</span>)))</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  tmp_sim <span class="ot">&lt;-</span> <span class="fu">PERFect_sim</span>(<span class="at">X =</span> tmp_get, <span class="at">alpha =</span> per_pval, <span class="at">Order =</span> <span class="st">&quot;NP&quot;</span>, <span class="at">center =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dim</span>(tmp_sim<span class="sc">$</span>filtX)</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  tmp_sim_ord <span class="ot">&lt;-</span> <span class="fu">PERFect_sim</span>(<span class="at">X =</span> tmp_get_ord, <span class="at">alpha =</span> per_pval, <span class="at">Order =</span> <span class="st">&quot;NP&quot;</span>, <span class="at">center =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dim</span>(tmp_sim_ord<span class="sc">$</span>filtX)</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  tmp_sim_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect_sim&quot;</span>))</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_sim_name, tmp_sim)</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  tmp_sim_ord_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect_sim&quot;</span>))</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_sim_ord_name, tmp_sim_ord)</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/perfect/rdata/&quot;</span>)</span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(tmp_sim, <span class="fu">paste</span>(tmp_path, tmp_sim_name, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(tmp_sim_ord, <span class="fu">paste</span>(tmp_path, tmp_sim_ord_name, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>its18_ps_work_ord_perfect_sim</span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_sim&quot;</span>)</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>)))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  tmp_get_ord <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect&quot;</span>)))</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  tmp_sim <span class="ot">&lt;-</span> <span class="fu">PERFect_sim</span>(<span class="at">X =</span> tmp_get, <span class="at">alpha =</span> per_pval, <span class="at">Order =</span> <span class="st">&quot;NP&quot;</span>, <span class="at">center =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dim</span>(tmp_sim<span class="sc">$</span>filtX)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  tmp_sim_ord <span class="ot">&lt;-</span> <span class="fu">PERFect_sim</span>(<span class="at">X =</span> tmp_get_ord, <span class="at">alpha =</span> per_pval, <span class="at">Order =</span> <span class="st">&quot;NP&quot;</span>, <span class="at">center =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dim</span>(tmp_sim_ord<span class="sc">$</span>filtX)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  tmp_sim_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect_sim&quot;</span>))</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_sim_name, tmp_sim)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  tmp_sim_ord_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_ord_perfect_sim&quot;</span>))</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_sim_ord_name, tmp_sim_ord)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/perfect/rdata/&quot;</span>)</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(tmp_sim, <span class="fu">paste</span>(tmp_path, tmp_sim_name, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(tmp_sim_ord, <span class="fu">paste</span>(tmp_path, tmp_sim_ord_name, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>its18_ps_work_ord_perfect_sim</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_sim&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -2681,59 +2696,64 @@ Total OTUs with p value less than 0.1
 [1] &quot;decreasing order: OTUs before checking p value was 1740 and after was 276&quot;</code></pre>
 </div>
 <p>Now we can make phyloseq objects. Manual inspection of the results from <code>PERFect_sim</code> indicated that using the default order and filtering p values &lt; 0.1 resulted in the best results. This approach limited the number of ASVs/OTUs found in only 1 or 2 samples.</p>
-<p>So first we filter out ASVs/OTUs with p values &lt; 0.1` and then make the objects.</p>
+<p>So first we filter out ASVs/OTUs with p values &lt; 0.1 and then make the objects.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>)))</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    tmp_get_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect_sim&quot;</span>)))</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    tmp_filt <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get_sim<span class="sc">$</span>filtX))</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    tmp_filt <span class="ot">&lt;-</span> tmp_filt <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    tmp_tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get))</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    tmp_tab <span class="ot">&lt;-</span> tmp_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    tmp_pvals <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(tmp_get_sim<span class="sc">$</span>pvals)</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    tmp_pvals <span class="ot">&lt;-</span> tmp_pvals <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;pval&quot;</span> <span class="ot">=</span> <span class="dv">2</span>)</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    tmp_pvals <span class="ot">&lt;-</span> tmp_pvals <span class="sc">%&gt;%</span> <span class="fu">filter</span>(pval <span class="sc">&lt;=</span> <span class="fl">0.1</span>)</span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_pvals, tmp_tab, <span class="at">by =</span> <span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>    tmp_merge[, <span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> tmp_merge <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(<span class="fu">get</span>(i))) <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_pvals, tmp_tax, <span class="at">by =</span> <span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>    tmp_tax[, <span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> tmp_tax <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Build PS object</span></span>
-<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>    tmp_samp <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(<span class="fu">get</span>(i)))</span>
-<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">identical</span>(<span class="fu">row.names</span>(tmp_tax), <span class="fu">row.names</span>(tmp_merge))</span>
-<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_merge))</span>
-<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_merge)</span>
-<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_tax)</span>
-<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>    tmp_ps <span class="ot">&lt;-</span> <span class="fu">phyloseq</span>(<span class="fu">otu_table</span>(tmp_merge, <span class="at">taxa_are_rows =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">tax_table</span>(tmp_tax),</span>
-<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">sample_data</span>(tmp_samp))</span>
-<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tmp_tree &lt;- rtree(ntaxa(tmp_ps), rooted = TRUE,</span></span>
-<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">#                       tip.label = taxa_names(tmp_ps))</span></span>
-<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>    tmp_ps <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps,</span>
-<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a>                               sample_data)</span>
-<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a>    tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perf_filt&quot;</span>))</span>
-<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_ps_name, tmp_ps)</span>
-<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>}  </span>
-<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span>
-<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_filt&quot;</span>)</span>
-<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a>its18_ps_work_otu_perf_filt</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> samp_ps_filt) {</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect&quot;</span>)))</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    tmp_get_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perfect_sim&quot;</span>)))</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    tmp_filt <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get_sim<span class="sc">$</span>filtX))</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    tmp_filt <span class="ot">&lt;-</span> tmp_filt <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    tmp_tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_get))</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    tmp_tab <span class="ot">&lt;-</span> tmp_tab <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    tmp_pvals <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(tmp_get_sim<span class="sc">$</span>pvals)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    tmp_pvals <span class="ot">&lt;-</span> tmp_pvals <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;pval&quot;</span> <span class="ot">=</span> <span class="dv">2</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    tmp_pvals <span class="ot">&lt;-</span> tmp_pvals <span class="sc">%&gt;%</span> <span class="fu">filter</span>(pval <span class="sc">&lt;=</span> <span class="fl">0.1</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_pvals, tmp_tab, <span class="at">by =</span> <span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    tmp_merge[, <span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> tmp_merge <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(<span class="fu">get</span>(i))) <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_pvals, tmp_tax, <span class="at">by =</span> <span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    tmp_tax[, <span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> tmp_tax <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Build PS object</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    tmp_samp <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(<span class="fu">get</span>(i)))</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">identical</span>(<span class="fu">row.names</span>(tmp_tax), <span class="fu">row.names</span>(tmp_merge))</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(tmp_merge))</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    tmp_merge <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_merge)</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_tax)</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>    tmp_ps <span class="ot">&lt;-</span> <span class="fu">phyloseq</span>(<span class="fu">otu_table</span>(tmp_merge, <span class="at">taxa_are_rows =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">tax_table</span>(tmp_tax),</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">sample_data</span>(tmp_samp))</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tmp_tree &lt;- rtree(ntaxa(tmp_ps), rooted = TRUE,</span></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">#                       tip.label = taxa_names(tmp_ps))</span></span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>    tmp_ps <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps,</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>                               sample_data)</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>    tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_perf_filt&quot;</span>))</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_ps_name, tmp_ps)</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>}  </span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_filt&quot;</span>)</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>its18_ps_work_otu_perf_filt</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;ASV phyloseq object&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;ASV phyloseq object&quot;</span>)</span></code></pre></div>
 <pre><code>[1] &quot;ASV phyloseq object&quot;</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_perf_filt</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_perf_filt</span></code></pre></div>
 <pre><code>phyloseq-class experiment-level object
 otu_table()   OTU Table:         [ 306 taxa and 13 samples ]
 sample_data() Sample Data:       [ 13 samples by 6 sample variables ]
 tax_table()   Taxonomy Table:    [ 306 taxa by 8 taxonomic ranks ]</code></pre>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;OTU phyloseq object&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">&quot;OTU phyloseq object&quot;</span>)</span></code></pre></div>
 <pre><code>[1] &quot;OTU phyloseq object&quot;</code></pre>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_otu_perf_filt</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_otu_perf_filt</span></code></pre></div>
 <pre><code>phyloseq-class experiment-level object
 otu_table()   OTU Table:         [ 294 taxa and 13 samples ]
 sample_data() Sample Data:       [ 13 samples by 6 sample variables ]
@@ -2744,7 +2764,7 @@ tax_table()   Taxonomy Table:    [ 294 taxa by 7 taxonomic ranks ]</code></pre>
 
 </div>
 <p><br/></p>
-<div class="layout-chunk" data-layout="l-body-outset">
+<div class="layout-chunk" data-layout="l-body">
 <table>
 <thead>
 <tr class="header">
@@ -2788,89 +2808,114 @@ tax_table()   Taxonomy Table:    [ 294 taxa by 7 taxonomic ranks ]</code></pre>
 </table>
 </div>
 <p></br></p>
-<p>And finally save Phyloseq PERfect objects.</p>
+<p>And finally save the phyloseq PERfect objects.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect <span class="ot">&lt;-</span> its18_ps_work_perf_filt</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_ps_perfect, <span class="st">&quot;files/perfect/rdata/its18_ps_perfect.rds&quot;</span>)</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_otu <span class="ot">&lt;-</span> its18_ps_work_otu_perf_filt</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_ps_perfect_otu, <span class="st">&quot;files/perfect/rdata/its18_ps_perfect_otu.rds&quot;</span>)</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect <span class="ot">&lt;-</span> its18_ps_work_perf_filt</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_ps_perfect, <span class="st">&quot;files/perfect/rdata/its18_ps_perfect.rds&quot;</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_otu <span class="ot">&lt;-</span> its18_ps_work_otu_perf_filt</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_ps_perfect_otu, <span class="st">&quot;files/perfect/rdata/its18_ps_perfect_otu.rds&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <h2 id="create-ampvis2-perfect-objects-1">Create Ampvis2 PERfect Objects</h2>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>ps_filt_obj <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;its18_ps_perfect_otu&quot;</span>)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    tmp_otu[] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(tmp_otu, as.numeric)</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_otu)</span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get)))</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    tmp_samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    tmp_ps_amp <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_otu, <span class="at">taxa_are_rows =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tax_table</span>(tmp_tax),</span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">sample_data</span>(tmp_samples))</span>
-<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>))</span>
-<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_ps_name, tmp_ps_amp)</span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_prep&quot;</span>)</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>ps_filt_obj <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;its18_ps_perfect_otu&quot;</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    tmp_otu[] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(tmp_otu, as.numeric)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    tmp_otu <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_otu)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get)))</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    tmp_samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    tmp_ps_amp <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_otu, <span class="at">taxa_are_rows =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tax_table</span>(tmp_tax),</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">sample_data</span>(tmp_samples))</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>))</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_ps_name, tmp_ps_amp)</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_prep&quot;</span>)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>)))</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">otu_table</span>(tmp_ps))</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv <span class="ot">&lt;-</span> tmp_amp_asv <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_ps))</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax <span class="ot">&lt;-</span> tmp_amp_tax <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax[<span class="dv">8</span><span class="sc">:</span><span class="fu">ncol</span>(tmp_amp_tax)] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax<span class="sc">$</span>Species <span class="ot">&lt;-</span> tmp_amp_tax<span class="sc">$</span>OTU</span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv_tax_perfect <span class="ot">&lt;-</span> <span class="fu">left_join</span>(tmp_amp_asv, tmp_amp_tax, <span class="at">by =</span> <span class="st">&quot;OTU&quot;</span>)</span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>  tmp_samp_data_t <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps))</span>
-<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>  tmp_amp_data_perfect <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(tmp_amp_asv_tax_perfect, <span class="at">metadata =</span> tmp_samp_data_t)</span>
-<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>  tmp_otu_tax_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp_otutax_tab&quot;</span>))</span>
-<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_otu_tax_name, tmp_amp_asv_tax_perfect)</span>
-<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp&quot;</span>))</span>
-<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_amp_data_perfect)</span>
-<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a>}  </span>
-<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_amp&quot;</span>)</span>
-<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ps_filt_obj) {</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prep&quot;</span>)))</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">otu_table</span>(tmp_ps))</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv <span class="ot">&lt;-</span> tmp_amp_asv <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_ps))</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax <span class="ot">&lt;-</span> tmp_amp_tax <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;OTU&quot;</span>)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax[<span class="dv">8</span><span class="sc">:</span><span class="fu">ncol</span>(tmp_amp_tax)] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  tmp_amp_tax<span class="sc">$</span>Species <span class="ot">&lt;-</span> tmp_amp_tax<span class="sc">$</span>OTU</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  tmp_amp_asv_tax_perfect <span class="ot">&lt;-</span> <span class="fu">left_join</span>(tmp_amp_asv, tmp_amp_tax, <span class="at">by =</span> <span class="st">&quot;OTU&quot;</span>)</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  tmp_samp_data_t <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps))</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>  tmp_amp_data_perfect <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(tmp_amp_asv_tax_perfect, <span class="at">metadata =</span> tmp_samp_data_t)</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>  tmp_otu_tax_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp_otutax_tab&quot;</span>))</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_otu_tax_name, tmp_amp_asv_tax_perfect)</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_amp&quot;</span>))</span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_amp_data_perfect)</span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>}  </span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_amp&quot;</span>)</span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <h2 id="summary-1">Summary</h2>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(its18_ps_perfect_amp,</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(its18_ps_perfect_amp_otutax_tab,</span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">metadata =</span> tmp_diversity_perfect)</span>
-<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(tmp_diversity_perfect)</span>
-<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(its18_ps_perfect_otu_amp, </span>
-<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
-<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
-<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
-<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_otu_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(its18_ps_perfect_otu_amp_otutax_tab,</span>
-<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">metadata =</span> tmp_diversity_perfect)</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(its18_ps_perfect_amp,</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(its18_ps_perfect_amp_otutax_tab,</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">metadata =</span> tmp_diversity_perfect)</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(tmp_diversity_perfect)</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> <span class="fu">amp_alphadiv</span>(its18_ps_perfect_otu_amp, </span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">measure =</span> <span class="st">&quot;observed&quot;</span>, <span class="at">richness =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect <span class="sc">%&gt;%</span> </span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;total_reads&quot;</span> <span class="ot">=</span> <span class="st">&quot;Reads&quot;</span>, <span class="st">&quot;total_asvs&quot;</span> <span class="ot">=</span> <span class="st">&quot;ObservedOTUs&quot;</span>)</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>tmp_diversity_perfect <span class="ot">&lt;-</span> tmp_diversity_perfect[<span class="fu">order</span>(tmp_diversity_perfect<span class="sc">$</span>SamName), ]</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_otu_amp <span class="ot">&lt;-</span> <span class="fu">amp_load</span>(its18_ps_perfect_otu_amp_otutax_tab,</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">metadata =</span> tmp_diversity_perfect)</span></code></pre></div>
+</details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>its18_amp_perfect <span class="ot">&lt;-</span> its18_ps_perfect_amp</span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(its18_ps_perfect_amp)</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_amp_perfect, <span class="st">&quot;files/perfect/rdata/its18_amp_perfect.rds&quot;</span>)</span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>its18_amp_perfect_otu <span class="ot">&lt;-</span> its18_ps_perfect_otu_amp</span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(its18_ps_perfect_otu_amp)</span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_amp_perfect_otu, <span class="st">&quot;files/perfect/rdata/its18_amp_perfect_otu.rds&quot;</span>)</span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<details>
+<summary>
+Show code
+</summary>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>its18_amp_perfect <span class="ot">&lt;-</span> its18_ps_perfect_amp</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(its18_ps_perfect_amp)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_amp_perfect, <span class="st">&quot;files/perfect/rdata/its18_amp_perfect.rds&quot;</span>)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>its18_amp_perfect_otu <span class="ot">&lt;-</span> its18_ps_perfect_otu_amp</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(its18_ps_perfect_otu_amp)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_amp_perfect_otu, <span class="st">&quot;files/perfect/rdata/its18_amp_perfect_otu.rds&quot;</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+</details>
 </div>
 <p>Let’s take a look at a table of sample information. Any header with the <code>_p</code> suffix is the <em>PERfect filtered</em> data.</p>
 <p><br/></p>
