@@ -37,15 +37,6 @@ remove(list = ls())
 ```
 </details>
 
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r codefolder, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
-
 # Prerequisites
 
 In order to run this workflow, you either need the *raw* data, available on the figshare project site, or the *trimmed* data, available from the ENA under project accession number ... See the [Data Availability](data-availability.html) page for complete details.
@@ -116,7 +107,7 @@ Next, we need to setup the working environment by renaming the fastq files and d
 
 To make the parsing easier, we will eliminate the lane and well number from each sample. If you do not wish to do that you will need to adjust the code accordingly. I am *positive* there are more elegant ways of doing this.
 
-> CAUTION. You should check that this code works on a few backup files before proceeding.
+> CAUTION. If you use this for your own data, please check that this code works on a few backup files before proceeding.
 
 ```{r, warning=FALSE}
 setwd("RAW")

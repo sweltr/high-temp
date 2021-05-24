@@ -48,16 +48,11 @@ knitr::opts_current$get(c(
 
 </details>
 
-</br>
-
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
+```{r, echo=FALSE, eval=TRUE}
+xaringanExtra::use_panelset()
 ```
-</aside>
+
+</br>
 
 # Synopsis
 
@@ -108,7 +103,7 @@ swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 ### Histogram of Read Counts
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, code_folding=TRUE}
 ssu18_max <- max(ssu18_samp_data$total_reads) +
   (0.2 * max(ssu18_samp_data$total_reads))
 ssu18_p_hist <- ggplot(ssu18_samp_data,
@@ -127,7 +122,7 @@ ssu18_p_hist
 
 ### Rarefaction Curves
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_rare_curve1 <- amp_rarecurve(
   ssu18_amp_data,
   stepsize = 1000,
@@ -142,7 +137,7 @@ ssu18_rare_curve1
 
 For a quick comparison, we can facet the above data by Temperature.
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_rare_curve2 <- amp_rarecurve(
   ssu18_amp_data,
   stepsize = 1000,
@@ -180,13 +175,20 @@ We perform each analysis against the full data set, the PIME filtered data set, 
 
 The command is as follows:
 
-`hill_div(count = x, qvalue = i, tree = ultrametric_tree)`, where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree (see below).
+```
+hill_div(count = x, qvalue = i, tree = ultrametric_tree)
+``` 
+
+where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree (see below).
 
 We first transform all the data to relative abundance values, and compute new trees.
 
 ```{r}
 ssu18_alpha_ds <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
                     "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
+```
+
+```{r, echo=FALSE}
 objects()
 ssu18_ps_work@phy_tree <- NULL
 ssu18_ps_pime@phy_tree <- NULL
@@ -196,8 +198,7 @@ ssu18_ps_pime_otu@phy_tree <- NULL
 ssu18_ps_perfect_otu@phy_tree <- NULL
 ```
 
-
-```{r}
+```{r, code_folding=TRUE}
 #  tmp_ps <- transform_sample_counts(get(i), function(otu) 1e5 otu/sum(otu))
 for (i in ssu18_alpha_ds) {
   tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
@@ -212,14 +213,13 @@ for (i in ssu18_alpha_ds) {
   assign(tmp_asv_name, tmp_asv)
   rm(list = ls(pattern = "tmp_"))
 }
-objects()
 ```
 
 #### No phylogenetic tree
 
 Next, we run the analysis for all three metrics on the data sets without a tree.
 
-```{r, results='hide'}
+```{r, results='hide', code_folding=TRUE}
 qvalue <- c(0,1,2)
 for (i in qvalue) {
   for (j in ssu18_alpha_ds) {
@@ -238,7 +238,7 @@ objects(pattern = "_h")
 
 And make summary tables to add back into each `ps` object.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ssu18_alpha_ds) {
      tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_h0")))
      tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_h1")))
@@ -255,7 +255,7 @@ objects(pattern = "_hill")
 
 And then create the new objects with the diversity data.
 
-```{r, echo=FALSE}
+```{r, code_folding=TRUE}
 for (i in ssu18_alpha_ds) {
      tmp_ps <- get(i)
      tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
@@ -294,8 +294,9 @@ is.ultrametric(ssu18_ps_perfect_tree_ult)
 is.ultrametric(ssu18_ps_perfect_otu_tree_ult)
 ```
 
+To generate trees, we used the R-package [`phytools`](https://github.com/liamrevell/phytools), specifically the function `force.ultrametric` since `hill_div` requires ultrametric trees. 
 
-```{r, echo=FALSE}
+```{r, code_folding=TRUE}
 rm(i)
 ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", 
                          "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
@@ -314,7 +315,7 @@ for (i in ssu18_alpha_ds_tree) {
 }
 ```
 
-```{r, results='hide'}
+```{r, results='hide', code_folding=TRUE}
 rm(i, j)
 ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", 
                          "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
@@ -334,7 +335,7 @@ for (i in qvalue) {
 }
 ```
 
-```{r}
+```{r, echo=FALSE}
 ssu18_alpha_ds_tree_pime <- c("ssu18_ps_pime", "ssu18_ps_pime_otu")
 for (i in ssu18_alpha_ds_tree_pime) {
      tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_ht0")))
@@ -383,7 +384,7 @@ for (i in ssu18_alpha_ds_tree) {
 ```
 
 
-### Sample Summary
+### Hill Numbers Summary
 
 Now we summarize the data for each sample against all three metrics. The table contains the results of ASV diversity estimates from the full data set and the PIME filtered data set, as well as the lineage diversity from the PIME data set.
 
@@ -432,11 +433,16 @@ ssu18_samp_data_otu_tab <- ssu18_samp_data_otu_tab %>% dplyr::rename("sample_id"
 ssu18_samp_data_otu_tab <- ssu18_samp_data_otu_tab[order(ssu18_samp_data_otu_tab$sample_id), ]
 ```
 
-### ASV Hill Summary
+
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### ASV Hill Summary
 
 <br/>
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
 ## elementId https://www.random.org/strings/
 datatable(ssu18_samp_data_tab, width = "100%", escape = FALSE,
           rownames = FALSE, filter = 'top',
@@ -461,11 +467,14 @@ datatable(ssu18_samp_data_tab, width = "100%", escape = FALSE,
                     fontSize = '80%')
 ```
 
-### OTU Hill Summary
+:::
+::: {.panel}
+
+#### OTU Hill Summary
 
 <br/>
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
 ## elementId https://www.random.org/strings/
 datatable(ssu18_samp_data_otu_tab, width = "100%", escape = FALSE,
           rownames = FALSE, filter = 'top',
@@ -489,6 +498,9 @@ datatable(ssu18_samp_data_otu_tab, width = "100%", escape = FALSE,
     DT::formatStyle(columns = colnames(ssu18_samp_data_tab),
                     fontSize = '80%')
 ```
+:::
+:::
+:::
 
 ### Normality Tests
 
@@ -504,7 +516,7 @@ The commands are as follows:
 
 First the Shapiro-Wilk Normality test.
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_div_tab <- ssu18_samp_data_tab
 ssu18_shap_tests_asv <- c()
 for (i in colnames(ssu18_div_tab[,7:ncol(ssu18_div_tab)])) {
@@ -531,7 +543,7 @@ objects(pattern = "shap_")
 
 And then the Bartlett Test of Homogeneity of Variances.
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_div_tab_asv <- ssu18_samp_data_tab
 ssu18_bart_tests_asv <- c()
 for (i in colnames(ssu18_div_tab_asv[,7:ncol(ssu18_div_tab_asv)])) {
@@ -556,47 +568,91 @@ for (i in colnames(ssu18_div_tab_otu[,7:ncol(ssu18_div_tab_otu)])) {
 objects(pattern = "_bart_")
 ```
 
-Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not for the ASV analysis?
+Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not. So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
 
-```{r, eval=TRUE}
-for (i in colnames(ssu18_div_tab_asv[,7:15])) {
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### ASV data sets
+
+```{r, eval=TRUE, echo=FALSE}
+ssu18_norm_res <- data.frame()
+for (i in colnames(ssu18_div_tab_asv[,7:ncol(ssu18_div_tab_asv)])) {
   tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("ssu18_shap_asv_", .)))
   tmp_shap_p <- round(tmp_get_shap[[2]], 4)
   tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("ssu18_bart_asv_", .)))
   tmp_bart_p <- round(tmp_get_bart[[3]], 4)
-  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
-  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
-                 "Bartlett p-value =", tmp_bart_p, 
-                 "Are both p-values > 0.05?", tmp_res)
-  cat(tmp_print,"\n")
+  
+  tmp_test <- if(tmp_shap_p > 0.05 & tmp_bart_p > 0.05 ){
+            tmp_test <- "ANOVA"
+          } else {
+            tmp_test <- "Kruskal-Wallis"
+          }
+  tmp_df <- data.frame(i, tmp_shap_p, tmp_bart_p, tmp_test)
+  ssu18_norm_res <- dplyr::bind_rows(ssu18_norm_res, tmp_df)
   rm(list = ls(pattern = "tmp_"))
 }
+ssu18_norm_res[,1] <- gsub('_exp', '', ssu18_norm_res[,1])
+ssu18_norm_res <- ssu18_norm_res %>% separate(col = 1, 
+                                              into = c("metric", "dataset"), 
+                                              sep = "_", remove = TRUE)
+ssu18_norm_res <- ssu18_norm_res %>% tidyr::replace_na(list(dataset = "full"))
+ssu18_norm_res$dataset <- stringr::str_replace(ssu18_norm_res$dataset, "^pit$", "pime_tree") %>%
+                          stringr::str_replace(., "^pet$", "perfect_tree") %>%
+                          stringr::str_replace(., "^pi$", "pime") %>%
+                          stringr::str_replace(., "^pe$", "perfect")
+
+ssu18_norm_res <- ssu18_norm_res %>% 
+  dplyr::rename(c("pval_shap" = 3, "pval_bart" = 4, "test" = 5))
+knitr::kable(ssu18_norm_res)
 ```
+:::
 
-And which of the metrics are significant for the OTU analysis?
+::: {.panel}
 
-```{r, eval=TRUE}
-for (i in colnames(ssu18_div_tab_otu[,7:15])) {
+#### OTU  data sets
+
+```{r, eval=TRUE, echo=FALSE}
+ssu18_norm_res_o <- data.frame()
+for (i in colnames(ssu18_div_tab_otu[,7:ncol(ssu18_div_tab_asv)])) {
   tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("ssu18_shap_otu_", .)))
   tmp_shap_p <- round(tmp_get_shap[[2]], 4)
   tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("ssu18_bart_otu_", .)))
   tmp_bart_p <- round(tmp_get_bart[[3]], 4)
-  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
-  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
-                 "Bartlett p-value =", tmp_bart_p, 
-                 "Are both p-values > 0.05?", tmp_res)
-  cat(tmp_print,"\n")
+  
+  tmp_test <- if(tmp_shap_p > 0.05 & tmp_bart_p > 0.05 ){
+            tmp_test <- "ANOVA"
+          } else {
+            tmp_test <- "Kruskal-Wallis"
+          }
+  tmp_df <- data.frame(i, tmp_shap_p, tmp_bart_p, tmp_test)
+  ssu18_norm_res_o <- dplyr::bind_rows(ssu18_norm_res_o, tmp_df)
   rm(list = ls(pattern = "tmp_"))
 }
-```
+ssu18_norm_res_o[,1] <- gsub('_exp', '', ssu18_norm_res_o[,1])
+ssu18_norm_res_o <- ssu18_norm_res_o %>% separate(col = 1, 
+                                              into = c("metric", "dataset"), 
+                                              sep = "_", remove = TRUE)
+ssu18_norm_res_o <- ssu18_norm_res_o %>% tidyr::replace_na(list(dataset = "full"))
+ssu18_norm_res_o$dataset <- stringr::str_replace(ssu18_norm_res_o$dataset, "^pit$", "pime_tree") %>%
+                          stringr::str_replace(., "^pet$", "perfect_tree") %>%
+                          stringr::str_replace(., "^pi$", "pime") %>%
+                          stringr::str_replace(., "^pe$", "perfect")
 
-So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
+ssu18_norm_res_o <- ssu18_norm_res_o %>% 
+  dplyr::rename(c("pval_shap" = 3, "pval_bart" = 4, "test" = 5))
+knitr::kable(ssu18_norm_res_o)
+```
+:::
+:::
+:::
 
 ### Significance Tests
 
 To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_hill_hier <- ssu18_samp_data_tab
 ssu18_hill_hier <- ssu18_hill_hier %>% dplyr::select("sample_id", "TEMP") %>%
   tibble::remove_rownames()
@@ -610,9 +666,14 @@ Again, we start by testing significance of ASV diversity for the full data set a
 
 The command is as follows:
 
-`div_test(countable = x, qvalue = i, hierarchy = hier, tree = ultrametric_tree, posthoc = TRUE)`, where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (see below), and `posthoc` indicates whether to run post hoc pairwise analyses.
+```
+div_test(countable = x, qvalue = i, hierarchy = hier, 
+         tree = ultrametric_tree, posthoc = TRUE)
+```
 
-```{r, results='hide'}
+where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (see below), and `posthoc` indicates whether to run post hoc pairwise analyses.
+
+```{r, results='hide', code_folding=TRUE}
 qvalue <- c(0,1,2)
 for (i in ssu18_alpha_ds) {
      for (j in qvalue) {
@@ -630,8 +691,9 @@ for (i in ssu18_alpha_ds) {
 
 And then test significance of lineage diversity for the PIME filtered data sets.
 
-```{r, results='hide'}
-ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
+```{r, results='hide', code_folding=TRUE}
+ssu18_alpha_ds_tree <- c("ssu18_ps_pime", "ssu18_ps_pime_otu", 
+                         "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
 qvalue <- c(0,1,2)
 for (i in ssu18_alpha_ds_tree) {
      for (j in qvalue) {
@@ -849,14 +911,17 @@ knitr::kable(ssu18_sig_tab_all)
 
 <br/>
 
-### PostHoc Analyses (ASV data sets)
+### PostHoc Analyses 
 
 First let's check the results of each posthoc analysis.
 
-<details markdown="1">
-<summary>Detailed results of PostHoc Analyses for each metric</summary>
+#### ASV data sets
 
-#### Observed (q-value = 0)
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+##### Observed (q-value = 0)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 ssu18_asvf0_lab <- "FULL (Observed)"
@@ -892,8 +957,11 @@ ssu18_asvrt0_lab
 ssu18_ps_perfect_t_q0_adt$posthoc.method
 data.frame(ssu18_ps_perfect_t_q0_adt$posthoc)
 ```
+:::
 
-#### Shannon exponential (q-value = 1)
+::: {.panel}
+
+##### Shannon exp  (q-value = 1)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 ssu18_asvf1_lab <- "FULL (Shannon exponential)"
@@ -930,8 +998,11 @@ ssu18_asvrt1_lab
 ssu18_ps_perfect_t_q1_adt$posthoc.method
 data.frame(ssu18_ps_perfect_t_q1_adt$posthoc)
 ```
+:::
 
-#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+::: {.panel}
+
+##### Inverse Simpson (q-value = 2)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 ssu18_asvf2_lab <- "FULL (Inverse Simpson)"
@@ -967,16 +1038,17 @@ ssu18_asvrt2_lab
 ssu18_ps_perfect_t_q2_adt$posthoc.method
 data.frame(ssu18_ps_perfect_t_q2_adt$posthoc)
 ```
-</details>
+:::
+:::
+:::
 
-### PostHoc Analyses (OTU data sets)
+#### OTU data sets
 
-Again, let's check the results of each posthoc analysis.
+::: l-body
+::: {.panelset}
+::: {.panel}
 
-<details markdown="1">
-<summary>Detailed results of PostHoc Analyses for each metric</summary>
-
-#### Observed (q-value = 0)
+##### Observed (q-value = 0)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 ssu18_otuf0_lab <- "FULL (Observed)"
@@ -1013,8 +1085,10 @@ ssu18_oturt0_lab
 ssu18_ps_perfect_otu_t_q0_adt$posthoc.method
 data.frame(ssu18_ps_perfect_otu_t_q0_adt$posthoc)
 ```
+:::
 
-#### Shannon exponential (q-value = 1)
+::: {.panel}
+##### Shannon exp  (q-value = 1)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 ssu18_otuf1_lab <- "FULL (Shannon exponential)"
@@ -1050,9 +1124,10 @@ ssu18_oturt1_lab
 ssu18_ps_perfect_otu_t_q1_adt$posthoc.method
 data.frame(ssu18_ps_perfect_otu_t_q1_adt$posthoc)
 ```
+:::
 
-
-#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+::: {.panel}
+##### Inverse Simpson (q-value = 2)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 ssu18_otuf2_lab <- "FULL (Inverse Simpson)"
@@ -1088,15 +1163,22 @@ ssu18_oturt2_lab
 ssu18_ps_perfect_otu_t_q2_adt$posthoc.method
 data.frame(ssu18_ps_perfect_otu_t_q2_adt$posthoc)
 ```
-</details>
+:::
+:::
+:::
 
 Now we can plot the results from the posthoc analyses for each metric and data set using the function `div_test_plot_jjs`. I modified the original function (`div_test_plot`) to control a little of the formatting.
 
 The command is as follows:
 
-`div_test_plot(divtest = x, chart = "type", colour = col.pal, posthoc = TRUE, threshold = value))`, where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin),`colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
+```
+div_test_plot(divtest = x, chart = "type", colour = col.pal, 
+              posthoc = TRUE, threshold = value))
+```
 
-```{r}
+where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin), `colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
+
+```{r, code_folding=TRUE}
 source("hack_code/div_test_plot_jjs.R")
 rm(list=ls(pattern="_adt_plot"))
 for (i in objects(pattern="_adt")) {
@@ -1266,12 +1348,19 @@ dev.off()
 
 Posthoc adjusted p-values given for each pairwise comparison.
 
+::: l-page
+::: {.panelset}
+::: {.panel}
+
 #### ASV data sets
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
 system("cp files/alpha/figures/ssu18_alph_div_plots_asv.png include/alpha/ssu18_alph_div_plots_asv.png")
 knitr::include_graphics("include/alpha/ssu18_alph_div_plots_asv.png")
 ```
+:::
+
+::: {.panel}
 
 #### OTU data sets
 
@@ -1279,7 +1368,9 @@ knitr::include_graphics("include/alpha/ssu18_alph_div_plots_asv.png")
 system("cp files/alpha/figures/ssu18_alph_div_plots_otu.png include/alpha/ssu18_alph_div_plots_otu.png")
 knitr::include_graphics("include/alpha/ssu18_alph_div_plots_otu.png")
 ```
-
+:::
+:::
+:::
 
 ```{r, echo=FALSE}
 save.image("page_build/alpha_ssu18_alpha_wf.rdata")
@@ -1328,7 +1419,7 @@ swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 ### Histogram of Read Counts
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, code_folding=TRUE}
 its18_max <- max(its18_samp_data$total_reads) +
   (0.2 * max(its18_samp_data$total_reads))
 its18_p_hist <- ggplot(its18_samp_data,
@@ -1347,7 +1438,7 @@ its18_p_hist
 
 ### Rarefaction Curves
 
-```{r}
+```{r, code_folding=TRUE}
 its18_rare_curve1 <- amp_rarecurve(
   its18_amp_data,
   stepsize = 1000,
@@ -1362,7 +1453,7 @@ its18_rare_curve1
 
 For a quick comparison, we can facet the above data by Temperature.
 
-```{r}
+```{r, code_folding=TRUE}
 its18_rare_curve2 <- amp_rarecurve(
   its18_amp_data,
   stepsize = 1000,
@@ -1396,15 +1487,19 @@ To calculate Hill numbers, we use the R package `hilldiv` [@alberdi2019hilldiv].
 2) Shannon exponential, which weighs ASVs by their frequency,  where `q-value = 1`.
 3) Simpson multiplicative inverse, which over weighs abundant ASVs,  where `q-value = 2`.
 
-We perform each analysis against the full data set and the PIME filtered data set using the function `hill_div`.
+e perform each analysis against the full data set, the PIME filtered data set, and the PERfect filtered data set using the function `hill_div`.
 
 The command is as follows:
 
-`hill_div(count = x, qvalue = i, tree = ultrametric_tree)`, where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree (see below).
+```
+hill_div(count = x, qvalue = i, tree = ultrametric_tree)
+```
+
+where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree (see below).
 
 We first transform all the data to relative abundance values, and compute new trees.
 
-```{r}
+```{r, echo=FALSE}
 its18_alpha_ds <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
                     "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
 objects()
@@ -1417,7 +1512,7 @@ its18_ps_perfect_otu@phy_tree <- NULL
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 #  tmp_ps <- transform_sample_counts(get(i), function(otu) 1e5 otu/sum(otu))
 for (i in its18_alpha_ds) {
   tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
@@ -1433,9 +1528,9 @@ for (i in its18_alpha_ds) {
 objects()
 ```
 
-Next, we run the analysis for all three metrics on the data sets without a tree.
+Next, we run the analysis for all three metrics on the data sets.
 
-```{r, results='hide'}
+```{r, results='hide', code_folding=TRUE}
 qvalue <- c(0,1,2)
 for (i in qvalue) {
   for (j in its18_alpha_ds) {
@@ -1454,7 +1549,7 @@ objects(pattern = "_h")
 
 And make summary tables to add back into each `ps` object.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in its18_alpha_ds) {
      tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_h0")))
      tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_h1")))
@@ -1471,7 +1566,7 @@ objects(pattern = "_hill")
 
 And then create the new objects with the diversity data.
 
-```{r, echo=FALSE}
+```{r, code_folding=TRUE}
 for (i in its18_alpha_ds) {
      tmp_ps <- get(i)
      tmp_hill <- get(purrr::map_chr(i, ~ paste0(., "_hill")))
@@ -1490,7 +1585,7 @@ for (i in its18_alpha_ds) {
 objects()
 ```
 
-### Sample Summary
+### Hill Numbers Summary
 
 Now we summarize the data for each sample against all three metrics. The table contains the results of ASV diversity estimates from the full data set and the PIME filtered data set, as well as the lineage diversity from the PIME data set.
 
@@ -1530,11 +1625,15 @@ its18_samp_data_otu_tab <- its18_samp_data_otu_tab %>% dplyr::rename("sample_id"
 its18_samp_data_otu_tab <- its18_samp_data_otu_tab[order(its18_samp_data_otu_tab$sample_id), ]
 ```
 
-### ASV Hill Summary
+::: l-body	
+::: {.panelset}	
+::: {.panel}	
+		
+#### ASV Hill Summary
 
 <br/>
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
 ## elementId https://www.random.org/strings/
 datatable(its18_samp_data_tab, width = "100%", escape = FALSE,
           rownames = FALSE, filter = 'top',
@@ -1558,12 +1657,15 @@ datatable(its18_samp_data_tab, width = "100%", escape = FALSE,
     DT::formatStyle(columns = colnames(its18_samp_data_tab),
                     fontSize = '80%')
 ```
+:::
 
-### OTU Hill Summary
+::: {.panel}	
+		
+#### OTU Hill Summary
 
 <br/>
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
 ## elementId https://www.random.org/strings/
 datatable(its18_samp_data_otu_tab, width = "100%", escape = FALSE,
           rownames = FALSE, filter = 'top',
@@ -1587,6 +1689,9 @@ datatable(its18_samp_data_otu_tab, width = "100%", escape = FALSE,
     DT::formatStyle(columns = colnames(its18_samp_data_tab),
                     fontSize = '80%')
 ```
+:::
+:::
+:::
 
 ### Normality Tests
 
@@ -1602,7 +1707,7 @@ The commands are as follows:
 
 First the Shapiro-Wilk Normality test.
 
-```{r}
+```{r, code_folding=TRUE}
 its18_div_tab <- its18_samp_data_tab
 its18_shap_tests_asv <- c()
 for (i in colnames(its18_div_tab[,7:ncol(its18_div_tab)])) {
@@ -1629,7 +1734,7 @@ objects(pattern = "shap_")
 
 And then the Bartlett Test of Homogeneity of Variances.
 
-```{r}
+```{r, code_folding=TRUE}
 its18_div_tab_asv <- its18_samp_data_tab
 its18_bart_tests_asv <- c()
 for (i in colnames(its18_div_tab_asv[,7:ncol(its18_div_tab_asv)])) {
@@ -1654,47 +1759,93 @@ for (i in colnames(its18_div_tab_otu[,7:ncol(its18_div_tab_otu)])) {
 objects(pattern = "_bart_")
 ```
 
-Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not for the ASV analysis?
 
-```{r, eval=TRUE}
-for (i in colnames(its18_div_tab_asv[,7:15])) {
-  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_asv_", .)))
-  tmp_shap_p <- round(tmp_get_shap[[2]], 4)
-  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("its18_bart_asv_", .)))
-  tmp_bart_p <- round(tmp_get_bart[[3]], 4)
-  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
-  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
-                 "Bartlett p-value =", tmp_bart_p, 
-                 "Are both p-values > 0.05?", tmp_res)
-  cat(tmp_print,"\n")
-  rm(list = ls(pattern = "tmp_"))
-}
-```
+Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not. So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.	
+	
+::: l-body	
+::: {.panelset}	
+::: {.panel}	
+	
+#### ASV data sets	
+	
+```{r, eval=TRUE, echo=FALSE}	
+its18_norm_res <- data.frame()	
+for (i in colnames(its18_div_tab_asv[,7:ncol(its18_div_tab_asv)])) {	
+  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_asv_", .)))	
+  tmp_shap_p <- round(tmp_get_shap[[2]], 4)	
+  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("its18_bart_asv_", .)))	
+  tmp_bart_p <- round(tmp_get_bart[[3]], 4)	
+  	
+  tmp_test <- if(tmp_shap_p > 0.05 & tmp_bart_p > 0.05 ){	
+            tmp_test <- "ANOVA"	
+          } else {	
+            tmp_test <- "Kruskal-Wallis"	
+          }	
+  tmp_df <- data.frame(i, tmp_shap_p, tmp_bart_p, tmp_test)	
+  its18_norm_res <- dplyr::bind_rows(its18_norm_res, tmp_df)	
+  rm(list = ls(pattern = "tmp_"))	
+}	
+its18_norm_res[,1] <- gsub('_exp', '', its18_norm_res[,1])	
+its18_norm_res <- its18_norm_res %>% separate(col = 1, 	
+                                              into = c("metric", "dataset"), 	
+                                              sep = "_", remove = TRUE)	
+its18_norm_res <- its18_norm_res %>% tidyr::replace_na(list(dataset = "full"))	
+its18_norm_res$dataset <- stringr::str_replace(its18_norm_res$dataset, "^pit$", "pime_tree") %>%	
+                          stringr::str_replace(., "^pet$", "perfect_tree") %>%	
+                          stringr::str_replace(., "^pi$", "pime") %>%	
+                          stringr::str_replace(., "^pe$", "perfect")	
+	
+its18_norm_res <- its18_norm_res %>% 	
+  dplyr::rename(c("pval_shap" = 3, "pval_bart" = 4, "test" = 5))	
+knitr::kable(its18_norm_res)	
+```	
+:::	
+	
+::: {.panel}	
+	
+#### OTU  data sets	
+	
+```{r, eval=TRUE, echo=FALSE}	
+its18_norm_res_o <- data.frame()	
+for (i in colnames(its18_div_tab_otu[,7:ncol(its18_div_tab_asv)])) {	
+  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_otu_", .)))	
+  tmp_shap_p <- round(tmp_get_shap[[2]], 4)	
+  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("its18_bart_otu_", .)))	
+  tmp_bart_p <- round(tmp_get_bart[[3]], 4)	
+  	
+  tmp_test <- if(tmp_shap_p > 0.05 & tmp_bart_p > 0.05 ){	
+            tmp_test <- "ANOVA"	
+          } else {	
+            tmp_test <- "Kruskal-Wallis"	
+          }	
+  tmp_df <- data.frame(i, tmp_shap_p, tmp_bart_p, tmp_test)	
+  its18_norm_res_o <- dplyr::bind_rows(its18_norm_res_o, tmp_df)	
+  rm(list = ls(pattern = "tmp_"))	
+}	
+its18_norm_res_o[,1] <- gsub('_exp', '', its18_norm_res_o[,1])	
+its18_norm_res_o <- its18_norm_res_o %>% separate(col = 1, 	
+                                              into = c("metric", "dataset"), 	
+                                              sep = "_", remove = TRUE)	
+its18_norm_res_o <- its18_norm_res_o %>% tidyr::replace_na(list(dataset = "full"))	
+its18_norm_res_o$dataset <- stringr::str_replace(its18_norm_res_o$dataset, "^pit$", "pime_tree") %>%	
+                          stringr::str_replace(., "^pet$", "perfect_tree") %>%	
+                          stringr::str_replace(., "^pi$", "pime") %>%	
+                          stringr::str_replace(., "^pe$", "perfect")	
+	
+its18_norm_res_o <- its18_norm_res_o %>% 	
+  dplyr::rename(c("pval_shap" = 3, "pval_bart" = 4, "test" = 5))	
+knitr::kable(its18_norm_res_o)	
+```	
+:::	
+:::	
+:::
 
-And which of the metrics are significant for the OTU analysis?
-
-```{r, eval=TRUE}
-for (i in colnames(its18_div_tab_otu[,7:15])) {
-  tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_otu_", .)))
-  tmp_shap_p <- round(tmp_get_shap[[2]], 4)
-  tmp_get_bart <- get(purrr::map_chr(i, ~ paste0("its18_bart_otu_", .)))
-  tmp_bart_p <- round(tmp_get_bart[[3]], 4)
-  tmp_res <- eval(isTRUE(tmp_get_shap[[2]] > 0.05) & isTRUE(tmp_get_bart[[3]] > 0.05))
-  tmp_print <- c(i, "Shapiro p-value =", tmp_shap_p, 
-                 "Bartlett p-value =", tmp_bart_p, 
-                 "Are both p-values > 0.05?", tmp_res)
-  cat(tmp_print,"\n")
-  rm(list = ls(pattern = "tmp_"))
-}
-```
-
-So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
 
 ### Significance Tests
 
 To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).
 
-```{r}
+```{r, code_folding=TRUE}
 its18_hill_hier <- its18_samp_data_tab
 its18_hill_hier <- its18_hill_hier %>% dplyr::select("sample_id", "TEMP") %>%
   tibble::remove_rownames()
@@ -1706,11 +1857,16 @@ saveRDS(its18_hill_hier, "files/alpha/rdata/its18_hill_hier.rds")
 
 Again, we start by testing significance of ASV diversity for the full data set against each of the three metrics using the `div_test` function.
 
-The command is as follows:
+The command is as follows:	
+		
+```	
+div_test(countable = x, qvalue = i, hierarchy = hier, 	
+         tree = ultrametric_tree, posthoc = TRUE)	
+```	
+		
+where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (see below), and `posthoc` indicates whether to run post hoc pairwise analyses.
 
-`div_test(countable = x, qvalue = i, hierarchy = hier, tree = ultrametric_tree, posthoc = TRUE)`, where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (see below), and `posthoc` indicates whether to run post hoc pairwise analyses.
-
-```{r, results='hide'}
+```{r, results='hide', code_folding=TRUE}
 source("hack_code/div_test_jjs.R")
 library(FSA)
 qvalue <- c(0,1,2)
@@ -1726,7 +1882,6 @@ for (i in its18_alpha_ds) {
          rm(list = ls(pattern = "tmp_"))
  }
 }
-objects()
 ```
 
 
@@ -1782,8 +1937,6 @@ for (i in tmp_objects) {
   tmp_name <- purrr::map_chr(i, ~ paste0(i, "_sig_tab"))
   assign(tmp_name, tmp_df)
 }
-objects(pattern="_sig_tab")
-its18_ps_pime_otu_sig_tab
 ```
 
 
@@ -1871,7 +2024,7 @@ its18_sig_tab_all <- rbind(its18_ps_work_sig_tab, its18_ps_pime_sig_tab, its18_p
       its18_ps_work_otu_sig_tab, its18_ps_pime_otu_sig_tab, its18_ps_perfect_otu_sig_tab)
 ```
 
-#### Summary
+### Summary
 
 <br/>
 
@@ -1882,14 +2035,18 @@ knitr::kable(its18_sig_tab_all)
 
 <br/>
 
-### PostHoc Analyses (ASV data sets)
-
-First let's check the results of each posthoc analysis.
-
-<details markdown="1">
-<summary>Detailed results of PostHoc Analyses for each metric</summary>
-
-#### Observed (q-value = 0)
+### PostHoc Analyses 	
+		
+First let's check the results of each posthoc analysis.	
+		
+#### ASV data sets	
+		
+::: l-body	
+::: {.panelset}	
+::: {.panel}	
+		
+##### Observed (q-value = 0)	
+	
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 its18_asvf0_lab <- "FULL (Observed)"
@@ -1912,7 +2069,11 @@ its18_ps_perfect_q0_adt$posthoc.method
 data.frame(its18_ps_perfect_q0_adt$posthoc)
 ```
 
-#### Shannon exponential (q-value = 1)
+:::	
+		
+::: {.panel}	
+		
+##### Shannon exp (q-value = 1)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 its18_asvf1_lab <- "FULL (Shannon exponential)"
@@ -1935,7 +2096,12 @@ its18_ps_perfect_q1_adt$posthoc.method
 data.frame(its18_ps_perfect_q1_adt$posthoc)
 ```
 
-#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
+:::	
+		
+::: {.panel}	
+		
+##### Inverse Simpson (q-value = 2)	
+	
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 its18_asvf2_lab <- "FULL (Inverse Simpson)"
@@ -1957,16 +2123,18 @@ its18_asvr2_lab
 its18_ps_perfect_q2_adt$posthoc.method
 data.frame(its18_ps_perfect_q2_adt$posthoc)
 ```
-</details>
+:::
+:::
+:::
 
-### PostHoc Analyses (OTU data sets)
 
-Again, let's check the results of each posthoc analysis.
-
-<details markdown="1">
-<summary>Detailed results of PostHoc Analyses for each metric</summary>
-
-#### Observed (q-value = 0)
+#### OTU data sets	
+		
+::: l-body	
+::: {.panelset}	
+::: {.panel}	
+		
+##### Observed (q-value = 0)
 
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 its18_otuf0_lab <- "FULL (Observed)"
@@ -1990,8 +2158,11 @@ data.frame(its18_ps_perfect_otu_q0_adt$posthoc)
 its18_ps_perfect_otu_q0_adt
 ```
 
-#### Shannon exponential (q-value = 1)
-
+:::	
+		
+::: {.panel}	
+##### Shannon exp  (q-value = 1)	
+	
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 its18_otuf1_lab <- "FULL (Shannon exponential)"
 its18_otuf1_lab
@@ -2013,8 +2184,11 @@ its18_ps_perfect_otu_q1_adt$posthoc.method
 data.frame(its18_ps_perfect_otu_q1_adt$posthoc)
 ```
 
-#### Simpson multiplicative (i.e., Inverse Simpson) (q-value = 2)
-
+:::	
+		
+::: {.panel}	
+##### Inverse Simpson (q-value = 2)	
+	
 ```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
 its18_otuf2_lab <- "FULL (Inverse Simpson)"
 its18_otuf2_lab
@@ -2035,15 +2209,22 @@ its18_otur2_lab
 its18_ps_perfect_otu_q2_adt$posthoc.method
 data.frame(its18_ps_perfect_otu_q2_adt$posthoc)
 ```
-</details>
-
-Now we can plot the results from the posthoc analyses for each metric and data set using the function `div_test_plot_jjs`. I modified the orihginal function (`div_test_plot`) to control a little of the formatting.
-
+:::	
+:::	
+:::	
+		
+Now we can plot the results from the posthoc analyses for each metric and data set using the function `div_test_plot_jjs`. I modified the original function (`div_test_plot`) to control a little of the formatting.	
+	
 The command is as follows:
 
-`div_test_plot(divtest = x, chart = "type", colour = col.pal, posthoc = TRUE, threshold = value))`, where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin),`colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
+```
+div_test_plot(divtest = x, chart = "type", colour = col.pal, 
+              posthoc = TRUE, threshold = value))
+```
 
-```{r}
+where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin),`colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
+
+```{r, code_folding=TRUE}
 source("hack_code/div_test_plot_jjs_2.R")
 rm(list=ls(pattern="_adt_plot"))
 for (i in objects(pattern="_adt")) {
@@ -2169,6 +2350,10 @@ dev.off()
 
 Posthoc adjusted p-values given for each pairwise comparison.
 
+::: l-page	
+::: {.panelset}	
+::: {.panel}	
+	
 #### ASV data sets
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
@@ -2176,16 +2361,23 @@ system("cp files/alpha/figures/its18_alph_div_plots_asv.png include/alpha/its18_
 knitr::include_graphics("include/alpha/its18_alph_div_plots_asv.png")
 ```
 
+:::	
+		
+::: {.panel}
 #### OTU data sets
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE, fig.cap='**Top row** = Observed; **middle row** = Shannon exponential; **bottom row** = Inverse Simpson.'}
 system("cp files/alpha/figures/its18_alph_div_plots_otu.png include/alpha/its18_alph_div_plots_otu.png")
 knitr::include_graphics("include/alpha/its18_alph_div_plots_otu.png")
 ```
+:::
+:::
+:::
 
 ```{r, echo=FALSE}
 save.image("page_build/alpha_its18_alpha_wf.rdata")
 ```
+
 
 ```{r, echo=FALSE, eval=TRUE}
 remove(list = ls())

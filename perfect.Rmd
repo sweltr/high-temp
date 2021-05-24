@@ -38,17 +38,6 @@ knitr::opts_current$get(c(
 
 </details> 
 
-<br/>
-
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
-
 In this workflow, we used PERFect [(PERmutation Filtering test for microbiome data)](https://github.com/katiasmirn/PERFect) [@smirnova2019perfect] to filter the FULL 16S rRNA (ASV & OTU) and ITS (ASV & OTU) data sets. 
 
 The first step in the PERFect process is to rarefy the data and then proceed with the filtering. Here is a summary of the results. Tables show comparisons of ASV vs. OTU data sets. Tables are duplicated in the relevant sections below.
@@ -98,7 +87,7 @@ ssu18_ps_work_otu <- readRDS("files/otu/rdata/ssu18_ps_work_otu.rds")
 
 To run PERFect, we need the ASV/OTU tables in data frame format with samples as rows and ASVs/OTUs as columns. PERFect is sensitive to the order of ASVs/OTUs, so here we test a) the default order in the phyloseq object and b) ASVs/OTUs ordered by decreasing abundance.
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps_filt <- c("ssu18_ps_work", "ssu18_ps_work_otu")
 for (i in samp_ps_filt) {
   tmp_get <- get(i)
@@ -139,7 +128,7 @@ per_pval <- 0.05
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps_filt) {
   tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_perfect")))
   tmp_get_ord <- get(purrr::map_chr(i, ~ paste0(., "_ord_perfect")))
@@ -207,14 +196,14 @@ objects()
 Now let's take a look at how many ASVs/OTUs were retained. 
 
 First the ASV data set. Default ordering resulted in 
-`r dim(ssu18_ps_work_perfect_sim$filtX)[2]` ASVs 
+**`r dim(ssu18_ps_work_perfect_sim$filtX)[2]`** ASVs 
 and reordering the data resulted in 
-`r dim(ssu18_ps_work_ord_perfect_sim$filtX)[2]` ASVs.
+**`r dim(ssu18_ps_work_ord_perfect_sim$filtX)[2]`** ASVs.
 
 And the OTU data set. Default ordering resulted in 
-`r dim(ssu18_ps_work_otu_perfect_sim$filtX)[2]` OTUs 
+**`r dim(ssu18_ps_work_otu_perfect_sim$filtX)[2]`** OTUs 
 and reordering the data resulted in 
-`r dim(ssu18_ps_work_otu_ord_perfect_sim$filtX)[2]` OTUs.
+**`r dim(ssu18_ps_work_otu_ord_perfect_sim$filtX)[2]`** OTUs.
 
 For some reason, the package does not remove based on the p value cutoff that we set earlier (`0.05`). So we need to filter out the ASVs/OTUs that have a higher p value than the cutoff.
 
@@ -248,7 +237,7 @@ Now we can make phyloseq objects. Manual inspection of the results from `PERFect
 
 So first we filter out ASVs/OTUs with p values < 0.05 and then make the objects.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps_filt) {
     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_ord_perfect")))
     tmp_get_sim <- get(purrr::map_chr(i, ~ paste0(., "_ord_perfect_sim")))
@@ -290,7 +279,7 @@ objects()
 objects(pattern = "_filt")
 ```
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, echo=FALSE}
 print("ASV phyloseq object")
 ssu18_ps_work_perf_filt
 print("OTU phyloseq object")
@@ -363,15 +352,15 @@ rm(list = ls(pattern = "tmp_"))
 
 <br/>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
 knitr::kable(ssu18_perfect_sum)
 ```
 
 </br>
 
-And finally save Phyloseq PERfect objects.
+And finally save the phyloseq PERfect objects.
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_ps_perfect <- ssu18_ps_work_perf_filt
 saveRDS(ssu18_ps_perfect, "files/perfect/rdata/ssu18_ps_perfect.rds")
 ssu18_ps_perfect_otu <- ssu18_ps_work_otu_perf_filt
@@ -397,7 +386,7 @@ write.table(ssu18_perf_preval.samp,
 
 ## Create Ampvis2 PERfect Objects
 
-```{r}
+```{r, code_folding=TRUE}
 ps_filt_obj <- c("ssu18_ps_perfect", "ssu18_ps_perfect_otu")
 for (i in ps_filt_obj) {
     tmp_get <- get(i)
@@ -416,7 +405,7 @@ for (i in ps_filt_obj) {
 objects(pattern = "_prep")
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_filt_obj) {
   tmp_ps <- get(purrr::map_chr(i, ~ paste0(., "_prep")))
   tmp_amp_asv  <- data.frame(otu_table(tmp_ps))
@@ -442,7 +431,7 @@ objects()
 
 ## Summary
 
-```{r}
+```{r, code_folding=TRUE}
 tmp_diversity_perfect <- amp_alphadiv(ssu18_ps_perfect_amp,
                                      measure = "observed", richness = FALSE)
 
@@ -468,7 +457,7 @@ ssu18_ps_perfect_otu_amp <- amp_load(ssu18_ps_perfect_otu_amp_otutax_tab,
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_amp_perfect <- ssu18_ps_perfect_amp
 rm(ssu18_ps_perfect_amp)
 saveRDS(ssu18_amp_perfect, "files/perfect/rdata/ssu18_amp_perfect.rds")
@@ -542,7 +531,7 @@ its18_ps_work_otu <- readRDS("files/otu/rdata/its18_ps_work_otu.rds")
 
 To run PERFect, we need the ASV/OTU tables in data frame format with samples as rows and ASVs/OTUs as columns. PERFect is sensitive to the order of ASVs/OTUs, so here we test a) the default order in the phyloseq object and b) ASVs/OTUs ordered by decreasing abundance.
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps_filt <- c("its18_ps_work", "its18_ps_work_otu")
 for (i in samp_ps_filt) {
   tmp_get <- get(i)
@@ -582,7 +571,7 @@ Next we run the filtering analysis using [`PERFect_sim`](https://rdrr.io/github/
 per_pval <- 0.1
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps_filt) {
   tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_perfect")))
   tmp_get_ord <- get(purrr::map_chr(i, ~ paste0(., "_ord_perfect")))
@@ -692,9 +681,9 @@ print(paste("decreasing order: OTUs before checking p value was", dim(its18_ps_w
 
 Now we can make phyloseq objects. Manual inspection of the results from `PERFect_sim` indicated that using the default order and filtering p values < `r per_pval` resulted in the best results. This approach limited the number of ASVs/OTUs found in only 1 or 2 samples.
 
-So first we filter out ASVs/OTUs with p values < `r per_pval`` and then make the objects.
+So first we filter out ASVs/OTUs with p values < `r per_pval` and then make the objects.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps_filt) {
     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_perfect")))
     tmp_get_sim <- get(purrr::map_chr(i, ~ paste0(., "_perfect_sim")))
@@ -783,15 +772,15 @@ rm(list = ls(pattern = "tmp_"))
 
 <br/>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
 knitr::kable(its18_perfect_sum)
 ```
 
 </br>
 
-And finally save Phyloseq PERfect objects.
+And finally save the phyloseq PERfect objects.
 
-```{r}
+```{r, code_folding=TRUE}
 its18_ps_perfect <- its18_ps_work_perf_filt
 saveRDS(its18_ps_perfect, "files/perfect/rdata/its18_ps_perfect.rds")
 its18_ps_perfect_otu <- its18_ps_work_otu_perf_filt
@@ -817,7 +806,7 @@ write.table(its18_perf_preval.samp,
 
 ## Create Ampvis2 PERfect Objects
 
-```{r}
+```{r, code_folding=TRUE}
 ps_filt_obj <- c("its18_ps_perfect", "its18_ps_perfect_otu")
 for (i in ps_filt_obj) {
     tmp_get <- get(i)
@@ -836,7 +825,7 @@ for (i in ps_filt_obj) {
 objects(pattern = "_prep")
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_filt_obj) {
   tmp_ps <- get(purrr::map_chr(i, ~ paste0(., "_prep")))
   tmp_amp_asv  <- data.frame(otu_table(tmp_ps))
@@ -862,7 +851,7 @@ objects()
 
 ## Summary
 
-```{r}
+```{r, code_folding=TRUE}
 tmp_diversity_perfect <- amp_alphadiv(its18_ps_perfect_amp,
                                      measure = "observed", richness = FALSE)
 
@@ -886,7 +875,7 @@ its18_ps_perfect_otu_amp <- amp_load(its18_ps_perfect_otu_amp_otutax_tab,
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 its18_amp_perfect <- its18_ps_perfect_amp
 rm(its18_ps_perfect_amp)
 saveRDS(its18_amp_perfect, "files/perfect/rdata/its18_amp_perfect.rds")

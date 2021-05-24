@@ -48,20 +48,11 @@ knitr::opts_current$get(c(
 xaringanExtra::use_panelset()
 ```
 
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
-
 # Synopsis
 
 This workflow contains ASV differential abundance analysis for the 2018 high temperature data sets. In order to run the workflow, you ...
 
-In this workflow...
+In this workflow, we use the `labdsv` package [@roberts2016package] to run Dufrene-Legendre Indicator Species Analysis and the  [microbiomeMarker package](https://github.com/yiluheihei/microbiomeMarker) [@cao2020package] to run linear discriminant analysis (LDA) effect size (LEfSe) [@segata2011metagenomic].
 
 # 16s rRNA
 
@@ -117,7 +108,7 @@ objects()
 
 Before jumping into the work flow, we need to first filter the FULL ASV and OTU data sets. For low-count filtering, we set the minimum read count to `5` and the prevalance to `0.2`. Then we apply another filter to remove ASVs with a low variance (`0.2`).
 
-```{r}
+```{r, code_folding=TRUE}
 tmp_low_count <- phyloseq::genefilter_sample(
                                          ssu18_ps_work, 
                                          filterfun_sample(function(x) x >= 5), 
@@ -145,11 +136,11 @@ swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 ## Indicator Analysis
 
-Details about IA
+Indicator Analysis calculates the indicator value (fidelity and relative abundance) of species in clusters or types.
 
 1. Choose a data set(s) & set the p-value cutoff.
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps <- c("ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect", 
              "ssu18_ps_filt_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
 indval_pval <- 0.05
@@ -157,7 +148,7 @@ indval_pval <- 0.05
 
 2. Format Data Frame
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_df <- data.frame(otu_table(tmp_get))
@@ -176,7 +167,7 @@ objects()
 
 3. Run Indicator Analysis
 
-```{r}
+```{r, code_folding=TRUE}
 set.seed(1191)
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
@@ -210,7 +201,7 @@ objects()
 
 Now we can save a few files and display the data.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
      tmp_get[,1] <- NULL
@@ -243,7 +234,7 @@ for (i in samp_ps) {
 
 4. Save a new phyloseq object
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_indval_summary")))
@@ -416,13 +407,16 @@ datatable(ssu18_ps_perfect_otu_indval_final, width = "100%", escape = FALSE,
 
 ## LEfSe
 
-Details about LEFSE
+<aside>
+From [@segata2011metagenomic].
+</aside>
 
-[microbiomeMarker](https://github.com/yiluheihei/microbiomeMarker)
+Linear discriminant analysis (LDA) effect size (LEfSe) is a method to support high-dimensional class comparisons with a particular focus on microbial community analyses. LEfSe determines the features (organisms, clades, operational taxonomic units, genes, or functions) most likely to explain differences between classes by coupling standard tests for statistical significance with additional tests encoding biological consistency and effect relevance. Class comparison methods typically predict biomarkers consisting of features that violate a null hypothesis of no difference between classes. The effect size provides an estimation of the magnitude of the observed phenomenon due to each characterizing feature and it is thus a valuable tool for ranking the relevance of different biological aspects and for addressing further investigations and analyses. 
 
-Remove ASV seq, subset only ASVs
 
-```{r}
+First, a little data tidying and subsetting only ASV data from the taxonomy table.
+
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
   tmp_get <- get(i)
   tax_table(tmp_get) <- tax_table(tmp_get)[,c(1:6)]
@@ -451,7 +445,7 @@ lefse_wc <- 0.05
 ```
 
 
-```{r, warnings = FALSE, error = FALSE}
+```{r, warnings = FALSE, error = FALSE, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_rf_asv")))
      tmp_lefse <- lefse(tmp_get, norm = "CPM", class = "TEMP", correct = "2", 
@@ -493,7 +487,7 @@ objects(pattern = "_lefse_all")
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
     tmp_o_tax <- data.frame(tax_table(get(i)))
     tmp_o_tax$ASV_ID <- NULL 
@@ -519,7 +513,7 @@ for (i in samp_ps) {
 
 Now we can save a few files and display the data.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_df <- data.frame(t(otu_table(tmp_get)))
@@ -554,7 +548,7 @@ for (i in samp_ps) {
 
 Save a new phyloseq object
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_lefse_summary")))
@@ -737,7 +731,7 @@ datatable(ssu18_ps_perfect_otu_lefse_final, width = "100%", escape = FALSE,
 
 ## LEfSe Visualization
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_asv")))
      tmp_mt <- data.frame(marker_table(tmp_get))
@@ -823,7 +817,7 @@ plot_ef_bar(ssu18_ps_perfect_otu_lefse_asv_viz_trim) +
 
 ## LEfSe Summary (Markers)
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
     tmp_mt <- data.frame(marker_table(tmp_get))
@@ -1004,7 +998,7 @@ datatable(ssu18_ps_perfect_otu_lefse_marker_final, width = "100%", escape = FALS
 
 ## LEfSe Visualization (Markers)
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
      tmp_mt <- data.frame(marker_table(tmp_get))
@@ -1096,7 +1090,7 @@ objects()
 
 ## Visualizing DA ASVs/OTUs in Anvi’o
 
-Next, we will combine the results of the ISA and LEfSe analyses with the distribution of ASVs (OTUs) across each sample. We are going to do the analysis in anvi’o using the `anvi-interactive` command. Anvi’o likes databases but it also understands that sometimes you do not have a database. So it offers a manual mode. If you type this command you can have a look at the relevant pieces we need for the visualization, specifically those under the headings MANUAL INPUTS and ADDITIONAL STUFF.
+Next, we will combine the results of the ISA and LEfSe analyses with the distribution of ASVs (OTUs) across each sample. We are going to do the analysis in [anvi’o](https://github.com/merenlab/anvio)---an advanced analysis and visualization platform for ‘omics data [@eren2015anvi]---using the `anvi-interactive` command. Anvi’o likes databases but it also understands that sometimes you do not have a database. So it offers a manual mode. If you type this command you can have a look at the relevant pieces we need for the visualization, specifically those under the headings MANUAL INPUTS and ADDITIONAL STUFF.
 
 ```bash
 anvi-interactive -h
@@ -1157,7 +1151,7 @@ load("page_build/da_ssu18_wf.rdata")
 
 Let’s start with the `-d` or `--view-data` file. This file needs to be an ASV by sample matrix of read counts. To simplify the visualization, we will use ***all*** ASVs represented by 100 or more total reads, including those identified as differentially abundant by the ISA and/or LEfSe. 
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps_all <- c("ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect", 
                  "ssu18_ps_filt_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu", 
                  "ssu18_ps_work", "ssu18_ps_work_otu")
@@ -1217,7 +1211,7 @@ for (i in samp_ps) {
 
 Or export a table of transformed data.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
      tmp_trans <- transform_sample_counts(tmp_get, function(x) 1e5 * {x/sum(x)})
@@ -1238,7 +1232,7 @@ Next, we need some additional data **about the ASVs** to overlay on the visual. 
 
 Start with an ASV + lineage table for the ASVs in the new phyloseq object.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get_indval <- get(purrr::map_chr(i, ~ paste0(., "_indval_final")))
      tmp_get_indval <- tmp_get_indval %>% dplyr::rename("Group" = "ASV_ID") %>%
@@ -1284,7 +1278,7 @@ Now we want some general data **about the samples** to overlay on the visual. Ag
 **Added** to  profile.db with  `anvi-import-misc-data` command &  `--target-data-table layers` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 metadata_tab <- read.table("files/metadata/tables/metadata.txt",
                            header = TRUE)
 
@@ -1322,7 +1316,7 @@ Anyway, the goal is to sum each taxon at some rank and present that as a bar cha
 **Added** to  profile.db with `anvi-import-misc-data` command & `--target-data-table layers` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 pick_rank <- "Phylum"
 pick_rank_l <- "phylum"
 for (i in samp_ps_all) {
@@ -1349,7 +1343,6 @@ for (i in samp_ps_all) {
     rm(list = ls(pattern = "tmp_"))
 }
 ```
-
 
 ### 5. Construct Dendrograms
 
@@ -1439,7 +1432,7 @@ cd ../
 
 Alternatively, we can generate dendrograms using `phyloseq::distance` and `hclust`. 
 
-```{r}
+```{r, code_folding=TRUE}
 pick_dist <- "bray"
 pick_clust <- "complete"
 
@@ -1457,7 +1450,7 @@ for (i in samp_ps) {
 }
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 pick_dist_asv <- "euclidean"
 pick_clust_asv <- "ward"
 
@@ -1494,7 +1487,7 @@ This is easy to do by hand, but I *really* need the practice so I will do it in 
 The file `sample.tre` is **added** to the profile.db with  `anvi-import-misc-data` command &   `--target-data-table layer_orders` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
       tmp_path <- file.path("files/anvio/ssu/")
       tmp_tree <- read_file(paste(tmp_path, i, "/", "sample.tre", sep = ""))
@@ -1512,7 +1505,7 @@ for (i in samp_ps) {
 }
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 # FOR TRANSFORMED DATA
 for (i in samp_ps) {
       tmp_path <- file.path("files/anvio/ssu/")
@@ -1532,7 +1525,7 @@ for (i in samp_ps) {
 objects()
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 # FOR HCLUST TREE
 for (i in samp_ps) {
       tmp_path <- file.path("files/anvio/ssu/")
@@ -1559,7 +1552,7 @@ We don't need to add a fasta file, but it is a nice way to keep everything in on
 **Loaded** with `anvi-interactive` command &  `--fasta-file` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
        tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
        tmp_tab <- tax_table(tmp_get)
@@ -1641,6 +1634,178 @@ knitr::include_graphics("figures/16s-da-asvs/before.png")
 
 ```
 
+
+```{r}
+remove(list = ls())
+load("page_build/da_ssu18_wf.rdata")
+objects()
+ssu18_ps_pime_lefse
+```
+
+```{r}
+ps_work_merge <- ssu18_ps_perfect_lefse
+ps_water_mc_100 <- prune_taxa(taxa_sums(ps_work_merge) > 100, ps_work_merge)
+total_reads_ps_water <- sum(readcount(ps_work_merge))
+total_reads_ps_water_100 <- sum(readcount(ps_water_mc_100))
+ps_obj <- ps_water_mc_100
+```
+
+```{r}
+#summarize_phyloseq(ps_water_o)
+#summarize_phyloseq(ps_water_mc)
+tax_tab1 <- as.data.frame(tax_table(ps_obj))
+tax_tab1 <- tibble::rownames_to_column(tax_tab1, "otu_id")
+tax_tab1$ASV_ID <- tax_tab1$otu_id
+asv_tab1 <- as.data.frame(t(otu_table(ps_obj)))
+asv_tab1 <- tibble::rownames_to_column(asv_tab1, "otu_id")
+sam_tab1 <- data.frame(sample_data(ps_obj))
+sam_tab1[1] <- NULL
+da_samp <- tibble::rownames_to_column(sam_tab1, "sample_id")
+water_mc <- merge(asv_tab1, tax_tab1, by="otu_id")
+water_mc$ASV_SEQ <- NULL
+```
+
+```{r}
+obj <- parse_tax_data(water_mc, class_cols = c("Kingdom", "Phylum",
+                                             "Class", "Order",
+                                             "Family", "Genus", "ASV_ID" ))
+obj$data$tax_abund <- calc_taxon_abund(obj, "tax_data",
+                                       cols = da_samp$sample_id)
+obj$data$tax_occ <- calc_n_samples(obj, "tax_abund",
+                                   groups = da_samp$TEMP,
+                                   cols = da_samp$sample_id)
+```
+
+```{r}
+obj$data$diff_table <- compare_groups(obj,
+                                      data = "tax_abund",
+                                      cols = da_samp$sample_id,
+                                      groups = da_samp$TEMP)
+```
+
+
+ Bacteria
+
+```{r}
+range.default(obj$data$diff_table$log2_median_ratio, finite=TRUE)
+```
+
+
+```{r}
+#set.seed(1999)
+obj %>%
+  filter_taxa(taxon_names %in% c("Bacteria"), subtaxa = TRUE) %>%
+#  filter_taxa(taxon_ranks == "f", supertaxa = TRUE) %>% # subset to the order rank
+#  filter_taxa(taxon_names %in% c("Proteobacteria", "Bacteroidia", "Archaea"), subtaxa = TRUE, invert = TRUE) # to remove taxa
+  heat_tree(
+          node_label = taxon_names,
+          node_size = n_obs,
+         # node_size_range = c(0.01, 0.05),
+          node_label_size_range = c(0.008, 0.04),
+          node_color = log2_median_ratio,
+          node_color_interval = c(-5, 4),
+          edge_color_interval = c(-5, 4),
+          node_color_trans = "area",
+          node_color_range = c("#0072B2", "gray", "#D55E00"),
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Log 2 median ratio",
+          layout = "da",
+          initial_layout = "re",
+          overlap_avoidance = 2,
+          output_file = "differential_heat_tree_merged_Bacteria.png")
+```
+
+Archaea
+
+```{r}
+arch_only <- obj %>% filter_taxa(taxon_names %in% c("Archaea"), subtaxa = TRUE)
+range.default(arch_only$data$diff_table$log2_median_ratio, finite=TRUE)
+```
+
+```{r}
+#set.seed(1999)
+obj %>%
+  filter_taxa(taxon_names %in% c("Archaea"), subtaxa = TRUE) %>%
+#  filter_taxa(taxon_ranks == "o", supertaxa = TRUE) %>% # subset to the order rank
+#  filter_taxa(taxon_names %in% c("Proteobacteria", "Bacteroidia", "Archaea"), subtaxa = TRUE, invert = TRUE) # to remove taxa
+  heat_tree(
+          node_label = taxon_names,
+          node_size = n_obs,
+         # node_size_range = c(0.01, 0.05),
+          node_label_size_range = c(0.008, 0.04),
+          node_color = log2_median_ratio,
+          node_color_interval = c(-2, 3),
+          edge_color_interval = c(-2, 3),
+          node_color_trans = "area",
+          node_color_range = c("#0072B2", "gray", "#D55E00"),
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Log 2 median ratio",
+          layout = "da",
+          initial_layout = "re",
+          overlap_avoidance = 2,
+          output_file = "differential_heat_tree_merged_Archaea.png")
+```
+
+Top Phyla
+
+```{r}
+top_phyl <- obj %>% filter_taxa(taxon_names %in% c("Proteobacteria", "Acidobacteriota"),  subtaxa = TRUE)
+range.default(top_phyl$data$diff_table$log2_median_ratio, finite=TRUE)
+```
+
+```{r}
+
+#set.seed(10)
+obj %>%
+  filter_taxa(taxon_names %in% c("Proteobacteria", "Acidobacteriota", "Chloroflexi", "Planctomycetota"),
+              subtaxa = TRUE) %>%
+  heat_tree(node_label = taxon_names,
+            node_size = n_obs,
+            node_color = log2_median_ratio,
+            node_color_range = c("#0072B2", "gray", "#D55E00"),
+            node_color_interval = c(-2.5, 5),
+            #edge_color_interval = c(-5.5, 4),
+            #node_color_trans = "area",
+            tree_label = taxon_names,
+            initial_layout = "re", layout = "da",
+            node_color_axis_label = "Sum of root reads",
+            node_size_axis_label = "Number of OTUs",
+            #overlap_avoidance = 2,
+            output_file = "differential_heat_tree_merged_phyla.png")
+```
+
+```{r}
+set.seed(1)
+obj$data$diff_table2 <- compare_groups(obj,
+                                      data = "tax_abund",
+                                      cols = da_samp$sample_id, # What columns of sample data to use
+                                      groups = da_samp$TEMP) # What category each sample is assigned to
+range.default(obj$data$diff_table2$log2_median_ratio, finite=TRUE)
+```
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+```{r}
+heat_tree_matrix(obj,
+                 data = "diff_table2",
+                 node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
+                 #node_size_trans = "log10",
+                 node_label = taxon_names,
+                 node_color = log2_median_ratio, # A column from `obj$data$diff_table`
+                 node_color_range = c("#2271B2", "gray", "#B22271"),
+                 row_label_color = c("#2271B2", "#B22271"),
+                 col_label_color = c("#2271B2", "#B22271"),
+                 node_color_trans = "linear", # The default is scaled by circle area
+                 node_color_interval = c(-5, 4), # The range of `log2_median_ratio` to display
+                 edge_color_interval = c(-5, 4), # The range of `log2_median_ratio` to display
+                 node_size_axis_label = "Number of OTUs",
+                 node_color_axis_label = "Log2 ratio median proportions",
+                 label_small_trees = TRUE,
+                 layout = "davidson-harel", # The primary layout algorithm
+                 initial_layout = "reingold-tilford", # The layout algorithm that initializes node locations
+                 output_file = c("differential_heat_tree2.png", "differential_heat_tree2.pdf")) # Saves the plot as a png file
+```
+
+
 # ITS
 
 
@@ -1688,7 +1853,7 @@ objects()
 
 Before jumping into the work flow, we need to first filter the FULL ASV and OTU data sets. For low-count filtering, we set the minimum read count to `5` and the prevalance to 20%. Then we apply another filter to remove ASVs with a low variance (`0.2`).
 
-```{r}
+```{r, code_folding=TRUE}
 tmp_low_count <- phyloseq::genefilter_sample(its18_ps_work, 
                                              filterfun_sample(function(x) x >= 5), 
                                              A = 0.2 * nsamples(its18_ps_work))
@@ -1727,7 +1892,7 @@ indval_pval <- 0.05
 
 2. Format Data Frame
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_df <- data.frame(otu_table(tmp_get))
@@ -1746,7 +1911,7 @@ objects()
 
 3. Run Indicator Analysis
 
-```{r}
+```{r, code_folding=TRUE}
 set.seed(1191)
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
@@ -1779,7 +1944,7 @@ for (i in samp_ps) {
 
 Now we can save a few files and display the data.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_seq_tab")))
      tmp_get[,1] <- NULL
@@ -1814,7 +1979,7 @@ for (i in samp_ps) {
 
 4. Save a new phyloseq object
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_indval_summary")))
@@ -1993,7 +2158,7 @@ Details about LEFSE
 
 Remove ASV seq, subset only ASVs
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
   tmp_get <- get(i)
   tax_table(tmp_get) <- tax_table(tmp_get)[,c(1:6)]
@@ -2022,7 +2187,7 @@ lefse_wc <- 0.05
 ```	
 
 
-```{r, warnings = FALSE, error = FALSE}
+```{r, warnings = FALSE, error = FALSE, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_rf_asv")))
      tmp_lefse <- lefse(tmp_get, norm = "CPM", class = "TEMP", correct = "2", 
@@ -2060,7 +2225,7 @@ objects(pattern = "_lefse_all")
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
     tmp_o_tax <- data.frame(tax_table(get(i)))
     tmp_o_tax$ASV_ID <- NULL 
@@ -2086,7 +2251,7 @@ for (i in samp_ps) {
 
 Now we can save a few files and display the data.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_df <- data.frame(t(otu_table(tmp_get)))
@@ -2121,7 +2286,7 @@ for (i in samp_ps) {
 
 Save a new phyloseq object
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(i)
      tmp_tab <- get(purrr::map_chr(i, ~ paste0(., "_lefse_summary")))
@@ -2393,7 +2558,7 @@ plot_ef_bar(its18_ps_perfect_otu_lefse_asv_viz_trim) +
 
 ## LEfSe Summary (Markers)
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
     tmp_mt <- data.frame(marker_table(tmp_get))
@@ -2574,7 +2739,7 @@ datatable(its18_ps_perfect_otu_lefse_marker_final, width = "100%", escape = FALS
 
 ## LEfSe Visualization (Markers)
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_lefse_all")))
      tmp_mt <- data.frame(marker_table(tmp_get))
@@ -2669,7 +2834,7 @@ objects()
 
 ## Visualizing DA ASVs/OTUs in Anvi’o
 
-Next, we will combine the results of the ISA and LEfSe analyses with the distribution of ASVs (OTUs) across each sample. We are going to do the analysis in anvi’o using the `anvi-interactive` command. Anvi’o likes databases but it also understands that sometimes you do not have a database. So it offers a manual mode. If you type this command you can have a look at the relevant pieces we need for the visualization, specifically those under the headings MANUAL INPUTS and ADDITIONAL STUFF.
+Next, we will combine the results of the ISA and LEfSe analyses with the distribution of ASVs (OTUs) across each sample. We are going to do the analysis in [anvi’o](https://github.com/merenlab/anvio)---an advanced analysis and visualization platform for ‘omics data [@eren2015anvi]---using the `anvi-interactive` command. Anvi’o likes databases but it also understands that sometimes you do not have a database. So it offers a manual mode. If you type this command you can have a look at the relevant pieces we need for the visualization, specifically those under the headings MANUAL INPUTS and ADDITIONAL STUFF.
 
 ```bash
 anvi-interactive -h
@@ -2730,7 +2895,7 @@ load("page_build/da_its18_wf.rdata")
 
 Let’s start with the `-d` or `--view-data` file. This file needs to be an ASV by sample matrix of read counts. To simplify the visualization, we will use ***all*** ASVs represented by 100 or more total reads, including those identified as differentially abundant by the ISA and/or LEfSe. 
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps_all <- c("its18_ps_filt", "its18_ps_pime", "its18_ps_perfect", 
                  "its18_ps_filt_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu", 
                  "its18_ps_work", "its18_ps_work_otu")
@@ -2783,7 +2948,7 @@ objects()
 ```
 
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
      tmp_df <- as.data.frame(t(otu_table(tmp_get)))
@@ -2798,7 +2963,7 @@ objects()
 
 Or export a table of transformed data.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
      tmp_trans <- transform_sample_counts(tmp_get, function(x) 1e5 * {x/sum(x)})
@@ -2820,7 +2985,7 @@ Next, we need some additional data **about the ASVs** to overlay on the visual. 
 
 Start with an ASV + lineage table for the ASVs in the new phyloseq object.
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
      tmp_get_indval <- get(purrr::map_chr(i, ~ paste0(., "_indval_final")))
      tmp_get_indval <- tmp_get_indval %>% dplyr::rename("Group" = "ASV_ID") %>%
@@ -2866,7 +3031,7 @@ Now we want some general data **about the samples** to overlay on the visual. Ag
 **Added** to  profile.db with  `anvi-import-misc-data` command &  `--target-data-table layers` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 metadata_tab <- read.table("files/metadata/tables/metadata.txt",
                            header = TRUE)
 
@@ -2904,7 +3069,7 @@ Anyway, the goal is to sum each taxon at some rank and present that as a bar cha
 **Added** to  profile.db with `anvi-import-misc-data` command & `--target-data-table layers` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 pick_rank <- "Order"
 pick_rank_l <- "order"
 for (i in samp_ps_all) {
@@ -3021,7 +3186,7 @@ cd ../
 
 Alternatively, we can generate dendrograms using `phyloseq::distance` and `hclust`. 
 
-```{r}
+```{r, code_folding=TRUE}
 pick_dist <- "bray"
 pick_clust <- "complete"
 
@@ -3039,7 +3204,7 @@ for (i in samp_ps) {
 }
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 pick_dist_asv <- "euclidean"
 pick_clust_asv <- "ward"
 
@@ -3076,7 +3241,7 @@ This is easy to do by hand, but I *really* need the practice so I will do it in 
 The file `sample.tre` is **added** to the profile.db with  `anvi-import-misc-data` command &   `--target-data-table layer_orders` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
       tmp_path <- file.path("files/anvio/its/")
       tmp_tree <- read_file(paste(tmp_path, i, "/", "sample.tre", sep = ""))
@@ -3094,7 +3259,7 @@ for (i in samp_ps) {
 }
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 # FOR TRANSFORMED DATA
 for (i in samp_ps) {
       tmp_path <- file.path("files/anvio/its/")
@@ -3114,7 +3279,7 @@ for (i in samp_ps) {
 objects()
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 # FOR HCLUST TREE
 for (i in samp_ps) {
       tmp_path <- file.path("files/anvio/its/")
@@ -3141,7 +3306,7 @@ We don't need to add a fasta file, but it is a nice way to keep everything in on
 **Loaded** with `anvi-interactive` command &  `--fasta-file` flag.
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
        tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
        tmp_tab <- tax_table(tmp_get)

@@ -37,16 +37,6 @@ knitr::opts_current$get(c(
 
 </details>
 
-
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
-
 These workflows share many common variable names so you must split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
 
 # 16s rRNA Data
@@ -167,7 +157,7 @@ knitr::include_graphics("include/data-prep/ssu18_samp_summary_plot.png")
 
 3. After we load the data packet, we next need to format sample names and define groups.
 
-```{r}
+```{r, code_folding=TRUE}
 joined_tab_ro <- joined_tab_percent[order(joined_tab_percent$FastqID), ]
 new_names <- joined_tab_ro$`Sample_ID`
 load("files/dada2/rdata/ssu18_dada2_wf.rdata")
@@ -186,7 +176,7 @@ We have a total of **`r length(unique(sample_name))`** samples, **`r length(uniq
 
 4. And finally we define a sample data frame that holds the different groups we extracted from the sample names.
 
-```{r}
+```{r, code_folding=TRUE}
 #define a sample data frame
 samdf <- data.frame(SamName = sample_name,
                     PLOT = plot,
@@ -213,7 +203,7 @@ For example, `r example_sam` is the sample heated at +`r samdf[example_sam,]$TEM
 A phyloseq object contains ASV table (taxa abundances), sample metadata, and taxonomy table (mapping between ASVs and higher-level taxonomic classifications).
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 # this create the phyloseq object
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE),
                    sample_data(samdf), tax_table(tax_silva))
@@ -387,7 +377,7 @@ Phyloseq has an odd way of dealing with taxonomic ranks that have no value---in 
 
 So you need to run something like this `rm(class, order, phylum, kingdom)` at the end of the code to remove these as variables. For now, I have not come up with a better solution.
 
-```{r}
+```{r, code_folding=TRUE}
 tax.clean <- data.frame(tax_table(ps_filt))
 for (i in 1:6){ tax.clean[,i] <- as.character(tax.clean[,i])}
 tax.clean[is.na(tax.clean)] <- ""
@@ -499,7 +489,7 @@ sparsity_ps_work <- round(length(which(
 
 We can also generate a summary table of total reads & ASVs for each sample. You can sort the table, download a copy, or filter by search term. Here is the code to generate the data for the table. First, we create data frames that hold total reads and ASVs for each sample.
 
-```{r}
+```{r, code_folding=TRUE}
 total_reads <- sample_sums(ps_work)
 total_reads <- as.data.frame(total_reads, make.names = TRUE)
 total_reads <- total_reads %>% rownames_to_column("Sample_ID")
@@ -512,7 +502,7 @@ total_asvs$Sample_ID <- gsub('\\.', '-', total_asvs$Sample_ID)
 
 And then we merge these two data frames with the sample data frame.
 
-```{r}
+```{r, code_folding=TRUE}
 sam_details <- samdf
 rownames(sam_details) <- NULL
 colnames(sam_details) <- c("Sample_ID", "Plot", "Depth",
@@ -617,7 +607,7 @@ write.table(sam_tab, "files/data-prep/tables/ssu18_sam_tab_mc.txt",
 
 Now that we have a local copy of each table (`tax_tab`, `asv_tab`, & `sam_tab`), we can read those tables back in using the [readr](https://readr.tidyverse.org/articles/readr.html) package. Why are we doing it this way instead of just setting each table to a variable? Great question. We do it this way because `readr` returns tibbles instead of data frames. Metacoder/taxa works best when the data is in tibble format. Instead of writing and reading the tables, you could use the command `tibble()`, which would convert the data frame to a tibble.
 
-```{r}
+```{r, code_folding=TRUE}
 asv_data_i <- read_tsv("files/data-prep/tables/ssu18_asv_tab_mc.txt")
 str(asv_data_i)
 tax_data <- read_tsv("files/data-prep/tables/ssu18_tax_tab_mc.txt")
@@ -736,7 +726,7 @@ write.table(t(otu_table(ps_work)),
 save.image("page_build/data_prep_ssu18_wf.rdata")
 ```
 
-```{r}
+```{r, echo=FALSE}
 saveRDS(ps_work, "files/data-prep/rdata/ssu18_ps_work.rds")
 saveRDS(ps_work_o, "files/data-prep/rdata/ssu18_ps_work_o.rds")
 saveRDS(amp_data, "files/data-prep/rdata/ssu18_amp_data.rds")
@@ -879,7 +869,7 @@ knitr::include_graphics("include/data-prep/its18_samp_summary_plot.png")
 
 3. After we load the data packet we next need to format sample names and define groups.
 
-```{r}
+```{r, code_folding=TRUE}
 joined_tab_ro <- joined_tab_percent[order(joined_tab_percent$FastqID), ]
 new_names <- joined_tab_ro$`Sample_ID`
 load("files/dada2/rdata/its18_dada2_wf.rdata")
@@ -897,7 +887,7 @@ We have a total of **`r length(unique(sample_name))`** samples, **`r length(uniq
 
 4. And finally we define a sample data frame that holds the different groups we extracted from the sample names.
 
-```{r}
+```{r, code_folding=TRUE}
 samdf <- data.frame(SamName = sample_name,
                     PLOT = plot,
                     DEPTH = depth,
@@ -943,7 +933,7 @@ tax_mod <- sub("g__", "", tax_mod)
 A phyloseq object contains ASV table (taxa abundances), sample metadata, and taxonomy table (mapping between ASVs and higher-level taxonomic classifications).
 </aside>
 
-```{r}
+```{r, code_folding=TRUE}
 # this create the phyloseq object
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE),
                    sample_data(samdf), tax_table(tax_mod))
@@ -1027,7 +1017,7 @@ rank_names(ps_o)
 
 **C**. Export sequence and taxonomy tables for the unadulterated phyloseq object for later use. We will use the prefix `full` to indicate that these are the *raw* outputs.
 
-```{r}
+```{r, code_folding=TRUE}
 write.table(tax_table(ps),
             "files/data-prep/tables/its18_full_tax_table.txt",
             sep="\t", quote = FALSE, col.names=NA)
@@ -1094,7 +1084,7 @@ Before doing that, we will save a copy of the phyloseq object with the original 
 ps_work_o <- ps_filt_no_nc
 ```
 
-```{r }
+```{r, code_folding=TRUE}
 tax.clean <- data.frame(tax_table(ps_filt_no_nc))
 for (i in 1:6){ tax.clean[,i] <- as.character(tax.clean[,i])}
 tax.clean[is.na(tax.clean)] <- ""
@@ -1139,26 +1129,9 @@ Finally, we rename the ps object. This is now our working data set.
 ps_work <- ps_filt_no_nc
 ```
 
-## Add Phylogenetic Tree
-
-One final task is to add a phylogenetic tree to the phyloseq object.
-
-```{r}
-ps_work_tree <- rtree(ntaxa(ps_work), rooted = TRUE,
-                      tip.label = taxa_names(ps_work))
-ps_work <- merge_phyloseq(ps_work,
-                          sample_data,
-                          ps_work_tree)
-ps_work_o_tree <- rtree(ntaxa(ps_work_o), rooted = TRUE,
-                      tip.label = taxa_names(ps_work_o))
-ps_work_o <- merge_phyloseq(ps_work_o,
-                          sample_data,
-                          ps_work_o_tree)
-```
-
 Later in the workflow, we will generate an ampvis2 object from the working phyloseq object, but first we need to fix the OTU table from the phyloseq object. For some reason, values in otu table are `int` but need to be `dbl` or else ampvis2 will not work properly.
 
-```{r}
+```{r, code_folding=TRUE}
 otu <- data.frame(t(otu_table(ps_work)))
 otu[] <- lapply(otu, as.numeric)
 otu <- as.matrix(otu)
@@ -1209,7 +1182,7 @@ sparsity_ps_work <- round(length(which(abundances(ps_work) == 0))/
 
 We can also generate a summary table of total reads & ASVs for each sample. You can sort the table, download a copy, or filter by search term. Here is the code to generate the data for the table. First, we create data frames that hold total reads and ASVs for each sample.
 
-```{r}
+```{r, code_folding=TRUE}
 total_reads <- sample_sums(ps_work)
 total_reads <- as.data.frame(total_reads, make.names = TRUE)
 total_reads <- total_reads %>% rownames_to_column("Sample_ID")
@@ -1221,7 +1194,7 @@ total_asvs$Sample_ID <- gsub('\\.', '-', total_asvs$Sample_ID)
 
 And then we merge these two data frames with the sample data frame.
 
-```{r}
+```{r, code_folding=TRUE}
 sam_details <- data.frame(sample_data(ps_work))
 rownames(sam_details) <- NULL
 colnames(sam_details) <- c("Sample_ID", "Plot", "Depth",
@@ -1323,7 +1296,7 @@ write.table(sam_tab, "files/data-prep/tables/its18_sam_tab_mc.txt",
 
 Now that we have a local copy of each table (`tax_tab`, `asv_tab`, & `sam_tab`), we can read those tables back in using the [readr](https://readr.tidyverse.org/articles/readr.html) package. Why are we doing it this way instead of just setting each table to a variable? Great question. We do it this way because `readr` returns tibbles instead of data frames. Metacoder/taxa works best when the data is in tibble format. Instead of writing and reading the tables, you could use the command `tibble()`, which would convert the data frame to a tibble.
 
-```{r}
+```{r, code_folding=TRUE}
 asv_data_i <- read_tsv("files/data-prep/tables/its18_asv_tab_mc.txt")
 str(asv_data_i)
 tax_data <- read_tsv("files/data-prep/tables/its18_tax_tab_mc.txt")
@@ -1438,7 +1411,7 @@ amp_data
 
 The last thing tasks to complete are to **a**) save copies of the taxonomy and sequence tables and **b**) save an image of the workflow for the next part of the workflow.
 
-```{r}
+```{r, code_folding=TRUE}
 write.table(tax_table(ps_work),
             "files/data-prep/tables/its18_work_tax_table.txt",
             sep="\t", quote = FALSE, col.names=NA)
@@ -1452,7 +1425,7 @@ write.table(t(otu_table(ps_work)),
 save.image("page_build/data_prep_its18_wf.rdata")
 ```
 
-```{r}
+```{r, echo=FALSE}
 saveRDS(ps_work, "files/data-prep/rdata/its18_ps_work.rds")
 saveRDS(ps_work_o, "files/data-prep/rdata/its18_ps_work_o.rds")
 saveRDS(amp_data, "files/data-prep/rdata/its18_amp_data.rds")

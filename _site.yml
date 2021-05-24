@@ -53,10 +53,10 @@ navbar:
 #      href: supplemental-material.html
 #    - icon: fa-code fa-lg
 #      href: raw_code.txt
+    - text: "Data Products"
+      #icon: fa-database
+      href: data-availability.html
   right:
-    - text: "Data"
-#      icon: fa-user-friends
-      href: temp.html
     - icon: fa-github fa-lg
       href: https://github.com/sweltr/high-temp/
 output:

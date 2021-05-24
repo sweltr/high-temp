@@ -1,0 +1,99 @@
+---
+title: "Data Availability"
+description: |
+  In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well.
+bibliography: assets/cite.bib  
+---
+
+## Archived Sequence Data
+
+All sequence data is deposited at the European Nucleotide Archive (ENA). See below for instructions on submitting data to the ENA and the files we used to deposit the data. 
+
+The trimmed **16S rRNA** and **ITS** data (primers removed) are deposited under Project Accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). 
+
+16S rRNA sample accession numbers are [ERS6485270-ERS6485284](https://www.ebi.ac.uk/ena/browser/view/ERS6485270-ERS6485284).
+
+ITS sample accession numbers are [ERS6485285-ERS6485299](https://www.ebi.ac.uk/ena/browser/view/ERS6485285-ERS6485299).
+
+## Pipeline Data
+
+Data for each individual pipeline are available through the Smithsonian figshare under a single collection at [doi:10.25573/data.c.5025362](https://doi.org/10.25573/data.c.5025362). In addition, data from each pipeline are available for download from figshare using the links at the bottom of each page (where applicable).
+
+```{r, echo=FALSE, eval=FALSE}
+## Accessing the R Code only
+
+#The  R code is available by clicking [here](files/data-availability/r-code). There you can find code for each step of the 16S rRNA pipeline. Please note that this  R code is pulled from the `.Rmd` files. The code has not been tested independent of the R Markdown workflows so *Use at Your Own Risk* please. In other words, the code works when run in the site build, but the complete pipeline has not been tested using just this code. I used `knitr::purl()` to pull  the code from the R Markdown file. I did this for you just in case you wanted the code and not hear me drone on about colors, zoomable figures, or Keanu Reeves. Commands that are commented out are things I tried that I could never get to work. Any line that starts like this: `## ----` is the code chuck name.
+```
+
+## Submitting Sequence Data
+
+We submitted out data to the [European Nucleotide Archive (ENA)](https://www.ebi.ac.uk/ena). The ENA does not like RAW data and prefers to have primers removed. So we submitted the trimmed Fastq files to the ENA. You can find these data under the study accession number **PRJEB45074 (ERP129199)**. The RAW files on our figshare site (see above).
+
+To submit to the ENA you need two data tables (plus your sequence data). One file describes the samples and the other file describes the sequencing data.
+
+You can download our submission data tables here:
+
+* [Sample submission form](include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv)
+* [FASTq submission form](include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv)
+
+But please note, these forms are study specific, so please use these are guides only.
+
+### Instructions for Submitting to the ENA
+
+Even though I have done this dozens of times, the process of submitting sequence data to read archives still baffles me. 
+
+> Note: I submit data with primers, barcodes, etc **removed**
+
+#### Register Project & Upload Sample Data
+
+1) go to https://www.ebi.ac.uk/ena/submit and select **Submit to ENA Interactively**.
+2) Login or Register.
+3) Go to **New Submission** tab and, if this is a new project, select **Register study (project)**.
+4) Hit Next
+5) Enter details and hit **Submit**.
+6) Next, [Select Checklist](https://www.ebi.ac.uk/ena/submit/checklists). This will be specific to the type of samples you have and basically will create a template so you can add your sample metadata. For this study I chose **GSC MIxS soil**, checklist accession number [ERC000022](https://www.ebi.ac.uk/ena/data/view/ERC000022)
+7) Next
+8) Now go through and select/deselect fields as needed. Note, some fields are mandatory.
+9) Once finished, hit **Next** to fill in any details that apply to *All* samples and the download the template. Alternatively, you can download the template and fill in the data by hand.
+10) Upload the sample sheet. 
+11) Once everything looks good and uploaded, click the **New Submission** tab.
+
+#### Upload Sequence Data
+
+12) Hit **Skip** and then select **Two Fastq files (Paired)**, Download the template and fill in the details.
+13) Next, make sure all the trimmed fastq files are gzipped **.gz**  (these are what you submit). 
+14) Navigate to the directory with  the trimmed, compressed fastq files and run:
+
+```
+md5sum *.gz
+```
+
+16) Add the checksums and file names to the fastq submission form. You can read more about [Preparing A File For Upload here](https://ena-docs.readthedocs.io/en/latest/submit/fileprep/preparation.html).
+
+**STOP**
+
+Before uploading the sheet, you first must upload the fastq files. Documentation for Uploading Files To ENA can be found [here](https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html). 
+
+17) In the same directory, run:
+
+```
+lftp webin2.ebi.ac.uk -u Webin-XXXXX
+```
+
+where `Webin-XXXXX` is your user name. Enter your password
+
+at the prompt run:
+
+```
+mput *.gz
+# when finished
+bye
+```
+
+The files should begin uploading. Depending on internet speed and/or file sizes/numbers, this could take a while. 
+
+18) Once the upload is finished, upload and submit the fastq submission form. If the `sample alias` field dows not autofill you may need to upload the sample form again. 
+
+## Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/data-availability.Rmd).
