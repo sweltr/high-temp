@@ -45,15 +45,6 @@ knitr::opts_current$get(c(
 
 <br/>
 
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
-
 # Synopsis
 
 This workflow contains taxonomic diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) and then the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation and PIME workflows. See the [Data Availability](data-availability.html) page for complete details.
@@ -1232,7 +1223,208 @@ knitr::include_graphics("include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
 
 #### METACODER
 
+ Lineage Maps
+
 ```{r}
+objects()
+```
+
+```{r}
+ps_work_merge <- ssu18_ps_pime
+ps_water_mc_100 <- prune_taxa(taxa_sums(ps_work_merge) > 100, ps_work_merge)
+total_reads_ps_water <- sum(readcount(ps_work_merge))
+total_reads_ps_water_100 <- sum(readcount(ps_water_mc_100))
+ps_obj <- ps_water_mc_100
+```
+
+```{r}
+#summarize_phyloseq(ps_water_o)
+#summarize_phyloseq(ps_water_mc)
+tax_tab1 <- as.data.frame(tax_table(ps_obj))
+tax_tab1 <- tibble::rownames_to_column(tax_tab1, "otu_id")
+asv_tab1 <- as.data.frame(t(otu_table(ps_obj)))
+asv_tab1 <- tibble::rownames_to_column(asv_tab1, "otu_id")
+sam_tab1 <- data.frame(sample_data(ps_obj))
+sam_tab1[1] <- NULL
+da_samp <- tibble::rownames_to_column(sam_tab1, "sample_id")
+water_mc <- merge(asv_tab1, tax_tab1, by="otu_id")
+water_mc$ASV_SEQ <- NULL
+```
+
+```{r}
+obj <- parse_tax_data(water_mc, class_cols = c("Kingdom", "Phylum",
+                                             "Class", "Order",
+                                             "Family", "Genus", "ASV_ID" ))
+obj$data$tax_abund <- calc_taxon_abund(obj, "tax_data",
+                                       cols = da_samp$sample_id)
+obj$data$tax_occ <- calc_n_samples(obj, "tax_abund",
+                                   groups = da_samp$REGION,
+                                   cols = da_samp$sample_id)
+```
+
+```{r}
+obj$data$diff_table <- compare_groups(obj,
+                                      data = "tax_abund",
+                                      cols = da_samp$sample_id,
+                                      groups = da_samp$TREAT)
+```
+
+
+ Bacteria
+
+```{r}
+range.default(obj$data$diff_table$log2_median_ratio, finite=TRUE)
+```
+
+
+```{r}
+#set.seed(1999)
+obj %>%
+  filter_taxa(taxon_names %in% c("Bacteria"), subtaxa = TRUE) %>%
+#  filter_taxa(taxon_ranks == "f", supertaxa = TRUE) %>% # subset to the order rank
+#  filter_taxa(taxon_names %in% c("Proteobacteria", "Bacteroidia", "Archaea"), subtaxa = TRUE, invert = TRUE) # to remove taxa
+  heat_tree(
+          node_label = taxon_names,
+          node_size = n_obs,
+         # node_size_range = c(0.01, 0.05),
+          node_label_size_range = c(0.008, 0.04),
+          node_color = log2_median_ratio,
+          node_color_interval = c(-3, 5),
+          edge_color_interval = c(-3, 5),
+          node_color_trans = "area",
+          node_color_range = c("#0072B2", "gray", "#D55E00"),
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Log 2 median ratio",
+          layout = "da",
+          initial_layout = "re",
+          overlap_avoidance = 2,
+          output_file = "differential_heat_tree_merged_Bacteria.png")
+```
+
+```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-page'}
+system("cp files/trepo/taxa/figures/differential_heat_tree_merged_Bacteria.png include/trepo/taxa/differential_heat_tree_merged_Bacteria.png")
+knitr::include_graphics("include/trepo/taxa/differential_heat_tree_merged_Bacteria.png")
+```
+
+
+ Archaea
+
+```{r}
+arch_only <- obj %>% filter_taxa(taxon_names %in% c("Archaea"), subtaxa = TRUE)
+range.default(arch_only$data$diff_table$log2_median_ratio, finite=TRUE)
+```
+
+```{r}
+#set.seed(1999)
+obj %>%
+  filter_taxa(taxon_names %in% c("Archaea"), subtaxa = TRUE) %>%
+#  filter_taxa(taxon_ranks == "o", supertaxa = TRUE) %>% # subset to the order rank
+#  filter_taxa(taxon_names %in% c("Proteobacteria", "Bacteroidia", "Archaea"), subtaxa = TRUE, invert = TRUE) # to remove taxa
+  heat_tree(
+          node_label = taxon_names,
+          node_size = n_obs,
+         # node_size_range = c(0.01, 0.05),
+          node_label_size_range = c(0.008, 0.04),
+          node_color = log2_median_ratio,
+          node_color_interval = c(-5, 7),
+          edge_color_interval = c(-5, 7),
+          node_color_trans = "area",
+          node_color_range = c("#0072B2", "gray", "#D55E00"),
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Log 2 median ratio",
+          layout = "da",
+          initial_layout = "re",
+          overlap_avoidance = 2,
+          output_file = "files/trepo/taxa/figures/differential_heat_tree_merged_Archaea.png")
+```
+
+```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-page'}
+system("cp files/trepo/taxa/figures/differential_heat_tree_merged_Archaea.png include/trepo/taxa/differential_heat_tree_merged_Archaea.png")
+knitr::include_graphics("include/trepo/taxa/differential_heat_tree_merged_Archaea.png")
+```
+
+Top Phyla
+
+```{r}
+top_phyl <- obj %>% filter_taxa(taxon_names %in% c("Proteobacteria", "Acidobacteriota", "Chloroflexi", "Planctomycetota"),  subtaxa = TRUE)
+range.default(top_phyl$data$diff_table$log2_median_ratio, finite=TRUE)
+```
+
+```{r}
+
+#set.seed(10)
+obj %>%
+  filter_taxa(taxon_names %in% c("Proteobacteria", "Acidobacteriota", "Chloroflexi", "Planctomycetota"),
+              subtaxa = TRUE) %>%
+  heat_tree(node_label = taxon_names,
+            node_size = n_obs,
+            node_color = log2_median_ratio,
+            node_color_range = c("#0072B2", "gray", "#D55E00"),
+            node_color_interval = c(-3, 3),
+            #edge_color_interval = c(-5.5, 4),
+            #node_color_trans = "area",
+            tree_label = taxon_names,
+            initial_layout = "re", layout = "da",
+            node_color_axis_label = "Sum of root reads",
+            node_size_axis_label = "Number of OTUs",
+            #overlap_avoidance = 2,
+            output_file = "files/trepo/taxa/figures/differential_heat_tree_merged_phyla.png")
+```
+
+```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-page'}
+system("cp files/trepo/taxa/figures/differential_heat_tree_merged_phyla.png include/trepo/taxa/differential_heat_tree_merged_phyla.png")
+knitr::include_graphics("include/trepo/taxa/differential_heat_tree_merged_phyla.png")
+```
+
+
+```{r}
+set.seed(1)
+obj$data$diff_table2 <- compare_groups(obj,
+                                      data = "tax_abund",
+                                      cols = da_samp$sample_id, # What columns of sample data to use
+                                      groups = da_samp$TEMP) # What category each sample is assigned to
+heat_tree_matrix(obj,
+                 data = "diff_table2",
+                 node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
+                 node_label = taxon_names,
+                 node_color = log2_median_ratio, # A column from `obj$data$diff_table`
+                 node_color_range = diverging_palette(), # The built-in palette for diverging data
+                 node_color_trans = "linear", # The default is scaled by circle area
+                 node_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
+                 edge_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
+                 node_size_axis_label = "Number of OTUs",
+                 node_color_axis_label = "Log2 ratio median proportions",
+                 layout = "davidson-harel", # The primary layout algorithm
+                 initial_layout = "reingold-tilford", # The layout algorithm that initializes node locations
+                 output_file = c("differential_heat_tree2.png", "differential_heat_tree2.pdf")) # Saves the plot as a png file
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+ssu18_ps_pime <- readRDS("files/pime/rdata/ssu18_ps_pime.rds")
+
 ps_water_mc_100 <- prune_taxa(taxa_sums(ssu18_ps_pime) > 500, ssu18_ps_pime)
 total_reads_ps_water <- sum(readcount(ssu18_ps_pime))
 total_reads_ps_water_100 <- sum(readcount(ps_water_mc_100))

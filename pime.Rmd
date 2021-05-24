@@ -38,15 +38,6 @@ knitr::opts_current$get(c(
 ```
 </details>
 
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
-
 # Summary of Results
 
 ```{r, include=FALSE, eval=TRUE}
@@ -233,7 +224,7 @@ Looks like the lowest OOB error rate (%) that retains the most ASVs is `r min(ss
 
 ## Best Prevalence Summary
 
-```{r}
+```{r, echo=FALSE}
 ssu18_imp_best[, 13:14] <- list(NULL)
 ssu18_imp_best <- ssu18_imp_best %>% dplyr::rename("ASV_ID" = "SequenceID")
 ```
@@ -435,7 +426,7 @@ write.table(ssu18_pime_preval.samp,
 
 ## Create Ampvis2 PIME Object
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_otu <- data.frame(t(otu_table(ssu18_ps_pime)))
 ssu18_otu[] <- lapply(ssu18_otu, as.numeric)
 ssu18_otu <- as.matrix(ssu18_otu)
@@ -446,7 +437,7 @@ ssu18_ps_amp <- merge_phyloseq(otu_table(ssu18_otu, taxa_are_rows = TRUE),
                           sample_data(ssu18_samples))
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_amp_asv_pime  <- data.frame(otu_table(ssu18_ps_amp))
 ssu18_amp_asv_pime <- ssu18_amp_asv_pime %>% tibble::rownames_to_column("OTU")
 ssu18_amp_tax_pime  <- data.frame(tax_table(ssu18_ps_amp))
@@ -486,10 +477,9 @@ ssu18_samp_pime <- ssu18_samp_pime %>% tibble::remove_rownames()
 ssu18_amp_pime
 ```
 
-```{r}
+```{r, echo=FALSE}
 saveRDS(ssu18_amp_pime, "files/pime/rdata/ssu18_amp_pime.rds")
 ```
-
 
 ## Summary
 
@@ -588,15 +578,6 @@ gdata::keep(ssu18_asv_pime_sum, sure = TRUE)
 ```
 
 # ITS ASV Data Set
-
-> Hit the *Hide Code* button to hide the R code (visible by default).
-
-<aside>
-```{r, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
 
 ```{r, include=FALSE}
 ## Load for original ANALYSIS ONLY #1
@@ -728,7 +709,7 @@ Looks like the lowest OOB error rate (%) that retains the most ASVs is `r min(it
 
 ## Best Prevalence Summary
 
-```{r}
+```{r, echo=FALSE}
 its18_imp_best[, 13:14] <- list(NULL)
 its18_imp_best <- its18_imp_best %>% dplyr::rename("ASV_ID" = "SequenceID")
 ```
@@ -932,7 +913,7 @@ write.table(its18_pime_preval.samp,
 
 ## Create Ampvis2 PIME Object
 
-```{r}
+```{r, code_folding=TRUE}
 its18_otu <- data.frame(t(otu_table(its18_ps_pime)))
 its18_otu[] <- lapply(its18_otu, as.numeric)
 its18_otu <- as.matrix(its18_otu)
@@ -943,7 +924,7 @@ its18_ps_amp <- merge_phyloseq(otu_table(its18_otu, taxa_are_rows = TRUE),
                           sample_data(its18_samples))
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 its18_amp_asv_pime  <- data.frame(otu_table(its18_ps_amp))
 its18_amp_asv_pime <- its18_amp_asv_pime %>% tibble::rownames_to_column("OTU")
 its18_amp_tax_pime  <- data.frame(tax_table(its18_ps_amp))
@@ -983,7 +964,7 @@ its18_samp_pime <- its18_samp_pime %>% tibble::remove_rownames()
 its18_amp_pime
 ```
 
-```{r}
+```{r, echo=FALSE}
 saveRDS(its18_amp_pime, "files/pime/rdata/its18_amp_pime.rds")
 ```
 
@@ -1106,7 +1087,6 @@ ssu18_ps_work_otu <- readRDS("files/otu/rdata/ssu18_ps_work_otu.rds")
 ssu18_work_amp_otu <- readRDS("files/otu/rdata/ssu18_ps_work_otu_amp.rds")
 ```
 
-
 We will use PIME (Prevalence Interval for Microbiome Evaluation) to create a filtered data set.
 
 ## Setup
@@ -1210,7 +1190,7 @@ Looks like the lowest OOB error rate (%) that retains the most ASVs is `r min(ss
 
 ## Best Prevalence Summary
 
-```{r}
+```{r, echo=FALSE}
 ssu18_imp_best[, 13:14] <- list(NULL)
 ssu18_imp_best <- ssu18_imp_best %>% dplyr::rename("OTU_ID" = "SequenceID")
 ```
@@ -1414,7 +1394,7 @@ write.table(ssu18_pime_preval.samp,
 
 ## Create Ampvis2 PIME Object
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_otu <- data.frame(t(otu_table(ssu18_ps_pime)))
 ssu18_otu[] <- lapply(ssu18_otu, as.numeric)
 ssu18_otu <- as.matrix(ssu18_otu)
@@ -1425,7 +1405,7 @@ ssu18_ps_amp <- merge_phyloseq(otu_table(ssu18_otu, taxa_are_rows = TRUE),
                           sample_data(ssu18_samples))
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 ssu18_amp_asv_pime  <- data.frame(otu_table(ssu18_ps_amp))
 ssu18_amp_asv_pime <- ssu18_amp_asv_pime %>% tibble::rownames_to_column("OTU")
 ssu18_amp_tax_pime  <- data.frame(tax_table(ssu18_ps_amp))
@@ -1464,7 +1444,7 @@ ssu18_samp_pime <- ssu18_samp_pime %>% tibble::remove_rownames()
 ssu18_amp_pime
 ```
 
-```{r}
+```{r, echo=FALSE}
 saveRDS(ssu18_amp_pime, "files/pime/rdata/ssu18_amp_pime_otu.rds")
 ```
 
@@ -1692,7 +1672,7 @@ Looks like the lowest OOB error rate (%) that retains the most ASVs is `r min(it
 
 ## Best Prevalence Summary
 
-```{r}
+```{r, echo=FALSE}
 its18_imp_best[, 13:14] <- list(NULL)
 its18_imp_best <- its18_imp_best %>% dplyr::rename("OTU_ID" = "SequenceID")
 ```
@@ -1894,7 +1874,7 @@ write.table(its18_pime_preval.samp,
 
 ## Create Ampvis2 PIME Object
 
-```{r}
+```{r, code_folding=TRUE}
 its18_otu <- data.frame(t(otu_table(its18_ps_pime)))
 its18_otu[] <- lapply(its18_otu, as.numeric)
 its18_otu <- as.matrix(its18_otu)
@@ -1905,7 +1885,7 @@ its18_ps_amp <- merge_phyloseq(otu_table(its18_otu, taxa_are_rows = TRUE),
                           sample_data(its18_samples))
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 its18_amp_asv_pime  <- data.frame(otu_table(its18_ps_amp))
 its18_amp_asv_pime <- its18_amp_asv_pime %>% tibble::rownames_to_column("OTU")
 its18_amp_tax_pime  <- data.frame(tax_table(its18_ps_amp))
@@ -1944,7 +1924,7 @@ its18_samp_pime <- its18_samp_pime %>% tibble::remove_rownames()
 its18_amp_pime
 ```
 
-```{r}
+```{r, echo=FALSE}
 saveRDS(its18_amp_pime, "files/pime/rdata/its18_amp_pime_otu.rds")
 ```
 

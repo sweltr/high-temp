@@ -42,16 +42,6 @@ knitr::opts_current$get(c(
 ```
 </details>
 
-</br>
-
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
 
 ## Synopsis
 
@@ -95,7 +85,7 @@ objects()
 
 ## 1. Generate FASTA File
 
-```{r}
+```{r, code_folding=TRUE}
 ps_list <- c("its18_ps_work", "ssu18_ps_work")
 for (i in ps_list) {
   ## Get ASV data
@@ -143,7 +133,7 @@ for (i in ps_list) {
 
 Code for clustering OTUs is based on the [kmer-vignette](https://shaunpwilkinson.github.io/post/kmer-vignette/). Important parameters are `threshold`	(value between 0 and 1 giving the OTU identity cutoff)  and `method` (`central`, `centroid`, `farthest`)
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_list) {
   tmp_fasta_name <- purrr::map_chr(i, ~paste0(., ".fasta"))
   tmp_path <- file.path("files/otu/tables/")
@@ -163,7 +153,7 @@ for (i in ps_list) {
 
 ## 3. Create Lookup Table
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_list) {
   tmp_df <- get(purrr::map_chr(i, ~paste0(., "_cluster_results")))
   ## Make lookup table from results
@@ -193,7 +183,7 @@ for (i in ps_list) {
 
 ## 4. ASV to OTU Table
 
-```{r}
+```{r, code_folding=TRUE}
 #https://riptutorial.com/data-table/example/13084/using--sd-and--sdcols
 
 for (i in ps_list) {
@@ -229,7 +219,7 @@ objects(pattern="its")
 
 ## 5. Make Taxonomy Files
 
-```{r}
+```{r, code_folding=TRUE}
 rm(list = ls(pattern = "tmp_"))
 rm(list = ls(pattern = "_otu_tax"))
 for (i in ps_list) {
@@ -258,7 +248,7 @@ for (i in ps_list) {
 
 Now we can create phyloseq objects for the new OTU data. This is a little tricky because in the original `ps` objects, the ASVs are named in order of total abundance. However, the new OTU designations are not named in this fashion. 
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_list) {
   tmp_otu <- get(purrr::map_chr(i, ~ paste0(., "_otu_tab")))
   tmp_tax <- get(purrr::map_chr(i, ~ paste0(., "_otu_tax")))
@@ -314,7 +304,7 @@ OK, now we need to make sure that all of this fiddling with OTU names didn't mes
 
 Specifically, we will compare the lineage and the DNA sequence from all three data frames. If they are equal, we are good to go. First the 16S rRNA data set.	
 
-```{r}	
+```{r, code_folding=TRUE}	
 tmp_rn <- data.frame(row.names(t(otu_table(ssu18_ps_work_otu))))	
 tmp_bind <- cbind(ssu18_ps_work_org_names, tmp_rn)	
 tmp_bind <- tmp_bind %>% dplyr::rename("NEW_ID" = 2)	
@@ -354,7 +344,7 @@ ssu18_results %>% dplyr::filter(TRUE. == "FALSE")
 
 And then the ITS data.	
 
-```{r}	
+```{r, code_folding=TRUE}	
 tmp_rn <- data.frame(row.names(t(otu_table(its18_ps_work_otu))))	
 tmp_bind <- cbind(its18_ps_work_org_names, tmp_rn)	
 tmp_bind <- tmp_bind %>% dplyr::rename("NEW_ID" = 2)	
@@ -394,7 +384,7 @@ its18_results %>% dplyr::filter(TRUE. == "FALSE")
 
 The last step is to add an `OTU_ID` column to the new `ps` objects so they are the same as their ASV counterparts.	
 
-```{r}	
+```{r, code_folding=TRUE}	
 tax_table(ssu18_ps_work_otu) <- cbind(tax_table(ssu18_ps_work_otu),	
                            rownames(tax_table(ssu18_ps_work_otu)))	
 colnames(tax_table(ssu18_ps_work_otu)) <- c("Kingdom", "Phylum", "Class", 	
@@ -409,7 +399,7 @@ colnames(tax_table(its18_ps_work_otu)) <- c("Kingdom", "Phylum", "Class",
 
 ## 7. Create Ampvis2 Objects
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_list){
     tmp_ps <- get(purrr::map_chr(i, ~ paste0(., "_otu")))
     tmp_otu <- data.frame(t(otu_table(tmp_ps)))
@@ -429,7 +419,7 @@ data.frame(tax_table(ssu18_ps_work_ps_otu_amp))
 ssu18_ps_work_ps_otu_amp
 ```
 
-```{r}
+```{r, code_folding=TRUE}
 for (i in ps_list){
     tmp_ps <- get(purrr::map_chr(i, ~ paste0(., "_ps_otu_amp")))
     tmp_samp <- data.frame(sample_data(tmp_ps))
@@ -473,7 +463,7 @@ for (i in ps_list){
 
 ## 8. Save Tables
 
-```{r}
+```{r, code_folding=TRUE}
 ps_list <- c("ssu18_ps_work_otu", "its18_ps_work_otu")
 for (i in ps_list) {
   ## Get ASV data
@@ -543,7 +533,7 @@ for (i in ps_list) {
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 save.image("page_build/otu_wf.rdata")
 ```
 

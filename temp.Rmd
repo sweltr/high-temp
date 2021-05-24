@@ -18,6 +18,15 @@ COMING SOON :-)
 
 <br/>
 
+```{bash}
+# TEST
+```
+
+
+```
+#test
+```
+
 ```{r}
 library(dada2); packageVersion("dada2")
 path <- "MiSeq_SOP"

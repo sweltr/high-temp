@@ -48,14 +48,6 @@ knitr::opts_current$get(c(
 xaringanExtra::use_panelset()
 ```
 
-> Hit the *Hide Code* button to collapse the R code (visible by default).
-
-<aside>
-```{r codefolder_ssu18, echo=FALSE, results='asis', eval=TRUE}
-codefolder::generic(init = "show", query = "pre.sourceCode",
-  style = "position: absolute; right: 14%; z-index: 200")
-```
-</aside>
 
 # Synopsis
 
@@ -98,16 +90,17 @@ swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 In order to test for significance between sample groups, we must perform the following steps:
 
-1. Create distance matrices based on some metrics, for example `wunifrac`, `unifrac`, and `jsd`. For this we use the function `phyloseq::distance`.
-2. Next, calculate beta dispersion using the `betadisper` function from the `vegan` package.
-3. Then, use the function `permutest` to run a Permutation test for homogeneity of multivariate dispersions.
-4. If the beta dispersion tests are not significant we will run a PERMANOVA (since PERMANOVA assumes equal dispersion), otherwise we will use Analysis of Similarity (ANOSIM).
+1. Transform sample counts to relative abundance.
+2. Create distance matrices based on some metrics, for example `wunifrac`, `unifrac`, and `jsd`. For this we use the function `phyloseq::distance`.
+3. Next, calculate beta dispersion using the `betadisper` function from the `vegan` package [@oksanen2013community].
+4. Then, use the function `permutest` to run a Permutation test for homogeneity of multivariate dispersions.
+5. If the beta dispersion tests are not significant we will run a PERMANOVA using `adonis` (since PERMANOVA assumes equal dispersion), otherwise we will use Analysis of Similarity (ANOSIM), both available in the `vegan` package [@oksanen2013community].
 
-Steps 1, 2, and 3 are analyzed in a `for` loop that tests all three distance metrics.
+Steps 2--4 are combined in a `for` loop that tests all three distance metrics.
 
 Before we begin, we must first transform sample counts to relative abundance for both data sets.
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
              "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
 for (i in samp_ps) {
@@ -127,7 +120,9 @@ for (i in samp_ps) {
 
 ### Beta Dispersion
 
-```{r}
+Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions. 
+
+```{r, code_folding=TRUE}
 dist <- c("jsd", "unifrac", "wunifrac")
 for (i in samp_ps) {
         for (d in dist){
@@ -152,7 +147,7 @@ objects()
 <details markdown="1">
 <summary>Detailed results of Beta Dispersion & Permutation tests for ASV data</summary>
 
-##### Permutation tests (ASV)
+#### Permutation tests (ASV)
 
 ```{r, eval=TRUE, echo=FALSE}
 samp_ps_asv <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect")
@@ -177,7 +172,7 @@ for (i in samp_ps_asv) {
 <details markdown="1">
 <summary>Detailed results of Beta Dispersion & Permutation tests for OTU data</summary>
 
-##### Permutation tests (OTU)
+#### Permutation tests (OTU)
 
 ```{r, eval=TRUE, echo=FALSE}
 samp_ps_otu <- c("ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
@@ -201,60 +196,85 @@ for (i in samp_ps_otu) {
 
 Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
 
-```{r}
-file.remove("files/beta/tables/tmp.txt")
+```{r, echo=FALSE, eval=TRUE, results='markdown'}
+ssu18_perm_pvalues <- data.frame()
 for (i in samp_ps) {
         for (d in dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_permutest_", d)))
-          tmp_res <- eval(isTRUE(tmp_get$tab$`Pr(>F)`[1] < 0.05))
-          tmp_print <- c("Permutation test p-value of  ", i, d,
-          " < 0.05?", tmp_res)
-          cat(tmp_print,"\n", append = TRUE, file = "files/beta/tables/tmp.txt")
+          tmp_pv <- tmp_get$tab$`Pr(>F)`[1]
+
+          tmp_test <- if(tmp_pv < 0.05){
+            tmp_test <- "ANOSIM"
+          } else {
+            tmp_test <- "ADONIS"
+          }
+          tmp_df <- data.frame(i, d, tmp_pv, tmp_test)
+          ssu18_perm_pvalues <- dplyr::bind_rows(ssu18_perm_pvalues, tmp_df)
           rm(list = ls(pattern = "tmp_"))
-        }
+    }
 }
-ssu18_perm_pvalues <- read_delim("files/beta/tables/tmp.txt", delim = "\n", col_names = "permutation results")
+ssu18_perm_pvalues <- ssu18_perm_pvalues %>% 
+  dplyr::rename(c("data_set" = 1, "dist" = 2, "pval" = 3, "test" = 4))
+ssu18_perm_pvalues <- ssu18_perm_pvalues %>% tibble::remove_rownames()
+knitr::kable(ssu18_perm_pvalues)
 ```
 
+Now we to create sample data frames for each data set. 
 
-```{r, echo=FALSE}
-## Make samp dfs
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
-     tmp_name <- purrr::map_chr(i, ~ paste0(., "_sampledf"))
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
      tmp_samp <- data.frame(sample_data(tmp_get))
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_sampledf"))
      assign(tmp_name, tmp_samp)
      rm(list = ls(pattern = "tmp_"))
 }
 objects(pattern="_sampledf")
 ```
 
-### Significance Tests (FULL ASV)
+### Significance Tests 
 
-```{r, echo=FALSE, eval=TRUE}
+Depending on the test, we need different data structures. For `adonis` we use the sample metadata and for `anosim` we will start with a phyloseq object. So for each data set we create two variables: `adonis_sampledf` and `anosim_data`
+
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, code_folding=TRUE}
 adonis_sampledf <- ssu18_ps_work_sampledf
 anosim_data <- ssu18_ps_work
-ssu18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "ssu18_ps_work ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_work',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_work_adonis_jsd <-  adonis(ssu18_ps_work_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 ssu18_ps_work_adonis2_jsd <- adonis2(ssu18_ps_work_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
-
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_work_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_work_anosim_unifrac <-
   anosim(phyloseq::distance(ssu18_ps_work_prop, "unifrac"),
          grouping = ssu18_ps_work_groups)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_work_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_work_anosim_wunifrac <-
   anosim(phyloseq::distance(ssu18_ps_work_prop, "wunifrac"),
@@ -279,31 +299,45 @@ cat("\n")
 ```
 </details>
 
-### Significance Tests (PIME ASV)
+:::
 
-```{r, echo=FALSE, eval=TRUE}
+::: {.panel}
+
+#### PIME ASV
+
+```{r, code_folding=TRUE}
 adonis_sampledf <- ssu18_ps_pime_sampledf
 anosim_data <- ssu18_ps_pime
-ssu18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "ssu18_ps_pime ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_pime',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_pime_adonis_jsd <-  adonis(ssu18_ps_pime_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 ssu18_ps_pime_adonis2_jsd <- adonis2(ssu18_ps_pime_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_pime_adonis_unifrac <-  adonis(ssu18_ps_pime_beta_dist_unifrac ~ TEMP,
                                      data = adonis_sampledf, permutations = 1000)
 ssu18_ps_pime_adonis2_unifrac <- adonis2(ssu18_ps_pime_beta_dist_unifrac ~ TEMP,
                                       data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_pime_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_pime_anosim_wunifrac <-
   anosim(phyloseq::distance(ssu18_ps_pime_prop, "wunifrac"),
@@ -328,31 +362,45 @@ cat("\n")
 ```
 </details>
 
-### Significance Tests (PERfect ASV)
+:::
 
-```{r, echo=FALSE, eval=TRUE}
+::: {.panel}
+
+#### PERfect ASV
+
+```{r, code_folding=TRUE}
 adonis_sampledf <- ssu18_ps_perfect_sampledf
 anosim_data <- ssu18_ps_perfect
-ssu18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "ssu18_ps_perfect ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_perfect',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_perfect_anosim_jsd <-
   anosim(phyloseq::distance(ssu18_ps_perfect_prop, "jsd"),
          grouping = ssu18_ps_perfect_groups)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_perfect_anosim_unifrac <-
   anosim(phyloseq::distance(ssu18_ps_perfect_prop, "unifrac"),
          grouping = ssu18_ps_perfect_groups)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
 ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_perfect_anosim_wunifrac <-
   anosim(phyloseq::distance(ssu18_ps_perfect_prop, "wunifrac"),
@@ -377,10 +425,210 @@ cat("\n")
 ```
 </details>
 
+:::
 
-### Summary ASV
+::: {.panel}
 
-Here is a quick summary of significance tests for the FULL and PIME ASV data sets against the three distance matrices.
+#### FULL OTU
+
+```{r, code_folding=TRUE}
+adonis_sampledf <- ssu18_ps_work_otu_sampledf
+anosim_data <- ssu18_ps_work_otu
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_work_otu',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_work_otu_anosim_jsd <-
+  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "jsd"),
+         grouping = ssu18_ps_work_otu_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_work_otu_anosim_unifrac <-
+  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "unifrac"),
+         grouping = ssu18_ps_work_otu_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_work_otu_anosim_wunifrac <-
+  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "wunifrac"),
+         grouping = ssu18_ps_work_otu_groups)
+```
+
+<details markdown="1">
+<summary>Detailed results of Significance tests for FULL data set</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+summary(ssu18_ps_work_otu_anosim_jsd)
+cat("\n")
+
+cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
+summary(ssu18_ps_work_otu_anosim_unifrac)
+cat("\n")
+
+cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
+summary(ssu18_ps_work_otu_anosim_wunifrac)
+cat("\n")
+```
+</details>
+
+:::
+
+::: {.panel}
+
+#### PIME OTU
+
+```{r, code_folding=TRUE}
+adonis_sampledf <- ssu18_ps_pime_otu_sampledf
+anosim_data <- ssu18_ps_pime_otu
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_pime_otu',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_pime_otu_adonis_jsd <-  adonis(ssu18_ps_pime_otu_beta_dist_jsd ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+ssu18_ps_pime_otu_adonis2_jsd <- adonis2(ssu18_ps_pime_otu_beta_dist_jsd ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_pime_otu_adonis_unifrac <-  adonis(ssu18_ps_pime_otu_beta_dist_unifrac ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+ssu18_ps_pime_otu_adonis2_unifrac <- adonis2(ssu18_ps_pime_otu_beta_dist_unifrac ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_pime_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_pime_otu_anosim_wunifrac <-
+  anosim(phyloseq::distance(ssu18_ps_pime_otu_prop, "wunifrac"),
+         grouping = ssu18_ps_pime_otu_groups)
+```
+
+
+<details markdown="1">
+<summary>Detailed results of Significance tests for PIME data set</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+ssu18_ps_pime_otu_adonis2_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Unweighted UniFrac distance, `unifrac`***", "\n\n")
+ssu18_ps_pime_otu_adonis2_unifrac
+cat("\n")
+
+cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
+summary(ssu18_ps_pime_otu_anosim_wunifrac)
+cat("\n")
+```
+</details>
+
+:::
+
+::: {.panel}
+
+#### PERfect OTU
+
+```{r, code_folding=TRUE}
+adonis_sampledf <- ssu18_ps_perfect_otu_sampledf
+anosim_data <- ssu18_ps_perfect_otu
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_perfect_otu',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_perfect_otu_anosim_jsd <-
+  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "jsd"),
+         grouping = ssu18_ps_perfect_otu_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_perfect_otu_anosim_unifrac <-
+  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "unifrac"),
+         grouping = ssu18_ps_perfect_otu_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
+ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_perfect_otu_anosim_wunifrac <-
+  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "wunifrac"),
+         grouping = ssu18_ps_perfect_otu_groups)
+```
+
+<details markdown="1">
+<summary>Detailed results of Significance tests for PERfect data set</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+summary(ssu18_ps_perfect_otu_anosim_jsd)
+cat("\n")
+
+cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
+summary(ssu18_ps_perfect_otu_anosim_unifrac)
+cat("\n")
+
+cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
+summary(ssu18_ps_perfect_otu_anosim_wunifrac)
+cat("\n")
+```
+</details>
+
+:::
+:::
+:::
+
+
+### Summaries 
+
+Here is a quick summary of significance tests for the data sets against three distance matrices.
+
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### ASV
 
 ```{r, echo=FALSE}
 data_set <- data.frame(c("FULL", "PIME", "PERfect"))
@@ -410,162 +658,11 @@ knitr::kable(ssu18_tab_sig_test)
 ```
 *Summary of significant tests for the FULL, PIME, & PERfect ASV data sets.*
 
+:::
 
-### Significance Tests (FULL OTU)
+::: {.panel}
 
-Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
-
-```{r, echo=FALSE, eval=TRUE}
-adonis_sampledf <- ssu18_ps_work_otu_sampledf
-anosim_data <- ssu18_ps_work_otu
-ssu18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "ssu18_ps_work_otu ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
-```
-
-```{r}
-ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_work_otu_anosim_jsd <-
-  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "jsd"),
-         grouping = ssu18_ps_work_otu_groups)
-```
-
-```{r}
-ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_work_otu_anosim_unifrac <-
-  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "unifrac"),
-         grouping = ssu18_ps_work_otu_groups)
-```
-
-```{r}
-ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_work_otu_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "wunifrac"),
-         grouping = ssu18_ps_work_otu_groups)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for FULL data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-summary(ssu18_ps_work_otu_anosim_jsd)
-cat("\n")
-
-cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-summary(ssu18_ps_work_otu_anosim_unifrac)
-cat("\n")
-
-cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_work_otu_anosim_wunifrac)
-cat("\n")
-```
-</details>
-
-### Significance Tests (PIME OTU)
-
-```{r, echo=FALSE, eval=TRUE}
-adonis_sampledf <- ssu18_ps_pime_otu_sampledf
-anosim_data <- ssu18_ps_pime_otu
-ssu18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "ssu18_ps_pime_otu ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
-```
-
-```{r}
-ssu18_ps_pime_otu_adonis_jsd <-  adonis(ssu18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-ssu18_ps_pime_otu_adonis2_jsd <- adonis2(ssu18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-```{r}
-ssu18_ps_pime_otu_adonis_unifrac <-  adonis(ssu18_ps_pime_otu_beta_dist_unifrac ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-ssu18_ps_pime_otu_adonis2_unifrac <- adonis2(ssu18_ps_pime_otu_beta_dist_unifrac ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-```{r, echo=FALSE, eval=FALSE}
-ssu18_ps_pime_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_pime_otu_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_pime_otu_prop, "wunifrac"),
-         grouping = ssu18_ps_pime_otu_groups)
-```
-
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-ssu18_ps_pime_otu_adonis2_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-ssu18_ps_pime_otu_adonis2_unifrac
-cat("\n")
-
-cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_pime_otu_anosim_wunifrac)
-cat("\n")
-```
-</details>
-
-### Significance Tests (PERfect OTU)
-
-Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
-
-```{r, echo=FALSE, eval=TRUE}
-adonis_sampledf <- ssu18_ps_perfect_otu_sampledf
-anosim_data <- ssu18_ps_perfect_otu
-ssu18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "ssu18_ps_perfect_otu ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
-```
-
-```{r}
-ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_otu_anosim_jsd <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "jsd"),
-         grouping = ssu18_ps_perfect_otu_groups)
-```
-
-```{r}
-ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_otu_anosim_unifrac <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "unifrac"),
-         grouping = ssu18_ps_perfect_otu_groups)
-```
-
-```{r}
-ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_otu_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "wunifrac"),
-         grouping = ssu18_ps_perfect_otu_groups)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PERfect data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-summary(ssu18_ps_perfect_otu_anosim_jsd)
-cat("\n")
-
-cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-summary(ssu18_ps_perfect_otu_anosim_unifrac)
-cat("\n")
-
-cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_perfect_otu_anosim_wunifrac)
-cat("\n")
-```
-</details>
-
-### Summary OTU
-
-Here is a quick summary of significance tests for the FULL and PIME OTU data sets against the three distance matrices.
+#### OTU
 
 ```{r, echo=FALSE}
 data_set <- data.frame(c("FULL", "PIME", "PERfect"))
@@ -598,7 +695,9 @@ knitr::kable(ssu18_tab_sig_test_otu)
 ```
 *Summary of significant tests for the FULL, PIME, & PERfect OTU data sets.*
 
-TO DO---Add posthoc analysis
+:::
+:::
+:::
 
 ```{r echo=FALSE}
 save.image("page_build/beta_ssu18_part_1_wf.rdata")
@@ -626,7 +725,7 @@ Here we visualize the different distance matrices using several ordination metho
 
 First, we inspect different ordination methods to see how the samples cluster using **weighted-UniFrac**,  **unweighted-UniFrac**, and **Jensen-Shannon Divergence** distance measurements. We could also test different diversity metrics, different transformations, etc.
 
-```{r}
+```{r, echo=FALSE}
 gdata::keep(ssu18_ps_work, ssu18_ps_pime, ssu18_ps_perfect, 
             ssu18_ps_work_otu, ssu18_ps_pime_otu, ssu18_ps_perfect_otu, 
             ssu18_ps_work_prop, ssu18_ps_pime_prop, ssu18_ps_perfect_prop, 
@@ -1182,16 +1281,17 @@ swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 In order to test for significance between sample groups, we must perform the following steps:
 
-1. Create distance matrices based on some metrics, for example `gower`, `bray`, and `jsd`. For this we use the function `phyloseq::distance`.
-2. Next, calculate beta dispersion using the `betadisper` function from the `vegan` package.
-3. Then, use the function `permutest` to run a Permutation test for homogeneity of multivariate dispersions.
-4. If the beta dispersion tests are not significant we will run a PERMANOVA (since PERMANOVA assumes equal dispersion), otherwise we will use Analysis of Similarity (ANOSIM).
+1. Transform sample counts to relative abundance.
+2. Create distance matrices based on some metrics, for example `gower`, `bray`, and `jsd`. For this we use the function `phyloseq::distance`.
+3. Next, calculate beta dispersion using the `betadisper` function from the `vegan` package.
+4. Then, use the function `permutest` to run a Permutation test for homogeneity of multivariate dispersions.
+5. If the beta dispersion tests are not significant we will run a PERMANOVA using `adonis` (since PERMANOVA assumes equal dispersion), otherwise we will use Analysis of Similarity (ANOSIM).
 
-Steps 1, 2, and 3 are analyzed in a `for` loop that tests all three distance metrics.
+Steps 2--4 are combined in a `for` loop that tests all three distance metrics.
 
 Before we begin, we must first transform sample counts to relative abundance for both data sets.
 
-```{r}
+```{r, code_folding=TRUE}
 samp_ps <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
              "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
 for (i in samp_ps) {
@@ -1209,7 +1309,9 @@ for (i in samp_ps) {
 
 ### Beta Dispersion
 
-```{r}
+Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions.
+
+```{r, code_folding=TRUE}
 dist <- c("jsd", "bray", "gower")
 for (i in samp_ps) {
         for (d in dist){
@@ -1234,7 +1336,7 @@ objects()
 <details markdown="1">
 <summary>Detailed results of Beta Dispersion & Permutation tests for ASV data</summary>
 
-##### Permutation tests (ASV)
+#### Permutation tests (ASV)
 
 ```{r, eval=TRUE, echo=FALSE}
 samp_ps_asv <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect")
@@ -1259,7 +1361,7 @@ for (i in samp_ps_asv) {
 <details markdown="1">
 <summary>Detailed results of Beta Dispersion & Permutation tests for OTU data</summary>
 
-##### Permutation tests (OTU)
+#### Permutation tests (OTU)
 
 ```{r, eval=TRUE, echo=FALSE}
 samp_ps_otu <- c("its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
@@ -1283,59 +1385,85 @@ for (i in samp_ps_otu) {
 
 Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
 
-```{r}
-file.remove("files/beta/tables/tmp.txt")
+```{r, echo=FALSE, eval=TRUE, results='markdown'}
+its18_perm_pvalues <- data.frame()
 for (i in samp_ps) {
         for (d in dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_permutest_", d)))
-          tmp_res <- eval(isTRUE(tmp_get$tab$`Pr(>F)`[1] < 0.05))
-          tmp_print <- c("Permutation test p-value of  ", i, d,
-          " < 0.05?", tmp_res)
-          cat(tmp_print,"\n", append = TRUE, file = "files/beta/tables/tmp.txt")
+          tmp_pv <- tmp_get$tab$`Pr(>F)`[1]
+
+          tmp_test <- if(tmp_pv < 0.05){
+            tmp_test <- "ANOSIM"
+          } else {
+            tmp_test <- "ADONIS"
+          }
+          tmp_df <- data.frame(i, d, tmp_pv, tmp_test)
+          its18_perm_pvalues <- dplyr::bind_rows(its18_perm_pvalues, tmp_df)
           rm(list = ls(pattern = "tmp_"))
-        }
+    }
 }
-its18_perm_pvalues <- read_delim("files/beta/tables/tmp.txt", delim = "\n", col_names = "permutation results")
+its18_perm_pvalues <- its18_perm_pvalues %>% 
+  dplyr::rename(c("data_set" = 1, "dist" = 2, "pval" = 3, "test" = 4))
+its18_perm_pvalues <- its18_perm_pvalues %>% tibble::remove_rownames()
+knitr::kable(its18_perm_pvalues)
 ```
 
+Now we to create sample data frames for each data set. 
 
-```{r, echo=FALSE}
-## Make samp dfs
+```{r, code_folding=TRUE}
 for (i in samp_ps) {
-     tmp_name <- purrr::map_chr(i, ~ paste0(., "_sampledf"))
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
      tmp_samp <- data.frame(sample_data(tmp_get))
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_sampledf"))
      assign(tmp_name, tmp_samp)
      rm(list = ls(pattern = "tmp_"))
 }
 objects(pattern="_sampledf")
 ```
 
-### Significance Tests (FULL ASV)
+### Significance Tests 
 
-```{r, echo=FALSE, eval=TRUE}
+Depending on the test, we need different data structures. For `adonis` we use the sample metadata and for `anosim` we will start with a phyloseq object. So for each data set we create two variables: `adonis_sampledf` and `anosim_data`
+
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### FULL ASV
+
+```{r, code_folding=TRUE}
 adonis_sampledf <- its18_ps_work_sampledf
 anosim_data <- its18_ps_work
-its18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "its18_ps_work ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_work',]
+```
+
+Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_work_adonis_jsd <-  adonis(its18_ps_work_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_work_adonis2_jsd <- adonis2(its18_ps_work_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_work_adonis_bray <-  adonis(its18_ps_work_beta_dist_bray ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_work_adonis2_bray <- adonis2(its18_ps_work_beta_dist_bray ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_work_adonis_gower <-  adonis(its18_ps_work_beta_dist_gower ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_work_adonis2_gower <- adonis2(its18_ps_work_beta_dist_gower ~ TEMP,
@@ -1360,31 +1488,45 @@ cat("\n")
 ```
 </details>
 
-### Significance Tests (PIME ASV)
+:::
 
-```{r, echo=FALSE, eval=TRUE}
+::: {.panel}
+
+#### PIME ASV
+
+```{r, code_folding=TRUE}
 adonis_sampledf <- its18_ps_pime_sampledf
 anosim_data <- its18_ps_pime
-its18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "its18_ps_pime ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pime',]
+```
+
+Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_pime_adonis_jsd <-  adonis(its18_ps_pime_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_pime_adonis2_jsd <- adonis2(its18_ps_pime_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_pime_adonis_bray <-  adonis(its18_ps_pime_beta_dist_bray ~ TEMP,
                                      data = adonis_sampledf, permutations = 1000)
 its18_ps_pime_adonis2_bray <- adonis2(its18_ps_pime_beta_dist_bray ~ TEMP,
                                       data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_pime_groups <- get_variable(anosim_data, "TEMP")
 its18_ps_pime_anosim_gower <-
   anosim(phyloseq::distance(its18_ps_pime_prop, "gower"),
@@ -1409,31 +1551,45 @@ cat("\n")
 ```
 </details>
 
-### Significance Tests (PERfect ASV)
+:::
 
-```{r, echo=FALSE, eval=TRUE}
+::: {.panel}
+
+#### PERfect ASV
+
+```{r, code_folding=TRUE}
 adonis_sampledf <- its18_ps_perfect_sampledf
 anosim_data <- its18_ps_perfect
-its18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "its18_ps_perfect ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
 ```
 
-```{r}
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_perfect',]
+```
+
+Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_perfect_adonis_jsd <-  adonis(its18_ps_perfect_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_perfect_adonis2_jsd <- adonis2(its18_ps_perfect_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_perfect_adonis_bray <-  adonis(its18_ps_perfect_beta_dist_bray ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_perfect_adonis2_bray <- adonis2(its18_ps_perfect_beta_dist_bray ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-```{r}
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
 its18_ps_perfect_adonis_gower <-  adonis(its18_ps_perfect_beta_dist_gower ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_perfect_adonis2_gower <- adonis2(its18_ps_perfect_beta_dist_gower ~ TEMP,
@@ -1458,10 +1614,210 @@ cat("\n")
 ```
 </details>
 
+:::
 
-### Summary ASV
+::: {.panel}
 
-Here is a quick summary of significance tests for the FULL and PIME ASV data sets against the three distance matrices.
+#### FULL OTU
+
+```{r, code_folding=TRUE}
+adonis_sampledf <- its18_ps_work_otu_sampledf
+anosim_data <- its18_ps_work_otu
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_work_otu',]
+```
+
+Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_work_otu_adonis_jsd <-  adonis(its18_ps_work_otu_beta_dist_jsd ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+its18_ps_work_otu_adonis2_jsd <- adonis2(its18_ps_work_otu_beta_dist_jsd ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_work_otu_adonis_bray <-  adonis(its18_ps_work_otu_beta_dist_bray ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+its18_ps_work_otu_adonis2_bray <- adonis2(its18_ps_work_otu_beta_dist_bray ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_work_otu_adonis_gower <-  adonis(its18_ps_work_otu_beta_dist_gower ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+its18_ps_work_otu_adonis2_gower <- adonis2(its18_ps_work_otu_beta_dist_gower ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
+```
+
+<details markdown="1">
+<summary>Detailed results of Significance tests for FULL data set</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_work_otu_adonis_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
+its18_ps_work_otu_adonis_bray
+cat("\n")
+
+cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
+its18_ps_work_otu_adonis_gower
+cat("\n")
+```
+</details>
+
+:::
+
+::: {.panel}
+
+#### PIME OTU
+
+```{r, code_folding=TRUE}
+adonis_sampledf <- its18_ps_pime_otu_sampledf
+anosim_data <- its18_ps_pime_otu
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pime_otu',]
+```
+
+Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_pime_otu_adonis_jsd <-  adonis(its18_ps_pime_otu_beta_dist_jsd ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+its18_ps_pime_otu_adonis2_jsd <- adonis2(its18_ps_pime_otu_beta_dist_jsd ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_pime_otu_adonis_bray <-  adonis(its18_ps_pime_otu_beta_dist_bray ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+its18_ps_pime_otu_adonis2_bray <- adonis2(its18_ps_pime_otu_beta_dist_bray ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_pime_otu_groups <- get_variable(anosim_data, "TEMP")
+its18_ps_pime_otu_anosim_gower <-
+  anosim(phyloseq::distance(its18_ps_pime_otu_prop, "gower"),
+         grouping = its18_ps_pime_otu_groups)
+```
+
+
+<details markdown="1">
+<summary>Detailed results of Significance tests for PIME data set</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_pime_otu_adonis2_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
+its18_ps_pime_otu_adonis2_bray
+cat("\n")
+
+cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
+summary(its18_ps_pime_otu_anosim_gower)
+cat("\n")
+```
+</details>
+
+:::
+
+::: {.panel}
+
+#### PERfect OTU
+
+```{r, code_folding=TRUE}
+adonis_sampledf <- its18_ps_perfect_otu_sampledf
+anosim_data <- its18_ps_perfect_otu
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_perfect_otu',]
+```
+
+Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_perfect_otu_adonis_jsd <-  adonis(its18_ps_perfect_otu_beta_dist_jsd ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+its18_ps_perfect_otu_adonis2_jsd <- adonis2(its18_ps_perfect_otu_beta_dist_jsd ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_perfect_otu_adonis_bray <-  adonis(its18_ps_perfect_otu_beta_dist_bray ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+its18_ps_perfect_otu_adonis2_bray <- adonis2(its18_ps_perfect_otu_beta_dist_bray ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r, code_folding=TRUE}
+its18_ps_perfect_otu_adonis_gower <-  adonis(its18_ps_perfect_otu_beta_dist_gower ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+its18_ps_perfect_otu_adonis2_gower <- adonis2(its18_ps_perfect_otu_beta_dist_gower ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+<details markdown="1">
+<summary>Detailed results of Significance tests for PERfect data set</summary>
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_perfect_otu_adonis_jsd
+cat("\n")
+
+cat("\n", "***ANOSIM for Bray distance, `bray`***", "\n\n")
+its18_ps_perfect_otu_adonis_bray
+cat("\n")
+
+cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
+its18_ps_perfect_otu_adonis_gower
+cat("\n")
+```
+</details>
+
+:::
+:::
+:::
+
+### Summaries 
+
+Here is a quick summary of significance tests for the data sets against three distance matrices.
+
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### ASV
 
 ```{r, echo=FALSE}
 data_set <- data.frame(c("FULL", "PIME", "PERfect"))
@@ -1493,162 +1849,11 @@ knitr::kable(its18_tab_sig_test)
 ```
 *Summary of significant tests for the FULL, PIME, & PERfect ASV data sets.*
 
+:::
 
-### Significance Tests (FULL OTU)
+::: {.panel}
 
-Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
-
-```{r, echo=FALSE, eval=TRUE}
-adonis_sampledf <- its18_ps_work_otu_sampledf
-anosim_data <- its18_ps_work_otu
-its18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "its18_ps_work_otu ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
-```
-
-```{r}
-its18_ps_work_otu_adonis_jsd <-  adonis(its18_ps_work_otu_beta_dist_jsd ~ TEMP,
-                                 data = adonis_sampledf, permutations = 1000)
-its18_ps_work_otu_adonis2_jsd <- adonis2(its18_ps_work_otu_beta_dist_jsd ~ TEMP,
-                                  data = adonis_sampledf, permutations = 1000)
-```
-
-```{r}
-its18_ps_work_otu_adonis_bray <-  adonis(its18_ps_work_otu_beta_dist_bray ~ TEMP,
-                                 data = adonis_sampledf, permutations = 1000)
-its18_ps_work_otu_adonis2_bray <- adonis2(its18_ps_work_otu_beta_dist_bray ~ TEMP,
-                                  data = adonis_sampledf, permutations = 1000)
-```
-
-```{r}
-its18_ps_work_otu_adonis_gower <-  adonis(its18_ps_work_otu_beta_dist_gower ~ TEMP,
-                                 data = adonis_sampledf, permutations = 1000)
-its18_ps_work_otu_adonis2_gower <- adonis2(its18_ps_work_otu_beta_dist_gower ~ TEMP,
-                                  data = adonis_sampledf, permutations = 1000)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for FULL data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_work_otu_adonis_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_work_otu_adonis_bray
-cat("\n")
-
-cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
-its18_ps_work_otu_adonis_gower
-cat("\n")
-```
-</details>
-
-### Significance Tests (PIME OTU)
-
-```{r, echo=FALSE, eval=TRUE}
-adonis_sampledf <- its18_ps_pime_otu_sampledf
-anosim_data <- its18_ps_pime_otu
-its18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "its18_ps_pime_otu ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
-```
-
-```{r}
-its18_ps_pime_otu_adonis_jsd <-  adonis(its18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_pime_otu_adonis2_jsd <- adonis2(its18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-```{r}
-its18_ps_pime_otu_adonis_bray <-  adonis(its18_ps_pime_otu_beta_dist_bray ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_pime_otu_adonis2_bray <- adonis2(its18_ps_pime_otu_beta_dist_bray ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-```{r, echo=FALSE, eval=FALSE}
-its18_ps_pime_otu_groups <- get_variable(anosim_data, "TEMP")
-its18_ps_pime_otu_anosim_gower <-
-  anosim(phyloseq::distance(its18_ps_pime_otu_prop, "gower"),
-         grouping = its18_ps_pime_otu_groups)
-```
-
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_pime_otu_adonis2_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_pime_otu_adonis2_bray
-cat("\n")
-
-cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
-summary(its18_ps_pime_otu_anosim_gower)
-cat("\n")
-```
-</details>
-
-### Significance Tests (PERfect OTU)
-
-Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
-
-```{r, echo=FALSE, eval=TRUE}
-adonis_sampledf <- its18_ps_perfect_otu_sampledf
-anosim_data <- its18_ps_perfect_otu
-its18_perm_pvalues %>% dplyr::filter(str_detect(`permutation results`, "its18_ps_perfect_otu ") == TRUE)
-# TRUE = ANOSIM
-# FALSE = ADONIS
-```
-
-```{r}
-its18_ps_perfect_otu_adonis_jsd <-  adonis(its18_ps_perfect_otu_beta_dist_jsd ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_perfect_otu_adonis2_jsd <- adonis2(its18_ps_perfect_otu_beta_dist_jsd ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-```{r}
-its18_ps_perfect_otu_adonis_bray <-  adonis(its18_ps_perfect_otu_beta_dist_bray ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_perfect_otu_adonis2_bray <- adonis2(its18_ps_perfect_otu_beta_dist_bray ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-```{r, echo=FALSE, eval=FALSE}
-its18_ps_perfect_otu_adonis_gower <-  adonis(its18_ps_perfect_otu_beta_dist_gower ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_perfect_otu_adonis2_gower <- adonis2(its18_ps_perfect_otu_beta_dist_gower ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PERfect data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_perfect_otu_adonis_jsd
-cat("\n")
-
-cat("\n", "***ANOSIM for Bray distance, `bray`***", "\n\n")
-its18_ps_perfect_otu_adonis_bray
-cat("\n")
-
-cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
-its18_ps_perfect_otu_adonis_gower
-cat("\n")
-```
-</details>
-
-### Summary OTU
-
-Here is a quick summary of significance tests for the FULL and PIME OTU data sets against the three distance matrices.
+#### OTU
 
 ```{r, echo=FALSE}
 data_set <- data.frame(c("FULL", "PIME", "PERfect"))
@@ -1679,8 +1884,9 @@ rm(list = ls(pattern = "tmp_"))
 knitr::kable(its18_tab_sig_test_otu)
 ```
 *Summary of significant tests for the FULL, PIME, & PERfect OTU data sets.*
-
-TO DO---Add posthoc analysis
+:::
+:::
+:::
 
 ```{r echo=FALSE}
 save.image("page_build/beta_its18_part_1_wf.rdata")
@@ -1938,7 +2144,6 @@ knitr::include_graphics("include/beta/its18_ps_pime_otu_beta_div_ord_plots.png")
 knitr::include_graphics("include/beta/its18_ps_perfect_otu_beta_div_ord_plots.png")
 ```
 :::
-
 :::
 :::
 
