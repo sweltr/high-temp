@@ -39,11 +39,70 @@ knitr::opts_current$get(c(
 xaringanExtra::use_panelset()
 ```
 
+```{r summary_load, include=FALSE, eval=TRUE}
+## Load for summary #3
+remove(list = ls())
+load("page_build/metadata_summary.rdata")
+```
+
+# Multivariate Summary
+
+Summary results for of `envfit` and `bioenv` tests for edaphic properties, soil functional response, and temperature adaptation for both 16S rRNA and ITS data sets.
+
+## 16S rRNA
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+datatable(ssu18_sig_summary, width = "100%", rownames = FALSE, caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of envfit & bioenv test for the 16S rRNA data set.')),
+          elementId = "95p2uxf1n8lpjbc2t0r9",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blftip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = -1,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )%>%
+    DT::formatRound(columns = c(3:ncol(ssu18_sig_summary)),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(ssu18_sig_summary),
+                    fontSize = '80%')
+```
+
+## ITS
+
+<br/>
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+datatable(its18_sig_summary, width = "100%", rownames = FALSE, caption = htmltools::tags$caption(
+            style = 'caption-side: bottom; text-align: left;',
+            'Table: ', htmltools::em('Results of envfit & bioenv test for the ITS data set.')),
+          elementId = "w114ycn9zt4kx4ip8165",
+          extensions = 'Buttons', options = list(
+            scrollX = TRUE,
+            dom = 'Blftip',
+            buttons = c('copy', 'csv', 'excel'),
+            pageLength = -1,
+            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
+            )
+          )%>%
+    DT::formatRound(columns = c(3:ncol(its18_sig_summary)),
+                    digits = 3) %>%
+    DT::formatStyle(columns = colnames(its18_sig_summary),
+                    fontSize = '80%')
+remove(list = ls())
+```
+
+
 ```{r master_load_ssu18, include=FALSE, eval=TRUE}
 ## Load to build page only #2
 remove(list = ls())
 load("page_build/metadata_ssu18_wf.rdata")
 ```
+
 
 ```{r, echo=FALSE}
 swel_col <- c("#2271B2", "#71B222", "#B22271")
@@ -69,6 +128,7 @@ In this workflow we compare the environmental metadata with the microbial commun
 6) Dissimilarity Correlation Tests: Use Mantel Tests to see if any on the metadata groups are significantly correlated with the community data.
 7) Best Subset of Variables: Determine which of the metadata parameters from each group are the most strongly correlated with the community data. For this we use the `bioenv` function from the `vegan` [@oksanen2013community] package.
 8) Distance-based Redundancy Analysis: Ordination analysis of samples and metadata vector overlays using `capscale`, also from the `vegan` package.  
+
 
 # Metadata  
 
@@ -1845,31 +1905,122 @@ ssu18_capscale_plots
 dev.off()
 ```
 
+
 ```{r, echo=FALSE}
-## PERMANOVA 
-tmp_md_groups <- c("edpahic", "soil_funct", "temp_adapt")
-tmp_data <- ssu18_select_mc_norm_split_no_ac
-tmp_data$edaphic$TREAT_T <- as.character(tmp_data$edaphic$TREAT_T)
+###########################################
+######## CODE FOR SUMMARY DATA ############
+###########################################
 
-tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+## Edaphic
+bioenv_set <- edaphic_bioenv_ind_mantel
+envfit_set <- envfit_edaphic_md
+res_name <- "ssu18_edaphic_sig_summary"
+metadata_set <- "edaphic"
 
-tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$edaphic)
-#tmp_env$edaphic$TREAT_T <- as.character(tmp_env$edaphic$TREAT_T)
-edpahic_adonis2 <- adonis2(tmp_comm ~ TREAT_T* AST, data = tmp_data$edaphic)
+## BIOENV
+bioenv_tab <- NULL
+for (i in names(bioenv_set)) {
+  tmp_r <- data.frame(bioenv_set[[i]]$statistic)
+  row.names(tmp_r) <- i
+  tmp_p <- data.frame(bioenv_set[[i]]$signif)
+  row.names(tmp_p) <- i
+  bioenv_tab <- rbind(bioenv_tab, data.frame(tmp_r, tmp_p))
+  rm(list = ls(pattern = "tmp_"))
+}
+bioenv_tab <- bioenv_tab %>% dplyr::rename("r (bioenv)" = 1, "pval (bioenv)" = 2) %>%
+  tibble::rownames_to_column("parameter")
 
-tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$soil_funct)
-soil_funct_adonis2 <- adonis2(soil_funct_cap$call$formula, data = tmp_data$soil_funct)
+## ENVFIT
+tmp_r <- data.frame(envfit_set$vectors$r)
+tmp_r <- tmp_r %>% tibble::rownames_to_column("parameter")
+tmp_p <- data.frame(envfit_set$vectors$pvals)
+tmp_p <- tmp_p %>% tibble::rownames_to_column("parameter")
+tmp_rp <- dplyr::full_join(tmp_r, tmp_p, by = "parameter")
+tmp_rp <- tmp_rp %>% dplyr::rename("r2 (envfit)" = 2, "Pr(>r) (envfit)" = 3)
+tmp_rp <- base::subset(tmp_rp, c(tmp_rp$`Pr(>r)` < 0.05 & tmp_rp$r2 > 0.4))
 
-tmp_env <- data.frame(ssu18_select_mc_norm_split_no_ac$temp_adapt)
-temp_adapt_adonis2 <- adonis2(temp_adapt_cap$call$formula, data = tmp_data$temp_adapt)
-
-
-### Soil Functional Response
- 
-### Temperature Adaptation
-temp_adapt_cap
-
+tmp_summary <- dplyr::full_join(tmp_rp, bioenv_tab, by = "parameter") 
+tmp_summary$metadata_set <- metadata_set
+tmp_summary <- tmp_summary[, c(6,1:5)]
+assign(res_name, tmp_summary)
+rm(list = ls(pattern = "tmp_"))
 ```
+
+```{r, echo=FALSE}
+## SOIL_FUNCT
+bioenv_set <- soil_funct_bioenv_ind_mantel
+envfit_set <- envfit_soil_funct_md
+res_name <- "ssu18_soil_funct_sig_summary"
+metadata_set <- "functional_response"
+
+## BIOENV
+bioenv_tab <- NULL
+for (i in names(bioenv_set)) {
+  tmp_r <- data.frame(bioenv_set[[i]]$statistic)
+  row.names(tmp_r) <- i
+  tmp_p <- data.frame(bioenv_set[[i]]$signif)
+  row.names(tmp_p) <- i
+  bioenv_tab <- rbind(bioenv_tab, data.frame(tmp_r, tmp_p))
+  rm(list = ls(pattern = "tmp_"))
+}
+bioenv_tab <- bioenv_tab %>% dplyr::rename("r (bioenv)" = 1, "pval (bioenv)" = 2) %>%
+  tibble::rownames_to_column("parameter")
+
+## ENVFIT
+tmp_r <- data.frame(envfit_set$vectors$r)
+tmp_r <- tmp_r %>% tibble::rownames_to_column("parameter")
+tmp_p <- data.frame(envfit_set$vectors$pvals)
+tmp_p <- tmp_p %>% tibble::rownames_to_column("parameter")
+tmp_rp <- dplyr::full_join(tmp_r, tmp_p, by = "parameter")
+tmp_rp <- tmp_rp %>% dplyr::rename("r2 (envfit)" = 2, "Pr(>r) (envfit)" = 3)
+tmp_rp <- base::subset(tmp_rp, c(tmp_rp$`Pr(>r)` < 0.05 & tmp_rp$r2 > 0.4))
+
+tmp_summary <- dplyr::full_join(tmp_rp, bioenv_tab, by = "parameter") 
+tmp_summary$metadata_set <- metadata_set
+tmp_summary <- tmp_summary[, c(6,1:5)]
+assign(res_name, tmp_summary)
+rm(list = ls(pattern = "tmp_"))
+```
+
+```{r, echo=FALSE}
+## TEMP
+bioenv_set <- temp_adapt_bioenv_ind_mantel
+envfit_set <- envfit_temp_adapt_md
+res_name <- "ssu18_temp_adapt_sig_summary"
+metadata_set <- "temperature adaptation"
+
+## BIOENV
+bioenv_tab <- NULL
+for (i in names(bioenv_set)) {
+  tmp_r <- data.frame(bioenv_set[[i]]$statistic)
+  row.names(tmp_r) <- i
+  tmp_p <- data.frame(bioenv_set[[i]]$signif)
+  row.names(tmp_p) <- i
+  bioenv_tab <- rbind(bioenv_tab, data.frame(tmp_r, tmp_p))
+  rm(list = ls(pattern = "tmp_"))
+}
+bioenv_tab <- bioenv_tab %>% dplyr::rename("r (bioenv)" = 1, "pval (bioenv)" = 2) %>%
+  tibble::rownames_to_column("parameter")
+
+## ENVFIT
+tmp_r <- data.frame(envfit_set$vectors$r)
+tmp_r <- tmp_r %>% tibble::rownames_to_column("parameter")
+tmp_p <- data.frame(envfit_set$vectors$pvals)
+tmp_p <- tmp_p %>% tibble::rownames_to_column("parameter")
+tmp_rp <- dplyr::full_join(tmp_r, tmp_p, by = "parameter")
+tmp_rp <- tmp_rp %>% dplyr::rename("r2 (envfit)" = 2, "Pr(>r) (envfit)" = 3)
+tmp_rp <- base::subset(tmp_rp, c(tmp_rp$`Pr(>r)` < 0.05 & tmp_rp$r2 > 0.4))
+
+tmp_summary <- dplyr::full_join(tmp_rp, bioenv_tab, by = "parameter") 
+tmp_summary$metadata_set <- metadata_set
+tmp_summary <- tmp_summary[, c(6,1:5)]
+assign(res_name, tmp_summary)
+rm(list = ls(pattern = "tmp_"))
+rm(bioenv_set, envfit_set, res_name, metadata_set, bioenv_tab)
+ssu18_sig_summary <- rbind(ssu18_edaphic_sig_summary, ssu18_soil_funct_sig_summary, ssu18_temp_adapt_sig_summary)
+rm(ssu18_edaphic_sig_summary, ssu18_soil_funct_sig_summary, ssu18_temp_adapt_sig_summary)
+```
+
 
 ```{r, echo=FALSE}
 save.image("page_build/metadata_ssu18_wf.rdata")
@@ -3630,29 +3781,118 @@ dev.off()
 
 
 ```{r, echo=FALSE}
-## PERMANOVA 
-tmp_md_groups <- c("edpahic", "soil_funct", "temp_adapt")
-tmp_data <- its18_select_mc_norm_split_no_ac
-tmp_data$edaphic$TREAT_T <- as.character(tmp_data$edaphic$TREAT_T)
+###########################################
+######## CODE FOR SUMMARY DATA ############
+###########################################
 
-tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+## Edaphic
+bioenv_set <- edaphic_bioenv_ind_mantel
+envfit_set <- envfit_edaphic_md
+res_name <- "its18_edaphic_sig_summary"
+metadata_set <- "edaphic"
 
-tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$edaphic)
-#tmp_env$edaphic$TREAT_T <- as.character(tmp_env$edaphic$TREAT_T)
-edpahic_adonis2 <- adonis2(tmp_comm ~ TREAT_T* AST, data = tmp_data$edaphic)
+## BIOENV
+bioenv_tab <- NULL
+for (i in names(bioenv_set)) {
+  tmp_r <- data.frame(bioenv_set[[i]]$statistic)
+  row.names(tmp_r) <- i
+  tmp_p <- data.frame(bioenv_set[[i]]$signif)
+  row.names(tmp_p) <- i
+  bioenv_tab <- rbind(bioenv_tab, data.frame(tmp_r, tmp_p))
+  rm(list = ls(pattern = "tmp_"))
+}
+bioenv_tab <- bioenv_tab %>% dplyr::rename("r (bioenv)" = 1, "pval (bioenv)" = 2) %>%
+  tibble::rownames_to_column("parameter")
 
-tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$soil_funct)
-soil_funct_adonis2 <- adonis2(soil_funct_cap$call$formula, data = tmp_data$soil_funct)
+## ENVFIT
+tmp_r <- data.frame(envfit_set$vectors$r)
+tmp_r <- tmp_r %>% tibble::rownames_to_column("parameter")
+tmp_p <- data.frame(envfit_set$vectors$pvals)
+tmp_p <- tmp_p %>% tibble::rownames_to_column("parameter")
+tmp_rp <- dplyr::full_join(tmp_r, tmp_p, by = "parameter")
+tmp_rp <- tmp_rp %>% dplyr::rename("r2 (envfit)" = 2, "Pr(>r) (envfit)" = 3)
+tmp_rp <- base::subset(tmp_rp, c(tmp_rp$`Pr(>r)` < 0.05 & tmp_rp$r2 > 0.4))
 
-tmp_env <- data.frame(its18_select_mc_norm_split_no_ac$temp_adapt)
-temp_adapt_adonis2 <- adonis2(temp_adapt_cap$call$formula, data = tmp_data$temp_adapt)
+tmp_summary <- dplyr::full_join(tmp_rp, bioenv_tab, by = "parameter") 
+tmp_summary$metadata_set <- metadata_set
+tmp_summary <- tmp_summary[, c(6,1:5)]
+assign(res_name, tmp_summary)
+rm(list = ls(pattern = "tmp_"))
+```
 
+```{r, echo=FALSE}
+## SOIL_FUNCT
+bioenv_set <- soil_funct_bioenv_ind_mantel
+envfit_set <- envfit_soil_funct_md
+res_name <- "its18_soil_funct_sig_summary"
+metadata_set <- "functional_response"
 
-### Soil Functional Response
- 
-### Temperature Adaptation
-temp_adapt_cap
-objects()
+## BIOENV
+bioenv_tab <- NULL
+for (i in names(bioenv_set)) {
+  tmp_r <- data.frame(bioenv_set[[i]]$statistic)
+  row.names(tmp_r) <- i
+  tmp_p <- data.frame(bioenv_set[[i]]$signif)
+  row.names(tmp_p) <- i
+  bioenv_tab <- rbind(bioenv_tab, data.frame(tmp_r, tmp_p))
+  rm(list = ls(pattern = "tmp_"))
+}
+bioenv_tab <- bioenv_tab %>% dplyr::rename("r (bioenv)" = 1, "pval (bioenv)" = 2) %>%
+  tibble::rownames_to_column("parameter")
+
+## ENVFIT
+tmp_r <- data.frame(envfit_set$vectors$r)
+tmp_r <- tmp_r %>% tibble::rownames_to_column("parameter")
+tmp_p <- data.frame(envfit_set$vectors$pvals)
+tmp_p <- tmp_p %>% tibble::rownames_to_column("parameter")
+tmp_rp <- dplyr::full_join(tmp_r, tmp_p, by = "parameter")
+tmp_rp <- tmp_rp %>% dplyr::rename("r2 (envfit)" = 2, "Pr(>r) (envfit)" = 3)
+tmp_rp <- base::subset(tmp_rp, c(tmp_rp$`Pr(>r)` < 0.05 & tmp_rp$r2 > 0.4))
+
+tmp_summary <- dplyr::full_join(tmp_rp, bioenv_tab, by = "parameter") 
+tmp_summary$metadata_set <- metadata_set
+tmp_summary <- tmp_summary[, c(6,1:5)]
+assign(res_name, tmp_summary)
+rm(list = ls(pattern = "tmp_"))
+```
+
+```{r, echo=FALSE}
+## TEMP
+bioenv_set <- temp_adapt_bioenv_ind_mantel
+envfit_set <- envfit_temp_adapt_md
+res_name <- "its18_temp_adapt_sig_summary"
+metadata_set <- "temperature adaptation"
+
+## BIOENV
+bioenv_tab <- NULL
+for (i in names(bioenv_set)) {
+  tmp_r <- data.frame(bioenv_set[[i]]$statistic)
+  row.names(tmp_r) <- i
+  tmp_p <- data.frame(bioenv_set[[i]]$signif)
+  row.names(tmp_p) <- i
+  bioenv_tab <- rbind(bioenv_tab, data.frame(tmp_r, tmp_p))
+  rm(list = ls(pattern = "tmp_"))
+}
+bioenv_tab <- bioenv_tab %>% dplyr::rename("r (bioenv)" = 1, "pval (bioenv)" = 2) %>%
+  tibble::rownames_to_column("parameter")
+
+## ENVFIT
+tmp_r <- data.frame(envfit_set$vectors$r)
+tmp_r <- tmp_r %>% tibble::rownames_to_column("parameter")
+tmp_p <- data.frame(envfit_set$vectors$pvals)
+tmp_p <- tmp_p %>% tibble::rownames_to_column("parameter")
+tmp_rp <- dplyr::full_join(tmp_r, tmp_p, by = "parameter")
+tmp_rp <- tmp_rp %>% dplyr::rename("r2 (envfit)" = 2, "Pr(>r) (envfit)" = 3)
+tmp_rp <- base::subset(tmp_rp, c(tmp_rp$`Pr(>r)` < 0.05 & tmp_rp$r2 > 0.4))
+
+tmp_summary <- dplyr::full_join(tmp_rp, bioenv_tab, by = "parameter") 
+tmp_summary$metadata_set <- metadata_set
+tmp_summary <- tmp_summary[, c(6,1:5)]
+assign(res_name, tmp_summary)
+rm(list = ls(pattern = "tmp_"))
+rm(bioenv_set, envfit_set, res_name, metadata_set, bioenv_tab)
+its18_sig_summary <- rbind(its18_edaphic_sig_summary, its18_soil_funct_sig_summary, its18_temp_adapt_sig_summary)
+rm(its18_edaphic_sig_summary, its18_soil_funct_sig_summary, its18_temp_adapt_sig_summary)
 ```
 
 ```{r, echo=FALSE}
