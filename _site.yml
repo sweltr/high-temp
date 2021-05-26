@@ -6,7 +6,7 @@ description: |
   sweltr
 output_dir: "public_build"
 creative_commons: CC BY
-exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build"]
+exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build", "graphics"]
 navbar:
   icon: icon.png
   title: ""
