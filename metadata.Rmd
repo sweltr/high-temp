@@ -51,6 +51,18 @@ Summary results for of `envfit` and `bioenv` tests for edaphic properties, soil 
 
 ## 16S rRNA
 
+Metadata parameters removed based on autocorrelation results.
+
+- edaphic properties: TEB + DON + Na + Al + Ca
+- soil functional response: micN + micNP + enzCN + enzCP + BP_ase + CE_ase + LP_ase + N_ase + P_ase
+- temperature adaptation: NUE + PUE + SI
+
+Metadata parameters removed from capscale analysis based on Degrees of Freedom.
+
+- edaphic properties: Mg + Mn
+- soil functional response: NONE
+- temperature adaptation: NONE
+
 <br/>
 
 ```{r, echo=FALSE, layout="l-body", eval=TRUE}
@@ -73,6 +85,18 @@ datatable(ssu18_sig_summary, width = "100%", rownames = FALSE, caption = htmltoo
 ```
 
 ## ITS
+
+Metadata parameters removed based on autocorrelation results.
+
+- edaphic properties: TEB + DON + Na + Al + Ca
+- soil functional response: micN + micNP + enzCN + enzCP + BP_ase + CE_ase + LP_ase + N_ase + P_ase
+- temperature adaptation: NUE + PUE + P_Q10 + SI
+
+Metadata parameters removed from capscale analysis based on Degrees of Freedom.
+
+- edaphic properties: Mg + Mn + Na + Al + Fe + K
+- soil functional response: NONE
+- temperature adaptation: S_Q10
 
 <br/>
 
@@ -118,7 +142,7 @@ write.table(tmp_3, "tmp_3.txt", sep = "\t", quote = FALSE)
 
 # Multivariate Analysis Overview
 
-In this workflow we compare the environmental metadata with the microbial community data. Part 1 involves the [16S rRNA](#s-rrna) community data and Part 2 deals with the [ITS](#its) community data. Each workflow contains the same major steps:
+In this workflow we compare the environmental metadata with the microbial community data. Part 1 involves the [16S rRNA](#s-rrna-1) community data and Part 2 deals with the [ITS](#its-1) community data. Each workflow contains the same major steps:
 
 1) Metadata Normality Tests: Shapiro-Wilk Normality Test to test whether each matadata parameter is normally distributed.
 2) Normalize Parameters: R package [`bestNormalize`](https://github.com/petersonR/bestNormalize) to find and execute the best normalizing transformation. 
@@ -128,7 +152,6 @@ In this workflow we compare the environmental metadata with the microbial commun
 6) Dissimilarity Correlation Tests: Use Mantel Tests to see if any on the metadata groups are significantly correlated with the community data.
 7) Best Subset of Variables: Determine which of the metadata parameters from each group are the most strongly correlated with the community data. For this we use the `bioenv` function from the `vegan` [@oksanen2013community] package.
 8) Distance-based Redundancy Analysis: Ordination analysis of samples and metadata vector overlays using `capscale`, also from the `vegan` package.  
-
 
 # Metadata  
 
@@ -728,19 +751,20 @@ Now we can remove parameters based on the autocorrelation analysis:
 
 A) Environmental and edaphic properties: TEB, DON, Na, Al, Ca.
 B) Microbial functional responses: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase.
-C) Temperature adaptation properties: NUE, PUE.
+C) Temperature adaptation properties: NUE, PUE, SI.
 
 ```{r, eval=FALSE, echo=FALSE}
 # FOR TESTING
 objects(pattern = "_cor_ggheatmap")
 edaphic_norm_cor_ggheatmap
 soil_funct_norm_cor_ggheatmap
+temp_adapt_norm_cor_ggheatmap
 
 dim(edaphic_norm_cor)
 dim(soil_funct_norm_cor)
 dim(temp_adapt_norm_cor)
 
-tmp_res <- soil_funct_cor_ggheatmap$data
+tmp_res <- temp_adapt_norm_cor_ggheatmap$data
 tmp_res %>% filter(value > 0.7 | value < -0.7) %>% filter_("Var1 != Var2")
 
 #tmp_res %>% filter(Var1 == "DOCN" | Var2 == "DOCN") %>% filter_("Var1 != Var2")
@@ -755,7 +779,7 @@ write.table(tmp_res %>% filter(value > 0.7 | value < -0.7) %>%
 edaphic_remove <- c("TEB", "DON", "Na", "Al", "Ca")
 soil_funct_remove <- c("micN", "micNP", "enzCN", "enzCP", "BP_ase", 
                        "CE_ase", "LP_ase", "N_ase", "P_ase")
-temp_adapt_remove <- c("NUE", "PUE")
+temp_adapt_remove <- c("NUE", "PUE", "SI")
 ```
 
 ```{r, code_folding=TRUE}
@@ -1026,7 +1050,7 @@ temp_adapt_bioenv_ind_mantel <- list(CUEcp = CUEcp_bioenv_mantel_test,
                                      LP_Q10 = LP_Q10_bioenv_mantel_test, 
                                      P_Q10 = P_Q10_bioenv_mantel_test, 
                                      S_Q10 = S_Q10_bioenv_mantel_test, 
-                                     SI = SI_bioenv_mantel_test)
+                                     Tmin = Tmin_bioenv_mantel_test)
 rm(list = ls(pattern = "_bioenv_mantel_test"))
 ```
 
@@ -1084,7 +1108,7 @@ Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(ssu18_select_mc_no
 # All edaphic: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, PO4, DOC, DON, DOCN
 # REMOVED edaphic: TEB, DON, Na, Al, Ca
 # Remaining edaphic: AST, H2O, N, P, Fe, K, Mg, Mn, ECEC, pH, NH4, NO3, PO4, DOC, DOCN
-# 16 total, only works with 13
+# 15 total, only works with 13
 # Removed  Mg + Mn
 # TEST with , metaMDSdist = TRUE AND/OR , metaMDS = TRUE
 ```
@@ -1607,21 +1631,21 @@ temp_adapt_rank
 Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(ssu18_select_mc_norm_split_no_ac$temp_adapt) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
 
 * Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
-* Autocorrelated removed: NUE, PUE
-* Remove for capscale: Tmin
+* Autocorrelated removed: NUE, PUE, SI
+* Remove for capscale: NONE
 
 ```{r, echo=FALSE}
 # All temp_adapt: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
-# REMOVED edaphic: NUE, PUE
-# Remaining edaphic: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, Tmin, SI
+# REMOVED temp_adapt: NUE, PUE, SI
+# Remaining temp_adapt: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, Tmin
 # 14 total, only works with 13
-# Removed:  Tmin
+# Removed:  NONE
 ```
 
 ```{r}
 temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BP_Q10 + CE_Q10 + 
                                        P_Q10 + N_Q10 + S_Q10 + XY_Q10 + 
-                                       LP_Q10 + PX_Q10 + CUEcn + CUEcp + SI, 
+                                       LP_Q10 + PX_Q10 + CUEcn + CUEcp + Tmin, 
                              tmp_md, dist = "bray")
 ```
 
@@ -2024,7 +2048,7 @@ rm(ssu18_edaphic_sig_summary, ssu18_soil_funct_sig_summary, ssu18_temp_adapt_sig
 
 ```{r, echo=FALSE}
 save.image("page_build/metadata_ssu18_wf.rdata")
-gdata::keep(metad, sure = TRUE)
+gdata::keep(metad, ssu18_sig_summary, sure = TRUE)
 objects()
 ```
 
@@ -2032,7 +2056,7 @@ objects()
 
 ```{r master_load_its18, include=FALSE, eval=TRUE}
 ## Load to build page only #2
-remove(list = ls())
+#remove(list = ls())
 load("page_build/metadata_its18_wf.rdata")
 ```
 
@@ -2611,7 +2635,7 @@ Now we can remove parameters based on the autocorrelation analysis:
 
 A) Environmental and edaphic properties: TEB, DON, Na, Al, Ca.
 B) Microbial functional responses: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase.
-C) Temperature adaptation properties: NUE, PUE, P_Q10, Tmin.
+C) Temperature adaptation properties: NUE, PUE, P_Q10, SI.
 
 ```{r, eval=FALSE, echo=FALSE}
 objects(pattern = "_cor_ggheatmap")
@@ -2630,7 +2654,7 @@ write.table(tmp_res %>% filter(value > value_choice | value < -value_choice) %>%
 edaphic_remove <- c("TEB", "DON", "Na", "Al", "Ca")
 soil_funct_remove <- c("micN", "micNP", "enzCN", "enzCP", "BP_ase", 
                        "CE_ase", "LP_ase", "N_ase", "P_ase")
-temp_adapt_remove <- c("NUE", "PUE", "P_Q10", "Tmin")
+temp_adapt_remove <- c("NUE", "PUE", "P_Q10", "SI")
 ```
 
 ```{r, code_folding=TRUE}
@@ -2896,10 +2920,8 @@ for (i in bioenv_list) {
 }
 objects(pattern = "_bioenv_mantel_test")
 
-temp_adapt_bioenv_ind_mantel <- list(LP_Q10 = LP_Q10_bioenv_mantel_test,
-                                     N_Q10 = N_Q10_bioenv_mantel_test,
-                                     XY_Q10 = XY_Q10_bioenv_mantel_test, 
-                                     SI = SI_bioenv_mantel_test)
+temp_adapt_bioenv_ind_mantel <- list(XY_Q10 = XY_Q10_bioenv_mantel_test,
+                                     Tmin = Tmin_bioenv_mantel_test)
 rm(list = ls(pattern = "_bioenv_mantel_test"))
 ```
 
@@ -2958,7 +2980,7 @@ Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(its18_select_mc_no
 # REMOVED edaphic: TEB, DON, Na, Al, Ca
 # Remaining edaphic: AST, H2O, N, P, Fe, K, Mg, Mn, ECEC, pH, NH4, NO3, PO4, DOC, DOCN
 # only works with 11
-# Removed  Mg + Mn + Fe + K
+# Removed  Mg + Mn + Na + Al + Fe + K
 # TEST with , metaMDSdist = TRUE AND/OR , metaMDS = TRUE
 ```
 
@@ -3201,7 +3223,7 @@ tmp_md <- its18_select_mc_norm_split_no_ac$soil_funct
 tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
 tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
 soil_funct_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
-          indices = c("euc", "man", "gow","bra", "kul"), 
+          indices = c("euc", "man", "gow", "bra", "kul"), 
           stepacross = FALSE, method = "spearman")
 ```
 
@@ -3470,7 +3492,7 @@ tmp_md <- its18_select_mc_norm_split_no_ac$temp_adapt
 tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
 tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
 temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
-          indices = c("euc", "man", "gow","bra", "kul"), 
+          indices = c("euc", "man", "gow", "bra", "kul"), 
           stepacross = FALSE, method = "spearman")
 ```
 
@@ -3481,13 +3503,13 @@ temp_adapt_rank
 Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(its18_select_mc_norm_split_no_ac$temp_adapt) - 8` metadata parameters in this group but, for some reason, `capscale` only works with 13 parameters. This may have to do with degrees of freedom? 
 
 * Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
-* Autocorrelated removed: NUE, PUE, P_Q10, Tmin                                                                        
+* Autocorrelated removed: NUE, PUE, P_Q10, SI                                                                        
 * Remove for capscale: S_Q10
 
 ```{r, echo=FALSE}
 # All temp_adapt: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
-# REMOVED edaphic: NUE, PUE, P_Q10, Tmin                                                                        
-# Remaining edaphic: AG_Q10, BG_Q10, BP_Q10, CE_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, SI
+# REMOVED edaphic: NUE, PUE, P_Q10, SI                                                                        
+# Remaining edaphic: AG_Q10, BG_Q10, BP_Q10, CE_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, Tmin
 # only works with 11
 # Removed:  S_Q10
 ```
@@ -3495,7 +3517,7 @@ Let's run `capscale` using Bray-Curtis. Note, we have `r ncol(its18_select_mc_no
 ```{r}
 temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BP_Q10 + CE_Q10 + 
                                        N_Q10 + XY_Q10 + LP_Q10 + PX_Q10 + 
-                                       CUEcn + CUEcp + SI, 
+                                       CUEcn + CUEcp + Tmin, 
                            tmp_md, dist = "bray")
 ```
 
@@ -3897,6 +3919,8 @@ rm(its18_edaphic_sig_summary, its18_soil_funct_sig_summary, its18_temp_adapt_sig
 
 ```{r, echo=FALSE}
 save.image("page_build/metadata_its18_wf.rdata")
+gdata::keep(ssu18_sig_summary, its18_sig_summary, sure = TRUE)
+save.image("page_build/metadata_summary.rdata")
 ```
 
 ```{r include=FALSE, eval=TRUE}

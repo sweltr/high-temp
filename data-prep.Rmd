@@ -727,6 +727,7 @@ save.image("page_build/data_prep_ssu18_wf.rdata")
 ```
 
 ```{r, echo=FALSE}
+saveRDS(ps, "files/data-prep/rdata/ssu18_ps.rds")
 saveRDS(ps_work, "files/data-prep/rdata/ssu18_ps_work.rds")
 saveRDS(ps_work_o, "files/data-prep/rdata/ssu18_ps_work_o.rds")
 saveRDS(amp_data, "files/data-prep/rdata/ssu18_amp_data.rds")

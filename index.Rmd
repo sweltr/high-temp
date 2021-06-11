@@ -104,4 +104,4 @@ You can find the source code for this page by [clicking this link](https://githu
 
 ## Data Availability {.appendix}
 
-Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [XXXXXXXX](). Output files from this workflow available on figshare at [XXXXXXXX.]().
+Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). Output files from this workflow available on figshare at [XXXXXXXX.]().

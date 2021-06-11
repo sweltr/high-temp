@@ -36,7 +36,7 @@ You can download our submission data tables here:
 * [Sample submission form](include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv)
 * [FASTq submission form](include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv)
 
-But please note, these forms are study specific, so please use these are guides only.
+Note, these forms are study specific, so please use these as guides only.
 
 ### Instructions for Submitting to the ENA
 
