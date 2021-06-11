@@ -1600,10 +1600,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
-        var refs = $(this).attr('data-cites').split(" ");
-        var refHtml = refs.map(function(ref) {
-          return "<p>" + $('#ref-' + ref).html() + "</p>";
-        }).join("\n");
+        var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
         window.tippy(this, {
           allowHTML: true,
           content: refHtml,
@@ -2186,22 +2183,46 @@ Show setup information.
 <h1 id="multivariate-summary">Multivariate Summary</h1>
 <p>Summary results for of <code>envfit</code> and <code>bioenv</code> tests for edaphic properties, soil functional response, and temperature adaptation for both 16S rRNA and ITS data sets.</p>
 <h2 id="s-rrna">16S rRNA</h2>
+<p>Metadata parameters removed based on autocorrelation results.</p>
+<ul>
+<li>edaphic properties: TEB + DON + Na + Al + Ca</li>
+<li>soil functional response: micN + micNP + enzCN + enzCP + BP_ase + CE_ase + LP_ase + N_ase + P_ase</li>
+<li>temperature adaptation: NUE + PUE + SI</li>
+</ul>
+<p>Metadata parameters removed from capscale analysis based on Degrees of Freedom.</p>
+<ul>
+<li>edaphic properties: Mg + Mn</li>
+<li>soil functional response: NONE</li>
+<li>temperature adaptation: NONE</li>
+</ul>
 <p><br/></p>
 <div class="layout-chunk" data-layout="l-body">
 <div id="95p2uxf1n8lpjbc2t0r9" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="95p2uxf1n8lpjbc2t0r9">{"x":{"filter":"none","extensions":["Buttons"],"caption":"<caption style=\"caption-side: bottom; text-align: left;\">\n  Table: \n  <em>Results of envfit &amp; bioenv test for the 16S rRNA data set.<\/em>\n<\/caption>","data":[["edaphic","edaphic","edaphic","functional_response","functional_response","functional_response","functional_response","functional_response","functional_response","functional_response","temperature adaptation","temperature adaptation","temperature adaptation","temperature adaptation","temperature adaptation"],["AST","H2O","DOC","AG_ase","BG_ase","S_ase","XY_ase","PX_ase","CO2","enzNP","S_Q10","LP_Q10","SI","CUEcp","P_Q10"],[0.828679090556174,0.518932896196791,0.445904146570695,0.443541369086058,0.560388090143001,0.737082621987766,0.519301170320349,0.763994367410604,0.504122883729818,0.624183202101924,0.493498587022458,0.411923798596767,0.692705681093478,null,null],[0.000999000999000999,0.00599400599400599,0.036963036963037,0.022977022977023,0.010989010989011,0.001998001998002,0.013986013986014,0.000999000999000999,0.013986013986014,0.00699300699300699,0.016983016983017,0.044955044955045,0.002997002997003,null,null],[1,null,null,0.55880778688965,null,0.613853482557918,0.455966824638411,0.611525394072235,null,0.462326352892391,0.559165513057935,0.356102105184725,0.531862726117485,0.313520445369415,0.550685921883466],[0.001,null,null,0.001,null,0.002,0.002,0.001,null,0.004,0.001,0.019,0.001,0.017,0.001]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>metadata_set<\/th>\n      <th>parameter<\/th>\n      <th>r2 (envfit)<\/th>\n      <th>Pr(&gt;r) (envfit)<\/th>\n      <th>r (bioenv)<\/th>\n      <th>pval (bioenv)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"dom":"Blftip","buttons":["copy","csv","excel"],"pageLength":-1,"lengthMenu":[[5,10,-1],["5","10","All"]],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"className":"dt-right","targets":[2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[0]; $(this.api().cell(row, 0).node()).css({'font-size':'80%'});\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-size':'80%'});\nvar value=data[2]; $(this.api().cell(row, 2).node()).css({'font-size':'80%'});\nvar value=data[3]; $(this.api().cell(row, 3).node()).css({'font-size':'80%'});\nvar value=data[4]; $(this.api().cell(row, 4).node()).css({'font-size':'80%'});\nvar value=data[5]; $(this.api().cell(row, 5).node()).css({'font-size':'80%'});\n}"}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<script type="application/json" data-for="95p2uxf1n8lpjbc2t0r9">{"x":{"filter":"none","extensions":["Buttons"],"caption":"<caption style=\"caption-side: bottom; text-align: left;\">\n  Table: \n  <em>Results of envfit &amp; bioenv test for the 16S rRNA data set.<\/em>\n<\/caption>","data":[["edaphic","edaphic","edaphic","functional_response","functional_response","functional_response","functional_response","functional_response","functional_response","functional_response","temperature adaptation","temperature adaptation","temperature adaptation","temperature adaptation","temperature adaptation"],["AST","H2O","DOC","AG_ase","BG_ase","S_ase","XY_ase","PX_ase","CO2","enzNP","S_Q10","LP_Q10","Tmin","CUEcp","P_Q10"],[0.828679090556174,0.518932896196791,0.445904146570695,0.443541369086058,0.560388090143001,0.737082621987766,0.519301170320349,0.763994367410604,0.504122883729818,0.624183202101924,0.495643228019936,0.413129988672484,0.445590698633893,null,null],[0.000999000999000999,0.00999000999000999,0.023976023976024,0.025974025974026,0.00699300699300699,0.001998001998002,0.00899100899100899,0.000999000999000999,0.012987012987013,0.003996003996004,0.014985014985015,0.040959040959041,0.02997002997003,null,null],[1,null,null,0.55880778688965,null,0.613853482557918,0.455966824638411,0.611525394072235,null,0.462326352892391,0.439483618153207,0.377176456710113,0.404434042774157,0.325039873858187,0.517723387090826],[0.001,null,null,0.001,null,0.001,0.002,0.001,null,0.006,0.001,0.005,0.005,0.013,0.001]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>metadata_set<\/th>\n      <th>parameter<\/th>\n      <th>r2 (envfit)<\/th>\n      <th>Pr(&gt;r) (envfit)<\/th>\n      <th>r (bioenv)<\/th>\n      <th>pval (bioenv)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"dom":"Blftip","buttons":["copy","csv","excel"],"pageLength":-1,"lengthMenu":[[5,10,-1],["5","10","All"]],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"className":"dt-right","targets":[2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[0]; $(this.api().cell(row, 0).node()).css({'font-size':'80%'});\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-size':'80%'});\nvar value=data[2]; $(this.api().cell(row, 2).node()).css({'font-size':'80%'});\nvar value=data[3]; $(this.api().cell(row, 3).node()).css({'font-size':'80%'});\nvar value=data[4]; $(this.api().cell(row, 4).node()).css({'font-size':'80%'});\nvar value=data[5]; $(this.api().cell(row, 5).node()).css({'font-size':'80%'});\n}"}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
 </div>
 <h2 id="its">ITS</h2>
+<p>Metadata parameters removed based on autocorrelation results.</p>
+<ul>
+<li>edaphic properties: TEB + DON + Na + Al + Ca</li>
+<li>soil functional response: micN + micNP + enzCN + enzCP + BP_ase + CE_ase + LP_ase + N_ase + P_ase</li>
+<li>temperature adaptation: NUE + PUE + P_Q10 + SI</li>
+</ul>
+<p>Metadata parameters removed from capscale analysis based on Degrees of Freedom.</p>
+<ul>
+<li>edaphic properties: Mg + Mn + Na + Al + Fe + K</li>
+<li>soil functional response: NONE</li>
+<li>temperature adaptation: S_Q10</li>
+</ul>
 <p><br/></p>
 <div class="layout-chunk" data-layout="l-body">
 <div id="w114ycn9zt4kx4ip8165" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="w114ycn9zt4kx4ip8165">{"x":{"filter":"none","extensions":["Buttons"],"caption":"<caption style=\"caption-side: bottom; text-align: left;\">\n  Table: \n  <em>Results of envfit &amp; bioenv test for the ITS data set.<\/em>\n<\/caption>","data":[["edaphic","edaphic","functional_response","functional_response","functional_response","functional_response","functional_response","functional_response","temperature adaptation","temperature adaptation","temperature adaptation","temperature adaptation","temperature adaptation"],["AST","DOC","micP","micCP","AG_ase","PX_ase","enzNP","XY_ase","XY_Q10","CUEcp","SI","LP_Q10","N_Q10"],[0.484886445899775,0.535380586373238,0.692467233357286,0.583125334332718,0.505997322492504,0.500221400157373,0.547105397610172,null,0.616486612673177,0.479457791639102,0.653315673122677,null,null],[0.025974025974026,0.024975024975025,0.001998001998002,0.004995004995005,0.028971028971029,0.042957042957043,0.012987012987013,null,0.00999000999000999,0.047952047952048,0.002997002997003,null,null],[1,null,null,null,null,0.685359444078673,0.552852211080059,0.505448232350988,0.560036464381244,null,0.6443196653736,0.536339839415365,0.337526822571152],[0.001,null,null,null,null,0.001,0.001,0.003,0.001,null,0.001,0.002,0.019]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>metadata_set<\/th>\n      <th>parameter<\/th>\n      <th>r2 (envfit)<\/th>\n      <th>Pr(&gt;r) (envfit)<\/th>\n      <th>r (bioenv)<\/th>\n      <th>pval (bioenv)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"dom":"Blftip","buttons":["copy","csv","excel"],"pageLength":-1,"lengthMenu":[[5,10,-1],["5","10","All"]],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"className":"dt-right","targets":[2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[0]; $(this.api().cell(row, 0).node()).css({'font-size':'80%'});\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-size':'80%'});\nvar value=data[2]; $(this.api().cell(row, 2).node()).css({'font-size':'80%'});\nvar value=data[3]; $(this.api().cell(row, 3).node()).css({'font-size':'80%'});\nvar value=data[4]; $(this.api().cell(row, 4).node()).css({'font-size':'80%'});\nvar value=data[5]; $(this.api().cell(row, 5).node()).css({'font-size':'80%'});\n}"}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<script type="application/json" data-for="w114ycn9zt4kx4ip8165">{"x":{"filter":"none","extensions":["Buttons"],"caption":"<caption style=\"caption-side: bottom; text-align: left;\">\n  Table: \n  <em>Results of envfit &amp; bioenv test for the ITS data set.<\/em>\n<\/caption>","data":[["edaphic","edaphic","functional_response","functional_response","functional_response","functional_response","functional_response","functional_response","temperature adaptation","temperature adaptation","temperature adaptation"],["AST","DOC","micP","micCP","AG_ase","PX_ase","enzNP","XY_ase","XY_Q10","CUEcp","Tmin"],[0.484886445899775,0.535380586373238,0.692467233357286,0.583125334332718,0.505997322492504,0.500221400157373,0.547105397610172,null,0.616573511458765,0.478583809955221,0.474866778699216],[0.036963036963037,0.027972027972028,0.001998001998002,0.015984015984016,0.036963036963037,0.034965034965035,0.013986013986014,null,0.00999000999000999,0.034965034965035,0.027972027972028],[1,null,null,null,null,0.685359444078673,0.552852211080059,0.505448232350988,0.725775481284095,null,0.616015933846717],[0.001,null,null,null,null,0.001,0.001,0.002,0.001,null,0.001]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>metadata_set<\/th>\n      <th>parameter<\/th>\n      <th>r2 (envfit)<\/th>\n      <th>Pr(&gt;r) (envfit)<\/th>\n      <th>r (bioenv)<\/th>\n      <th>pval (bioenv)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"dom":"Blftip","buttons":["copy","csv","excel"],"pageLength":-1,"lengthMenu":[[5,10,-1],["5","10","All"]],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatRound(data, 3, 3, \",\", \".\");\n  }"},{"className":"dt-right","targets":[2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[0]; $(this.api().cell(row, 0).node()).css({'font-size':'80%'});\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-size':'80%'});\nvar value=data[2]; $(this.api().cell(row, 2).node()).css({'font-size':'80%'});\nvar value=data[3]; $(this.api().cell(row, 3).node()).css({'font-size':'80%'});\nvar value=data[4]; $(this.api().cell(row, 4).node()).css({'font-size':'80%'});\nvar value=data[5]; $(this.api().cell(row, 5).node()).css({'font-size':'80%'});\n}"}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <h1 id="multivariate-analysis-overview">Multivariate Analysis Overview</h1>
-<p>In this workflow we compare the environmental metadata with the microbial community data. Part 1 involves the <a href="#s-rrna">16S rRNA</a> community data and Part 2 deals with the <a href="#its">ITS</a> community data. Each workflow contains the same major steps:</p>
+<p>In this workflow we compare the environmental metadata with the microbial community data. Part 1 involves the <a href="#s-rrna-1">16S rRNA</a> community data and Part 2 deals with the <a href="#its-1">ITS</a> community data. Each workflow contains the same major steps:</p>
 <ol type="1">
 <li>Metadata Normality Tests: Shapiro-Wilk Normality Test to test whether each matadata parameter is normally distributed.</li>
 <li>Normalize Parameters: R package <a href="https://github.com/petersonR/bestNormalize"><code>bestNormalize</code></a> to find and execute the best normalizing transformation.</li>
@@ -3437,7 +3458,7 @@ Show code
 <ol type="A">
 <li>Environmental and edaphic properties: TEB, DON, Na, Al, Ca.</li>
 <li>Microbial functional responses: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase.</li>
-<li>Temperature adaptation properties: NUE, PUE.</li>
+<li>Temperature adaptation properties: NUE, PUE, SI.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -3446,7 +3467,7 @@ Show code
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>edaphic_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;TEB&quot;</span>, <span class="st">&quot;DON&quot;</span>, <span class="st">&quot;Na&quot;</span>, <span class="st">&quot;Al&quot;</span>, <span class="st">&quot;Ca&quot;</span>)</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>soil_funct_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;micN&quot;</span>, <span class="st">&quot;micNP&quot;</span>, <span class="st">&quot;enzCN&quot;</span>, <span class="st">&quot;enzCP&quot;</span>, <span class="st">&quot;BP_ase&quot;</span>, </span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                       <span class="st">&quot;CE_ase&quot;</span>, <span class="st">&quot;LP_ase&quot;</span>, <span class="st">&quot;N_ase&quot;</span>, <span class="st">&quot;P_ase&quot;</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>temp_adapt_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;NUE&quot;</span>, <span class="st">&quot;PUE&quot;</span>)</span></code></pre></div>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>temp_adapt_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;NUE&quot;</span>, <span class="st">&quot;PUE&quot;</span>, <span class="st">&quot;SI&quot;</span>)</span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -3556,19 +3577,19 @@ Show code
 <tr class="odd">
 <td style="text-align: left;">no</td>
 <td style="text-align: left;">no</td>
-<td style="text-align: right;">0.347</td>
-<td style="text-align: right;">0.180</td>
-<td style="text-align: right;">0.025</td>
-<td style="text-align: right;">0.025</td>
+<td style="text-align: right;">0.375</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">0.059</td>
+<td style="text-align: right;">0.019</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">no</td>
 <td style="text-align: left;">yes</td>
-<td style="text-align: right;">0.349</td>
-<td style="text-align: right;">0.185</td>
-<td style="text-align: right;">0.029</td>
+<td style="text-align: right;">0.399</td>
+<td style="text-align: right;">0.170</td>
+<td style="text-align: right;">0.031</td>
 <td style="text-align: right;">0.020</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
@@ -3576,20 +3597,20 @@ Show code
 <tr class="odd">
 <td style="text-align: left;">yes</td>
 <td style="text-align: left;">no</td>
-<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.003</td>
 <td style="text-align: right;">0.002</td>
-<td style="text-align: right;">0.557</td>
-<td style="text-align: right;">0.264</td>
+<td style="text-align: right;">0.537</td>
+<td style="text-align: right;">0.250</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">yes</td>
 <td style="text-align: left;">yes</td>
-<td style="text-align: right;">0.005</td>
+<td style="text-align: right;">0.007</td>
 <td style="text-align: right;">0.002</td>
-<td style="text-align: right;">0.521</td>
-<td style="text-align: right;">0.253</td>
+<td style="text-align: right;">0.541</td>
+<td style="text-align: right;">0.288</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
 </tr>
@@ -3667,7 +3688,7 @@ Mantel statistic r:     1
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.177 0.238 0.309 0.410 
+0.177 0.226 0.271 0.326 
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
@@ -3744,7 +3765,7 @@ Mantel statistic r: 0.5588
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.185 0.238 0.283 0.332 
+0.186 0.235 0.281 0.330 
 Permutation: free
 Number of permutations: 999
 
@@ -3757,11 +3778,11 @@ Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
 Mantel statistic r: 0.4623 
-      Significance: 0.004 
+      Significance: 0.006 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.208 0.281 0.336 0.392 
+0.219 0.280 0.336 0.413 
 Permutation: free
 Number of permutations: 999
 
@@ -3774,11 +3795,11 @@ Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
 Mantel statistic r: 0.6139 
-      Significance: 0.002 
+      Significance: 0.001 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.226 0.306 0.375 0.449 
+0.223 0.305 0.384 0.466 
 Permutation: free
 Number of permutations: 999
 
@@ -3795,7 +3816,7 @@ Mantel statistic r: 0.6115
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.183 0.257 0.292 0.338 
+0.176 0.222 0.289 0.346 
 Permutation: free
 Number of permutations: 999
 
@@ -3812,7 +3833,7 @@ Mantel statistic r: 0.456
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.182 0.248 0.295 0.356 
+0.189 0.258 0.304 0.347 
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
@@ -3853,7 +3874,7 @@ Show code
 <span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">LP_Q10 =</span> LP_Q10_bioenv_mantel_test, </span>
 <span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">P_Q10 =</span> P_Q10_bioenv_mantel_test, </span>
 <span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">S_Q10 =</span> S_Q10_bioenv_mantel_test, </span>
-<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">SI =</span> SI_bioenv_mantel_test)</span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">Tmin =</span> Tmin_bioenv_mantel_test)</span>
 <span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_bioenv_mantel_test&quot;</span>))</span></code></pre></div>
 </details>
 </div>
@@ -3868,9 +3889,9 @@ Correlations:    spearman
 Dissimilarities: bray 
 Metric:          euclidean 
 
-Best model has 5 parameters (max. 14 allowed):
-P_Q10 S_Q10 LP_Q10 CUEcp SI
-with correlation  0.4777732 </code></pre>
+Best model has 5 parameters (max. 13 allowed):
+P_Q10 S_Q10 LP_Q10 CUEcp Tmin
+with correlation  0.4237093 </code></pre>
 </div>
 <details>
 <summary>
@@ -3884,12 +3905,12 @@ Mantel statistic based on Spearman&#39;s rank correlation rho
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.3135 
-      Significance: 0.017 
+Mantel statistic r: 0.325 
+      Significance: 0.013 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.188 0.259 0.289 0.342 
+0.188 0.226 0.280 0.331 
 Permutation: free
 Number of permutations: 999
 
@@ -3901,12 +3922,12 @@ Mantel statistic based on Spearman&#39;s rank correlation rho
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.3561 
-      Significance: 0.019 
+Mantel statistic r: 0.3772 
+      Significance: 0.005 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.205 0.271 0.331 0.373 
+0.203 0.272 0.306 0.351 
 Permutation: free
 Number of permutations: 999
 
@@ -3918,12 +3939,12 @@ Mantel statistic based on Spearman&#39;s rank correlation rho
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.5507 
+Mantel statistic r: 0.5177 
       Significance: 0.001 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.148 0.218 0.284 0.349 
+0.158 0.211 0.261 0.309 
 Permutation: free
 Number of permutations: 999
 
@@ -3935,34 +3956,34 @@ Mantel statistic based on Spearman&#39;s rank correlation rho
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.5592 
+Mantel statistic r: 0.4395 
       Significance: 0.001 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.170 0.233 0.286 0.369 
+0.159 0.205 0.252 0.301 
 Permutation: free
 Number of permutations: 999
 
 
-$SI
+$Tmin
 
 Mantel statistic based on Spearman&#39;s rank correlation rho 
 
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.5319 
-      Significance: 0.001 
+Mantel statistic r: 0.4044 
+      Significance: 0.005 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.193 0.250 0.303 0.357 
+0.207 0.267 0.305 0.359 
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
 </details>
-<p><code>bioenv</code> found the following temperature adaptations significantly correlated with the community data: <strong>CUEcp, LP_Q10, P_Q10, S_Q10, SI</strong></p>
+<p><code>bioenv</code> found the following temperature adaptations significantly correlated with the community data: <strong>CUEcp, LP_Q10, P_Q10, S_Q10, Tmin</strong></p>
 <h2 id="distance-based-redundancy">Distance-based Redundancy</h2>
 <p>Now we turn our attention to distance-based redundancy analysis (dbRDA), an ordination method similar to Redundancy Analysis (rda) but it allows non-Euclidean dissimilarity indices, such as Manhattan or Bray–Curtis distance. For this, we use <code>capscale</code> from the <code>vegan</code> package. <code>capscale</code> is a constrained versions of metric scaling (principal coordinates analysis), which are based on the Euclidean distance but can be used, and are more useful, with other dissimilarity measures. The functions can also perform unconstrained principal coordinates analysis, optionally using extended dissimilarities.</p>
 <p>For each of the three metadata subsets, we perform the following steps:</p>
@@ -4129,18 +4150,18 @@ Show code
 
          CAP1     CAP2     r2   Pr(&gt;r)    
 AST   0.99825 -0.05912 0.8287 0.000999 ***
-H2O  -0.98657 -0.16333 0.5189 0.005994 ** 
-N     0.94537 -0.32599 0.1403 0.397602    
-P     0.89518 -0.44571 0.0759 0.585415    
-Fe    0.32411  0.94602 0.1194 0.444555    
-K    -0.16554  0.98620 0.0204 0.902098    
-ECEC -0.37874  0.92550 0.1444 0.414585    
-pH   -0.26344  0.96468 0.0685 0.663337    
-NH4   0.35944  0.93317 0.2621 0.160839    
-NO3  -0.69392  0.72006 0.1380 0.407592    
-PO4  -0.99991 -0.01327 0.3118 0.098901 .  
-DOC  -0.83396 -0.55183 0.4459 0.036963 *  
-DOCN  0.25463  0.96704 0.1640 0.335664    
+H2O  -0.98657 -0.16333 0.5189 0.009990 ** 
+N     0.94537 -0.32599 0.1403 0.398601    
+P     0.89518 -0.44571 0.0759 0.602398    
+Fe    0.32411  0.94602 0.1194 0.432567    
+K    -0.16554  0.98620 0.0204 0.890110    
+ECEC -0.37874  0.92550 0.1444 0.368631    
+pH   -0.26344  0.96468 0.0685 0.672328    
+NH4   0.35944  0.93317 0.2621 0.152847    
+NO3  -0.69392  0.72006 0.1380 0.417582    
+PO4  -0.99991 -0.01327 0.3118 0.090909 .  
+DOC  -0.83396 -0.55183 0.4459 0.023976 *  
+DOCN  0.25463  0.96704 0.1640 0.318681    
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -4209,15 +4230,15 @@ Show code
 ***VECTORS
 
           CAP1     CAP2     r2   Pr(&gt;r)    
-ASV1   0.99502  0.09969 0.6491 0.011988 *  
+ASV1   0.99502  0.09969 0.6491 0.005994 ** 
 ASV2   0.54850 -0.83615 0.8984 0.000999 ***
 ASV3   0.79245  0.60994 0.9429 0.000999 ***
-ASV4  -0.12958  0.99157 0.2913 0.113886    
-ASV5  -0.56363 -0.82603 0.1586 0.352647    
+ASV4  -0.12958  0.99157 0.2913 0.120879    
+ASV5  -0.56363 -0.82603 0.1586 0.362637    
 ASV6  -0.10651  0.99431 0.7559 0.000999 ***
-ASV8  -0.84329  0.53746 0.4370 0.021978 *  
-ASV7  -0.52510 -0.85104 0.0681 0.604396    
-ASV9   0.51828 -0.85521 0.2559 0.167832    
+ASV8  -0.84329  0.53746 0.4370 0.030969 *  
+ASV7  -0.52510 -0.85104 0.0681 0.655345    
+ASV9   0.51828 -0.85521 0.2559 0.185814    
 ASV10 -0.34456  0.93876 0.8331 0.000999 ***
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
@@ -4433,17 +4454,17 @@ Show code
 ***VECTORS
 
            CAP1     CAP2     r2   Pr(&gt;r)    
-micC    0.16467  0.98635 0.1012 0.488511    
-micP   -0.74314  0.66913 0.1473 0.373626    
-micCN   0.39228 -0.91985 0.2111 0.235764    
-micCP   0.70633 -0.70788 0.1070 0.512488    
-AG_ase -0.39292  0.91957 0.4435 0.022977 *  
-BG_ase  0.57346  0.81923 0.5604 0.010989 *  
+micC    0.16467  0.98635 0.1012 0.511489    
+micP   -0.74314  0.66913 0.1473 0.385614    
+micCN   0.39228 -0.91985 0.2111 0.244755    
+micCP   0.70633 -0.70788 0.1070 0.504496    
+AG_ase -0.39292  0.91957 0.4435 0.025974 *  
+BG_ase  0.57346  0.81923 0.5604 0.006993 ** 
 S_ase   0.35512  0.93482 0.7371 0.001998 ** 
-XY_ase  0.90321  0.42921 0.5193 0.013986 *  
+XY_ase  0.90321  0.42921 0.5193 0.008991 ** 
 PX_ase  0.92246  0.38609 0.7640 0.000999 ***
-CO2     0.97421 -0.22565 0.5041 0.013986 *  
-enzNP  -0.98661  0.16307 0.6242 0.006993 ** 
+CO2     0.97421 -0.22565 0.5041 0.012987 *  
+enzNP  -0.98661  0.16307 0.6242 0.003996 ** 
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -4514,14 +4535,14 @@ Show code
 ***VECTORS
 
           CAP1     CAP2     r2   Pr(&gt;r)    
-ASV1   0.99572  0.09244 0.6448 0.011988 *  
+ASV1   0.99572  0.09244 0.6448 0.008991 ** 
 ASV2   0.53392 -0.84554 0.9003 0.000999 ***
 ASV3   0.80024  0.59968 0.9414 0.000999 ***
-ASV4  -0.10124  0.99486 0.2814 0.131868    
-ASV5  -0.56790 -0.82310 0.1663 0.362637    
+ASV4  -0.10124  0.99486 0.2814 0.142857    
+ASV5  -0.56790 -0.82310 0.1663 0.313686    
 ASV6  -0.08053  0.99675 0.7514 0.000999 ***
-ASV8  -0.83447  0.55105 0.4303 0.031968 *  
-ASV7  -0.57807 -0.81599 0.0697 0.610390    
+ASV8  -0.83447  0.55105 0.4303 0.017982 *  
+ASV7  -0.57807 -0.81599 0.0697 0.619381    
 ASV9   0.49314 -0.86995 0.2612 0.147852    
 ASV10 -0.32480  0.94578 0.8408 0.000999 ***
 ---
@@ -4647,13 +4668,13 @@ Show code
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>      euc       man       gow       bra       kul 
-0.3455007 0.3673854 0.3357350 0.3673854 0.3673854 </code></pre>
+0.2732117 0.3330085 0.3456355 0.3330085 0.3330085 </code></pre>
 </div>
-<p>Let’s run <code>capscale</code> using Bray-Curtis. Note, we have 14 metadata parameters in this group but, for some reason, <code>capscale</code> only works with 13 parameters. This may have to do with degrees of freedom?</p>
+<p>Let’s run <code>capscale</code> using Bray-Curtis. Note, we have 13 metadata parameters in this group but, for some reason, <code>capscale</code> only works with 13 parameters. This may have to do with degrees of freedom?</p>
 <ul>
 <li>Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI</li>
-<li>Autocorrelated removed: NUE, PUE</li>
-<li>Remove for capscale: Tmin</li>
+<li>Autocorrelated removed: NUE, PUE, SI</li>
+<li>Remove for capscale: NONE</li>
 </ul>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -4661,30 +4682,30 @@ Show code
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>temp_adapt_cap <span class="ot">&lt;-</span> <span class="fu">capscale</span>(tmp_comm <span class="sc">~</span>  AG_Q10 <span class="sc">+</span> BG_Q10 <span class="sc">+</span> BP_Q10 <span class="sc">+</span> CE_Q10 <span class="sc">+</span> </span>
 <span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>                                       P_Q10 <span class="sc">+</span> N_Q10 <span class="sc">+</span> S_Q10 <span class="sc">+</span> XY_Q10 <span class="sc">+</span> </span>
-<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>                                       LP_Q10 <span class="sc">+</span> PX_Q10 <span class="sc">+</span> CUEcn <span class="sc">+</span> CUEcp <span class="sc">+</span> SI, </span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>                                       LP_Q10 <span class="sc">+</span> PX_Q10 <span class="sc">+</span> CUEcn <span class="sc">+</span> CUEcp <span class="sc">+</span> Tmin, </span>
 <span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>                             tmp_md, <span class="at">dist =</span> <span class="st">&quot;bray&quot;</span>)</span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>Call: capscale(formula = tmp_comm ~ AG_Q10 + BG_Q10 + BP_Q10 +
 CE_Q10 + P_Q10 + N_Q10 + S_Q10 + XY_Q10 + LP_Q10 + PX_Q10 +
-CUEcn + CUEcp + SI, data = tmp_md, distance = &quot;bray&quot;)
+CUEcn + CUEcp + Tmin, data = tmp_md, distance = &quot;bray&quot;)
 
               Inertia Proportion Rank
 Total         1.67890    1.00000     
-Constrained   1.57650    0.93901   13
-Unconstrained 0.10240    0.06099    1
+Constrained   1.57681    0.93919   13
+Unconstrained 0.10209    0.06081    1
 Inertia is squared Bray distance 
 Species scores projected from &#39;tmp_comm&#39; 
 
 Eigenvalues for constrained axes:
   CAP1   CAP2   CAP3   CAP4   CAP5   CAP6   CAP7   CAP8   CAP9  CAP10 
-0.6296 0.2774 0.1982 0.1087 0.0856 0.0611 0.0528 0.0451 0.0348 0.0273 
+0.6298 0.2776 0.1985 0.1087 0.0849 0.0614 0.0528 0.0450 0.0352 0.0273 
  CAP11  CAP12  CAP13 
-0.0244 0.0218 0.0098 
+0.0244 0.0218 0.0095 
 
 Eigenvalues for unconstrained axes:
-  MDS1 
-0.1024 </code></pre>
+   MDS1 
+0.10209 </code></pre>
 </div>
 <p>Now we can look at the variance against each principal component.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -4720,21 +4741,21 @@ Show code
 <p>Now we have a new data frame that contains sample details and capscale values.</p>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>          SampleID PLOT TREAT TREAT_T PAIR        CAP1        CAP2
-1  P10_D00_010_C0E  P10     C       0    E -0.50450124  0.09209632
-2  P02_D00_010_C0A  P02     C       0    A -0.48633792 -0.14443759
-3  P04_D00_010_C0B  P04     C       0    B -0.57845414  0.04089030
-4  P06_D00_010_C0C  P06     C       0    C -0.53295515  0.08834036
-5  P08_D00_010_C0D  P08     C       0    D -0.68269651  0.11029558
-6  P01_D00_010_W3A  P01     W       3    A -0.13982210 -0.22762484
-7  P03_D00_010_W3B  P03     W       3    B -0.25730612  0.02960565
-8  P05_D00_010_W3C  P05     W       3    C -0.38688998 -0.10052777
-9  P07_D00_010_W3D  P07     W       3    D -0.01713972 -0.46277274
-10 P09_D00_010_W3E  P09     W       3    E -0.11388480 -0.53947405
-11 P01_D00_010_W8A  P01     W       8    A  0.78198666  0.09529782
-12 P03_D00_010_W8B  P03     W       8    B  0.89636172 -1.10200963
-13 P05_D00_010_W8C  P05     W       8    C  1.07425643 -0.27725171
-14 P07_D00_010_W8D  P07     W       8    D  0.41304490  0.81469385
-15 P09_D00_010_W8E  P09     W       8    E  0.53433797  1.58287845</code></pre>
+1  P10_D00_010_C0E  P10     C       0    E -0.50625375  0.10348626
+2  P02_D00_010_C0A  P02     C       0    A -0.48509579 -0.14580527
+3  P04_D00_010_C0B  P04     C       0    B -0.57845671  0.03776429
+4  P06_D00_010_C0C  P06     C       0    C -0.53336078  0.08936059
+5  P08_D00_010_C0D  P08     C       0    D -0.68345909  0.10974979
+6  P01_D00_010_W3A  P01     W       3    A -0.13776351 -0.22674265
+7  P03_D00_010_W3B  P03     W       3    B -0.25679729  0.01972197
+8  P05_D00_010_W3C  P05     W       3    C -0.38722889 -0.11236725
+9  P07_D00_010_W3D  P07     W       3    D -0.01518359 -0.46741081
+10 P09_D00_010_W3E  P09     W       3    E -0.11194937 -0.54460136
+11 P01_D00_010_W8A  P01     W       8    A  0.78329851  0.09997647
+12 P03_D00_010_W8B  P03     W       8    B  0.89642936 -1.09522700
+13 P05_D00_010_W8C  P05     W       8    C  1.07566246 -0.26764258
+14 P07_D00_010_W8D  P07     W       8    D  0.41185806  0.81673870
+15 P09_D00_010_W8E  P09     W       8    E  0.52830039  1.58299886</code></pre>
 </div>
 <p>We can then do the same with the metadata vectors. Here though we only need the scores and parameter name.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -4751,19 +4772,19 @@ Show code
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>       parameters        CAP1        CAP2
-AG_Q10     AG_Q10 -0.07403107  0.24326304
-BG_Q10     BG_Q10  0.73072420  0.09979703
-BP_Q10     BP_Q10  0.07089010 -0.12514597
-CE_Q10     CE_Q10 -0.37530944  0.55413021
-P_Q10       P_Q10  0.87695573 -0.26100273
-N_Q10       N_Q10  0.09463633 -0.33054733
-S_Q10       S_Q10  0.91947764  0.55311074
-XY_Q10     XY_Q10  0.92778590 -0.02663546
-LP_Q10     LP_Q10 -0.90915795 -0.35954697
-PX_Q10     PX_Q10 -0.87916906  0.18885822
-CUEcn       CUEcn -0.24097076 -0.39300643
-CUEcp       CUEcp  0.58207662 -0.63402940
-SI             SI  1.24819254  0.20817749</code></pre>
+AG_Q10     AG_Q10 -0.07373951  0.23793282
+BG_Q10     BG_Q10  0.72604945  0.10579764
+BP_Q10     BP_Q10  0.07015779 -0.12413231
+CE_Q10     CE_Q10 -0.37489864  0.55022094
+P_Q10       P_Q10  0.87190011 -0.25252818
+N_Q10       N_Q10  0.09422795 -0.32515404
+S_Q10       S_Q10  0.91309230  0.55878516
+XY_Q10     XY_Q10  0.92245895 -0.02395029
+LP_Q10     LP_Q10 -0.90356227 -0.36479560
+PX_Q10     PX_Q10 -0.87475774  0.18121787
+CUEcn       CUEcn -0.23872665 -0.39707742
+CUEcp       CUEcp  0.57949983 -0.62675335
+Tmin         Tmin  0.99158847  0.19050834</code></pre>
 </div>
 <p>Let’s run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function <code>envfit</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -4785,20 +4806,20 @@ Show code
 <pre><code>
 ***VECTORS
 
-           CAP1     CAP2     r2   Pr(&gt;r)   
-AG_Q10 -0.30119  0.95356 0.0267 0.835165   
-BG_Q10  0.99117  0.13257 0.2353 0.204795   
-BP_Q10  0.50931 -0.86058 0.0086 0.946054   
-CE_Q10 -0.57820  0.81589 0.1869 0.268731   
-P_Q10   0.96289 -0.26989 0.3601 0.062937 . 
-N_Q10   0.28462 -0.95864 0.0488 0.714286   
-S_Q10   0.86665  0.49892 0.4935 0.016983 * 
-XY_Q10  0.99972 -0.02370 0.3726 0.039960 * 
-LP_Q10 -0.93478 -0.35522 0.4119 0.044955 * 
-PX_Q10 -0.98035  0.19727 0.3486 0.078921 . 
-CUEcn  -0.54243 -0.84010 0.0891 0.557443   
-CUEcp   0.69360 -0.72036 0.3112 0.113886   
-SI      0.98705  0.16040 0.6927 0.002997 **
+           CAP1     CAP2     r2  Pr(&gt;r)  
+AG_Q10 -0.30810  0.95136 0.0260 0.83117  
+BG_Q10  0.99031  0.13889 0.2354 0.17782  
+BP_Q10  0.50944 -0.86050 0.0086 0.95504  
+CE_Q10 -0.58116  0.81379 0.1875 0.25075  
+P_Q10   0.96427 -0.26494 0.3590 0.05395 .
+N_Q10   0.28973 -0.95711 0.0479 0.76723  
+S_Q10   0.86347  0.50440 0.4956 0.01499 *
+XY_Q10  0.99973 -0.02334 0.3725 0.04895 *
+LP_Q10 -0.93292 -0.36008 0.4131 0.04096 *
+PX_Q10 -0.98131  0.19244 0.3483 0.07992 .
+CUEcn  -0.53407 -0.84544 0.0908 0.55245  
+CUEcp   0.69625 -0.71780 0.3103 0.12288  
+Tmin    0.98341  0.18140 0.4456 0.02997 *
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -4818,14 +4839,14 @@ Show code
 <span id="cb86-7"><a href="#cb86-7" aria-hidden="true" tabindex="-1"></a>                                               temp_adapt_md_signif_hits,]</span></code></pre></div>
 </details>
 </div>
-<p><code>envfit</code> found that S_Q10, LP_Q10, SI were significantly correlated.</p>
+<p><code>envfit</code> found that S_Q10, LP_Q10, Tmin were significantly correlated.</p>
 <p>Now let’s see if the same parameters are significant for the <code>envfit</code> and <code>bioenv</code> analyses.</p>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>[1] &quot;Significant parameters from bioenv analysis.&quot;
-[1] &quot;CUEcp&quot;  &quot;LP_Q10&quot; &quot;P_Q10&quot;  &quot;S_Q10&quot;  &quot;SI&quot;    
+[1] &quot;CUEcp&quot;  &quot;LP_Q10&quot; &quot;P_Q10&quot;  &quot;S_Q10&quot;  &quot;Tmin&quot;  
 _____________________________________
 [1] &quot;Significant parameters from envfit analysis.&quot;
-[1] &quot;S_Q10&quot;  &quot;LP_Q10&quot; &quot;SI&quot;    
+[1] &quot;S_Q10&quot;  &quot;LP_Q10&quot; &quot;Tmin&quot;  
 _____________________________________
 [1] &quot;Found in bioenv but not envfit.&quot;
 [1] &quot;CUEcp&quot; &quot;P_Q10&quot;
@@ -4834,7 +4855,7 @@ _____________________________________
 character(0)
 _____________________________________
 [1] &quot;Found in envfit and  bioenv.&quot;
-[1] &quot;S_Q10&quot;  &quot;LP_Q10&quot; &quot;SI&quot;     &quot;CUEcp&quot;  &quot;P_Q10&quot; </code></pre>
+[1] &quot;S_Q10&quot;  &quot;LP_Q10&quot; &quot;Tmin&quot;   &quot;CUEcp&quot;  &quot;P_Q10&quot; </code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -4870,16 +4891,16 @@ Show code
 ***VECTORS
 
           CAP1     CAP2     r2   Pr(&gt;r)    
-ASV1   0.99035  0.13856 0.6525 0.007992 ** 
-ASV2   0.54799 -0.83649 0.8916 0.000999 ***
-ASV3   0.80138  0.59816 0.9509 0.000999 ***
-ASV4  -0.11615  0.99323 0.3171 0.091908 .  
-ASV5  -0.68379 -0.72968 0.1181 0.484515    
-ASV6  -0.09452  0.99552 0.7055 0.002997 ** 
-ASV8  -0.85080  0.52548 0.4293 0.033966 *  
-ASV7  -0.57119 -0.82082 0.0629 0.671329    
-ASV9   0.52932 -0.84842 0.2423 0.177822    
-ASV10 -0.34318  0.93927 0.7999 0.000999 ***
+ASV1   0.98984  0.14217 0.6541 0.009990 ** 
+ASV2   0.55070 -0.83470 0.8953 0.000999 ***
+ASV3   0.79919  0.60108 0.9513 0.000999 ***
+ASV4  -0.12171  0.99257 0.3110 0.118881    
+ASV5  -0.67644 -0.73649 0.1181 0.487512    
+ASV6  -0.10078  0.99491 0.7028 0.003996 ** 
+ASV8  -0.85434  0.51972 0.4279 0.043956 *  
+ASV7  -0.57853 -0.81566 0.0602 0.676324    
+ASV9   0.53361 -0.84573 0.2425 0.185814    
+ASV10 -0.34761  0.93764 0.8031 0.000999 ***
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -4901,11 +4922,11 @@ Show code
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>      parameters        CAP1        CAP2 variable_type
-ASV3        ASV3  0.49847268  0.48202601           ASV
-ASV6        ASV6 -0.01595959  0.20579668           ASV
-ASV2        ASV2  0.23441870 -0.44117377           ASV
-ASV10      ASV10 -0.02437655  0.08143042           ASV
-ASV1        ASV1  1.18568557  0.33089553           ASV</code></pre>
+ASV3        ASV3  0.49583686  0.48216614           ASV
+ASV6        ASV6 -0.01759546  0.20461984           ASV
+ASV2        ASV2  0.23578207 -0.44144325           ASV
+ASV10      ASV10 -0.02475900  0.08142465           ASV
+ASV1        ASV1  1.18724098  0.33621587           ASV</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -6122,7 +6143,7 @@ Show code
 <ol type="A">
 <li>Environmental and edaphic properties: TEB, DON, Na, Al, Ca.</li>
 <li>Microbial functional responses: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase.</li>
-<li>Temperature adaptation properties: NUE, PUE, P_Q10, Tmin.</li>
+<li>Temperature adaptation properties: NUE, PUE, P_Q10, SI.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -6131,7 +6152,7 @@ Show code
 <div class="sourceCode" id="cb113"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>edaphic_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;TEB&quot;</span>, <span class="st">&quot;DON&quot;</span>, <span class="st">&quot;Na&quot;</span>, <span class="st">&quot;Al&quot;</span>, <span class="st">&quot;Ca&quot;</span>)</span>
 <span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>soil_funct_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;micN&quot;</span>, <span class="st">&quot;micNP&quot;</span>, <span class="st">&quot;enzCN&quot;</span>, <span class="st">&quot;enzCP&quot;</span>, <span class="st">&quot;BP_ase&quot;</span>, </span>
 <span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>                       <span class="st">&quot;CE_ase&quot;</span>, <span class="st">&quot;LP_ase&quot;</span>, <span class="st">&quot;N_ase&quot;</span>, <span class="st">&quot;P_ase&quot;</span>)</span>
-<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a>temp_adapt_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;NUE&quot;</span>, <span class="st">&quot;PUE&quot;</span>, <span class="st">&quot;P_Q10&quot;</span>, <span class="st">&quot;Tmin&quot;</span>)</span></code></pre></div>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a>temp_adapt_remove <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;NUE&quot;</span>, <span class="st">&quot;PUE&quot;</span>, <span class="st">&quot;P_Q10&quot;</span>, <span class="st">&quot;SI&quot;</span>)</span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -6241,40 +6262,40 @@ Show code
 <tr class="odd">
 <td style="text-align: left;">no</td>
 <td style="text-align: left;">no</td>
-<td style="text-align: right;">0.121</td>
-<td style="text-align: right;">0.068</td>
-<td style="text-align: right;">0.103</td>
-<td style="text-align: right;">0.046</td>
-<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.119</td>
+<td style="text-align: right;">0.062</td>
+<td style="text-align: right;">0.097</td>
+<td style="text-align: right;">0.047</td>
 <td style="text-align: right;">0.001</td>
+<td style="text-align: right;">0.002</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">no</td>
 <td style="text-align: left;">yes</td>
-<td style="text-align: right;">0.071</td>
-<td style="text-align: right;">0.036</td>
+<td style="text-align: right;">0.081</td>
+<td style="text-align: right;">0.037</td>
 <td style="text-align: right;">0.095</td>
-<td style="text-align: right;">0.049</td>
+<td style="text-align: right;">0.037</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">yes</td>
 <td style="text-align: left;">no</td>
-<td style="text-align: right;">0.145</td>
-<td style="text-align: right;">0.063</td>
-<td style="text-align: right;">0.313</td>
-<td style="text-align: right;">0.178</td>
+<td style="text-align: right;">0.151</td>
+<td style="text-align: right;">0.081</td>
+<td style="text-align: right;">0.345</td>
+<td style="text-align: right;">0.163</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">yes</td>
 <td style="text-align: left;">yes</td>
-<td style="text-align: right;">0.005</td>
-<td style="text-align: right;">0.005</td>
-<td style="text-align: right;">0.351</td>
-<td style="text-align: right;">0.170</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.003</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: right;">0.180</td>
 <td style="text-align: right;">0.001</td>
 <td style="text-align: right;">0.001</td>
 </tr>
@@ -6353,7 +6374,7 @@ Mantel statistic r:     1
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.186 0.233 0.272 0.325 
+0.192 0.242 0.272 0.339 
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
@@ -6428,7 +6449,7 @@ Mantel statistic r: 0.5529
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.201 0.279 0.347 0.406 
+0.202 0.277 0.330 0.417 
 Permutation: free
 Number of permutations: 999
 
@@ -6445,7 +6466,7 @@ Mantel statistic r: 0.6854
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.178 0.246 0.302 0.362 
+0.209 0.282 0.361 0.412 
 Permutation: free
 Number of permutations: 999
 
@@ -6458,11 +6479,11 @@ Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
 Mantel statistic r: 0.5054 
-      Significance: 0.003 
+      Significance: 0.002 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.183 0.253 0.308 0.360 
+0.202 0.261 0.308 0.359 
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
@@ -6499,11 +6520,9 @@ Show code
 <span id="cb122-23"><a href="#cb122-23" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb122-24"><a href="#cb122-24" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_bioenv_mantel_test&quot;</span>)</span>
 <span id="cb122-25"><a href="#cb122-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb122-26"><a href="#cb122-26" aria-hidden="true" tabindex="-1"></a>temp_adapt_bioenv_ind_mantel <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">LP_Q10 =</span> LP_Q10_bioenv_mantel_test,</span>
-<span id="cb122-27"><a href="#cb122-27" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">N_Q10 =</span> N_Q10_bioenv_mantel_test,</span>
-<span id="cb122-28"><a href="#cb122-28" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">XY_Q10 =</span> XY_Q10_bioenv_mantel_test, </span>
-<span id="cb122-29"><a href="#cb122-29" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">SI =</span> SI_bioenv_mantel_test)</span>
-<span id="cb122-30"><a href="#cb122-30" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_bioenv_mantel_test&quot;</span>))</span></code></pre></div>
+<span id="cb122-26"><a href="#cb122-26" aria-hidden="true" tabindex="-1"></a>temp_adapt_bioenv_ind_mantel <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">XY_Q10 =</span> XY_Q10_bioenv_mantel_test,</span>
+<span id="cb122-27"><a href="#cb122-27" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">Tmin =</span> Tmin_bioenv_mantel_test)</span>
+<span id="cb122-28"><a href="#cb122-28" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_bioenv_mantel_test&quot;</span>))</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
@@ -6517,84 +6536,50 @@ Correlations:    spearman
 Dissimilarities: bray 
 Metric:          euclidean 
 
-Best model has 4 parameters (max. 12 allowed):
-N_Q10 XY_Q10 LP_Q10 SI
-with correlation  0.5926858 </code></pre>
+Best model has 2 parameters (max. 12 allowed):
+XY_Q10 Tmin
+with correlation  0.5637527 </code></pre>
 </div>
 <details>
 <summary>
 Show the results of individual temperature adaptation metadata Mantel tests
 </summary>
 <div class="layout-chunk" data-layout="l-body">
-<pre><code>$LP_Q10
+<pre><code>$XY_Q10
 
 Mantel statistic based on Spearman&#39;s rank correlation rho 
 
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.5363 
-      Significance: 0.002 
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.218 0.268 0.315 0.368 
-Permutation: free
-Number of permutations: 999
-
-
-$N_Q10
-
-Mantel statistic based on Spearman&#39;s rank correlation rho 
-
-Call:
-mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
-
-Mantel statistic r: 0.3375 
-      Significance: 0.019 
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.201 0.262 0.316 0.372 
-Permutation: free
-Number of permutations: 999
-
-
-$XY_Q10
-
-Mantel statistic based on Spearman&#39;s rank correlation rho 
-
-Call:
-mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
-
-Mantel statistic r:  0.56 
+Mantel statistic r: 0.7258 
       Significance: 0.001 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.132 0.180 0.234 0.330 
+0.134 0.200 0.241 0.316 
 Permutation: free
 Number of permutations: 999
 
 
-$SI
+$Tmin
 
 Mantel statistic based on Spearman&#39;s rank correlation rho 
 
 Call:
 mantel(xdis = bioenv_best, ydis = tmp_md, method = &quot;spearman&quot;,      permutations = 999) 
 
-Mantel statistic r: 0.6443 
+Mantel statistic r: 0.616 
       Significance: 0.001 
 
 Upper quantiles of permutations (null model):
   90%   95% 97.5%   99% 
-0.216 0.282 0.369 0.428 
+0.189 0.245 0.297 0.360 
 Permutation: free
 Number of permutations: 999</code></pre>
 </div>
 </details>
-<p><code>bioenv</code> found the following temperature adaptations significantly correlated with the community data: <strong>LP_Q10, N_Q10, XY_Q10, SI</strong></p>
+<p><code>bioenv</code> found the following temperature adaptations significantly correlated with the community data: <strong>XY_Q10, Tmin</strong></p>
 <h2 id="distance-based-redundancy-1">Distance-based Redundancy</h2>
 <p>Now we turn our attention to distance-based redundancy analysis (dbRDA), an ordination method similar to Redundancy Analysis (rda) but it allows non-Euclidean dissimilarity indices, such as Manhattan or Bray–Curtis distance. For this, we use <code>capscale</code> from the <code>vegan</code> package. <code>capscale</code> is a constrained versions of metric scaling (principal coordinates analysis), which are based on the Euclidean distance but can be used, and are more useful, with other dissimilarity measures. The functions can also perform unconstrained principal coordinates analysis, optionally using extended dissimilarities.</p>
 <p>For each of the three metadata subsets, we perform the following steps:</p>
@@ -6756,17 +6741,17 @@ Show code
 ***VECTORS
 
          CAP1     CAP2     r2  Pr(&gt;r)  
-AST   0.99126  0.13189 0.4849 0.02597 *
-H2O  -0.99989  0.01511 0.2434 0.24076  
-N     0.43981  0.89809 0.2124 0.29970  
-P     0.43273  0.90152 0.0349 0.84515  
-ECEC -0.50151  0.86515 0.2595 0.23377  
-pH   -0.66815 -0.74403 0.0102 0.94006  
-NH4  -0.81970  0.57279 0.0906 0.63636  
-NO3  -0.76538  0.64357 0.0824 0.64436  
-PO4  -0.85783  0.51393 0.3187 0.15784  
-DOC  -0.99945  0.03317 0.5354 0.02498 *
-DOCN  0.02108 -0.99978 0.1437 0.48951  
+AST   0.99126  0.13189 0.4849 0.03696 *
+H2O  -0.99989  0.01511 0.2434 0.25275  
+N     0.43981  0.89809 0.2124 0.27473  
+P     0.43273  0.90152 0.0349 0.86014  
+ECEC -0.50151  0.86515 0.2595 0.21778  
+pH   -0.66815 -0.74403 0.0102 0.94705  
+NH4  -0.81970  0.57279 0.0906 0.60140  
+NO3  -0.76538  0.64357 0.0824 0.64635  
+PO4  -0.85783  0.51393 0.3187 0.15185  
+DOC  -0.99945  0.03317 0.5354 0.02797 *
+DOCN  0.02108 -0.99978 0.1437 0.47552  
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -6835,16 +6820,16 @@ Show code
 ***VECTORS
 
           CAP1     CAP2     r2   Pr(&gt;r)   
-ASV1  -0.61940 -0.78508 0.3539 0.013986 * 
+ASV1  -0.61940 -0.78508 0.3539 0.010989 * 
 ASV2   0.73098 -0.68240 0.5575 0.003996 **
-ASV4  -0.33832 -0.94103 0.4713 0.016983 * 
-ASV3  -0.89855  0.43888 0.4897 0.004995 **
-ASV15  0.95614  0.29292 0.2269 0.198801   
-ASV8  -0.87871 -0.47735 0.1267 0.751249   
-ASV9   0.73176  0.68156 0.1410 0.478521   
-ASV24  0.45502  0.89048 0.1661 0.477522   
+ASV4  -0.33832 -0.94103 0.4713 0.010989 * 
+ASV3  -0.89855  0.43888 0.4897 0.002997 **
+ASV15  0.95614  0.29292 0.2269 0.192807   
+ASV8  -0.87871 -0.47735 0.1267 0.795205   
+ASV9   0.73176  0.68156 0.1410 0.468531   
+ASV24  0.45502  0.89048 0.1661 0.459540   
 ASV12  0.12678  0.99193 0.7513 0.001998 **
-ASV13 -0.42157 -0.90680 0.4286 0.063936 . 
+ASV13 -0.42157 -0.90680 0.4286 0.060939 . 
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -6914,7 +6899,7 @@ Show code
 <span id="cb146-2"><a href="#cb146-2" aria-hidden="true" tabindex="-1"></a>tmp_md<span class="sc">$</span>TREAT_T <span class="ot">&lt;-</span> <span class="fu">as.character</span>(tmp_md<span class="sc">$</span>TREAT_T)</span>
 <span id="cb146-3"><a href="#cb146-3" aria-hidden="true" tabindex="-1"></a>tmp_comm <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(its18_select_mc_norm_split_no_ac<span class="sc">$</span>data_loaded))</span>
 <span id="cb146-4"><a href="#cb146-4" aria-hidden="true" tabindex="-1"></a>soil_funct_rank <span class="ot">&lt;-</span> <span class="fu">rankindex</span>(tmp_md[, <span class="dv">8</span><span class="sc">:</span><span class="fu">ncol</span>(tmp_md)], tmp_comm, </span>
-<span id="cb146-5"><a href="#cb146-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">indices =</span> <span class="fu">c</span>(<span class="st">&quot;euc&quot;</span>, <span class="st">&quot;man&quot;</span>, <span class="st">&quot;gow&quot;</span>,<span class="st">&quot;bra&quot;</span>, <span class="st">&quot;kul&quot;</span>), </span>
+<span id="cb146-5"><a href="#cb146-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">indices =</span> <span class="fu">c</span>(<span class="st">&quot;euc&quot;</span>, <span class="st">&quot;man&quot;</span>, <span class="st">&quot;gow&quot;</span>, <span class="st">&quot;bra&quot;</span>, <span class="st">&quot;kul&quot;</span>), </span>
 <span id="cb146-6"><a href="#cb146-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">stepacross =</span> <span class="cn">FALSE</span>, <span class="at">method =</span> <span class="st">&quot;spearman&quot;</span>)</span></code></pre></div>
 </details>
 </div>
@@ -7054,17 +7039,17 @@ Show code
 ***VECTORS
 
            CAP1     CAP2     r2   Pr(&gt;r)   
-micC   -0.50911  0.86070 0.1567 0.453546   
+micC   -0.50911  0.86070 0.1567 0.442557   
 micP   -0.50009  0.86597 0.6925 0.001998 **
-micCN   0.92125  0.38897 0.2225 0.290709   
-micCP   0.48092 -0.87676 0.5831 0.004995 **
-AG_ase -0.40574  0.91399 0.5060 0.028971 * 
-BG_ase  0.99507  0.09917 0.0341 0.825175   
-S_ase   0.23862  0.97111 0.3542 0.103896   
-XY_ase  0.96571  0.25962 0.2931 0.205794   
-PX_ase  0.99996 -0.00944 0.5002 0.042957 * 
-CO2     0.94850 -0.31679 0.2342 0.273726   
-enzNP  -0.98088  0.19460 0.5471 0.012987 * 
+micCN   0.92125  0.38897 0.2225 0.261738   
+micCP   0.48092 -0.87676 0.5831 0.015984 * 
+AG_ase -0.40574  0.91399 0.5060 0.036963 * 
+BG_ase  0.99507  0.09917 0.0341 0.832168   
+S_ase   0.23862  0.97111 0.3542 0.099900 . 
+XY_ase  0.96571  0.25962 0.2931 0.170829   
+PX_ase  0.99996 -0.00944 0.5002 0.034965 * 
+CO2     0.94850 -0.31679 0.2342 0.250749   
+enzNP  -0.98088  0.19460 0.5471 0.013986 * 
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -7134,17 +7119,17 @@ Show code
 <pre><code>
 ***VECTORS
 
-          CAP1     CAP2     r2   Pr(&gt;r)   
-ASV1  -0.79963 -0.60050 0.2256 0.239760   
-ASV2   0.68178 -0.73156 0.6129 0.001998 **
-ASV4  -0.33208 -0.94325 0.5433 0.002997 **
-ASV3  -0.92213  0.38687 0.4516 0.006993 **
-ASV15  0.95847  0.28518 0.2287 0.173826   
-ASV8  -0.97867 -0.20544 0.1064 0.938062   
-ASV9   0.76380  0.64546 0.1326 0.495504   
-ASV24  0.40983  0.91216 0.2438 0.087912 . 
-ASV12  0.14788  0.98901 0.7872 0.001998 **
-ASV13 -0.42711 -0.90420 0.4546 0.055944 . 
+          CAP1     CAP2     r2   Pr(&gt;r)    
+ASV1  -0.79963 -0.60050 0.2256 0.245754    
+ASV2   0.68178 -0.73156 0.6129 0.000999 ***
+ASV4  -0.33208 -0.94325 0.5433 0.000999 ***
+ASV3  -0.92213  0.38687 0.4516 0.010989 *  
+ASV15  0.95847  0.28518 0.2287 0.159840    
+ASV8  -0.97867 -0.20544 0.1064 0.930070    
+ASV9   0.76380  0.64546 0.1326 0.481518    
+ASV24  0.40983  0.91216 0.2438 0.065934 .  
+ASV12  0.14788  0.98901 0.7872 0.000999 ***
+ASV13 -0.42711 -0.90420 0.4546 0.044955 *  
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -7260,18 +7245,18 @@ Show code
 <span id="cb168-2"><a href="#cb168-2" aria-hidden="true" tabindex="-1"></a>tmp_md<span class="sc">$</span>TREAT_T <span class="ot">&lt;-</span> <span class="fu">as.character</span>(tmp_md<span class="sc">$</span>TREAT_T)</span>
 <span id="cb168-3"><a href="#cb168-3" aria-hidden="true" tabindex="-1"></a>tmp_comm <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(its18_select_mc_norm_split_no_ac<span class="sc">$</span>data_loaded))</span>
 <span id="cb168-4"><a href="#cb168-4" aria-hidden="true" tabindex="-1"></a>temp_adapt_rank <span class="ot">&lt;-</span> <span class="fu">rankindex</span>(tmp_md[, <span class="dv">8</span><span class="sc">:</span><span class="fu">ncol</span>(tmp_md)], tmp_comm, </span>
-<span id="cb168-5"><a href="#cb168-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">indices =</span> <span class="fu">c</span>(<span class="st">&quot;euc&quot;</span>, <span class="st">&quot;man&quot;</span>, <span class="st">&quot;gow&quot;</span>,<span class="st">&quot;bra&quot;</span>, <span class="st">&quot;kul&quot;</span>), </span>
+<span id="cb168-5"><a href="#cb168-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">indices =</span> <span class="fu">c</span>(<span class="st">&quot;euc&quot;</span>, <span class="st">&quot;man&quot;</span>, <span class="st">&quot;gow&quot;</span>, <span class="st">&quot;bra&quot;</span>, <span class="st">&quot;kul&quot;</span>), </span>
 <span id="cb168-6"><a href="#cb168-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">stepacross =</span> <span class="cn">FALSE</span>, <span class="at">method =</span> <span class="st">&quot;spearman&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>       euc        man        gow        bra        kul 
-0.01657836 0.36455949 0.26478585 0.36455949 0.36455949 </code></pre>
+0.05132842 0.39465598 0.27457353 0.39465598 0.39465598 </code></pre>
 </div>
 <p>Let’s run <code>capscale</code> using Bray-Curtis. Note, we have 12 metadata parameters in this group but, for some reason, <code>capscale</code> only works with 13 parameters. This may have to do with degrees of freedom?</p>
 <ul>
 <li>Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI</li>
-<li>Autocorrelated removed: NUE, PUE, P_Q10, Tmin<br />
+<li>Autocorrelated removed: NUE, PUE, P_Q10, SI<br />
 </li>
 <li>Remove for capscale: S_Q10</li>
 </ul>
@@ -7281,30 +7266,30 @@ Show code
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb170"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a>temp_adapt_cap <span class="ot">&lt;-</span> <span class="fu">capscale</span>(tmp_comm <span class="sc">~</span>  AG_Q10 <span class="sc">+</span> BG_Q10 <span class="sc">+</span> BP_Q10 <span class="sc">+</span> CE_Q10 <span class="sc">+</span> </span>
 <span id="cb170-2"><a href="#cb170-2" aria-hidden="true" tabindex="-1"></a>                                       N_Q10 <span class="sc">+</span> XY_Q10 <span class="sc">+</span> LP_Q10 <span class="sc">+</span> PX_Q10 <span class="sc">+</span> </span>
-<span id="cb170-3"><a href="#cb170-3" aria-hidden="true" tabindex="-1"></a>                                       CUEcn <span class="sc">+</span> CUEcp <span class="sc">+</span> SI, </span>
+<span id="cb170-3"><a href="#cb170-3" aria-hidden="true" tabindex="-1"></a>                                       CUEcn <span class="sc">+</span> CUEcp <span class="sc">+</span> Tmin, </span>
 <span id="cb170-4"><a href="#cb170-4" aria-hidden="true" tabindex="-1"></a>                           tmp_md, <span class="at">dist =</span> <span class="st">&quot;bray&quot;</span>)</span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>Call: capscale(formula = tmp_comm ~ AG_Q10 + BG_Q10 + BP_Q10 +
 CE_Q10 + N_Q10 + XY_Q10 + LP_Q10 + PX_Q10 + CUEcn + CUEcp +
-SI, data = tmp_md, distance = &quot;bray&quot;)
+Tmin, data = tmp_md, distance = &quot;bray&quot;)
 
               Inertia Proportion Rank
 Total         3.88624    1.00000     
-Constrained   3.64408    0.93769   11
-Unconstrained 0.24216    0.06231    1
+Constrained   3.64416    0.93771   11
+Unconstrained 0.24208    0.06229    1
 Inertia is squared Bray distance 
 Species scores projected from &#39;tmp_comm&#39; 
 
 Eigenvalues for constrained axes:
   CAP1   CAP2   CAP3   CAP4   CAP5   CAP6   CAP7   CAP8   CAP9  CAP10 
-0.9380 0.5973 0.4446 0.3685 0.3139 0.2644 0.2084 0.1485 0.1377 0.1236 
+0.9367 0.5976 0.4447 0.3685 0.3136 0.2644 0.2093 0.1488 0.1377 0.1235 
  CAP11 
-0.0991 
+0.0994 
 
 Eigenvalues for unconstrained axes:
    MDS1 
-0.24216 </code></pre>
+0.24208 </code></pre>
 </div>
 <p>Now we can look at the variance against each principal component.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -7340,19 +7325,19 @@ Show code
 <p>Now we have a new data frame that contains sample details and capscale values.</p>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>          SampleID PLOT TREAT TREAT_T PAIR        CAP1       CAP2
-1  P10_D00_010_C0E  P10     C       0    E -0.71392142  0.8833010
-2  P02_D00_010_C0A  P02     C       0    A -0.88882380  0.4703714
-3  P04_D00_010_C0B  P04     C       0    B -0.94474713 -0.5170008
-4  P06_D00_010_C0C  P06     C       0    C -0.93639669 -0.7344493
-5  P08_D00_010_C0D  P08     C       0    D -0.09788458  1.0022260
-6  P01_D00_010_W3A  P01     W       3    A -0.79343991  0.3412930
-7  P03_D00_010_W3B  P03     W       3    B  0.28458045 -0.8797085
-8  P07_D00_010_W3D  P07     W       3    D  0.19274052 -0.9837785
-9  P09_D00_010_W3E  P09     W       3    E  0.57735645 -0.4016395
-10 P01_D00_010_W8A  P01     W       8    A  0.98360423  0.1496654
-11 P03_D00_010_W8B  P03     W       8    B  0.88618260  0.6327023
-12 P05_D00_010_W8C  P05     W       8    C  0.84170827  0.9068543
-13 P07_D00_010_W8D  P07     W       8    D  0.60904101 -0.8698367</code></pre>
+1  P10_D00_010_C0E  P10     C       0    E -0.70909404  0.8884734
+2  P02_D00_010_C0A  P02     C       0    A -0.88932428  0.4678685
+3  P04_D00_010_C0B  P04     C       0    B -0.94720017 -0.5168746
+4  P06_D00_010_C0C  P06     C       0    C -0.94117253 -0.7283971
+5  P08_D00_010_C0D  P08     C       0    D -0.09697067  1.0013016
+6  P01_D00_010_W3A  P01     W       3    A -0.79138504  0.3434287
+7  P03_D00_010_W3B  P03     W       3    B  0.28447425 -0.8800769
+8  P07_D00_010_W3D  P07     W       3    D  0.18992920 -0.9828048
+9  P09_D00_010_W3E  P09     W       3    E  0.57704340 -0.4016378
+10 P01_D00_010_W8A  P01     W       8    A  0.98434765  0.1432237
+11 P03_D00_010_W8B  P03     W       8    B  0.88625427  0.6330378
+12 P05_D00_010_W8C  P05     W       8    C  0.84253827  0.9056297
+13 P07_D00_010_W8D  P07     W       8    D  0.61055970 -0.8731722</code></pre>
 </div>
 <p>We can then do the same with the metadata vectors. Here though we only need the scores and parameter name.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -7369,17 +7354,17 @@ Show code
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>       parameters         CAP1        CAP2
-AG_Q10     AG_Q10  0.133855002 -0.08736190
-BG_Q10     BG_Q10  0.511522505  0.42779195
-BP_Q10     BP_Q10  0.206991045  0.17873212
-CE_Q10     CE_Q10 -0.453843450 -0.07780038
-N_Q10       N_Q10  0.003393566  0.27313742
-XY_Q10     XY_Q10  0.797882628  0.18273440
-LP_Q10     LP_Q10 -0.412848155 -0.07538210
-PX_Q10     PX_Q10 -0.349204927  0.05372262
-CUEcn       CUEcn -0.140696324 -0.39013457
-CUEcp       CUEcp  0.307275279  0.64675826
-SI             SI  0.826836422  0.16253623</code></pre>
+AG_Q10     AG_Q10  0.138111424 -0.09067317
+BG_Q10     BG_Q10  0.529871661  0.44030269
+BP_Q10     BP_Q10  0.213674949  0.18420563
+CE_Q10     CE_Q10 -0.470374849 -0.07935444
+N_Q10       N_Q10  0.002856862  0.28186886
+XY_Q10     XY_Q10  0.826073837  0.18643092
+LP_Q10     LP_Q10 -0.428296135 -0.07664534
+PX_Q10     PX_Q10 -0.361920412  0.05606159
+CUEcn       CUEcn -0.146194994 -0.40205479
+CUEcp       CUEcp  0.318510258  0.66752667
+Tmin         Tmin  0.740618311 -0.05737920</code></pre>
 </div>
 <p>Let’s run some quick correlations of metadata with ordination axes to see which parameters are significant. For this we use the vegan function <code>envfit</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -7401,18 +7386,18 @@ Show code
 <pre><code>
 ***VECTORS
 
-           CAP1     CAP2     r2   Pr(&gt;r)   
-AG_Q10  0.83074 -0.55666 0.0238 0.882118   
-BG_Q10  0.76026  0.64962 0.4116 0.061938 . 
-BP_Q10  0.74980  0.66167 0.0693 0.723277   
-CE_Q10 -0.98563 -0.16892 0.1951 0.374625   
-N_Q10   0.00811  0.99997 0.0703 0.695305   
-XY_Q10  0.97447  0.22453 0.6165 0.009990 **
-LP_Q10 -0.98369 -0.17985 0.1620 0.420579   
-PX_Q10 -0.98722  0.15936 0.1151 0.551449   
-CUEcn  -0.32948 -0.94416 0.1612 0.414585   
-CUEcp   0.41882  0.90807 0.4795 0.047952 * 
-SI      0.98111  0.19343 0.6533 0.002997 **
+           CAP1     CAP2     r2  Pr(&gt;r)   
+AG_Q10  0.82904 -0.55918 0.0237 0.89710   
+BG_Q10  0.76182  0.64778 0.4109 0.07792 . 
+BP_Q10  0.74983  0.66163 0.0689 0.71528   
+CE_Q10 -0.98593 -0.16714 0.1956 0.34865   
+N_Q10   0.00657  0.99998 0.0700 0.71029   
+XY_Q10  0.97498  0.22227 0.6166 0.00999 **
+LP_Q10 -0.98418 -0.17719 0.1627 0.44955   
+PX_Q10 -0.98713  0.15993 0.1155 0.54246   
+CUEcn  -0.33206 -0.94326 0.1605 0.40460   
+CUEcp   0.42027  0.90740 0.4786 0.03497 * 
+Tmin    0.99659 -0.08248 0.4749 0.02797 * 
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -7432,23 +7417,23 @@ Show code
 <span id="cb180-7"><a href="#cb180-7" aria-hidden="true" tabindex="-1"></a>                                               temp_adapt_md_signif_hits,]</span></code></pre></div>
 </details>
 </div>
-<p><code>envfit</code> found that XY_Q10, CUEcp, SI were significantly correlated.</p>
+<p><code>envfit</code> found that XY_Q10, CUEcp, Tmin were significantly correlated.</p>
 <p>Now let’s see if the same parameters are significant for the <code>envfit</code> and <code>bioenv</code> analyses.</p>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>[1] &quot;Significant parameters from bioenv analysis.&quot;
-[1] &quot;LP_Q10&quot; &quot;N_Q10&quot;  &quot;XY_Q10&quot; &quot;SI&quot;    
+[1] &quot;XY_Q10&quot; &quot;Tmin&quot;  
 _____________________________________
 [1] &quot;Significant parameters from envfit analysis.&quot;
-[1] &quot;XY_Q10&quot; &quot;CUEcp&quot;  &quot;SI&quot;    
+[1] &quot;XY_Q10&quot; &quot;CUEcp&quot;  &quot;Tmin&quot;  
 _____________________________________
 [1] &quot;Found in bioenv but not envfit.&quot;
-[1] &quot;LP_Q10&quot; &quot;N_Q10&quot; 
+character(0)
 _____________________________________
 [1] &quot;Found in envfit but not bioenv.&quot;
 [1] &quot;CUEcp&quot;
 _____________________________________
 [1] &quot;Found in envfit and  bioenv.&quot;
-[1] &quot;XY_Q10&quot; &quot;CUEcp&quot;  &quot;SI&quot;     &quot;LP_Q10&quot; &quot;N_Q10&quot; </code></pre>
+[1] &quot;XY_Q10&quot; &quot;CUEcp&quot;  &quot;Tmin&quot;  </code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -7484,16 +7469,16 @@ Show code
 ***VECTORS
 
           CAP1     CAP2     r2   Pr(&gt;r)    
-ASV1  -0.69423  0.71975 0.2976 0.049950 *  
-ASV2   0.68347  0.72998 0.5593 0.003996 ** 
-ASV4  -0.34398  0.93898 0.4945 0.002997 ** 
-ASV3  -0.89576 -0.44453 0.5051 0.001998 ** 
-ASV15  0.96657 -0.25640 0.2491 0.132867    
-ASV8  -0.91120  0.41196 0.1150 0.922078    
-ASV9   0.76404 -0.64516 0.1338 0.476523    
-ASV24  0.44233 -0.89685 0.2365 0.103896    
-ASV12  0.14787 -0.98901 0.7746 0.000999 ***
-ASV13 -0.42021  0.90743 0.4369 0.067932 .  
+ASV1  -0.68969  0.72410 0.2975 0.051948 .  
+ASV2   0.68393  0.72955 0.5592 0.003996 ** 
+ASV4  -0.34226  0.93961 0.4935 0.005994 ** 
+ASV3  -0.89727 -0.44148 0.5062 0.000999 ***
+ASV15  0.96528 -0.26123 0.2497 0.122877    
+ASV8  -0.90985  0.41495 0.1146 0.923077    
+ASV9   0.76209 -0.64748 0.1338 0.474525    
+ASV24  0.44129 -0.89736 0.2375 0.095904 .  
+ASV12  0.14568 -0.98933 0.7737 0.002997 ** 
+ASV13 -0.41856  0.90819 0.4357 0.056943 .  
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 Permutation: free
@@ -7515,9 +7500,9 @@ Show code
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>      parameters        CAP1       CAP2 variable_type
-ASV12      ASV12  0.03573061 -0.2336902           ASV
-ASV2        ASV2  0.38395745  0.3976455           ASV
-ASV3        ASV3 -0.45543633 -0.1868280           ASV</code></pre>
+ASV12      ASV12  0.03533894 -0.2327656           ASV
+ASV2        ASV2  0.38413654  0.3977765           ASV
+ASV3        ASV3 -0.45977392 -0.1843674           ASV</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <details>
