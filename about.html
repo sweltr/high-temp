@@ -1538,10 +1538,7 @@
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
-        var refs = $(this).attr('data-cites').split(" ");
-        var refHtml = refs.map(function(ref) {
-          return "<p>" + $('#ref-' + ref).html() + "</p>";
-        }).join("\n");
+        var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
         window.tippy(this, {
           allowHTML: true,
           content: refHtml,
@@ -2031,8 +2028,6 @@ B. Diversity Workflows
 
 
 <div class="d-article">
-<iframe src="https://widgets.figshare.com/articles/11819745/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0">
-</iframe>
 <h2 id="github-pages-site-deployment">GitHub Pages Site Deployment</h2>
 <h3 id="initial-setup">Initial Setup</h3>
 <p>This is how I built a <code>gh-pages</code> site for the high-temp SWELTR study. Check out <a href="https://www.thinkful.com/learn/a-guide-to-using-github-pages/">A guide to using Github Pages</a> for more information.</p>
