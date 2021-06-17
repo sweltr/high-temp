@@ -6,19 +6,22 @@ author:
   - name: "Andrew Nottingham"
 #    url: https://github.com/rich-iannone
     affiliation: University of Edinburgh
-#    affiliation_url: https://www.ed.ac.uk/
-  - name: "Kristin Saltonstall"
-#    url: https://stri.si.edu/scientist/kristin-saltonstall
-    affiliation: STRI
-#    affiliation_url: https://stri.si.edu/
-  - name: "Kirk Broders"
-#    url: https://stri.si.edu/scientist/kristin-saltonstall
-    affiliation: STRI
-#    affiliation_url: https://stri.si.edu/
+    affiliation_url: https://www.ed.ac.uk/
   - name: "Jarrod J Scott"
-#    url: https://github.com/jjallaire
-    affiliation: STRI
-    #affiliation_url: https://www.rstudio.com
+    orcid_id: 0000-0001-9863-1318
+    url: https://metacrobe.github.io/
+    affiliation: Smithsonian Tropical Research Institute
+    affiliation_url: https://stri.si.edu/
+  - name: "Kristin Saltonstall"
+    orcid_id: 0000-0002-1811-4087
+    url: https://stri.si.edu/scientist/kristin-saltonstall
+    affiliation: Smithsonian Tropical Research Institute
+    affiliation_url: https://stri.si.edu/
+  - name: "Kirk Broders"
+    orcid_id: 0000-0002-8569-6005
+    url: https://www.ars.usda.gov/midwest-area/peoria-il/national-center-for-agricultural-utilization-research/mycotoxin-prevention-and-applied-microbiology-research/people/kirk-broders/
+    affiliation: USDA-ARS
+#    affiliation_url: https://stri.si.edu/
 bibliography: assets/cite.bib
 site: distill::distill_website
 ---
