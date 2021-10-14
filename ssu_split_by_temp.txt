@@ -1,0 +1,13 @@
+Description	object name	no. samples	total reads	total asvs
+FULL data set (0C)	ssu18_ps_work_0	5	321068	9026
+FULL data set (3C)	ssu18_ps_work_3	5	327911	8154
+FULL data set (8C)	ssu18_ps_work_8	5	287661	6735
+Arbitrary filter data (0C)	ssu18_ps_filt_0	5	247405	1592
+Arbitrary filter data (3C)	ssu18_ps_filt_3	5	266549	1682
+Arbitrary filter data (8C)	ssu18_ps_filt_8	5	216019	1399
+PERfect filtered data (0C)	ssu18_ps_perfect_0	5	243480	1254
+PERfect filtered data (3C)	ssu18_ps_perfect_3	5	262133	1339
+PERfect filtered data (8C)	ssu18_ps_perfect_8	5	225895	1336
+PIME (0C)	ssu18_ps_pime_0	5	80595	752
+PIME (3C)	ssu18_ps_pime_3	5	84976	692
+PIME (8C)	ssu18_ps_pime_8	5	66961	355
