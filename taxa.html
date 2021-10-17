@@ -2159,7 +2159,6 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
       overflow-x: scroll !important;
       padding:  10px 10px 10px 18px;
       border-radius: 5px;
-
     }
 
   /** Controls inline code  **/
@@ -2203,7 +2202,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
     font-family: 'Work Sans'
   }
   .nav-dropdown .nav-dropbtn {
-    color: #FEFEFE;
+  /*  color: #FEFEFE; */
     font-weight: 400;
   }
 
@@ -2249,31 +2248,29 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
     /* background-color: #acc2c2; */
   }
 
-
   details {
     display: flex;
     justify-content: space-between;
     align-content: center;
     border-radius: 4px;
     outline: none;
-
   }
 
   details.active {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     outline: none;
-
   }
 
   summary::-webkit-details-marker {
     display: none;
     outline: none;
-
   }
+
   summary:focus {
     outline: none;
   }
+
   summary::after {
     float: right;
     font-family: "Font Awesome 5 Free";
@@ -2330,13 +2327,18 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <a href="index.html">
 <i class="fa fa-home" aria-hidden="true"></i>
 </a>
+<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
+</div>
+<div class="nav-right">
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
-A. Processing Workflows
+A. Processing
  
 <span class="down-arrow">&#x25BE;</span>
 </button>
 <div class="nav-dropdown-content">
+<span class="nav-dropdown-header">Workflows</span>
+<hr/>
 <a href="dada2.html">1. DADA2</a>
 <a href="data-prep.html">2. Data Set Prep</a>
 <a href="filtering.html">3. Filtering</a>
@@ -2344,11 +2346,13 @@ A. Processing Workflows
 </div>
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
-B. Diversity Workflows
+B. Diversity
  
 <span class="down-arrow">&#x25BE;</span>
 </button>
 <div class="nav-dropdown-content">
+<span class="nav-dropdown-header">Workflows</span>
+<hr/>
 <a href="taxa.html">4. Taxonomic</a>
 <a href="alpha.html">5. Alpha Diversity</a>
 <a href="beta.html">6. Beta Diversity</a>
@@ -2356,13 +2360,13 @@ B. Diversity Workflows
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
-</div>
-<div class="nav-right">
 <a href="data-availability.html">Data Products</a>
 <a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
+</a>
+<a href="about.html">
+<i class="fa fa-question" aria-hidden="true"></i>
 </a>
 <a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
 </div>

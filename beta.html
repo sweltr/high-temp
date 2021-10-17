@@ -2167,7 +2167,6 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
       overflow-x: scroll !important;
       padding:  10px 10px 10px 18px;
       border-radius: 5px;
-
     }
 
   /** Controls inline code  **/
@@ -2211,7 +2210,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
     font-family: 'Work Sans'
   }
   .nav-dropdown .nav-dropbtn {
-    color: #FEFEFE;
+  /*  color: #FEFEFE; */
     font-weight: 400;
   }
 
@@ -2257,31 +2256,29 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
     /* background-color: #acc2c2; */
   }
 
-
   details {
     display: flex;
     justify-content: space-between;
     align-content: center;
     border-radius: 4px;
     outline: none;
-
   }
 
   details.active {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     outline: none;
-
   }
 
   summary::-webkit-details-marker {
     display: none;
     outline: none;
-
   }
+
   summary:focus {
     outline: none;
   }
+
   summary::after {
     float: right;
     font-family: "Font Awesome 5 Free";
@@ -2338,13 +2335,18 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <a href="index.html">
 <i class="fa fa-home" aria-hidden="true"></i>
 </a>
+<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
+</div>
+<div class="nav-right">
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
-A. Processing Workflows
+A. Processing
  
 <span class="down-arrow">&#x25BE;</span>
 </button>
 <div class="nav-dropdown-content">
+<span class="nav-dropdown-header">Workflows</span>
+<hr/>
 <a href="dada2.html">1. DADA2</a>
 <a href="data-prep.html">2. Data Set Prep</a>
 <a href="filtering.html">3. Filtering</a>
@@ -2352,11 +2354,13 @@ A. Processing Workflows
 </div>
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
-B. Diversity Workflows
+B. Diversity
  
 <span class="down-arrow">&#x25BE;</span>
 </button>
 <div class="nav-dropdown-content">
+<span class="nav-dropdown-header">Workflows</span>
+<hr/>
 <a href="taxa.html">4. Taxonomic</a>
 <a href="alpha.html">5. Alpha Diversity</a>
 <a href="beta.html">6. Beta Diversity</a>
@@ -2364,13 +2368,13 @@ B. Diversity Workflows
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
-</div>
-<div class="nav-right">
 <a href="data-availability.html">Data Products</a>
 <a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
+</a>
+<a href="about.html">
+<i class="fa fa-question" aria-hidden="true"></i>
 </a>
 <a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
 </div>
@@ -2841,8 +2845,8 @@ diagonal)
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-fc5f7b00899a1383a230" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-fc5f7b00899a1383a230">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"pval":[0.1089,0.01,0.006,0.0889,0.006,0.005,0.021,0.004,0.003,0.4356,0.2398,0.009],"test":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.1089","0.0100","0.0060","0.0889","0.0060","0.0050","0.0210","0.0040","0.0030","0.4356","0.2398","0.0090"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"125489211532ae68fedb7a51e9633aab"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5df4a84b1131e6deb597" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-5df4a84b1131e6deb597">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"pval":[0.1089,0.01,0.006,0.0889,0.006,0.005,0.021,0.004,0.003,0.4356,0.2398,0.009],"test":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.1089","0.0100","0.0060","0.0889","0.0060","0.0050","0.0210","0.0040","0.0030","0.4356","0.2398","0.0090"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"125489211532ae68fedb7a51e9633aab"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <p>Now we to create sample data frames for each data set.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -3279,8 +3283,8 @@ Between  9 41.00  62 85.5  105 75
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-cecec87b5299f1f465f5" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-cecec87b5299f1f465f5">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"FULL":[0.006,0.003,0.001],"FILT":[0.01,0.009,0.001],"PERfect":[0.001,0.007,0.001],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.006","0.003","0.001"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.010","0.009","0.001"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.007","0.001"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"bd26b561fb9059d6b0e32a959b06d95c"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-1252e119738dd0ea8e60" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1252e119738dd0ea8e60">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"FULL":[0.006,0.003,0.001],"FILT":[0.01,0.009,0.001],"PERfect":[0.001,0.007,0.001],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.006","0.003","0.001"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.010","0.009","0.001"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.007","0.001"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"bd26b561fb9059d6b0e32a959b06d95c"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h1 id="its">ITS</h1>
 <div class="layout-chunk" data-layout="l-body">
@@ -3645,8 +3649,8 @@ diagonal)
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-0206c46563879bcb8d51" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-0206c46563879bcb8d51">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"pval":[0.7522,0.7093,0.3247,0.9101,0.8801,0.1419,0.8831,0.8062,0.2138,0.7163,0.7602,0.002],"test":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.7522","0.7093","0.3247","0.9101","0.8801","0.1419","0.8831","0.8062","0.2138","0.7163","0.7602","0.0020"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"0e627cd3ad28b39af93d6fd48b0e16b6"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-c4da9a692b7505b3fa83" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-c4da9a692b7505b3fa83">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"pval":[0.7522,0.7093,0.3247,0.9101,0.8801,0.1419,0.8831,0.8062,0.2138,0.7163,0.7602,0.002],"test":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.7522","0.7093","0.3247","0.9101","0.8801","0.1419","0.8831","0.8062","0.2138","0.7163","0.7602","0.0020"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"0e627cd3ad28b39af93d6fd48b0e16b6"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <p>Now we to create sample data frames for each data set.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -4044,8 +4048,8 @@ Between  4 31.50 48.5 64.25   78 56
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-b85f030edf0c79c9706a" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-b85f030edf0c79c9706a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"FULL":[0.04,0.046,0.014],"FILT":[0.037,0.033,0.008],"PERfect":[0.0599,0.0819,0.002],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.040","0.046","0.014"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.037","0.033","0.008"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.0599","0.0819","0.002"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"079db4e6c2e9ed19842eac9085e5d884"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-3ccb90fb573c03acee6a" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-3ccb90fb573c03acee6a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"FULL":[0.04,0.046,0.014],"FILT":[0.037,0.033,0.008],"PERfect":[0.0599,0.0819,0.002],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.040","0.046","0.014"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.037","0.033","0.008"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.0599","0.0819","0.002"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"079db4e6c2e9ed19842eac9085e5d884"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
