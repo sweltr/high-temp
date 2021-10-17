@@ -1,7 +1,7 @@
 ---
-title: "5 Taxonomic Diversity"
+title: "4. Taxonomic Diversity"
 description: |
-  Reproducible workflow for ... In this workflow, ....
+  Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.
 author:
 #  - name: Jarrod J Scott
 #    url: https://example.com/norajones
@@ -16,10 +16,9 @@ output:
 ---
 
 <details markdown="1">
-<summary>Click here for setup information.</summary>
+<summary><strong>Click here</strong> for setup information.</summary>
 
-
-```{r setup}
+```{r setup, message=FALSE, results = 'hide'}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
 #library(conflicted)
@@ -28,9 +27,12 @@ set.seed(119)
 
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
-pacman::p_load(tidyverse, metacoder, hilldiv, patchwork, ampvis2, 
+pacman::p_load(tidyverse, metacoder, hilldiv, patchwork, codefolder,
                agricolae, labdsv, naniar, codefolder, pairwiseAdonis, 
-               microbiome, seqRFLP, DT, 
+               microbiome, seqRFLP, DT, microeco, file2meco, cowplot,
+               GUniFrac, ggalluvial, ggdendro, tidytree, igraph, reactable,
+               pheatmap, SpiecEasi, Tax4Fun, WGCNA, microbiomeMarker,
+               captioner, downloadthis,
                install = FALSE, update = FALSE)
 options(scipen=999)
 knitr::opts_current$get(c(
@@ -43,32 +45,47 @@ knitr::opts_current$get(c(
 ```
 </details>
 
-<br/>
-
-# Synopsis
-
-This workflow contains taxonomic diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) and then the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation and PIME workflows. See the [Data Availability](data-availability.html) page for complete details.
-
-In this workflow...
-
-# 16s rRNA
-
 ```{r, eval=TRUE, echo=FALSE}
 #TEMP LOAD ONLY REMOVE WHEN WORKFLOW FINISHED
 remove(list = ls())
-load("page_build/taxa_ssu18_wf_part_1.rdata")
+load("page_build/taxa_wf.rdata")
 ```
 
-```{r, include=FALSE}
+```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+# Create the caption(s) with captioner
+caption_tab <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
+caption_fig <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
+# Create a function for referring to the tables in text
+ref <- function(x) str_extract(x, "[^|]*") %>% 
+  trimws(which = "right", whitespace = "[ ]")
+```
+
+```{r, echo = FALSE, eval = TRUE}
+source("assets/captions/captions_taxa.R")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+xaringanExtra::use_panelset()
+```
+
+# Synopsis
+
+This workflow contains taxonomic diversity assessments for the 16S rRNA and ITS data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow](dada2.html), then the [Data Preparation workflow](data-prep.html), and finally the  [Filtering workflow](filtering.html). 
+
+In this workflow, we use the [microeco](https://github.com/ChiLiubio/microeco) to look at the taxonomic distribution of microbial communities.
+
+# Taxonomic Assessment
+
+## 16s rRNA
+
+```{r, echo=FALSE}
 ## Initial Load for  ANALYSIS #1
 remove(list = ls())
 set.seed(119)
 ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
-ssu18_ps_work_otu <- readRDS("files/otu/rdata/ssu18_ps_work_otu.rds")
-ssu18_ps_pime <- readRDS("files/pime/rdata/ssu18_ps_pime.rds")
-ssu18_ps_pime_otu <- readRDS("files/pime/rdata/ssu18_ps_pime_otu.rds")
-ssu18_ps_perfect <- readRDS("files/perfect/rdata/ssu18_ps_perfect.rds")
-ssu18_ps_perfect_otu <- readRDS("files/perfect/rdata/ssu18_ps_perfect_otu.rds")
+ssu18_ps_filt <- readRDS("files/filtering/arbitrary/rdata/ssu18_ps_filt.rds")
+ssu18_ps_perfect <- readRDS("files/filtering/perfect/rdata/ssu18_ps_perfect.rds")
+ssu18_ps_pime <- readRDS("files/filtering/pime/rdata/ssu18_ps_pime.rds")
 objects()
 ```
 
@@ -76,21 +93,15 @@ objects()
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
-## Bar charts of Major Taxa
+Here we compare the taxonomic breakdown of the Full (unfiltered), Arbitrary filtered, PERfect filtered, and PIME filtered  data sets, split by temperature treatment.
 
-Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment.
-
-<details markdown="1">
-<summary>Detailed Bar chart workflow </summary>
-
-To create a bar chart by Phylum and Proteobacteria classes, we perform the following steps:
+Before we plot the data, we want to separate out the Proteobacteria classes so we can plot these along with other phyla. To accomplish this we perform the following steps:
 
 1) Get all Class-level Proteobacteria names
 
-```{r}
-ssu18_data_sets <- c("ssu18_ps_pime",  "ssu18_ps_pime_otu",
-                     "ssu18_ps_work", "ssu18_ps_work_otu",
-                     "ssu18_ps_perfect", "ssu18_ps_perfect_otu")
+```{r, code_folding=TRUE}
+ssu18_data_sets <- c("ssu18_ps_work",  "ssu18_ps_filt",
+                     "ssu18_ps_perfect", "ssu18_ps_pime")
 
 for (i in ssu18_data_sets) {
      tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo"))
@@ -107,9 +118,9 @@ for (i in ssu18_data_sets) {
 }
 ```
 
-2) Replace Phylum == Proteobacteria with the Class name.
+2) Replace Phylum Proteobacteria with the Class name.
 
-````{r}
+````{r, code_folding=TRUE}
 for (j in ssu18_data_sets) {
   tmp_name <- purrr::map_chr(j, ~paste0(., "_proteo_clean"))
   tmp_get <- get(j)
@@ -145,182 +156,191 @@ rm(class, order, phylum)
 objects(pattern="_proteo_clean")
 ```
 
-3) Choose the **number** of taxa to display and the taxonomic **level**. Aggregate the rest into "Other".
+3) In order to use `microeco`, we need to add the rank designation as a prefix to each taxa. For example, `Actinobacteriota` is changed to `p__Actinobacteriota`. 
 
-```{r}
-top_hits <- 12
-top_level <- "Phylum"
-```
+```{r, code_folding=TRUE}
+for (i in ssu18_data_sets) {
+  tmp_get <- get(purrr::map_chr(i, ~paste0(., "_proteo_clean")))
+  #tmp_get <- get(i)
+  #tmp_path <- file.path("files/alpha/rdata/")
+  #tmp_read <- readRDS(paste(tmp_path, i, ".rds", sep = ""))
+  tmp_sam_data <- sample_data(tmp_get)
+  tmp_tax_data <- data.frame(tax_table(tmp_get))
+  tmp_tax_data$Phylum <- gsub("p_Proteobacteria", "Proteobacteria", tmp_tax_data$Phylum)
 
-```{r}
-for (i in ssu18_data_sets){
-  tmp_get <- get(i)
-  tmp_otu <- data.frame(t(otu_table(tmp_get)))
-  tmp_otu[] <- lapply(tmp_otu, as.numeric)
-  tmp_otu <- as.matrix(tmp_otu)
-  tmp_clean_name <- purrr::map_chr(i, ~ paste0(., "_proteo_clean"))
-  tmp_get_clean <- get(tmp_clean_name)
-  tmp_tax <- as.matrix(data.frame(tax_table(tmp_get_clean)))
-  tmp_samples <- data.frame(sample_data(tmp_get_clean))
-  tmp_clean_name <- purrr::map_chr(i, ~paste0(., "_clean_", top_level))
-  tmp_clean_df <- merge_phyloseq(otu_table(tmp_otu, taxa_are_rows = TRUE),
-                          tax_table(tmp_tax, tmp_tax),
-                          sample_data(tmp_samples))
-  assign(tmp_clean_name, tmp_clean_df)
-  tmp_agg_name <- purrr::map_chr(i, ~paste0(., "_clean_", top_level, "_agg"))
-  tmp_agg_df <- microbiome::aggregate_top_taxa(tmp_clean_df,
-                                                    top = top_hits,
-                                                    level = top_level)
-  assign(tmp_agg_name, tmp_agg_df)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern = "_agg")
-```
-
-```{r}
-for (i in objects(pattern="_agg$")) {
-  tmp_name <- purrr::map_chr(i, ~ paste0(., "_order"))
-  tmp_get <- get(i)
-  tmp_list <- get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[2],
-                        errorIfNULL = TRUE)
-  assign(tmp_name, tmp_list)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_order")
-```
-
-Next, we need to set the order of the taxa to display in the plots. This must be done manually, probably.
-
-```{r}
-ssu18_ps_work_clean_Phylum_agg_order <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", "Verrucomicrobiota", "Chloroflexi", "Planctomycetota", "Methylomirabilota", "Crenarchaeota", "Other")
-
-ssu18_ps_pime_clean_Phylum_agg_order <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", "Verrucomicrobiota", "RCP2-54", "Nitrospirota", "Methylomirabilota", "Crenarchaeota", "Other")
+  #tmp_tax_data[,c(1:6)]
+  tmp_tax_data$ASV_ID <- NULL # Some have, some do not
+  tmp_tax_data$ASV_SEQ <- NULL
   
-ssu18_ps_perfect_clean_Phylum_agg_order <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", "Verrucomicrobiota", "RCP2-54", "Planctomycetota", "Methylomirabilota", "Crenarchaeota", "Other")
-```
-
-4) Now, transform the data to relative abundance.
-
-```{r}
-for (i in objects(pattern="_agg$")) {
-  tmp_name <- purrr::map_chr(i, ~paste0(., "_tax"))
-  tmp_agg <- purrr::map_chr(i, ~paste0(., "_order"))
-  tmp_get <- get(i)
-  tmp_get_agg <- get(tmp_agg)
-  tmp_df <- tmp_get %>%
-            transform_sample_counts(function(x) {x/sum(x)} ) %>%
-            psmelt()
-  tmp_df[[top_level]] <- gdata::reorder.factor(tmp_df[[top_level]],
-                                                  new.order = rev(tmp_get_agg))
-  tmp_df <- tmp_df %>% dplyr::arrange(get(top_level))
-  assign(tmp_name, tmp_df)
-  print(c(i, tmp_name, tmp_agg))
+  tmp_tax_data[] <- data.frame(lapply(tmp_tax_data, gsub, 
+                                      pattern = "^[k | p | c | o | f]_.*", 
+                                      replacement = "", fixed = FALSE))
+  tmp_tax_data$Kingdom <- paste("k__", tmp_tax_data$Kingdom, sep = "")
+  tmp_tax_data$Phylum <- paste("p__", tmp_tax_data$Phylum, sep = "")
+  tmp_tax_data$Class <- paste("c__", tmp_tax_data$Class, sep = "")
+  tmp_tax_data$Order <- paste("o__", tmp_tax_data$Order, sep = "")
+  tmp_tax_data$Family <- paste("f__", tmp_tax_data$Family, sep = "")
+  tmp_tax_data$Genus <- paste("g__", tmp_tax_data$Genus, sep = "")
+  tmp_tax_data <- as.matrix(tmp_tax_data)
+  
+  tmp_ps <- phyloseq(otu_table(tmp_get),
+                     phy_tree(tmp_get),
+                     tax_table(tmp_tax_data),
+                     tmp_sam_data)
+  assign(i, tmp_ps)
   rm(list = ls(pattern = "tmp_"))
 }
-objects(pattern = "_tax")
+rm(list = ls(pattern = "_proteo_clean"))
 ```
 
+4) Next, we need to covert each `phyloseq object` to a `microtable class`.  The microtable class is the basic data structure for the `microeco` package and designed to store basic information from all the downstream analyses (e.g, alpha diversity, beta diversity, etc.). We use the [file2meco](https://github.com/ChiLiubio/file2meco) to read the phyloseq object and convert into a microtable object. We can add `_me` as a suffix to each object to distiguish it from its' phyloseq counterpart. 
 
-```{r}
-for (i in objects(pattern="_tax")) {
-  tmp_get <- get(i)
-  tmp_levels <- levels(tmp_get[[top_level]])
-  print(c(i, tmp_levels))
-}
+```{r, code_folding=TRUE}
+for (i in ssu18_data_sets) {
+    tmp_get <- get(i)
+    tmp_otu_table <- data.frame(t(otu_table(tmp_get)))
+    tmp_sample_info <- data.frame(sample_data(tmp_get))
+    tmp_taxonomy_table <- data.frame(tax_table(tmp_get))
+    tmp_phylo_tree <- phy_tree(tmp_get)
+    tmp_taxonomy_table %<>% tidy_taxonomy
+    tmp_dataset <- microtable$new(sample_table = tmp_sample_info, 
+                                  otu_table = tmp_otu_table, 
+                                  tax_table = tmp_taxonomy_table, 
+                                  phylo_tree = tmp_phylo_tree)
+    tmp_dataset$tidy_dataset()
+    print(tmp_dataset)
+    tmp_dataset$tax_table %<>% base::subset(Kingdom == "k__Archaea" | Kingdom == "k__Bacteria")
+    print(tmp_dataset)
+    tmp_dataset$filter_pollution(taxa = c("mitochondria", "chloroplast"))
+    print(tmp_dataset)
+    tmp_dataset$tidy_dataset()
+    print(tmp_dataset)
+    tmp_name <- purrr::map_chr(i, ~paste0(., "_me")) 
+    assign(tmp_name, tmp_dataset)
+    rm(list = ls(pattern = "tmp_"))
+}  
+objects()
 ```
 
-5) Plot the data for a single phyloseq object. Here you use an aggregated tax file.
+Here is an example of what a new microeco object looks like when you call it.
 
-```{r}
-# SOME COLOR PALETTES
-fifteen <- c("#68023F", "#008169", "#EF0096", "#00DCB5", "#FFCFE2", "#003C86", "#9400E6", "#009FFA", "#FF71FD", "#7CFFFA", "#6A0213", "#008607", "#F60239", "#00E307", "#FFDC3D")
-fifteen_alt <- c("#00463C", "#C00B6F", "#00A090", "#FF95BA", "#5FFFDE", "#590A87", "#0063E5", "#ED0DFD", "#00C7F9", "#FFD5FD", "#3D3C04", "#C80B2A", "#00A51C", "#FFA035", "#9BFF2D")
-twelve_alt <- c("#006A5E", "#ED0D88", "#00BDA9", "#FFC4D4", "#0058CC", "#D208FB", "#FF66FD", "#00EFF9", "#156D03", "#009719", "#00C61B", "#00FB1D")
-twelve <- c("#9F0162", "#009F81", "#FF5AAF", "#00FCCF", "#8400CD", "#008DF9", "#00C2F9", "#FFB2FD", "#A40122", "#E20134", "#FF6E3A", "#FFC33B")
+```{r, eval=TRUE, echo=TRUE}
+ssu18_ps_work_me
 ```
 
 ```{r, echo=FALSE}
-ssu18_colvec.tax <- c(
-"#3D3C04",
-"#FF95BA",
-"#00A090",
-"#C00B6F",
-#"#9BFF2D",
-#"#590A87",
-"#5FFFDE",
-"#0063E5",
-"#ED0DFD",
-"#FFA035",
-"#00C7F9",
-"#C80B2A",
-"#00A51C",
-"#FFD5FD",
-"#00463C"
-)
-show_col(ssu18_colvec.tax)
+saveRDS(ssu18_ps_work_me, "files/taxa/rdata/ssu18_ps_work_me.rds")
+saveRDS(ssu18_ps_filt_me, "files/taxa/rdata/ssu18_ps_filt_me.rds")
+saveRDS(ssu18_ps_perfect_me, "files/taxa/rdata/ssu18_ps_perfect_me.rds")
+saveRDS(ssu18_ps_pime_me, "files/taxa/rdata/ssu18_ps_pime_me.rds")
 ```
 
-```{r}
-#Select data set
-set_to_plot <- "ssu18_ps_work"
-set_type <- "FULL" # FULL PIME or PERFECT
-```
+5) Now, we calculate the taxa abundance at each taxonomic rank using `cal_abund()`. This function return a list called `taxa_abund` containing several data frame of the abundance information at each taxonomic rank. The list is stored in the microtable object automatically. It’s worth noting that the `cal_abund()` function can be used to solve some complex cases, such as supporting both the relative and absolute abundance calculation and selecting the partial taxonomic columns. More information can be found in the description of the [file2meco package](https://github.com/ChiLiubio/file2meco). In the same loop we also create a `trans_abund` class, which is used to transform taxonomic abundance data for plotting.
 
-
-```{r}
-rm(i)
-for (i in  set_to_plot) {
-     tmp_plot_name <- purrr::map_chr(i, ~paste0(., "_", top_level, "_plot"))
-     tmp_get <- get(purrr::map_chr(i, ~paste0(., "_clean_Phylum_agg_tax")))
-     tmp_plot <- ggplot(tmp_get,
-                        aes(x = factor(TEMP),
-                            y = Abundance, fill = get(top_level))) +
-       geom_bar(stat = "identity", position = "fill") +
-       scale_fill_manual(values = ssu18_colvec.tax) +
-       #scale_x_discrete("Temperature", expand = waiver(), position = "bottom", drop = FALSE) +
-       theme_cowplot() +
-       guides(fill = guide_legend(title = top_level)) +
-       #guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +
-       ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
-       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-             panel.background = element_rect(fill = "transparent", colour = NA),
-             plot.background = element_rect(fill = "transparent", colour = NA),
-             panel.border = element_rect(fill = NA, color = "black"),
-             legend.position = "none",
-             axis.text = element_text(size = 8),
-             axis.title = element_text(size = 10))
-     assign(tmp_plot_name, tmp_plot)
-     rm(list = ls(pattern = "tmp_"))
+```{r, code_folding=TRUE}
+for (i in ssu18_data_sets) {
+  tmp_me <- get(purrr::map_chr(i, ~paste0(., "_me")))
+  tmp_me$cal_abund()
+  tmp_me_abund <- trans_abund$new(dataset = tmp_me, taxrank = "Phylum", ntaxa = 12)
+  tmp_me_abund$abund_data$Abundance <- tmp_me_abund$abund_data$Abundance / 100
+  tmp_me_abund_gr <- trans_abund$new(dataset = tmp_me, taxrank = "Phylum", ntaxa = 12, 
+                                  groupmean = "TEMP")
+  tmp_me_abund_gr$abund_data$Abundance <- tmp_me_abund_gr$abund_data$Abundance / 100
+  tmp_name <- purrr::map_chr(i, ~paste0(., "_me_abund")) 
+  assign(tmp_name, tmp_me_abund)  
+  tmp_name_gr <- purrr::map_chr(i, ~paste0(., "_me_abund_group")) 
+  assign(tmp_name_gr, tmp_me_abund_gr)  
+  rm(list = ls(pattern = "tmp_"))
 }
-rm(i)
+objects()
 ```
 
-6) Plot the data for a multiple phyloseq objects. Here again you use an aggregated tax file. This code can be used to generate plots for multiple data frames by adding the base  phyloseq names to the `set_to_plot` variable. This code will also facet the plots by a metadata variable. If you do not want to facet remove the line beginning with `facet_grid`.
+```
+The result is stored in object$taxa_abund ...
+```
 
-```{r}
-for (i in set_to_plot) {
-  tmp_level_get <- get(i)
-  tmp_level <- data.frame(sample_data(tmp_level_get))
-  tmp_level <- tmp_level[order(tmp_level$TEMP), ]
-  tmp_level <- as.vector(tmp_level$SamName)
+6) I prefer to specify the order of taxa in these kinds of plots. We can look the top `ntaxa` (defined above) by accessing the `use_taxanames` character vector of each microtable object.
 
-  tmp_agg_name <- purrr::map_chr(i, ~paste0(., "_clean_", top_level, "_agg_tax"))
-  tmp_get <- get(tmp_agg_name)
-  tmp_df <- reshape::melt(tmp_get, id.vars = c("Sample", "TEMP", "Abundance", top_level))
-  tmp_plot_name <- purrr::map_chr(i, ~paste0(., "_", top_level, "_melt_plot"))
+```{r, echo=FALSE}
+print("FULL Data set (ssu18_ps_work_me)", quote = FALSE)
+ssu18_ps_work_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+print("Arbitrary filtered Data set (ssu18_ps_filt_me)", quote = FALSE)
+ssu18_ps_filt_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+print("PERfect filtered Data set (ssu18_ps_perfect)", quote = FALSE)
+ssu18_ps_perfect_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+print("PIME filtered Data set (ssu18_ps_pime_me)", quote = FALSE)
+ssu18_ps_pime_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+```
 
-  tmp_plot <- ggplot(tmp_df,
-                aes(x = Sample,
-                    y = Abundance, fill = get(top_level))) +
-    facet_grid(. ~TEMP, scale = "free_x", space = "free_x")+
-    geom_bar(stat = "identity", position = "fill")  +
-    scale_fill_manual(values = ssu18_colvec.tax) +
-    #scale_x_discrete("Treatment", expand = waiver(),
-    #                 position = "bottom", drop = FALSE, limits = tmp_level) +
+Hum. Similar but not the same. This means we need to define the order for each separately. Once we do that, we will override the `use_taxanames` character vectors with the reordered vectors.
+
+```{r code_folding=TRUE}
+ssu18_ps_work_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", 
+                           "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", 
+                           "Verrucomicrobiota", "Chloroflexi", "Planctomycetota", 
+                           "Methylomirabilota", "Crenarchaeota")
+ssu18_ps_filt_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", 
+                           "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", 
+                           "Verrucomicrobiota", "RCP2-54", "Planctomycetota", 
+                           "Methylomirabilota", "Crenarchaeota")
+ssu18_ps_perfect_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", 
+                              "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", 
+                              "Verrucomicrobiota", "RCP2-54", "Planctomycetota", 
+                              "Methylomirabilota", "Crenarchaeota")
+ssu18_ps_pime_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", 
+                           "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", 
+                           "Verrucomicrobiota", "RCP2-54", "Nitrospirota", 
+                           "Methylomirabilota", "Crenarchaeota")
+```
+
+7) And one more little step before plotting. Here we  **a**) specify a custom color palette and  **b**) specify the sample order. 
+
+```{r, code_folding=TRUE}
+top_level <- "Phylum"
+ssu18_colvec.tax <- c("#00463C","#FFD5FD","#00A51C","#C80B2A","#00C7F9","#FFA035",
+                      "#ED0DFD","#0063E5","#5FFFDE","#C00B6F","#00A090","#FF95BA")
+ssu18_samp_order <- c("P02_D00_010_C0A", "P04_D00_010_C0B", "P06_D00_010_C0C", "P08_D00_010_C0D", "P10_D00_010_C0E", 
+                    "P01_D00_010_W3A", "P03_D00_010_W3B", "P05_D00_010_W3C", "P07_D00_010_W3D", "P09_D00_010_W3E", 
+                    "P01_D00_010_W8A", "P03_D00_010_W8B", "P05_D00_010_W8C", "P07_D00_010_W8D", "P09_D00_010_W8E")
+```
+
+8) Now we can generate plots (in a loop) for each faceted data set.
+
+```{r, code_folding=TRUE}
+for (i in ssu18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~paste0(., "_me_abund")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~paste0(., "_tax_ord")))
+  tmp_abund$use_taxanames <- tmp_tax_order
+  tmp_facet_plot <- tmp_abund$plot_bar(use_colors = ssu18_colvec.tax, 
+                                       others_color = "#323232", 
+                                       facet = "TEMP", 
+                                       xtext_keep = TRUE, 
+                                       xtext_type_hor = FALSE, 
+                                       legend_text_italic = FALSE, 
+                                       xtext_size = 6, 
+                                       facet_color = "#cccccc", 
+                                       order_x = ssu18_samp_order)
+  tmp_facet_name <- purrr::map_chr(i, ~paste0(., "_facet_plot")) 
+  assign(tmp_facet_name, tmp_facet_plot)  
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Then add a little formatting to the faceted plots.
+
+```{r, code_folding=TRUE}
+set_to_plot <- c("ssu18_ps_work_facet_plot", "ssu18_ps_filt_facet_plot", "ssu18_ps_perfect_facet_plot", "ssu18_ps_pime_facet_plot")
+for (i in  set_to_plot) {
+    tmp_get <- get(i)
+    tmp_get <- tmp_get +
     theme_cowplot() +
     guides(fill = guide_legend(title = top_level, reverse = FALSE,
                                keywidth = 0.7, keyheight = 0.7)) +
-    ylab(NULL) +
+    ylab(NULL) + xlab("Sample") +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "transparent", colour = NA),
         plot.background = element_rect(fill = "transparent", colour = NA),
@@ -328,145 +348,623 @@ for (i in set_to_plot) {
         legend.text = element_text(size = 7),
         legend.title = element_text(size = 10),
         legend.position = "right",
-        #legend.key.size = unit(1.5, "cm"),
         axis.text.y = element_text(size = 8),
         axis.text.x = element_text(size = 6, angle = 90),
         strip.text = element_text(size = 8, angle = 0),
-        axis.title = element_text(size = 10)) + ylab(NULL)
-  assign(tmp_plot_name, tmp_plot)
-  rm(list = ls(pattern = "tmp_"))
+        axis.title = element_text(size = 10)) + ylab(NULL) +
+      scale_y_continuous()
+  assign(i, tmp_get)
+  rm(list = ls(pattern = "tmp_")) 
 }
-rm(i)
+
 ```
 
-7) Finally we use the `patchwork` package to combine the two plots and customize the look.
+And now plots for the groupmeans sets. We can use the same taxa order since that should not have changed.
 
-```{r}
+```{r, code_folding=TRUE}
+set_to_plot <- c("ssu18_ps_work_group_plot", "ssu18_ps_filt_group_plot", "ssu18_ps_perfect_group_plot", "ssu18_ps_pime_group_plot")
+for (i in ssu18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~paste0(., "_me_abund_group")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~paste0(., "_tax_ord")))
+  tmp_abund$use_taxanames <- tmp_tax_order
+  tmp_group_plot <- tmp_abund$plot_bar(use_colors = ssu18_colvec.tax, 
+                                       others_color = "#323232", 
+                                       xtext_keep = TRUE, 
+                                       xtext_type_hor = TRUE, 
+                                       legend_text_italic = FALSE, 
+                                       xtext_size = 10, 
+                                       facet_color = "#cccccc")
+  tmp_group_name <- purrr::map_chr(i, ~paste0(., "_group_plot")) 
+  assign(tmp_group_name, tmp_group_plot)  
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Let's also add a little formatting to the groupmean plots.
+
+```{r, code_folding=TRUE}
 for (i in  set_to_plot) {
-     tmp_plot_final_name <- purrr::map_chr(i, ~paste0(., "_", top_level, "_plot_final"))
-     tmp_p_plot <- get(purrr::map_chr(i, ~paste0(., "_", top_level, "_plot")))
-     tmp_m_plot <- get(purrr::map_chr(i, ~paste0(., "_", top_level, "_melt_plot")))
+     tmp_get <- get(i)
+     tmp_get <- tmp_get +
+       theme_cowplot() +
+       ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
+       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+             panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA),
+             panel.border = element_rect(fill = NA, color = "black"),
+             legend.position = "none",
+             axis.text = element_text(size = 8),
+             axis.title = element_text(size = 10)) + 
+       scale_y_continuous()
+
+     assign(i, tmp_get)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+```
+
+10) Finally we use the `patchwork` package to combine the two plots and customize the look.
+
+```{r, code_folding=TRUE}
+## single index that acts as an index for referencing elements (variables) in a list
+##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460
+var_list <- list(
+  var1 = ssu18_data_sets,
+  var2 = c("FULL", "Arbitrary filtered", "PERfect filtered", "PIME filtered")
+)
+for (j in  1:length(var_list$var1)) {
+     tmp_plot_final_name <- purrr::map_chr(var_list$var1[j], ~paste0(., "_", top_level, "_plot_final"))
+     tmp_set_type <- var_list$var2[j]
+     tmp_p_plot <- get(purrr::map_chr(var_list$var1[j], ~paste0(., "_group_plot")))
+     tmp_m_plot <- get(purrr::map_chr(var_list$var1[j], ~paste0(., "_facet_plot")))
      tmp_plot_final <- tmp_p_plot + tmp_m_plot
      tmp_plot_final <- tmp_plot_final +
-         plot_annotation(tag_levels = "A", 
-                         title = paste("Top", top_level, "of", set_type, "data set"), 
+         plot_annotation(tag_levels = "a", 
+                         title = paste("Top", top_level, "of", tmp_set_type, "data set"), 
                          #subtitle = 'Top taxa of non-filtered data',
-                         caption = "A) grouped by temperature.,
-                         B) All samples, faceted by temperature.") + 
+                         caption = "a) grouped by temperature.,
+                         b) All samples, faceted by temperature.") + 
        plot_layout(widths = c(1, 2)) &
        theme(plot.title = element_text(size = 13),
              plot.subtitle = element_text(size = 10), 
              plot.tag = element_text(size = 12), 
              axis.title = element_text(size = 10), 
              axis.text = element_text(size = 8)) 
-     #legend.position = "right") 
-     #legend.position = "right", 
-     #legend.title = element_text(size = rel(1)), 
-     #legend.text = element_text(size = rel(1)))
   assign(tmp_plot_final_name, tmp_plot_final)
   rm(list = ls(pattern = "tmp_"))
 }
-rm(i)
 ```
 
 ```{r, echo=FALSE}
-tmp_plot_final <- get(purrr::map_chr(set_to_plot, ~paste0(., "_", top_level,  "_plot_final")))
-tmp_plot_final
-dev.off()
-png(paste("files/taxa/figures/", set_to_plot, "_tax_div_bar_plots.png", sep = ""), 
-    height = 14, width = 21, units = 'cm', res = 600, bg = "white")
-tmp_plot_final
-dev.off()
-pdf(paste("files/taxa/figures/", set_to_plot, "_tax_div_bar_plots.pdf", sep = ""), height = 10, width = 12)
-tmp_plot_final
-dev.off()
-rm(list = ls(pattern = "tmp_"))
+for (i in ssu18_data_sets) {
+   tmp_plot_final <- get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
+   ggplot2::ggsave(tmp_plot_final, file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.png", sep = ""), 
+                   height = 14, width = 21, units = 'cm', bg = "white")
+   ggplot2::ggsave(tmp_plot_final, file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+                   height = 14, width = 21, units = 'cm', bg = "white")
+   rm(list = ls(pattern = "tmp_"))
+}
 ```
-
-</details>
 
 ```{r, echo=FALSE}
 system("cp files/taxa/figures/ssu18_ps_work_tax_div_bar_plots.png include/taxa/ssu18_ps_work_tax_div_bar_plots.png")
-system("cp files/taxa/figures/ssu18_ps_pime_tax_div_bar_plots.png include/taxa/ssu18_ps_pime_tax_div_bar_plots.png")
+system("cp files/taxa/figures/ssu18_ps_filt_tax_div_bar_plots.png include/taxa/ssu18_ps_filt_tax_div_bar_plots.png")
 system("cp files/taxa/figures/ssu18_ps_perfect_tax_div_bar_plots.png include/taxa/ssu18_ps_perfect_tax_div_bar_plots.png")
-```
-
-```{r, echo=FALSE}
-save.image("page_build/taxa_ssu18_wf_part_1.rdata")
-```
-
-```{r, echo=FALSE, eval=TRUE}
-xaringanExtra::use_panelset()
+system("cp files/taxa/figures/ssu18_ps_pime_tax_div_bar_plots.png include/taxa/ssu18_ps_pime_tax_div_bar_plots.png")
 ```
 
 <br/>
 
-> It is important to note that while most of the dominant taxa are the same across the FULL, PIME, and PERfect data sets, there a few key difference:
+> It is important to note that while most of the dominant taxa are the same across the FULL, Arbitrary, PIME, and PERfect data sets, there a few key difference:
 
 1) Planctomycetota was not among the dominant taxa in the PIME data set. Nitrospirota was substituted. 
 
-2) Chloroflexi was not among the dominant taxa in either the PIME or PERfect data sets. RCP2-54 was substituted in both cases.
+2) Chloroflexi was not among the dominant taxa in either the Arbitrary, PERfect, or PIME  data sets. RCP2-54 was substituted in both cases.
 
 ::: l-body-outset
 ::: {.panelset}
 ::: {.panel}
 
-#### FULL dataset
+#### FULL (unfiltered)
 
 ```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
 knitr::include_graphics("include/taxa/ssu18_ps_work_tax_div_bar_plots.png")
 ```
+<small>`r caption_fig("major_taxa_full_ssu")`</small>
 :::
 
 ::: {.panel}
-#### PIME dataset
+
+#### Arbitrary filtered
 
 ```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-knitr::include_graphics("include/taxa/ssu18_ps_pime_tax_div_bar_plots.png")
+knitr::include_graphics("include/taxa/ssu18_ps_filt_tax_div_bar_plots.png")
 ```
+<small>`r caption_fig("major_taxa_filt_ssu")`</small>
 :::
 
+
 ::: {.panel}
-#### PERFECT dataset
+#### PERFECT filtered
 
 ```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
 knitr::include_graphics("include/taxa/ssu18_ps_perfect_tax_div_bar_plots.png")
 ```
+<small>`r caption_fig("major_taxa_perfect_ssu")`</small>
 :::
+
+::: {.panel}
+#### PIME filtered
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/taxa/ssu18_ps_pime_tax_div_bar_plots.png")
+```
+<small>`r caption_fig("major_taxa_pime_ssu")`</small>
+:::
+
 :::
 :::
 
+## ITS
 
-## Bar charts of Major Taxa by Family
+```{r, eval=FALSE, echo=FALSE}
+## Initial Load for  ANALYSIS #1
+remove(list = ls())
+set.seed(119)
+its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
+its18_ps_filt <- readRDS("files/filtering/arbitrary/rdata/its18_ps_filt.rds")
+its18_ps_perfect <- readRDS("files/filtering/perfect/rdata/its18_ps_perfect.rds")
+its18_ps_pime <- readRDS("files/filtering/pime/rdata/its18_ps_pime.rds")
+```
 
-We can also look at the relative abundance of groups within dominant Phyla. **Please note** these analyses are for the FULL data set only, before any type of filtering.
+```{r, echo=FALSE}
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+```
+
+Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment for the ITS data. The workflow is basically the same as the 16S rRNA data. Click the box below to see the entire workflow.
+
+```{r, echo=FALSE}
+its18_data_sets <- c("its18_ps_work",  "its18_ps_filt",
+                     "its18_ps_perfect", "its18_ps_pime")
+```
+
+<details markdown="1">
+<summary><strong>Detailed workflow</strong> for ITS taxonomic analysis.</summary>
+
+1) Choose the **number** of taxa to display and the taxonomic **level**. Aggregate the rest into "Other".
+
+```{r}
+top_hits <- 14
+top_level <- "Order"
+```
+
+As above, in order to use `microeco`, we need to add the rank designation as a prefix to each taxa. For example, `Basidiomycota` is changed to `p__Basidiomycota`. 
+
+```{r}
+for (i in its18_data_sets) {
+  tmp_get <- get(i)
+  tmp_sam_data <- sample_data(tmp_get)
+  tmp_tax_data <- data.frame(tax_table(tmp_get))
+  tmp_tax_data$ASV_ID <- NULL # Some have, some do not
+  tmp_tax_data$ASV_SEQ <- NULL
+  
+#  tmp_tax_data[] <- data.frame(lapply(tmp_tax_data, gsub, 
+#                                      pattern = "^[k | p | c | o | f]_.*", 
+#                                      replacement = "", fixed = FALSE))
+  tmp_tax_data$Kingdom <- paste("k__", tmp_tax_data$Kingdom, sep = "")
+  tmp_tax_data$Phylum <- paste("p__", tmp_tax_data$Phylum, sep = "")
+  tmp_tax_data$Class <- paste("c__", tmp_tax_data$Class, sep = "")
+  tmp_tax_data$Order <- paste("o__", tmp_tax_data$Order, sep = "")
+  tmp_tax_data$Family <- paste("f__", tmp_tax_data$Family, sep = "")
+  tmp_tax_data$Genus <- paste("g__", tmp_tax_data$Genus, sep = "")
+  tmp_tax_data <- as.matrix(tmp_tax_data)
+  
+  tmp_ps <- phyloseq(otu_table(tmp_get),
+                     tax_table(tmp_tax_data),
+                     tmp_sam_data)
+  assign(i, tmp_ps)
+  rm(list = ls(pattern = "tmp_"))
+}
+data.frame(tax_table(its18_ps_pime))
+```
+
+```{r}
+for (i in its18_data_sets) {
+    tmp_get <- get(i)
+    tmp_otu_table <- data.frame(t(otu_table(tmp_get)))
+    tmp_sample_info <- data.frame(sample_data(tmp_get))
+    tmp_taxonomy_table <- data.frame(tax_table(tmp_get))
+    #tmp_taxonomy_table %<>% tidy_taxonomy
+    tmp_dataset <- microtable$new(sample_table = tmp_sample_info, 
+                                  otu_table = tmp_otu_table, 
+                                  tax_table = tmp_taxonomy_table)
+    tmp_dataset$tidy_dataset()
+    print(tmp_dataset)
+    tmp_dataset$tax_table %<>% base::subset(Kingdom == "k__Fungi")
+    print(tmp_dataset)
+    tmp_dataset$tidy_dataset()
+    print(tmp_dataset)
+    tmp_name <- purrr::map_chr(i, ~paste0(., "_me")) 
+    assign(tmp_name, tmp_dataset)
+    rm(list = ls(pattern = "tmp_"))
+}  
+objects()
+```
+
+Here is an example of what a new microeco object looks like when you call it.
+
+```{r, eval=TRUE, echo=TRUE}
+its18_ps_work_me
+```
+
+```{r, echo=FALSE}
+saveRDS(its18_ps_work_me, "files/taxa/rdata/its18_ps_work_me.rds")
+saveRDS(its18_ps_filt_me, "files/taxa/rdata/its18_ps_filt_me.rds")
+saveRDS(its18_ps_perfect_me, "files/taxa/rdata/its18_ps_perfect_me.rds")
+saveRDS(its18_ps_pime_me, "files/taxa/rdata/its18_ps_pime_me.rds")
+```
+
+
+5) Now, we calculate the taxa abundance at each taxonomic rank using `cal_abund()`. This function return a list called `taxa_abund` containing several data frame of the abundance information at each taxonomic rank. The list is stored in the microtable object automatically. It’s worth noting that the `cal_abund()` function can be used to solve some complex cases, such as supporting both the relative and absolute abundance calculation and selecting the partial taxonomic columns. More information can be found in the description of the [file2meco package](https://github.com/ChiLiubio/file2meco). In the same loop we also create a `trans_abund` class, which is used to transform taxonomic abundance data for plotting.
+
+```{r}
+for (i in its18_data_sets) {
+  tmp_me <- get(purrr::map_chr(i, ~paste0(., "_me")))
+  tmp_me$cal_abund()
+  tmp_me_abund <- trans_abund$new(dataset = tmp_me, taxrank = top_level, ntaxa = top_hits)
+  tmp_me_abund$abund_data$Abundance <- tmp_me_abund$abund_data$Abundance / 100
+  tmp_me_abund_gr <- trans_abund$new(dataset = tmp_me, taxrank = top_level, ntaxa = top_hits, 
+                                  groupmean = "TEMP")
+  tmp_me_abund_gr$abund_data$Abundance <- tmp_me_abund_gr$abund_data$Abundance / 100
+  tmp_name <- purrr::map_chr(i, ~paste0(., "_me_abund")) 
+  assign(tmp_name, tmp_me_abund)  
+  tmp_name_gr <- purrr::map_chr(i, ~paste0(., "_me_abund_group")) 
+  assign(tmp_name_gr, tmp_me_abund_gr)  
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```
+The result is stored in object$taxa_abund ...
+```
+
+6) I prefer to specify the order of taxa in these kinds of plots. We can look the top `ntaxa` (defined above) by accessing the `use_taxanames` character vector of each microtable object.
+
+```{r, echo=FALSE}
+print("FULL Data set (its18_ps_work_me)", quote = FALSE)
+its18_ps_work_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+print("Arbitrary filtered Data set (its18_ps_filt_me)", quote = FALSE)
+its18_ps_filt_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+print("PERfect filtered Data set (its18_ps_perfect)", quote = FALSE)
+its18_ps_perfect_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+print("PIME filtered Data set (its18_ps_pime_me)", quote = FALSE)
+its18_ps_pime_me_abund$use_taxanames
+print("--------------------------------------------", quote = FALSE)
+```
+
+Hum. Similar but not the same. This means we need to define the order for each separately. Once we do that, we will override the `use_taxanames` character vectors with the reordered vectors.
+
+```{r code_folding=TRUE}
+its18_ps_work_tax_ord <- rev(c(
+  "k_Fungi",  "p_Ascomycota",  "c_Agaricomycetes", "Agaricales",  
+  "Archaeorhizomycetales",  "Capnodiales",  "Eurotiales",  "Geastrales",  
+  "Glomerales",  "Helotiales", "Hypocreales",  "Saccharomycetales",  
+  "Trichosporonales",  "Xylariales"))   
+
+its18_ps_filt_tax_ord <- rev(c(
+  "k_Fungi",  "p_Ascomycota",  "Polyporales", "Agaricales",  
+  "Archaeorhizomycetales",  "Capnodiales",  "Eurotiales",  "Geastrales",  
+  "Glomerales",  "Mortierellales", "Hypocreales",  "Saccharomycetales",  
+  "Trichosporonales",  "Xylariales"))   
+
+its18_ps_perfect_tax_ord <- rev(c(
+  "k_Fungi",  "p_Ascomycota",  "c_Agaricomycetes", "Agaricales",  
+  "Archaeorhizomycetales",  "Capnodiales",  "Eurotiales",  "Geastrales",  
+  "Glomerales",  "Helotiales",   "Hypocreales",  "Saccharomycetales", 
+  "Trichosporonales",  "Pezizales"))   
+its18_ps_pime_tax_ord <- rev(c(
+  "k_Fungi",  "p_Ascomycota",  "Polyporales",  "Agaricales",  
+  "Archaeorhizomycetales",  "Capnodiales",  "Eurotiales",  "Geastrales", 
+  "Glomerales",  "Mortierellales",  "Hypocreales",  "Saccharomycetales",  
+  "Trichosporonales",  "Pezizales"))   
+```
+
+7) And one more little step before plotting. Here we  **a**) specify a custom color palette and  **b**) specify the sample order. 
+
+```{r}
+its18_colvec.tax <- rev(c("#323232", "#004949", "#924900", "#490092", 
+                      "#6db6ff", "#920000", "#ffb6db", "#24ff24", 
+                      "#006ddb", "#db6d00", "#b66dff", "#ffff6d", 
+                      "#009292", "#b6dbff", "#ff6db6"))
+its18_samp_order <- c("P02_D00_010_C0A", "P04_D00_010_C0B", "P06_D00_010_C0C", "P08_D00_010_C0D", "P10_D00_010_C0E", 
+                    "P01_D00_010_W3A", "P03_D00_010_W3B", "P07_D00_010_W3D", "P09_D00_010_W3E", 
+                    "P01_D00_010_W8A", "P03_D00_010_W8B", "P05_D00_010_W8C", "P07_D00_010_W8D")
+```
+
+8) Now we can generate plots (in a loop) for each faceted data set.
+
+```{r}
+for (i in its18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~paste0(., "_me_abund")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~paste0(., "_tax_ord")))
+  tmp_abund$use_taxanames <- tmp_tax_order
+  tmp_facet_plot <- tmp_abund$plot_bar(use_colors = its18_colvec.tax, 
+                                       others_color = "#323232", 
+                                       facet = "TEMP", 
+                                       xtext_keep = TRUE, 
+                                       xtext_type_hor = FALSE, 
+                                       legend_text_italic = FALSE, 
+                                       xtext_size = 6, 
+                                       facet_color = "#cccccc", 
+                                       order_x = its18_samp_order)
+  tmp_facet_name <- purrr::map_chr(i, ~paste0(., "_facet_plot")) 
+  assign(tmp_facet_name, tmp_facet_plot)  
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Then add a little formatting to the faceted plots.
+
+```{r}
+set_to_plot <- c("its18_ps_work_facet_plot", "its18_ps_filt_facet_plot", "its18_ps_perfect_facet_plot", "its18_ps_pime_facet_plot")
+for (i in  set_to_plot) {
+    tmp_get <- get(i)
+    tmp_get <- tmp_get +
+    theme_cowplot() +
+    guides(fill = guide_legend(title = top_level, reverse = FALSE,
+                               keywidth = 0.7, keyheight = 0.7)) +
+    ylab(NULL) + xlab("Sample") +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent", colour = NA),
+        plot.background = element_rect(fill = "transparent", colour = NA),
+        panel.border = element_rect(fill = NA, color = "black"),
+        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 10),
+        legend.position = "right",
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 6, angle = 90),
+        strip.text = element_text(size = 8, angle = 0),
+        axis.title = element_text(size = 10)) + ylab(NULL) +
+      scale_y_continuous()
+  assign(i, tmp_get)
+  rm(list = ls(pattern = "tmp_")) 
+}
+
+```
+
+And now plots for the groupmeans sets. We can use the same taxa order since that should not have changed.
+
+```{r}
+set_to_plot <- c("its18_ps_work_group_plot", "its18_ps_filt_group_plot", "its18_ps_perfect_group_plot", "its18_ps_pime_group_plot")
+for (i in its18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~paste0(., "_me_abund_group")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~paste0(., "_tax_ord")))
+  tmp_abund$use_taxanames <- tmp_tax_order
+  tmp_group_plot <- tmp_abund$plot_bar(use_colors = its18_colvec.tax, 
+                                       others_color = "#323232", 
+                                       xtext_keep = TRUE, 
+                                       xtext_type_hor = TRUE, 
+                                       legend_text_italic = FALSE, 
+                                       xtext_size = 10, 
+                                       facet_color = "#cccccc")
+  tmp_group_name <- purrr::map_chr(i, ~paste0(., "_group_plot")) 
+  assign(tmp_group_name, tmp_group_plot)  
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+Let's also add a little formatting to the groupmean plots.
+
+```{r}
+for (i in  set_to_plot) {
+     tmp_get <- get(i)
+     tmp_get <- tmp_get +
+       theme_cowplot() +
+       ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
+       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+             panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA),
+             panel.border = element_rect(fill = NA, color = "black"),
+             legend.position = "none",
+             axis.text = element_text(size = 8),
+             axis.title = element_text(size = 10)) + 
+       scale_y_continuous()
+
+     assign(i, tmp_get)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+```
+
+10) Finally we use the `patchwork` package to combine the two plots and customize the look.
+
+```{r}
+## single index that acts as an index for referencing elements (variables) in a list
+##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460
+var_list <- list(
+  var1 = its18_data_sets,
+  var2 = c("FULL", "Arbitrary filtered", "PERfect filtered", "PIME filtered")
+)
+for (j in  1:length(var_list$var1)) {
+     tmp_plot_final_name <- purrr::map_chr(var_list$var1[j], ~paste0(., "_", top_level, "_plot_final"))
+     tmp_set_type <- var_list$var2[j]
+     tmp_p_plot <- get(purrr::map_chr(var_list$var1[j], ~paste0(., "_group_plot")))
+     tmp_m_plot <- get(purrr::map_chr(var_list$var1[j], ~paste0(., "_facet_plot")))
+     tmp_plot_final <- tmp_p_plot + tmp_m_plot
+     tmp_plot_final <- tmp_plot_final +
+         plot_annotation(tag_levels = "a", 
+                         title = paste("Top", top_level, "of", tmp_set_type, "data set"), 
+                         #subtitle = 'Top taxa of non-filtered data',
+                         caption = "a) grouped by temperature.,
+                         b) All samples, faceted by temperature.") + 
+       plot_layout(widths = c(1, 2)) &
+       theme(plot.title = element_text(size = 13),
+             plot.subtitle = element_text(size = 10), 
+             plot.tag = element_text(size = 12), 
+             axis.title = element_text(size = 10), 
+             axis.text = element_text(size = 8)) 
+  assign(tmp_plot_final_name, tmp_plot_final)
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+for (i in its18_data_sets) {
+   tmp_plot_final <- get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
+   ggplot2::ggsave(tmp_plot_final, file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.png", sep = ""), 
+                   height = 14, width = 21, units = 'cm', bg = "white")
+   ggplot2::ggsave(tmp_plot_final, file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+                   height = 14, width = 21, units = 'cm', bg = "white")
+   rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=FALSE}
+system("cp files/taxa/figures/its18_ps_work_tax_div_bar_plots.png include/taxa/its18_ps_work_tax_div_bar_plots.png")
+system("cp files/taxa/figures/its18_ps_filt_tax_div_bar_plots.png include/taxa/its18_ps_filt_tax_div_bar_plots.png")
+system("cp files/taxa/figures/its18_ps_perfect_tax_div_bar_plots.png include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
+system("cp files/taxa/figures/its18_ps_pime_tax_div_bar_plots.png include/taxa/its18_ps_pime_tax_div_bar_plots.png")
+```
+</details>
+
+<br/>
+
+> It is important to note that while most of the dominant taxa are the same across the FULL, Arbitrary, PIME, and PERfect data sets, there a few key difference:
+
+1) c_Agaricomycetes & Helotiales were not among the dominant taxa in the Arbitrary or PIME filtered data sets. Polyporales & Mortierellales were substituted, respectively. 
+
+2) Xylariales was not among the dominant taxa in either the PIME or PERfect data sets. Pezizales was substituted in both cases.
+
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL (unfiltered)
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/taxa/its18_ps_work_tax_div_bar_plots.png")
+```
+<small>`r caption_fig("major_taxa_full_its")`</small>
+:::
+
+::: {.panel}
+
+#### Arbitrary filtered
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/taxa/its18_ps_filt_tax_div_bar_plots.png")
+```
+<small>`r caption_fig("major_taxa_filt_its")`</small>
+:::
+
+
+::: {.panel}
+#### PERFECT filtered
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
+```
+<small>`r caption_fig("major_taxa_perfect_its")`</small>
+:::
+
+::: {.panel}
+#### PIME filtered
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/taxa/its18_ps_pime_tax_div_bar_plots.png")
+```
+<small>`r caption_fig("major_taxa_pime_its")`</small>
+:::
+
+:::
+:::
+
+# Major Bacterial taxa by Family
+
+We also look at the relative abundance of groups within dominant Phyla. **Please note** these analyses are for the FULL data set only, before any type of filtering. For this analysis, we use the phyloseq object created in the Data Preparation wokflow section [Rename NA taxonomic ranks](data-prep.html#rename-na-taxonomic-ranks) where unclassified ranks were renamed by the next highest rank. See step #1 below for an example of the taxa table structure. 
 
 <aside>
 This code ***only*** works for multiple taxa from a *single* phyloseq object.
 </aside>
 
 <details markdown="1">
-<summary>Detailed Bar chart workflow </summary>
+<summary><strong>Detailed workflow</strong> for assessing Bacterial families.</summary>
 
-1) Subset Phyla of interest. This can be done for multiple data sets by adding to the `ssu18_data_sets` list
+1) Subset Phyla of interest. 
 
-```{r, echo=FALSE, eval=TRUE}
-rm(list = ls())
-load("page_build/taxa_ssu18_wf_part_2.rdata")
+```{r}
+ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
+head(data.frame(tax_table(ssu18_ps_work)))[,1:6]
 ```
 
-```{r, echo=FALSE}
-rm(list = ls())
-load("page_build/taxa_ssu18_wf_part_1.rdata")
-to_keep <- objects(pattern = "_proteo_clean")
-gdata::keep(list = to_keep, sure = TRUE)
-objects()
+```{r, echo=FALSE, eval=TRUE, layout='l-body-outset'}
+head(data.frame(tax_table(ssu18_ps_work)))[,1:6]
+```
+
+
+```{r}
+ssu18_data_sets <- c("ssu18_ps_work")
+for (i in ssu18_data_sets) {
+     tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo"))
+     tmp_get <- get(i)
+     tmp_df <- subset_taxa(tmp_get, Phylum == "Proteobacteria")
+     assign(tmp_name, tmp_df)
+     print(tmp_name)
+     tmp_get_taxa <- get_taxa_unique(tmp_df,
+                                     taxonomic.rank = rank_names(tmp_df)[3],
+                                     errorIfNULL=TRUE)
+     print(tmp_get_taxa)
+     rm(list = ls(pattern = "tmp_"))
+     rm(list = ls(pattern = "_proteo"))
+}
+```
+
+2) Replace Phylum Proteobacteria with the Class name.
+
+````{r}
+for (j in ssu18_data_sets) {
+  tmp_name <- purrr::map_chr(j, ~paste0(., "_proteo_clean"))
+  tmp_get <- get(j)
+  tmp_clean <- data.frame(tax_table(tmp_get))
+
+   for (i in 1:nrow(tmp_clean)){
+       if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "Alphaproteobacteria"){
+           phylum <- base::paste("Alphaproteobacteria")
+           tmp_clean[i, 2] <- phylum
+   }   else if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "Gammaproteobacteria"){
+           phylum <- base::paste("Gammaproteobacteria")
+           tmp_clean[i, 2] <- phylum
+   }   else if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "Zetaproteobacteria"){
+              phylum <- base::paste("Zetaproteobacteria")
+           tmp_clean[i, 2] <- phylum
+   }   else if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "p_Proteobacteria"){
+           phylum <- base::paste("p_Proteobacteria")
+           tmp_clean[i, 2] <- phylum
+       }
+     }
+  tax_table(tmp_get) <- as.matrix(tmp_clean)
+  rank_names(tmp_get)
+  assign(tmp_name, tmp_get)
+  print(c(tmp_name, tmp_get))
+  print(length(get_taxa_unique(tmp_get,
+                               taxonomic.rank = rank_names(tmp_get)[2],
+                               errorIfNULL=TRUE)))
+  tmp_path <- file.path("files/taxa/rdata/")
+  saveRDS(tmp_get, paste(tmp_path, j, "_clean.rds", sep = ""))
+  rm(list = ls(pattern = "tmp_"))
+}
+rm(class, order, phylum)
 ```
 
 ```{r}
 set_to_plot <- "ssu18_ps_work"
-tax_group <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", 
-               "Actinobacteriota", "Bacteroidota", "Firmicutes", 
+tax_group <- c("Alphaproteobacteria", "Gammaproteobacteria", 
+               "Acidobacteriota", "Actinobacteriota", 
+               "Bacteroidota", "Firmicutes", 
                "Myxococcota", "Verrucomicrobiota")
 for (i in set_to_plot) {
   for (j in tax_group) {
@@ -477,10 +975,9 @@ for (i in set_to_plot) {
   rm(list = ls(pattern = "tmp_"))
   }
 }
-objects()
 ```
 
-```{r}
+```{r, echo=FALSE}
 for (i in tax_group) {
   tmp_get <- get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i)))
   tmp_list <-  get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[5], errorIfNULL = TRUE)
@@ -500,7 +997,7 @@ for (i in tax_group) {
 ```{r}
 top_hits <- 12
 top_level <- "Family"
-for (i in tax_group){
+for (i in tax_group) {
   tmp_get <- get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i)))
   tmp_otu <- data.frame(t(otu_table(tmp_get)))
   tmp_otu[] <- lapply(tmp_otu, as.numeric)
@@ -517,8 +1014,6 @@ for (i in tax_group){
   assign(tmp_agg_name, tmp_agg_df)
   rm(list = ls(pattern = "_sep_agg"))
 }
-objects(pattern = "_agg$")
-objects()
 ```
 
 ```{r}
@@ -531,7 +1026,6 @@ for (i in tax_group){
   assign(tmp_name, tmp_list)
   rm(list = ls(pattern = "tmp_"))
 }
-objects(pattern = "_agg_order$")
 ```
 
 ```{r}
@@ -575,12 +1069,6 @@ assign(paste(set_to_plot, "_", "Verrucomicrobiota", "_agg_order", sep = ""), tmp
 ###################
 ```
 
-
-[1] "c_Alphaproteobacteria"      "Dongiaceae"                 "Hyphomicrobiaceae"          "KF-JG30-B3"                
- [5] "Methyloligellaceae"         "Micropepsaceae"             "o_Azospirillales"           "o_Elsterales"              
- [9] "Other"                      "Rhizobiaceae"               "Rhizobiales_Incertae_Sedis" "Sphingomonadaceae"         
-[13] "Xanthobacteraceae"   
-
 4) Now, transform the data to relative abundance.
 
 ```{r}
@@ -600,7 +1088,6 @@ for (i in tax_group) {
   #print(c(i, tmp_name, tmp_agg))
   rm(list = ls(pattern = "tmp_"))
 }
-objects(pattern="_tax")
 ```
 
 
@@ -612,7 +1099,7 @@ for (i in tax_group) {
 }
 ```
 
-5) Plot the data for a single phyloseq object. Here you use an aggragated tax file.
+5) Plot the data for a single phyloseq object. Here you use an aggregated tax file.
 
 ```{r, echo=FALSE}
 ssu18_colvec.tax <- c(
@@ -632,9 +1119,6 @@ ssu18_colvec.tax <- c(
 "#FFD5FD",
 "#00463C"
 )
-
-show_col(ssu18_colvec.tax)
-
 ```
 
 ```{r}
@@ -706,8 +1190,6 @@ for (i in tax_group) {
   assign(tmp_plot_name, tmp_plot)
   rm(list = ls(pattern = "tmp_"))
 }
-objects()
-
 ```
 
 7) Finally we use the `patchwork` package to combine the two plots and customize the look.
@@ -718,7 +1200,7 @@ for (i in tax_group) {
   tmp_plot_melt <- get(purrr::map_chr(i, ~paste0(set_to_plot, "_", ., "_plot_melt")))
   tmp_final <- tmp_plot_main + tmp_plot_melt
   tmp_final <- tmp_final + 
-    plot_annotation(tag_levels = 'A', 
+    plot_annotation(tag_levels = 'a', 
                     title = i) + 
                     #subtitle = 'Top taxa of non-filtered data',
                     #caption = 'A) grouped by temperature.,
@@ -731,7 +1213,7 @@ for (i in tax_group) {
         axis.text = element_text(size = 6),
         strip.text = element_text(size = 8, angle = 0),
         legend.text = element_text(size = 7),
-        legend.title = element_text(size = 9)
+        legend.title = element_text(size = 9),
         )
         #legend.position = "right")
         #legend.position = "right",
@@ -741,24 +1223,23 @@ for (i in tax_group) {
   assign(tmp_name, tmp_final)
   rm(list = ls(pattern = "tmp_"))
 }
-
 ```
 
 ```{r}
-save.image("page_build/taxa_ssu18_wf_part_2.rdata")
+taxa_to_plot <- c("Acidobacteriota", "Actinobacteriota", "Alphaproteobacteria", 
+                  "Bacteroidota", "Firmicutes", "Gammaproteobacteria", "Myxococcota", 
+                  "Verrucomicrobiota")
+for (i in taxa_to_plot) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0("ssu18_ps_work_", i, "_final_plot", sep = "")))
+  ggplot2::ggsave(tmp_get, 
+                file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.png", sep = ""), 
+                height = 14, width = 21, units = 'cm', bg = "white")
+  ggplot2::ggsave(tmp_get, 
+                file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+                height = 14, width = 21, units = 'cm', bg = "white")
+}
 ```
 </details>
-
-```{r, echo=FALSE, eval=TRUE}
-rm(list = ls())
-load("page_build/taxa_ssu18_wf_part_2.rdata")
-gdata::keep(ssu18_ps_work_Acidobacteriota_final_plot, ssu18_ps_work_Actinobacteriota_final_plot,
-            ssu18_ps_work_Alphaproteobacteria_final_plot, ssu18_ps_work_Bacteroidota_final_plot, 
-            ssu18_ps_work_Firmicutes_final_plot, ssu18_ps_work_Gammaproteobacteria_final_plot, 
-            ssu18_ps_work_Myxococcota_final_plot, ssu18_ps_work_Verrucomicrobiota_final_plot, 
-            tax_group, top_level, sure = TRUE)
-
-```
 
 <br/>
 
@@ -768,10 +1249,12 @@ gdata::keep(ssu18_ps_work_Acidobacteriota_final_plot, ssu18_ps_work_Actinobacter
 
 #### Alphaproteobacteria
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Alphaproteobacteria_final_plot 
+```{r ggg, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+top_level <- "Family"
+ssu18_ps_work_Alphaproteobacteria_final_plot
 #unique(ssu18_ps_work_Alphaproteobacteria_final_plot$data$Family)
 ```
+<small>`r caption_fig("alpha_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -781,6 +1264,7 @@ ssu18_ps_work_Alphaproteobacteria_final_plot
 ssu18_ps_work_Gammaproteobacteria_final_plot 
 #unique(ssu18_ps_work_Gammaproteobacteria_final_plot$data$Family)
 ```
+<small>`r caption_fig("gamma_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -790,6 +1274,7 @@ ssu18_ps_work_Gammaproteobacteria_final_plot
 ssu18_ps_work_Acidobacteriota_final_plot 
 #unique(ssu18_ps_work_Acidobacteriota_final_plot$data$Family)
 ```
+<small>`r caption_fig("acido_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -799,6 +1284,7 @@ ssu18_ps_work_Acidobacteriota_final_plot
 ssu18_ps_work_Actinobacteriota_final_plot 
 #unique(ssu18_ps_work_Actinobacteriota_final_plot$data$Family)
 ```
+<small>`r caption_fig("actino_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -808,6 +1294,7 @@ ssu18_ps_work_Actinobacteriota_final_plot
 ssu18_ps_work_Bacteroidota_final_plot 
 #unique(ssu18_ps_work_Bacteroidota_final_plot$data$Family)
 ```
+<small>`r caption_fig("bacteroid_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -817,6 +1304,7 @@ ssu18_ps_work_Bacteroidota_final_plot
 ssu18_ps_work_Firmicutes_final_plot 
 #unique(ssu18_ps_work_Firmicutes_final_plot$data$Family)
 ```
+<small>`r caption_fig("firm_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -826,6 +1314,7 @@ ssu18_ps_work_Firmicutes_final_plot
 ssu18_ps_work_Myxococcota_final_plot 
 #unique(ssu18_ps_work_Myxococcota_final_plot$data$Family)
 ```
+<small>`r caption_fig("myxo_ssu")`</small>
 :::
 
 ::: {.panel}
@@ -835,1007 +1324,14 @@ ssu18_ps_work_Myxococcota_final_plot
 ssu18_ps_work_Verrucomicrobiota_final_plot 
 #unique(ssu18_ps_work_Verrucomicrobiota_final_plot$data$Family)
 ```
+<small>`r caption_fig("verruco_ssu")`</small>
 :::
 :::
 ::: 
 
-# ITS
-
-```{r, eval=TRUE, echo=FALSE}
-#TEMP LOAD ONLY REMOVE WHEN WORKFLOW FINISHED
-remove(list = ls())
-load("page_build/taxa_its18_wf_part_1.rdata")
-```
-
-```{r, include=FALSE, eval=TRUE}
-## Load to build page only #2
-#remove(list = ls())
-#load("rdata/taxa/its/taxa-wf_its18.rdata")
-```
-
-```{r initial_load_its18, include=FALSE}
-## Initial Load for  ANALYSIS #1
-remove(list = ls())
-set.seed(119)
-
-its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")	
-its18_ps_work_otu <- readRDS("files/otu/rdata/its18_ps_work_otu.rds")	
-its18_ps_pime <- readRDS("files/pime/rdata/its18_ps_pime.rds")	
-its18_ps_pime_otu <- readRDS("files/pime/rdata/its18_ps_pime_otu.rds")	
-its18_ps_perfect <- readRDS("files/perfect/rdata/its18_ps_perfect.rds")	
-its18_ps_perfect_otu <- readRDS("files/perfect/rdata/its18_ps_perfect_otu.rds")
-objects()
-```
-
 
 ```{r, echo=FALSE}
-swel_col <- c("#2271B2", "#71B222", "#B22271")
-```
-
-## Bar charts of Major Taxa
-
-Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment.
-
-<details markdown="1">
-<summary>Detailed Bar chart workflow </summary>
-
-
-```{r}
-its18_data_sets <- c("its18_ps_pime",  "its18_ps_pime_otu",	
-	                     "its18_ps_work", "its18_ps_work_otu",	
-	                     "its18_ps_perfect", "its18_ps_perfect_otu")
-```
-
-1) Choose the **number** of taxa to display and the taxonomic **level**. Aggregate the rest into "Other".
-
-```{r}
-top_hits <- 14
-top_level <- "Order"
-```
-
-```{r}
-for (i in its18_data_sets){
-  tmp_get <- get(i)
-  tmp_otu <- data.frame(t(otu_table(tmp_get)))
-  tmp_otu[] <- lapply(tmp_otu, as.numeric)
-  tmp_otu <- as.matrix(tmp_otu)
-  #tmp_clean_name <- purrr::map_chr(i, ~ paste0(., "_proteo_clean"))
-  #tmp_get_clean <- get(tmp_clean_name)
-  tmp_tax <- as.matrix(data.frame(tax_table(tmp_get)))
-  tmp_samples <- data.frame(sample_data(tmp_get))
-  tmp_clean_name <- purrr::map_chr(i, ~paste0(., "_clean_", top_level))
-  tmp_clean_df <- merge_phyloseq(otu_table(tmp_otu, taxa_are_rows = TRUE),
-                          tax_table(tmp_tax, tmp_tax),
-                          sample_data(tmp_samples))
-  assign(tmp_clean_name, tmp_clean_df)
-  tmp_agg_name <- purrr::map_chr(i, ~paste0(., "_clean_", top_level, "_agg"))
-  tmp_agg_df <- microbiome::aggregate_top_taxa(tmp_clean_df,
-                                                    top = top_hits,
-                                                    level = top_level)
-  assign(tmp_agg_name, tmp_agg_df)
-  rm(list = ls(pattern = "tmp_"))
-}
-#rm(list = ls(pattern = "_proteo_clean"))
-objects()
-```
-
-```{r}
-for (i in objects(pattern="_agg$")) {
-  tmp_name <- purrr::map_chr(i, ~ paste0(., "_order"))
-  tmp_get <- get(i)
-  tmp_list <- get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[2],
-                        errorIfNULL = TRUE)
-  assign(tmp_name, tmp_list)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_order")
-```
-
-Next, we need to set the order of the taxa to display in the plots. This must be done manually, probably.
-
-```{r}
-its18_ps_work_clean_Order_agg_order <- rev(c(
-"Other",
- "k_Fungi",
- "p_Ascomycota",
- "c_Agaricomycetes", #NOT IN PIME USE Polyporales
- "Agaricales",
- "Archaeorhizomycetales",
- "Capnodiales",
- "Eurotiales",
- "Geastrales",
- "Glomerales",
- "Helotiales", #NOT IN PIME USE Mortierellales
- "Hypocreales",
- "Saccharomycetales",
- "Trichosporonales",
- "Xylariales")) #NOT IN PIME OR PERFECT USE Pezizales
-
-its18_ps_pime_clean_Order_agg_order <- rev(c(
-"Other",
- "k_Fungi",
- "p_Ascomycota",
- "Polyporales",
- "Agaricales",
- "Archaeorhizomycetales",
- "Capnodiales",
- "Eurotiales",
- "Geastrales",
- "Glomerales",
- "Mortierellales",
- "Hypocreales",
- "Saccharomycetales",
- "Trichosporonales",
- "Pezizales")) #NOT IN PIME OR PERFECT USE Pezizales
-
-its18_ps_perfect_clean_Order_agg_order <- rev(c(
-"Other",
- "k_Fungi",
- "p_Ascomycota",
- "c_Agaricomycetes", 
- "Agaricales",
- "Archaeorhizomycetales",
- "Capnodiales",
- "Eurotiales",
- "Geastrales",
- "Glomerales",
- "Helotiales", 
- "Hypocreales",
- "Saccharomycetales",
- "Trichosporonales",
- "Pezizales"))  
-```
-
-4) Now, transform the data to relative abundance.
-
-```{r}
-for (i in objects(pattern="_agg$")) {
-  tmp_name <- purrr::map_chr(i, ~paste0(., "_tax"))
-  tmp_agg <- purrr::map_chr(i, ~paste0(., "_order"))
-  tmp_get <- get(i)
-  tmp_get_agg <- get(tmp_agg)
-  tmp_df <- tmp_get %>%
-            transform_sample_counts(function(x) {x/sum(x)} ) %>%
-            psmelt()
-  tmp_df[[top_level]] <- gdata::reorder.factor(tmp_df[[top_level]],
-                                                  new.order = rev(tmp_get_agg))
-  tmp_df <- tmp_df %>% dplyr::arrange(get(top_level))
-  assign(tmp_name, tmp_df)
-  print(c(i,tmp_name, tmp_agg))
-  rm(list = ls(pattern = "tmp_"))
-}
-objects()
-```
-
-
-```{r}
-for (i in objects(pattern="_tax")) {
-  tmp_get <- get(i)
-  tmp_levels <- levels(tmp_get[[top_level]])
-  print(c(i, tmp_levels))
-}
-```
-
-5) Plot the data for a single phyloseq object. Here you use an aggragated tax file.
-
-```{r, echo=FALSE}
-its18_colvec.tax <- c(
-"#323232",
-"#004949",
-"#924900",
-"#490092",
-"#6db6ff",
-"#920000",
-"#ffb6db",
-"#24ff24",
-"#006ddb",
-"#db6d00",
-"#b66dff",
-"#ffff6d",
-"#009292",
-"#b6dbff",
-"#ff6db6"
-)
-```
-
-```{r}
-#Select data set	
-set_to_plot <- "its18_ps_perfect"	
-set_type <- "PERFECT" # FULL PIME or PERFECT
-```
-
-```{r}
-rm(i)	
-	for (i in  set_to_plot) {	
-	     tmp_plot_name <- purrr::map_chr(i, ~paste0(., "_", top_level, "_plot"))	
-	     tmp_get <- get(purrr::map_chr(i, ~paste0(., "_clean_", top_level, "_agg_tax")))	
-	     tmp_plot <- ggplot(tmp_get,	
-	                        aes(x = factor(TEMP),	
-	                            y = Abundance, fill = get(top_level))) +	
-	       geom_bar(stat = "identity", position = "fill") +	
-	       scale_fill_manual(values = its18_colvec.tax) +	
-	       #scale_x_discrete("Temperature", expand = waiver(), position = "bottom", drop = FALSE) +	
-	       theme_cowplot() +	
-	       guides(fill = guide_legend(title = top_level)) +	
-	       #guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +	
-	       ylab("Relative Abundance (% total reads)") + xlab("Temperature") +	
-	       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),	
-	             panel.background = element_rect(fill = "transparent", colour = NA),	
-	             plot.background = element_rect(fill = "transparent", colour = NA),	
-	             panel.border = element_rect(fill = NA, color = "black"),	
-	             legend.position = "none",	
-	             axis.text = element_text(size = 8),	
-	             axis.title = element_text(size = 10))	
-	     assign(tmp_plot_name, tmp_plot)	
-	     rm(list = ls(pattern = "tmp_"))	
-	}	
-rm(i)	
-
-```
-
-6) Plot the data for a multiple phyloseq objects. Here again you use an aggragated tax file. This code can be used to generate plots for multiple data frames by adding the base  phyloseq names to the `its18_split_df` variable. This code will also facet the plots by a metadata variable. If you do not want to facet remove the line beginning with `facet_grid`.
-
-```{r}	
-for (i in set_to_plot) {	
-	  tmp_level_get <- get(i)	
-	  tmp_level <- data.frame(sample_data(tmp_level_get))	
-	  tmp_level <- tmp_level[order(tmp_level$TEMP), ]	
-	  tmp_level <- as.vector(tmp_level$SamName)	
-		
-	  tmp_agg_name <- purrr::map_chr(i, ~paste0(., "_clean_", top_level, "_agg_tax"))	
-	  tmp_get <- get(tmp_agg_name)	
-	  tmp_df <- reshape::melt(tmp_get, id.vars = c("Sample", "TEMP", "Abundance", top_level))	
-	  tmp_plot_name <- purrr::map_chr(i, ~paste0(., "_", top_level, "_melt_plot"))	
-		
-	  tmp_plot <- ggplot(tmp_df,	
-	                aes(x = Sample,	
-	                    y = Abundance, fill = get(top_level))) +	
-	    facet_grid(. ~TEMP, scale = "free_x", space = "free_x")+	
-	    geom_bar(stat = "identity", position = "fill")  +	
-	    scale_fill_manual(values = its18_colvec.tax) +	
-	    #scale_x_discrete("Treatment", expand = waiver(),	
-	    #                 position = "bottom", drop = FALSE, limits = tmp_level) +	
-	    theme_cowplot() +	
-	    guides(fill = guide_legend(title = top_level, reverse = FALSE,	
-	                               keywidth = 0.7, keyheight = 0.7)) +	
-	    ylab(NULL) +	
-	    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),	
-	        panel.background = element_rect(fill = "transparent", colour = NA),	
-	        plot.background = element_rect(fill = "transparent", colour = NA),	
-	        panel.border = element_rect(fill = NA, color = "black"),	
-	        legend.text = element_text(size = 7),	
-	        legend.title = element_text(size = 10),	
-	        legend.position = "right",	
-	        #legend.key.size = unit(1.5, "cm"),	
-	        axis.text.y = element_text(size = 8),	
-	        axis.text.x = element_text(size = 6, angle = 90),	
-	        strip.text = element_text(size = 8, angle = 0),	
-	        axis.title = element_text(size = 10)) + ylab(NULL)	
-	  assign(tmp_plot_name, tmp_plot)	
-	  rm(list = ls(pattern = "tmp_"))	
-}	
-rm(i)	
-```
-
-
-7) Finally we use the `patchwork` package to combine the two plots and customize the look.
-
-
-```{r}	
-for (i in  set_to_plot) {	
-	     tmp_plot_final_name <- purrr::map_chr(i, ~paste0(., "_", top_level, "_plot_final"))	
-	     tmp_p_plot <- get(purrr::map_chr(i, ~paste0(., "_", top_level, "_plot")))	
-	     tmp_m_plot <- get(purrr::map_chr(i, ~paste0(., "_", top_level, "_melt_plot")))	
-	     tmp_plot_final <- tmp_p_plot + tmp_m_plot	
-	     tmp_plot_final <- tmp_plot_final +	
-	         plot_annotation(tag_levels = "A", 	
-	                         title = paste("Top", top_level, "of", set_type, "data set"), 	
-	                         #subtitle = 'Top taxa of non-filtered data',	
-	                         caption = "A) grouped by temperature.	
-	                         B) All samples, faceted by temperature.") + 	
-	       plot_layout(widths = c(1, 2)) &	
-	       theme(plot.title = element_text(size = 13),	
-	             plot.subtitle = element_text(size = 10), 	
-	             plot.tag = element_text(size = 12), 	
-	             axis.title = element_text(size = 10), 	
-	             axis.text = element_text(size = 8)) 	
-	     #legend.position = "right") 	
-	     #legend.position = "right", 	
-	     #legend.title = element_text(size = rel(1)), 	
-	     #legend.text = element_text(size = rel(1)))	
-	  assign(tmp_plot_final_name, tmp_plot_final)	
-	  rm(list = ls(pattern = "tmp_"))	
-}	
-rm(i)
-```
-
-```{r, echo=FALSE}
-tmp_plot_final <- get(purrr::map_chr(set_to_plot, ~paste0(., "_", top_level,  "_plot_final")))
-tmp_plot_final
-dev.off()
-png(paste("files/taxa/figures/", set_to_plot, "_tax_div_bar_plots.png", sep = ""), 
-    height = 14, width = 21, units = 'cm', res = 600, bg = "white")
-tmp_plot_final
-dev.off()
-pdf(paste("files/taxa/figures/", set_to_plot, "_tax_div_bar_plots.pdf", sep = ""), height = 10, width = 12)
-tmp_plot_final
-dev.off()
-rm(list = ls(pattern = "tmp_"))
-```
-
-</details>
-
-```{r, echo=FALSE}
-system("cp files/taxa/figures/its18_ps_work_tax_div_bar_plots.png include/taxa/its18_ps_work_tax_div_bar_plots.png")
-system("cp files/taxa/figures/its18_ps_pime_tax_div_bar_plots.png include/taxa/its18_ps_pime_tax_div_bar_plots.png")
-system("cp files/taxa/figures/its18_ps_perfect_tax_div_bar_plots.png include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
-```
-
-```{r, echo=FALSE}
-save.image("page_build/taxa_its18_wf_part_1.rdata")
-```
-
-```{r, echo=FALSE, eval=TRUE}
-xaringanExtra::use_panelset()
-```
-
-<br/>
-
-> It is important to note that while most of the dominant taxa are the same across the FULL, PIME, and PERfect data sets, there a few key difference:
-
-1) c_Agaricomycetes & Helotiales were not among the dominant taxa in the PIME data set. Polyporales & Mortierellales were substituted, respecively. 
-
-2) Xylariales was not among the dominant taxa in either the PIME or PERfect data sets. Pezizales was substituted in both cases.
-
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
-
-#### FULL dataset
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-knitr::include_graphics("include/taxa/its18_ps_work_tax_div_bar_plots.png")
-```
-:::
-
-::: {.panel}
-#### PIME dataset
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-knitr::include_graphics("include/taxa/its18_ps_pime_tax_div_bar_plots.png")
-```
-:::
-
-::: {.panel}
-#### PERFECT dataset
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-knitr::include_graphics("include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
-```
-:::
-:::
-:::
-
-
-<details markdown="1">
-<summary>Scratch Code</summary>
-
-
-#### METACODER
-
- Lineage Maps
-
-```{r}
-objects()
-```
-
-```{r}
-ps_work_merge <- ssu18_ps_pime
-ps_water_mc_100 <- prune_taxa(taxa_sums(ps_work_merge) > 100, ps_work_merge)
-total_reads_ps_water <- sum(readcount(ps_work_merge))
-total_reads_ps_water_100 <- sum(readcount(ps_water_mc_100))
-ps_obj <- ps_water_mc_100
-```
-
-```{r}
-#summarize_phyloseq(ps_water_o)
-#summarize_phyloseq(ps_water_mc)
-tax_tab1 <- as.data.frame(tax_table(ps_obj))
-tax_tab1 <- tibble::rownames_to_column(tax_tab1, "otu_id")
-asv_tab1 <- as.data.frame(t(otu_table(ps_obj)))
-asv_tab1 <- tibble::rownames_to_column(asv_tab1, "otu_id")
-sam_tab1 <- data.frame(sample_data(ps_obj))
-sam_tab1[1] <- NULL
-da_samp <- tibble::rownames_to_column(sam_tab1, "sample_id")
-water_mc <- merge(asv_tab1, tax_tab1, by="otu_id")
-water_mc$ASV_SEQ <- NULL
-```
-
-```{r}
-obj <- parse_tax_data(water_mc, class_cols = c("Kingdom", "Phylum",
-                                             "Class", "Order",
-                                             "Family", "Genus", "ASV_ID" ))
-obj$data$tax_abund <- calc_taxon_abund(obj, "tax_data",
-                                       cols = da_samp$sample_id)
-obj$data$tax_occ <- calc_n_samples(obj, "tax_abund",
-                                   groups = da_samp$REGION,
-                                   cols = da_samp$sample_id)
-```
-
-```{r}
-obj$data$diff_table <- compare_groups(obj,
-                                      data = "tax_abund",
-                                      cols = da_samp$sample_id,
-                                      groups = da_samp$TREAT)
-```
-
-
- Bacteria
-
-```{r}
-range.default(obj$data$diff_table$log2_median_ratio, finite=TRUE)
-```
-
-
-```{r}
-#set.seed(1999)
-obj %>%
-  filter_taxa(taxon_names %in% c("Bacteria"), subtaxa = TRUE) %>%
-#  filter_taxa(taxon_ranks == "f", supertaxa = TRUE) %>% # subset to the order rank
-#  filter_taxa(taxon_names %in% c("Proteobacteria", "Bacteroidia", "Archaea"), subtaxa = TRUE, invert = TRUE) # to remove taxa
-  heat_tree(
-          node_label = taxon_names,
-          node_size = n_obs,
-         # node_size_range = c(0.01, 0.05),
-          node_label_size_range = c(0.008, 0.04),
-          node_color = log2_median_ratio,
-          node_color_interval = c(-3, 5),
-          edge_color_interval = c(-3, 5),
-          node_color_trans = "area",
-          node_color_range = c("#0072B2", "gray", "#D55E00"),
-          node_size_axis_label = "OTU count",
-          node_color_axis_label = "Log 2 median ratio",
-          layout = "da",
-          initial_layout = "re",
-          overlap_avoidance = 2,
-          output_file = "differential_heat_tree_merged_Bacteria.png")
-```
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-page'}
-system("cp files/trepo/taxa/figures/differential_heat_tree_merged_Bacteria.png include/trepo/taxa/differential_heat_tree_merged_Bacteria.png")
-knitr::include_graphics("include/trepo/taxa/differential_heat_tree_merged_Bacteria.png")
-```
-
-
- Archaea
-
-```{r}
-arch_only <- obj %>% filter_taxa(taxon_names %in% c("Archaea"), subtaxa = TRUE)
-range.default(arch_only$data$diff_table$log2_median_ratio, finite=TRUE)
-```
-
-```{r}
-#set.seed(1999)
-obj %>%
-  filter_taxa(taxon_names %in% c("Archaea"), subtaxa = TRUE) %>%
-#  filter_taxa(taxon_ranks == "o", supertaxa = TRUE) %>% # subset to the order rank
-#  filter_taxa(taxon_names %in% c("Proteobacteria", "Bacteroidia", "Archaea"), subtaxa = TRUE, invert = TRUE) # to remove taxa
-  heat_tree(
-          node_label = taxon_names,
-          node_size = n_obs,
-         # node_size_range = c(0.01, 0.05),
-          node_label_size_range = c(0.008, 0.04),
-          node_color = log2_median_ratio,
-          node_color_interval = c(-5, 7),
-          edge_color_interval = c(-5, 7),
-          node_color_trans = "area",
-          node_color_range = c("#0072B2", "gray", "#D55E00"),
-          node_size_axis_label = "OTU count",
-          node_color_axis_label = "Log 2 median ratio",
-          layout = "da",
-          initial_layout = "re",
-          overlap_avoidance = 2,
-          output_file = "files/trepo/taxa/figures/differential_heat_tree_merged_Archaea.png")
-```
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-page'}
-system("cp files/trepo/taxa/figures/differential_heat_tree_merged_Archaea.png include/trepo/taxa/differential_heat_tree_merged_Archaea.png")
-knitr::include_graphics("include/trepo/taxa/differential_heat_tree_merged_Archaea.png")
-```
-
-Top Phyla
-
-```{r}
-top_phyl <- obj %>% filter_taxa(taxon_names %in% c("Proteobacteria", "Acidobacteriota", "Chloroflexi", "Planctomycetota"),  subtaxa = TRUE)
-range.default(top_phyl$data$diff_table$log2_median_ratio, finite=TRUE)
-```
-
-```{r}
-
-#set.seed(10)
-obj %>%
-  filter_taxa(taxon_names %in% c("Proteobacteria", "Acidobacteriota", "Chloroflexi", "Planctomycetota"),
-              subtaxa = TRUE) %>%
-  heat_tree(node_label = taxon_names,
-            node_size = n_obs,
-            node_color = log2_median_ratio,
-            node_color_range = c("#0072B2", "gray", "#D55E00"),
-            node_color_interval = c(-3, 3),
-            #edge_color_interval = c(-5.5, 4),
-            #node_color_trans = "area",
-            tree_label = taxon_names,
-            initial_layout = "re", layout = "da",
-            node_color_axis_label = "Sum of root reads",
-            node_size_axis_label = "Number of OTUs",
-            #overlap_avoidance = 2,
-            output_file = "files/trepo/taxa/figures/differential_heat_tree_merged_phyla.png")
-```
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-page'}
-system("cp files/trepo/taxa/figures/differential_heat_tree_merged_phyla.png include/trepo/taxa/differential_heat_tree_merged_phyla.png")
-knitr::include_graphics("include/trepo/taxa/differential_heat_tree_merged_phyla.png")
-```
-
-
-```{r}
-set.seed(1)
-obj$data$diff_table2 <- compare_groups(obj,
-                                      data = "tax_abund",
-                                      cols = da_samp$sample_id, # What columns of sample data to use
-                                      groups = da_samp$TEMP) # What category each sample is assigned to
-heat_tree_matrix(obj,
-                 data = "diff_table2",
-                 node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
-                 node_label = taxon_names,
-                 node_color = log2_median_ratio, # A column from `obj$data$diff_table`
-                 node_color_range = diverging_palette(), # The built-in palette for diverging data
-                 node_color_trans = "linear", # The default is scaled by circle area
-                 node_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
-                 edge_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
-                 node_size_axis_label = "Number of OTUs",
-                 node_color_axis_label = "Log2 ratio median proportions",
-                 layout = "davidson-harel", # The primary layout algorithm
-                 initial_layout = "reingold-tilford", # The layout algorithm that initializes node locations
-                 output_file = c("differential_heat_tree2.png", "differential_heat_tree2.pdf")) # Saves the plot as a png file
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-ssu18_ps_pime <- readRDS("files/pime/rdata/ssu18_ps_pime.rds")
-
-ps_water_mc_100 <- prune_taxa(taxa_sums(ssu18_ps_pime) > 500, ssu18_ps_pime)
-total_reads_ps_water <- sum(readcount(ssu18_ps_pime))
-total_reads_ps_water_100 <- sum(readcount(ps_water_mc_100))
-ps_obj <- ps_water_mc_100
-x <- data.frame(sample_data(ps_obj))
-
-temp_temp <- c("W0", "W0", "W0", "W0", "W0", "W4", "W4", "W4", "W4", "W4", "W8", "W8", "W8", "W8", "W8")
-x$TEMP <- temp_temp
-
-sample_data(ps_obj) <- x
-```
-
-```{r}
-load("filtered_data.Rdata")
-obj %>%
-  filter_taxa(grepl(pattern = "^[a-zA-Z]+$", taxon_names)) %>% # remove "odd" taxa
-  filter_taxa(taxon_ranks == "o", supertaxa = TRUE) %>% # subset to the order rank
-  heat_tree(node_label = gsub(pattern = "\\[|\\]", replacement = "", taxon_names),
-            node_size = n_obs,
-            node_color = n_obs,
-            node_color_axis_label = "OTU count",
-            layout = "davidson-harel", initial_layout = "reingold-tilford")
-```
-
-```{r}
-heat_tree(obj)
-obj$taxon_names()
-ps_obj_mc_obj$n_obs_1()
-heat_tree(obj,
-          node_label = taxon_names,
-          node_size = n_obs,
-          node_color = roots)
-
-obj$data$tax_abund <- calc_taxon_abund(obj, "otu_counts",
-                                       cols = sample_data$SampleID,
-                                       groups = sample_data$Type)
-
-
-```
-
-```{r}
-ssu18_make_metac <- c("ps_obj")
-rm(list = ls(pattern = "tmp_"))
-for (i in ssu18_make_metac){
-        tmp_get <- get(i)
-        tmp_tax <- as.data.frame(tax_table(tmp_get))
-        tmp_tax <- tmp_tax %>% tibble::rownames_to_column("otu_id")
-        tmp_asv <- as.data.frame(t(otu_table(tmp_get)))
-        tmp_asv <- tmp_asv %>% tibble::rownames_to_column("otu_id")
-        tmp_sam <- data.frame(sample_data(tmp_get))
-        tmp_sam[1] <- NULL
-        tmp_sam <- tmp_sam %>% tibble::rownames_to_column("sample_id")
-        tmp_asv_tax <- merge(tmp_asv, tmp_tax, by="otu_id")
-        tmp_asv_tax$ASV_SEQ <- NULL
-        tmp_asv_tax$ASV_ID <- NULL
-        tmp_obj <- parse_tax_data(tmp_asv_tax,
-                                  class_cols = c("Kingdom", "Phylum","Class",
-                                                 "Order","Family", "Genus"
-                                                 ))
-        tmp_obj$data$tax_group_abund <- calc_taxon_abund(tmp_obj, "tax_data",
-                                       cols = tmp_sam$sample_id,
-                                       groups = tmp_sam$TEMP)
-        tmp_obj$data$tax_total_abund <- calc_taxon_abund(tmp_obj, "tax_data",
-                                       cols = tmp_sam$sample_id,
-                                       groups = tmp_sam$DEPTH,
-                                       out_names = "n_reads")
-        tmp_obj$data$tax_samp_abund <- calc_taxon_abund(tmp_obj, "tax_data",
-                                       cols = tmp_sam$sample_id)
-        tmp_obj$data$tax_samp_occ <- calc_n_samples(tmp_obj, "tax_samp_abund",
-                                   groups = tmp_sam$TEMP,
-                                   cols = tmp_sam$sample_id)
-        tmp_obj$data$diff_table <- compare_groups(tmp_obj,
-                                      data = "tax_samp_abund",
-                                      cols = tmp_sam$sample_id,
-                                      groups = tmp_sam$TEMP)
-        tmp_name <- purrr::map_chr(i, ~paste0(., "_mc_obj"))
-        assign(tmp_name, tmp_obj)
-        tmp_name2 <- purrr::map_chr(i, ~paste0(., "_mc_samp_data"))
-        assign(tmp_name2, tmp_sam)
-        rm(list = ls(pattern = "tmp_"))
-}
-objects()
-```
-
-```{r}
-ps_obj_mc_obj$data$tax_sam
-#ps_obj_mc_obj$data$diff_table
-#write.table(ps_obj_mc_obj$data$diff_table, "test.txt", quote = FALSE, sep = "\t")
-#ps_obj_mc_obj$data$diff_table
-#set.seed(1999)
-ps_obj_mc_obj %>%
-  filter_taxa(taxon_names %in% c("Bacteria"), subtaxa = TRUE) %>%
-#  filter_taxa(taxon_ranks == "o", supertaxa = TRUE) %>% # subset to the order rank
-#  filter_taxa(taxon_names %in% c("Alphaproteobacteria", "Firmicutes", "Gammaproteobacteria"), subtaxa = TRUE, invert = FALSE) %>% #
-
-  heat_tree(node_label = taxon_names,
-            node_size = n_obs,
-            node_size_range = c(0.01, 0.05),
-            edge_size_range = c(0.005, 0.005),
-            node_color = W0,
-            initial_layout = "re", layout = "da",
-            title = "Root sample read depth",
-            node_color_axis_label = "Sum of root reads",
-            node_size_axis_label = "Number of OTUs",
-            output_file = "plot_example0.pdf")
-
-  heat_tree(
-          node_size = W8,
-          node_label = paste0(taxon_names, " (", n_obs, ")" ) ,
-          node_size_range = c(0.01, 0.04),
-          #node_label_size_range = c(0.008, 0.04),
-          node_color = W8,
-          #node_color_interval = c(0, 0.05),
-          #edge_color_interval = c(0, 0.05),
-          #node_color_trans = "area",
-          #node_color_range = c("#D55E00", "gray", "#0072B2"),
-          node_size_axis_label = "OTU count",
-          node_color_axis_label = "Log 2 median ratio",
-          layout = "da",
-          initial_layout = "re",
-          overlap_avoidance = 2,
-          output_file = "differential_heat_tree.pdf")
-```
-
-
-```{r}
-swel_col <- c("#ff6db6", "#24ff24", "#db6d00")
-write.table(ps_obj_mc_obj$data$diff_table, "test.txt", quote = FALSE, sep = "\t")
-ps_obj_mc_obj$n_obs()
-ps_obj_mc_obj %>%
-filter_taxa(taxon_names %in% c("Bacteria"), subtaxa = TRUE) %>%
-heat_tree_matrix(
-                 data = "diff_table",
-                 node_label = taxon_names,
-                 node_size = n_obs_1, # n_obs is a function that calculates the number of OTUs per taxon
-                 #node_label_size_range = c(0.008, 0.04),
-                 node_color = roots, # A column from `obj$data$diff_table`
-                 #node_color_range = swel_col, # The built-in palette for diverging data
-                 #node_color_trans = "linear", # The default is scaled by circle area
-                 #node_color_interval = c(0, 0.05),  # The range of `log2_median_ratio` to display
-                 #edge_color_interval = c(0, 0.05), # The range of `log2_median_ratio` to display
-                 node_size_axis_label = "Number of OTUs",
-                 node_color_axis_label = "Log2 ratio median proportions",
-                 layout = "fr", # The primary layout algorithm
-                 initial_layout = "reingold-tilford", # The layout algorithm that initializes node locations
-                 output_file = "differential_heat_tree2.pdf") # Saves the plot as a png file
-
-```
-
-
-
-```{r}
-for (i in ssu18_data_sets){
-    tmp_clean <- purrr::map_chr(i, ~paste0(., "_proteo_clean"))
-    tmp_get <- get(tmp_clean)
-    tmp_ps <- transform_sample_counts(tmp_get, function(otu) otu/sum(otu))
-    tmp_ps@phy_tree <- NULL
-    tmp_prune <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
-    tmp_tree <- rtree(ntaxa(tmp_prune), rooted = TRUE, tip.label = taxa_names(tmp_prune))
-    tmp_ps_merge <- merge_phyloseq(tmp_prune,
-                               sample_data,
-                               tmp_tree)
-    tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo_clean_trans"))
-    assign(tmp_name, tmp_ps_merge)
-    rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_agg") ssu18_ps_pime_clean_Phylum_agg
-```
-
-
-```{r}
-carbom_chloro <- subset_taxa(ssu18_ps_pime_proteo_clean_trans, Phylum %in% c("Firmicutes"))
-testplot <- plot_bar(carbom_chloro, x="Class", fill = "Class", facet_grid = ~TEMP) +
-            geom_bar(aes(color=Class, fill=Class), stat="identity", position="stack")
-
-carbom_chloro <- subset_taxa(ssu18_ps_pime_proteo_clean_trans, Phylum %in% c("Alphaproteobacteria", "Gammaproteobacteria", "Firmicutes"))
-carbom.ord <- ordinate(carbom_chloro, "NMDS", "bray")
-testplot <- plot_ordination(ssu18_ps_work_proteo_clean_trans, carbom.ord, type="taxa", color="Family",
-                  title="OTUs", label="Family") +
-                  facet_wrap(~Phylum)
-
-
-testplot
-dev.off()
-png("figures/taxa/ssu/testplot.png", height = 20, width = 70,
-    units = 'cm', res = 600, bg = "white")
-testplot
-dev.off()
-pdf("figures/taxa/ssu/testplot.pdf", height = 10, width = 12)
-testplot
-dev.off()
-```
-
-
-
-```{r}
-subset_level <- "Phylum"
-subset_name <- "Alphaproteobacteria"
-for ( i in ssu18_data_sets){
-  tmp_get_name <- purrr::map_chr(i, ~ paste0(., "_proteo_clean"))
-  tmp_get <- get(tmp_get_name)
-  tmp_ps <- subset_taxa(tmp_get, get(subset_level) %in% c(subset_name))
-  tmp_sub_name <- purrr::map_chr(i, ~paste0(., "_clean_sub_", subset_name))
-  assign(tmp_sub_name, tmp_ps)
-  rm(list = ls(pattern = "tmp_"))
-}
-```
-
-
-```{r}
-top_hits <- 12
-top_level <- "Family"
-for (i in ssu18_data_sets){
-  tmp_get_name <- purrr::map_chr(i, ~ paste0(., "_clean_sub_", subset_name))
-  tmp_get <- get(tmp_get_name)
-  tmp_otu <- data.frame(t(otu_table(tmp_get)))
-  tmp_otu[] <- lapply(tmp_otu, as.numeric)
-  tmp_otu <- as.matrix(tmp_otu)
-  tmp_tax <- as.matrix(data.frame(tax_table(tmp_get)))
-  tmp_samples <- data.frame(sample_data(tmp_get))
-  tmp_clean_df <- merge_phyloseq(otu_table(tmp_otu, taxa_are_rows = TRUE),
-                          tax_table(tmp_tax, tmp_tax),
-                          sample_data(tmp_samples))
-  tmp_agg_name <- purrr::map_chr(i, ~paste0(., "_clean_sub_", subset_name, "_agg"))
-  tmp_agg_df <- microbiome::aggregate_top_taxa(tmp_clean_df,
-                                                    top = top_hits,
-                                                    level = top_level)
-  assign(tmp_agg_name, tmp_agg_df)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_sub")
-objects()
-```
-
-```{r}
-for (i in objects(pattern="_sub.*_agg$")) {
-  tmp_name <- purrr::map_chr(i, ~ paste0(., "_order"))
-  tmp_get <- get(i)
-  tmp_list <- get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[1],
-                        errorIfNULL = TRUE)
-  assign(tmp_name, tmp_list)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_sub")
-
-```
-
-```{r}
-for (i in objects(pattern="_sub.*_agg$")) {
-  tmp_name <- purrr::map_chr(i, ~paste0(., "_tax"))
-  tmp_agg <- purrr::map_chr(i, ~paste0(., "_order"))
-  tmp_get <- get(i)
-  tmp_get_agg <- get(tmp_agg)
-  tmp_df <- tmp_get %>%
-            transform_sample_counts(function(x) {x/sum(x)} ) %>%
-            psmelt()
-  tmp_df[[top_level]] <- gdata::reorder.factor(tmp_df[[top_level]],
-                                                  new.order = rev(tmp_get_agg))
-  tmp_df <- tmp_df %>% dplyr::arrange(get(top_level))
-  assign(tmp_name, tmp_df)
-  print(c(i,tmp_name, tmp_agg))
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_tax")
-```
-
-```{r}
-for (i in objects(pattern="_sub.*_tax")) {
-  tmp_get <- get(i)
-  tmp_levels <- levels(tmp_get[[top_level]])
-  print(c(i, tmp_levels))
-}
-```
-
-```{r}
-ssu18_ps_pime_0_clean_sub_Firmicutes_agg_order <- c("Bacillaceae" "o_Bacillales"     "Planococcaceae"   "Paenibacillaceae")
-ssu18_ps_pime_4_clean_sub_Firmicutes_agg_order
-ssu18_ps_pime_8_clean_sub_Firmicutes_agg_order
-ssu18_ps_pime_clean_sub_Firmicutes_agg_order
-ssu18_ps_work_0_clean_sub_Firmicutes_agg_order
-ssu18_ps_work_4_clean_sub_Firmicutes_agg_order
-ssu18_ps_work_8_clean_sub_Firmicutes_agg_order
-ssu18_ps_work_clean_sub_Firmicutes_agg_order
-
-```
-
-5) Plot the data for a single phyloseq object. Here you use an aggragated tax file.
-
-```{r, echo=FALSE}
-ssu18_colvec.tax <- c(
-"#3D3C04",
-"#FF95BA", #ALT
-"#00A090", #ALT
-"#C00B6F", #ALT
-#"#9BFF2D",
-#"#590A87",
-"#5FFFDE",
-"#0063E5",
-"#ED0DFD",
-"#FFA035",
-"#00C7F9",
-"#C80B2A",
-"#00A51C",
-"#FFD5FD",
-"#00463C"
-)
-```
-
-```{r}
-ssu18_ps_work_Alphaproteobacteria_plot <- ggplot(ssu18_ps_work_clean_sub_Alphaproteobacteria_agg_tax,
-                aes(x = factor(TEMP),
-                    y = Abundance, fill = get(top_level))) +
-  geom_bar(stat = "identity", position = "fill") +
-  scale_fill_manual(values = ssu18_colvec.tax) +
-  #scale_x_discrete("Temperature", expand = waiver(), position = "bottom", drop = FALSE) +
-  theme_cowplot() +
-  guides(fill = guide_legend(title = top_level)) +
-  #guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +
-  ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "transparent", colour = NA),
-        plot.background = element_rect(fill = "transparent", colour = NA),
-        panel.border = element_rect(fill = NA, color = "black"),
-        legend.position = "right",
-        axis.text = element_text(size = 8),
-        axis.title = element_text(size = 10))
-ssu18_ps_work_Alphaproteobacteria_plot
-```
-
-```{r}
-ssu18_split_df <- c("ssu18_ps_work", "ssu18_ps_pime_0", "ssu18_ps_pime_4", "ssu18_ps_pime_8")
-for (i in ssu18_split_df) {
-  tmp_level_get <- get(i)
-  tmp_level <- data.frame(sample_data(tmp_level_get))
-  tmp_level <- tmp_level[order(tmp_level$TEMP), ]
-  tmp_level <- as.vector(tmp_level$SamName)
-
-  tmp_agg_name <- purrr::map_chr(i, ~paste0(., "_clean_sub_", subset_name, "_agg_tax"))
-  tmp_get <- get(tmp_agg_name)
-  tmp_df <- reshape::melt(tmp_get, id.vars = c("Sample", "TEMP", "Abundance", top_level))
-  tmp_plot_name <- purrr::map_chr(i, ~paste0(., "_", subset_name, "_melt_plot"))
-
-  tmp_plot <- ggplot(tmp_df,
-                aes(x = Sample,
-                    y = Abundance, fill = get(top_level))) +
-    facet_grid(. ~TEMP, scale = "free_x", space = "free_x")+
-    geom_bar(stat = "identity", position = "fill")  +
-    scale_fill_manual(values = ssu18_colvec.tax) +
-    #scale_x_discrete("Treatment", expand = waiver(),
-    #                 position = "bottom", drop = FALSE, limits = tmp_level) +
-    theme_cowplot() +
-    guides(fill = guide_legend(title = top_level, reverse = FALSE,
-                               keywidth = 0.7, keyheight = 0.7)) +
-    ylab(NULL) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = "transparent", colour = NA),
-        plot.background = element_rect(fill = "transparent", colour = NA),
-        panel.border = element_rect(fill = NA, color = "black"),
-        legend.text = element_text(size = 7),
-        legend.title = element_text(size = 10),
-        legend.position = "right",
-        #legend.key.size = unit(1.5, "cm"),
-        axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 6, angle = 90),
-        strip.text = element_text(size = 8, angle = 0),
-        axis.title = element_text(size = 10)) + ylab(NULL)
-  assign(tmp_plot_name, tmp_plot)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects(pattern="_plot")
-ssu18_ps_work_Alphaproteobacteria_melt_plot
-ssu18_ps_pime_0_Alphaproteobacteria_melt_plot
-ssu18_ps_pime_4_Alphaproteobacteria_melt_plot
-ssu18_ps_pime_8_Alphaproteobacteria_melt_plot
-```
-
-
-```{r}
-ssu18_ps_work_
-carbom_chloro_trans <- carbom_chloro %>%
-        transform_sample_counts(function(x) {x/sum(x)} ) %>%
-        psmelt()
-ssu18_Fractions_tax$Phylum <- gdata::reorder.factor(ssu18_Fractions_tax$Phylum,
-                                                  new.order = ssu18_tax_order)
-ssu18_Fractions_tax <- ssu18_Fractions_tax %>% dplyr::arrange(Phylum)
-
-
-
-plot_bar(carbom_chloro_trans, x = "Family", fill = "Family", facet_grid = DEPTH~TEMP) +
-  geom_bar(aes(color = Family, fill = Family), stat = "identity", position = "stack")
-```
-
-
-
-tax_tab <- as.data.frame(tax_table(ps_work))
-tax_tab <- tibble::rownames_to_column(tax_tab, "asv_id")
-tax_tab$ASV_SEQ <- NULL
-colnames(tax_tab)[colnames(tax_tab) == "ASV_ID"] <- "ASV"
-write.table(tax_tab, "tables/data-prep/ssu/tax_tab_mc_ssu18.txt",
-            quote = FALSE, sep = "\t", row.names = FALSE)
-
-
-
-```{r, echo=FALSE}
-ssu18_ps_work_asv <- data.frame(t(otu_table(ssu18_ps_work)))
-ssu18_ps_pime_asv <- data.frame(t(otu_table(ssu18_ps_pime)))
-```
-</details>
-
-```{r include=FALSE, eval=TRUE}
-remove(list = ls())
+save.image("page_build/taxa_wf.rdata")
 ```
 
 ##  Source Code {.appendix}

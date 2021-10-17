@@ -1,7 +1,7 @@
 ---
-title: "7 Beta Diversity & Dispersion Estimates"
+title: "6. Beta Diversity & Dispersion Estimates"
 description: |
-  Reproducible workflow for ... In this workflow, ....
+  Reproducible workflow for assessing community dissimilarity across temperature treatments.
 author:
 #  - name: Jarrod J Scott
 #    url: https://example.com/norajones
@@ -16,17 +16,17 @@ output:
 ---
 
 <details markdown="1">
-<summary>Click here for setup information.</summary>
+<summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup}
+```{r setup, message=FALSE, results = 'hide'}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
 pacman::p_load(tidyverse, DT, ampvis2, hilldiv, 
-               microbiome, phytools, phangorn, 
-               pairwiseAdonis, codefolder, naniar, 
-               labdsv, patchwork, agricolae, 
+               microbiome, phytools, phangorn, reactable, Matrix, 
+               pairwiseAdonis, codefolder, naniar, downloadthis,
+               labdsv, patchwork, agricolae, captioner, microeco,
                install = FALSE, update = FALSE)
 
 #pacman::p_depends(agricolae, local = TRUE)  
@@ -48,45 +48,48 @@ knitr::opts_current$get(c(
 xaringanExtra::use_panelset()
 ```
 
+```{r master_load_ssu18, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+load("page_build/beta_wf_part_1.rdata")
+```
+
+```{r, echo = FALSE, eval=TRUE, results = 'hide'}
+# Create the caption(s) with captioner
+caption_tab_ssu <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
+caption_fig_ssu <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
+
+caption_tab_its <- captioner(prefix = "(ITS) Table", suffix = " |", style = "b")
+caption_fig_its <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
+# Create a function for referring to the tables in text
+ref <- function(x) str_extract(x, "[^|]*") %>% 
+  trimws(which = "right", whitespace = "[ ]")
+```
+
+```{r, echo = FALSE, eval = TRUE}
+source("assets/captions/captions_beta.R")
+```
 
 # Synopsis
 
-This workflow contains diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) **and** the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation workflow. See the [Data Availability](data-availability.html) page for complete details.
+This workflow contains diversity assessments for the high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) **and** the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation workflow. See the [Data Availability](data-availability.html) page for complete details.
 
 In this workflow...
 
 # 16s rRNA
 
-```{r master_load_ssu18, include=FALSE, eval=TRUE}
-## Load to build page only #2
-remove(list = ls())
-load("page_build/beta_ssu18_part_1_wf.rdata")
-```
-
-```{r initial_load_ssu18, include=FALSE}
+```{r, include=FALSE, eval=FALSE}
 ## Initial Load for  ANALYSIS #1
-remove(list = ls())
 set.seed(119)
 ssu18_ps_work <- readRDS("files/alpha/rdata/ssu18_ps_work.rds")
-ssu18_ps_pime <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
+ssu18_ps_filt <- readRDS("files/alpha/rdata/ssu18_ps_filt.rds")
 ssu18_ps_perfect <- readRDS("files/alpha/rdata/ssu18_ps_perfect.rds")
-ssu18_ps_work_otu <- readRDS("files/alpha/rdata/ssu18_ps_work_otu.rds")
-ssu18_ps_pime_otu <- readRDS("files/alpha/rdata/ssu18_ps_pime_otu.rds")
-ssu18_ps_perfect_otu <- readRDS("files/alpha/rdata/ssu18_ps_perfect_otu.rds")
-
-ssu18_hill_hier <- readRDS("files/alpha/rdata/ssu18_hill_hier.rds")
-ssu18_ps_pime_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_pime_tree_ult.rds")
-ssu18_ps_pime_otu_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_pime_otu_tree_ult.rds")
-ssu18_ps_perfect_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_perfect_tree_ult.rds")
-ssu18_ps_perfect_otu_tree_ult <- readRDS("files/alpha/rdata/ssu18_ps_perfect_otu_tree_ult.rds")
-objects()
+ssu18_ps_pime <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
 ```
 
 ```{r, echo=FALSE}
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
-
-## Significance Tests
 
 In order to test for significance between sample groups, we must perform the following steps:
 
@@ -98,15 +101,16 @@ In order to test for significance between sample groups, we must perform the fol
 
 Steps 2--4 are combined in a `for` loop that tests all three distance metrics.
 
-Before we begin, we must first transform sample counts to relative abundance for both data sets.
+Before we begin, we need to first transform sample counts to relative abundance and generate some new trees.
 
 ```{r, code_folding=TRUE}
-samp_ps <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
-             "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
-for (i in samp_ps) {
+ssu_samp_ps <- c("ssu18_ps_work", "ssu18_ps_filt", 
+             "ssu18_ps_perfect", "ssu18_ps_pime")
+for (i in ssu_samp_ps) {
      tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
      tmp_get <- get(i)
-     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
+     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 
+                                          1e5 * otu/sum(otu))
      tmp_ps@phy_tree <- NULL
      tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
      tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE, 
@@ -118,43 +122,50 @@ for (i in samp_ps) {
 }
 ```
 
-### Beta Dispersion
+## Beta Dispersion
 
 Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions. 
 
 ```{r, code_folding=TRUE}
-dist <- c("jsd", "unifrac", "wunifrac")
-for (i in samp_ps) {
-        for (d in dist){
-             tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_prop")))
-             tmp_samp <- data.frame(sample_data(tmp_get))
-             tmp_df <- phyloseq::distance(tmp_get, method = d)
-             tmp_df_name <- purrr::map_chr(d, ~ paste0(i, "_beta_dist_", .))
-             assign(tmp_df_name, tmp_df)
-             tmp_df2 <- betadisper(tmp_df, tmp_samp$TEMP, bias.adjust = TRUE)
-             tmp_df_name2 <- purrr::map_chr(d, ~ paste0(i, "_beta_dispersion_", .))
-             assign(tmp_df_name2, tmp_df2)
-             tmp_df3 <- permutest(tmp_df2, pairwise = TRUE,
-                                  permutations = 1000, binary = FALSE)
-             tmp_df_name3 <- purrr::map_chr(d, ~ paste0(i, "_permutest_", .))
-             assign(tmp_df_name3, tmp_df3)
-             rm(list = ls(pattern = "tmp_"))
-       }
+ssu_dist <- c("jsd", "unifrac", "wunifrac")
+for (i in ssu_samp_ps) {
+    for (d in ssu_dist){
+       tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_prop")))
+       tmp_samp <- data.frame(sample_data(tmp_get))
+       tmp_df <- phyloseq::distance(tmp_get, method = d)
+       tmp_df_name <- purrr::map_chr(d, ~ paste0(i, "_beta_dist_", .))
+       assign(tmp_df_name, tmp_df)
+       tmp_df2 <- betadisper(tmp_df, tmp_samp$TEMP, bias.adjust = TRUE)
+       tmp_df_name2 <- purrr::map_chr(d, ~ paste0(i, "_beta_dispersion_", .))
+       assign(tmp_df_name2, tmp_df2)
+       tmp_df3 <- permutest(tmp_df2, pairwise = TRUE,
+                            permutations = 1000, binary = FALSE)
+       tmp_df_name3 <- purrr::map_chr(d, ~ paste0(i, "_permutest_", .))
+       assign(tmp_df_name3, tmp_df3)
+       rm(list = ls(pattern = "tmp_"))
+    }
 }
 objects()
 ```
 
 <details markdown="1">
-<summary>Detailed results of Beta Dispersion & Permutation tests for ASV data</summary>
+<summary><strong>Detailed results</strong> of Beta Dispersion & Permutation tests</summary>
 
-#### Permutation tests (ASV)
+::: l-body
+::: {.panelset}
 
 ```{r, eval=TRUE, echo=FALSE}
-samp_ps_asv <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect")
-dist <- c("jsd", "unifrac", "wunifrac")
-for (i in samp_ps_asv) {
-  cat("\n", "           *****", i, "*****", "\n")
-        for (d in dist){
+ssu_samp_ps <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
+ssu_dist <- c("jsd", "unifrac", "wunifrac")
+```
+
+::: {.panel}
+#### FULL
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in ssu_samp_ps[1]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in ssu_dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
           cat("\n")
           cat("####################################################", "\n")
@@ -167,19 +178,37 @@ for (i in samp_ps_asv) {
         }
 }
 ```
-</details>
+:::
 
-<details markdown="1">
-<summary>Detailed results of Beta Dispersion & Permutation tests for OTU data</summary>
-
-#### Permutation tests (OTU)
+::: {.panel}
+#### Arbitrary
 
 ```{r, eval=TRUE, echo=FALSE}
-samp_ps_otu <- c("ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
-dist <- c("jsd", "unifrac", "wunifrac")
-for (i in samp_ps_otu) {
-  cat("\n", "*****", i, "*****", "\n")
-        for (d in dist){
+for (i in ssu_samp_ps[2]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in ssu_dist){
+          tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
+          cat("\n")
+          cat("####################################################", "\n")
+          tmp_print <- c("BETA DISPERSION significance test", d, "distance")
+          cat(tmp_print, "\n")
+          cat("####################################################")
+          cat("\n")
+          print(tmp_get)
+          rm(list = ls(pattern = "tmp_"))
+        }
+}
+
+```
+:::
+
+::: {.panel}
+#### PERfect
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in ssu_samp_ps[3]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in ssu_dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
           cat("\n")
           cat("####################################################", "\n")
@@ -192,14 +221,38 @@ for (i in samp_ps_otu) {
         }
 }
 ```
+:::
+
+::: {.panel}
+#### PIME
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in ssu_samp_ps[4]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in ssu_dist){
+          tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
+          cat("\n")
+          cat("####################################################", "\n")
+          tmp_print <- c("BETA DISPERSION significance test", d, "distance")
+          cat(tmp_print, "\n")
+          cat("####################################################")
+          cat("\n")
+          print(tmp_get)
+          rm(list = ls(pattern = "tmp_"))
+        }
+}
+```
+:::
+:::
+:::
 </details>
 
 Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
 
 ```{r, echo=FALSE, eval=TRUE, results='markdown'}
 ssu18_perm_pvalues <- data.frame()
-for (i in samp_ps) {
-        for (d in dist){
+for (i in ssu_samp_ps) {
+        for (d in ssu_dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_permutest_", d)))
           tmp_pv <- tmp_get$tab$`Pr(>F)`[1]
 
@@ -216,13 +269,82 @@ for (i in samp_ps) {
 ssu18_perm_pvalues <- ssu18_perm_pvalues %>% 
   dplyr::rename(c("data_set" = 1, "dist" = 2, "pval" = 3, "test" = 4))
 ssu18_perm_pvalues <- ssu18_perm_pvalues %>% tibble::remove_rownames()
-knitr::kable(ssu18_perm_pvalues)
+```
+
+
+```{r, echo=FALSE}
+ssu18_perm_summary <- ssu18_perm_pvalues
+ssu18_perm_summary <- ssu18_perm_summary %>% separate(col = 1, 
+                                              into = c("dummy", "metric", "dataset"), 
+                                              sep = "_", remove = TRUE)
+ssu18_perm_summary[,1:2] <- NULL 
+
+ssu18_perm_summary$dataset <- stringr::str_replace(ssu18_perm_summary$dataset, "work", "FULL") %>%
+                              stringr::str_replace(., "filt", "FILT") %>%
+                              stringr::str_replace(., "pime", "PIME") %>%
+                              stringr::str_replace(., "perfect", "PERfect")
+ssu18_perm_summary$dist <- stringr::str_replace(ssu18_perm_summary$dist, "jsd", "Jensen–Shannon divergence") %>%
+                              stringr::str_replace(., "wunifrac", "weighted UniFrac") %>%
+                              stringr::str_replace(., "unifrac", "unweighted UniFrac")
+ssu18_perm_summary$pval <- round(ssu18_perm_summary[[3]], 4)
+```
+
+<small>`r caption_tab_ssu("ssu_beta_disp_tests")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- ssu18_perm_summary
+seq_table %>%
+  download_this(
+    output_name = "ssu_beta_disp_tests",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 100, headerVAlign = "center"
+    ), 
+  columns = list(
+    dataset = colDef(name = "Dataset", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 50),
+    dist = colDef(name = "distance", align = "left"),
+    `pval` = colDef(name = "p-value", minWidth = 100, resizable = FALSE,
+                                   style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2"
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")
+    })
+    ), 
+  searchable = FALSE, defaultPageSize = 12, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 
 Now we to create sample data frames for each data set. 
 
 ```{r, code_folding=TRUE}
-for (i in samp_ps) {
+for (i in ssu_samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
      tmp_samp <- data.frame(sample_data(tmp_get))
      tmp_name <- purrr::map_chr(i, ~ paste0(., "_sampledf"))
@@ -232,7 +354,7 @@ for (i in samp_ps) {
 objects(pattern="_sampledf")
 ```
 
-### Significance Tests 
+## Significance Tests 
 
 Depending on the test, we need different data structures. For `adonis` we use the sample metadata and for `anosim` we will start with a phyloseq object. So for each data set we create two variables: `adonis_sampledf` and `anosim_data`
 
@@ -240,9 +362,9 @@ Depending on the test, we need different data structures. For `adonis` we use th
 ::: {.panelset}
 ::: {.panel}
 
-#### FULL ASV
+#### FULL
 
-```{r, code_folding=TRUE}
+```{r, echo=FALSE}
 adonis_sampledf <- ssu18_ps_work_sampledf
 anosim_data <- ssu18_ps_work
 ```
@@ -254,7 +376,7 @@ tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_wo
 Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[1]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 ssu18_ps_work_adonis_jsd <-  adonis(ssu18_ps_work_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 ssu18_ps_work_adonis2_jsd <- adonis2(ssu18_ps_work_beta_dist_jsd ~ TEMP,
@@ -264,7 +386,7 @@ ssu18_ps_work_adonis2_jsd <- adonis2(ssu18_ps_work_beta_dist_jsd ~ TEMP,
 Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[2]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 ssu18_ps_work_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_work_anosim_unifrac <-
   anosim(phyloseq::distance(ssu18_ps_work_prop, "unifrac"),
@@ -274,15 +396,158 @@ ssu18_ps_work_anosim_unifrac <-
 Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[3]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 ssu18_ps_work_groups <- get_variable(anosim_data, "TEMP")
 ssu18_ps_work_anosim_wunifrac <-
   anosim(phyloseq::distance(ssu18_ps_work_prop, "wunifrac"),
          grouping = ssu18_ps_work_groups)
 ```
 
+:::
+
+::: {.panel}
+
+#### Arbitrary
+
+```{r, echo=FALSE}
+adonis_sampledf <- ssu18_ps_filt_sampledf
+anosim_data <- ssu18_ps_filt
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_filt',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r}
+ssu18_ps_filt_adonis_jsd <-  adonis(ssu18_ps_filt_beta_dist_jsd ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+ssu18_ps_filt_adonis2_jsd <- adonis2(ssu18_ps_filt_beta_dist_jsd ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r}
+ssu18_ps_filt_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_filt_anosim_unifrac <-
+  anosim(phyloseq::distance(ssu18_ps_filt_prop, "unifrac"),
+         grouping = ssu18_ps_filt_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r}
+ssu18_ps_filt_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_filt_anosim_wunifrac <-
+  anosim(phyloseq::distance(ssu18_ps_filt_prop, "wunifrac"),
+         grouping = ssu18_ps_filt_groups)
+```
+:::
+
+::: {.panel}
+
+#### PERfect
+
+```{r, echo=FALSE}
+adonis_sampledf <- ssu18_ps_perfect_sampledf
+anosim_data <- ssu18_ps_perfect
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_perfect',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r}
+ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_perfect_anosim_jsd <-
+  anosim(phyloseq::distance(ssu18_ps_perfect_prop, "jsd"),
+         grouping = ssu18_ps_perfect_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r}
+ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_perfect_anosim_unifrac <-
+  anosim(phyloseq::distance(ssu18_ps_perfect_prop, "unifrac"),
+         grouping = ssu18_ps_perfect_groups)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r}
+ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_perfect_anosim_wunifrac <-
+  anosim(phyloseq::distance(ssu18_ps_perfect_prop, "wunifrac"),
+         grouping = ssu18_ps_perfect_groups)
+```
+:::
+
+::: {.panel}
+
+#### PIME
+
+```{r, echo=FALSE}
+adonis_sampledf <- ssu18_ps_pime_sampledf
+anosim_data <- ssu18_ps_pime
+```
+
+```{r, echo=FALSE, eval=TRUE}
+tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_pime',]
+```
+
+Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[1]`**.
+
+```{r}
+ssu18_ps_pime_adonis_jsd <-  adonis(ssu18_ps_pime_beta_dist_jsd ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+ssu18_ps_pime_adonis2_jsd <- adonis2(ssu18_ps_pime_beta_dist_jsd ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[2]`**.
+
+```{r}
+ssu18_ps_pime_adonis_unifrac <-  adonis(ssu18_ps_pime_beta_dist_unifrac ~ TEMP,
+                                     data = adonis_sampledf, permutations = 1000)
+ssu18_ps_pime_adonis2_unifrac <- adonis2(ssu18_ps_pime_beta_dist_unifrac ~ TEMP,
+                                      data = adonis_sampledf, permutations = 1000)
+```
+
+Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
+Then we use **`r tmp_perm_tests$test[3]`**.
+
+```{r}
+ssu18_ps_pime_groups <- get_variable(anosim_data, "TEMP")
+ssu18_ps_pime_anosim_wunifrac <-
+  anosim(phyloseq::distance(ssu18_ps_pime_prop, "wunifrac"),
+         grouping = ssu18_ps_pime_groups)
+```
+
+:::
+:::
+:::
+
 <details markdown="1">
-<summary>Detailed results of Significance tests for FULL data set</summary>
+<summary><strong>Detailed results</strong> of Significance tests</summary>
+
+::: l-body
+::: {.panelset}
+::: {.panel}
+
+#### FULL
 
 ```{r, eval=TRUE, echo=FALSE}
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
@@ -297,118 +562,30 @@ cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
 summary(ssu18_ps_work_anosim_wunifrac)
 cat("\n")
 ```
-</details>
-
 :::
 
 ::: {.panel}
 
-#### PIME ASV
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- ssu18_ps_pime_sampledf
-anosim_data <- ssu18_ps_pime
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_pime',]
-```
-
-Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_pime_adonis_jsd <-  adonis(ssu18_ps_pime_beta_dist_jsd ~ TEMP,
-                                 data = adonis_sampledf, permutations = 1000)
-ssu18_ps_pime_adonis2_jsd <- adonis2(ssu18_ps_pime_beta_dist_jsd ~ TEMP,
-                                  data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_pime_adonis_unifrac <-  adonis(ssu18_ps_pime_beta_dist_unifrac ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-ssu18_ps_pime_adonis2_unifrac <- adonis2(ssu18_ps_pime_beta_dist_unifrac ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_pime_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_pime_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_pime_prop, "wunifrac"),
-         grouping = ssu18_ps_pime_groups)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
+#### Arbitrary
 
 ```{r, eval=TRUE, echo=FALSE}
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-ssu18_ps_pime_adonis2_jsd
+ssu18_ps_filt_adonis2_jsd
 cat("\n")
 
-cat("\n", "***PERMANOVA for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-ssu18_ps_pime_adonis2_unifrac
+cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
+summary(ssu18_ps_filt_anosim_unifrac)
 cat("\n")
 
 cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_pime_anosim_wunifrac)
+summary(ssu18_ps_filt_anosim_wunifrac)
 cat("\n")
 ```
-</details>
-
 :::
 
 ::: {.panel}
 
-#### PERfect ASV
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- ssu18_ps_perfect_sampledf
-anosim_data <- ssu18_ps_perfect
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_perfect',]
-```
-
-Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_anosim_jsd <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_prop, "jsd"),
-         grouping = ssu18_ps_perfect_groups)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_anosim_unifrac <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_prop, "unifrac"),
-         grouping = ssu18_ps_perfect_groups)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_perfect_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_prop, "wunifrac"),
-         grouping = ssu18_ps_perfect_groups)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
+#### PERfect
 
 ```{r, eval=TRUE, echo=FALSE}
 cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
@@ -423,881 +600,156 @@ cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
 summary(ssu18_ps_perfect_anosim_wunifrac)
 cat("\n")
 ```
-</details>
-
 :::
 
 ::: {.panel}
 
-#### FULL OTU
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- ssu18_ps_work_otu_sampledf
-anosim_data <- ssu18_ps_work_otu
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_work_otu',]
-```
-
-Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_work_otu_anosim_jsd <-
-  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "jsd"),
-         grouping = ssu18_ps_work_otu_groups)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_work_otu_anosim_unifrac <-
-  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "unifrac"),
-         grouping = ssu18_ps_work_otu_groups)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_work_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_work_otu_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_work_otu_prop, "wunifrac"),
-         grouping = ssu18_ps_work_otu_groups)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for FULL data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-summary(ssu18_ps_work_otu_anosim_jsd)
-cat("\n")
-
-cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-summary(ssu18_ps_work_otu_anosim_unifrac)
-cat("\n")
-
-cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_work_otu_anosim_wunifrac)
-cat("\n")
-```
-</details>
-
-:::
-
-::: {.panel}
-
-#### PIME OTU
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- ssu18_ps_pime_otu_sampledf
-anosim_data <- ssu18_ps_pime_otu
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_pime_otu',]
-```
-
-Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_pime_otu_adonis_jsd <-  adonis(ssu18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-ssu18_ps_pime_otu_adonis2_jsd <- adonis2(ssu18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_pime_otu_adonis_unifrac <-  adonis(ssu18_ps_pime_otu_beta_dist_unifrac ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-ssu18_ps_pime_otu_adonis2_unifrac <- adonis2(ssu18_ps_pime_otu_beta_dist_unifrac ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_pime_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_pime_otu_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_pime_otu_prop, "wunifrac"),
-         grouping = ssu18_ps_pime_otu_groups)
-```
-
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
+#### PIME
 
 ```{r, eval=TRUE, echo=FALSE}
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-ssu18_ps_pime_otu_adonis2_jsd
+ssu18_ps_pime_adonis2_jsd
 cat("\n")
 
 cat("\n", "***PERMANOVA for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-ssu18_ps_pime_otu_adonis2_unifrac
+ssu18_ps_pime_adonis2_unifrac
 cat("\n")
 
 cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_pime_otu_anosim_wunifrac)
+summary(ssu18_ps_pime_anosim_wunifrac)
 cat("\n")
 ```
+:::
+:::
+:::
+
+
 </details>
 
-:::
-
-::: {.panel}
-
-#### PERfect OTU
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- ssu18_ps_perfect_otu_sampledf
-anosim_data <- ssu18_ps_perfect_otu
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_perfect_otu',]
-```
-
-Is the p-value of the `r ssu18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_otu_anosim_jsd <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "jsd"),
-         grouping = ssu18_ps_perfect_otu_groups)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_otu_anosim_unifrac <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "unifrac"),
-         grouping = ssu18_ps_perfect_otu_groups)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-ssu18_ps_perfect_otu_groups <- get_variable(anosim_data, "TEMP")
-ssu18_ps_perfect_otu_anosim_wunifrac <-
-  anosim(phyloseq::distance(ssu18_ps_perfect_otu_prop, "wunifrac"),
-         grouping = ssu18_ps_perfect_otu_groups)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PERfect data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-summary(ssu18_ps_perfect_otu_anosim_jsd)
-cat("\n")
-
-cat("\n", "***ANOSIM for Unweighted UniFrac distance, `unifrac`***", "\n\n")
-summary(ssu18_ps_perfect_otu_anosim_unifrac)
-cat("\n")
-
-cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
-summary(ssu18_ps_perfect_otu_anosim_wunifrac)
-cat("\n")
-```
-</details>
-
-:::
-:::
-:::
-
-
-### Summaries 
+## Summaries 
 
 Here is a quick summary of significance tests for the data sets against three distance matrices.
 
-::: l-body
-::: {.panelset}
-::: {.panel}
-
-#### ASV
-
 ```{r, echo=FALSE}
-data_set <- data.frame(c("FULL", "PIME", "PERfect"))
-dist_metric <- data.frame(c("Jensen-Shannon Divergence", "unweighted UniFrac", "weighted UniFrac"))
+data_set <- data.frame(c("FULL", "FILT", "PERfect", "PIME"))
+ssu_dist_metric <- data.frame(c("Jensen-Shannon Divergence", "unweighted UniFrac", "weighted UniFrac"))
 
 tmp_p_value_full <- data.frame(c(ssu18_ps_work_adonis_jsd$aov.tab$`Pr(>F)`[1],
                                  ssu18_ps_work_anosim_unifrac$signif,
                                  ssu18_ps_work_anosim_wunifrac$signif))
 
-tmp_p_value_pime <- data.frame(c(ssu18_ps_pime_adonis_jsd$aov.tab$`Pr(>F)`[1],
-                                 ssu18_ps_pime_adonis_unifrac$aov.tab$`Pr(>F)`[1],
-                                 ssu18_ps_pime_anosim_wunifrac$signif))
-
 tmp_p_value_perfect <- data.frame(c(ssu18_ps_perfect_anosim_jsd$signif,
                                     ssu18_ps_perfect_anosim_unifrac$signif,
                                     ssu18_ps_perfect_anosim_wunifrac$signif))
 
-ssu18_tab_sig_test <- dplyr::bind_cols(dist_metric, tmp_p_value_full) %>%
-                      dplyr::bind_cols(., tmp_p_value_pime) %>%
+tmp_p_value_filt <- data.frame(c(ssu18_ps_filt_adonis_jsd$aov.tab$`Pr(>F)`[1],
+                                 ssu18_ps_filt_anosim_unifrac$signif,
+                                 ssu18_ps_filt_anosim_wunifrac$signif))
+
+tmp_p_value_pime <- data.frame(c(ssu18_ps_pime_adonis_jsd$aov.tab$`Pr(>F)`[1],
+                                 ssu18_ps_pime_adonis_unifrac$aov.tab$`Pr(>F)`[1],
+                                 ssu18_ps_pime_anosim_wunifrac$signif))
+
+ssu18_tab_sig_test <- dplyr::bind_cols(ssu_dist_metric, tmp_p_value_full) %>%
+                      dplyr::bind_cols(., tmp_p_value_filt) %>%
                       dplyr::bind_cols(., tmp_p_value_perfect) %>%
-  dplyr::rename("distance metric" = 1, "p-value (FULL)" = 2, "p-value (PIME)" = 3, "p-value (PERfect)" = 4)
+                      dplyr::bind_cols(., tmp_p_value_pime)  %>%
+  dplyr::rename("distance metric" = 1, "FULL" = 2, "FILT" = 3, "PERfect" = 4, "PIME" = 5) 
+
+ssu18_tab_sig_test <- ssu18_tab_sig_test %>%  
+  dplyr::mutate(across(.cols = c(2:ncol(ssu18_tab_sig_test)), round, digits = 4))
 rm(list = ls(pattern = "tmp_"))
 ```
+<small>`r caption_tab_ssu("ssu_sign_tests")`</small>
 
 ```{r, echo=FALSE, eval=TRUE}
-knitr::kable(ssu18_tab_sig_test)
-```
-*Summary of significant tests for the FULL, PIME, & PERfect ASV data sets.*
-
-:::
-
-::: {.panel}
-
-#### OTU
-
-```{r, echo=FALSE}
-data_set <- data.frame(c("FULL", "PIME", "PERfect"))
-dist_metric <- data.frame(c("Jensen-Shannon Divergence", "unweighted UniFrac", "weighted UniFrac"))
-
-tmp_p_value_full <- data.frame(c(
-                           ssu18_ps_work_otu_anosim_jsd$signif,
-                           ssu18_ps_work_otu_anosim_unifrac$signif,
-                           ssu18_ps_work_otu_anosim_wunifrac$signif))
-
-tmp_p_value_pime <- data.frame(c(
-                                 ssu18_ps_pime_otu_adonis_jsd$aov.tab$`Pr(>F)`[1],
-                                 ssu18_ps_pime_otu_adonis_unifrac$aov.tab$`Pr(>F)`[1],
-                                 ssu18_ps_pime_otu_anosim_wunifrac$signif))
-
-tmp_p_value_perfect <- data.frame(c(
-                           ssu18_ps_perfect_otu_anosim_jsd$signif,
-                           ssu18_ps_perfect_otu_anosim_unifrac$signif,
-                           ssu18_ps_perfect_otu_anosim_wunifrac$signif))
-
-ssu18_tab_sig_test_otu <- dplyr::bind_cols(dist_metric, tmp_p_value_full) %>%
-                          dplyr::bind_cols(., tmp_p_value_pime) %>%
-                          dplyr::bind_cols(., tmp_p_value_perfect) %>%
-  dplyr::rename("distance metric" = 1, "p-value (FULL)" = 2, "p-value (PIME)" = 3, "p-value (PERfect)" = 4)
-rm(list = ls(pattern = "tmp_"))
+seq_table <- ssu18_tab_sig_test
+seq_table %>%
+  download_this(
+    output_name = "ssu_sign_tests",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
-knitr::kable(ssu18_tab_sig_test_otu)
-```
-*Summary of significant tests for the FULL, PIME, & PERfect OTU data sets.*
-
-:::
-:::
-:::
-
-```{r echo=FALSE}
-save.image("page_build/beta_ssu18_part_1_wf.rdata")
-gdata::keep(ssu18_ps_work, ssu18_ps_pime, ssu18_ps_perfect, 
-            ssu18_ps_work_otu, ssu18_ps_pime_otu, ssu18_ps_perfect_otu, 
-            ssu18_ps_work_prop, ssu18_ps_pime_prop, ssu18_ps_perfect_prop, 
-            ssu18_ps_work_otu_prop, ssu18_ps_pime_otu_prop, ssu18_ps_perfect_otu_prop, 
-            swel_col, sure = TRUE)
-objects()
-```
-
-## Beta Diversity Plots
-
-```{r echo=FALSE}
-remove(list = ls())
-load("page_build/beta_ssu18_part_2_wf.rdata")
-```
-
-Here we visualize the different distance matrices using several ordination methods on the FULL, PIME filtered, and PERfect filtered data sets to access dissimilarity among sample.
-
-### Plot Code
-
-<details markdown="1">
-<summary>Code to reproduce plots</summary>
-
-First, we inspect different ordination methods to see how the samples cluster using **weighted-UniFrac**,  **unweighted-UniFrac**, and **Jensen-Shannon Divergence** distance measurements. We could also test different diversity metrics, different transformations, etc.
-
-```{r, echo=FALSE}
-gdata::keep(ssu18_ps_work, ssu18_ps_pime, ssu18_ps_perfect, 
-            ssu18_ps_work_otu, ssu18_ps_pime_otu, ssu18_ps_perfect_otu, 
-            ssu18_ps_work_prop, ssu18_ps_pime_prop, ssu18_ps_perfect_prop, 
-            ssu18_ps_work_otu_prop, ssu18_ps_pime_otu_prop, ssu18_ps_perfect_otu_prop, 
-            swel_col, sure = TRUE)
-
-```
-
-```{r}
-list_of_samps <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
-                   "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
-dist <- c("wunifrac", "unifrac", "jsd")
-for (samp_ps in list_of_samps) {
-for (d in dist){
-     tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
-     ord_meths <- c("NMDS", "PCoA", "CCA", "DCA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
-     tmp_plist <- llply(as.list(ord_meths), function(i, physeq, d) {
-        ordi = ordinate(physeq, method = i, distance = d)
-        plot_ordination(physeq, ordi, "samples", color = "TEMP")
-   }, tmp_get, d)
-
-  names(tmp_plist) <- ord_meths
-
-  tmp_df <- ldply(tmp_plist, function(x){
-      df = x$data[, 1:2]
-      colnames(df) = c("Axis_1", "Axis_2")
-      return(cbind(df, x$data))})
-  names(tmp_df)[1] = "method"
-  
-  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2, color = TEMP, shape = TEMP, fill = TEMP))
-  tmp_plot <- tmp_plot + geom_point(size = 2)
-  tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
-  tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
-  
-  tmp_df_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
-  tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
-  tmp_plot_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
-  tmp_list <- list("tmp_df_name" = tmp_df, tmp_plist_name = tmp_plist, tmp_plot_name = tmp_plot)
-  assign(paste0(samp_ps, "_",  d, "_ord_results"), tmp_list)
-  #assign(purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .)), tmp_df)
-  #assign(purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist")), tmp_plist)
-  #assign(purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot")), tmp_plot)
-  rm(list = ls(pattern = "_tmp"))
- }
-}
-
-objects(pattern = "_ord_results")
-```
-
-```{r}
-plist_name <- objects(pattern="_ord_results")
-plot_num <- c(1,2,3,4)
-for (i in plist_name) {
-  for (j in plot_num) {
-       tmp_get_i <- get(i)$tmp_plist_name
-       tmp_ord <- names(tmp_get_i)[j]
-       tmp_name <- stringr::str_replace(i, "ord_results", tmp_ord)
-       tmp_plot <- tmp_get_i[[j]] + scale_colour_manual(values = swel_col)
-       tmp_plot <- tmp_plot + geom_point(size = 4, aes(shape = TEMP)) +
-         theme(legend.position = "bottom")
-       tmp_plot$labels$shape <- "TEMP"
-       assign(tmp_name, tmp_plot)
-       rm(list = ls(pattern = "tmp_"))
-  }
-}
-objects()
-```
-
-```{r, echo=FALSE}
-list_of_samps <- c("ssu18_ps_work", "ssu18_ps_pime", "ssu18_ps_perfect", 
-                   "ssu18_ps_work_otu", "ssu18_ps_pime_otu", "ssu18_ps_perfect_otu")
-ssu18_ps_work_title <- "FULL ASV Ordination Plots"
-ssu18_ps_pime_title <- "PIME ASV Ordination Plots"
-ssu18_ps_perfect_title <- "PERfect ASV Ordination Plots"
-ssu18_ps_work_otu_title <- "FULL OTU Ordination Plots"
-ssu18_ps_pime_otu_title <- "PIME OTU Ordination Plots" 
-ssu18_ps_perfect_otu_title <- "PERfect OTU Ordination Plots" 
-
-for (samp_ps in list_of_samps) {
-  tmp_combo_plot <- (get(purrr::map_chr(samp_ps, ~ paste0(., "_jsd_NMDS"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_unifrac_NMDS"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_wunifrac_NMDS")))) /
-                    (get(purrr::map_chr(samp_ps, ~ paste0(., "_jsd_PCoA"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_unifrac_PCoA"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_wunifrac_PCoA")))) + 
-    geom_point(size = 1)
-  tmp_title <- paste(samp_ps, "_title", sep = "")
-  tmp_combo_plot <-  tmp_combo_plot +
-  plot_annotation(title = get(tmp_title),
-    subtitle = 'Comparisons by three distance metrics & two ordination method') +
-  plot_layout(widths = c(3, 3), guides = "collect") &
-  theme(plot.title = element_text(size = 18),
-        plot.subtitle = element_text(size = 16),
-        plot.tag = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        legend.position = "bottom",
-        legend.title = element_text(size = rel(1.75)),
-        legend.text = element_text(size = rel(1.5)))
-  tmp_combo_plot_name <- purrr::map_chr(samp_ps, ~ paste0(., "_plots"))
-  assign(tmp_combo_plot_name, tmp_combo_plot)
-  rm(list = ls(pattern = "tmp_"))
-}
-objects()
-objects(pattern = "_plots")
-```
-
-```{r, echo=FALSE}
-ssu18_ps_work_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_work_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_work_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_work_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_work_plots
-dev.off()
-system("cp files/beta/figures/ssu18_ps_work_beta_div_ord_plots.png include/beta/ssu18_ps_work_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-ssu18_ps_pime_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_pime_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_pime_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_pime_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_pime_plots
-dev.off()
-system("cp files/beta/figures/ssu18_ps_pime_beta_div_ord_plots.png include/beta/ssu18_ps_pime_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-ssu18_ps_perfect_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_perfect_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_perfect_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_perfect_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_perfect_plots
-dev.off()
-system("cp files/beta/figures/ssu18_ps_perfect_beta_div_ord_plots.png include/beta/ssu18_ps_perfect_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-ssu18_ps_work_otu_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_work_otu_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_work_otu_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_work_otu_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_work_otu_plots
-dev.off()
-system("cp files/beta/figures/ssu18_ps_work_otu_beta_div_ord_plots.png include/beta/ssu18_ps_work_otu_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-ssu18_ps_pime_otu_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_pime_otu_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_pime_otu_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_pime_otu_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_pime_otu_plots
-dev.off()
-system("cp files/beta/figures/ssu18_ps_pime_otu_beta_div_ord_plots.png include/beta/ssu18_ps_pime_otu_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-ssu18_ps_perfect_otu_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_perfect_otu_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_perfect_otu_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_perfect_otu_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_perfect_otu_plots
-dev.off()
-system("cp files/beta/figures/ssu18_ps_perfect_otu_beta_div_ord_plots.png include/beta/ssu18_ps_perfect_otu_beta_div_ord_plots.png")
-```
-</details>
-
-<br/>
-
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
-
-#### FULL ASV 
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/ssu18_ps_work_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PIME ASV
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/ssu18_ps_pime_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PERfect ASV
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/ssu18_ps_perfect_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### FULL OTU 
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/ssu18_ps_work_otu_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PIME OTU
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset',  fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/ssu18_ps_pime_otu_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PERfect OTU
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/ssu18_ps_perfect_otu_beta_div_ord_plots.png")
-```
-:::
-
-:::
-:::
-
-```{r, echo=FALSE}
-## CODE to subset PIME ASVs from FULL without losing ASV
-## below PIME Prev
-pime_asvs <- colnames(otu_table(ssu18_ps_pime))
-ssu18_ps_pime_all <- prune_taxa(pime_asvs, ssu18_ps_work)
-
-samp_ps <- c("ssu18_ps_pime_all")
-for (i in samp_ps) {
-     tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
-     tmp_get <- get(i)
-     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
-     tmp_ps@phy_tree <- NULL
-     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
-     tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE, tip.label = taxa_names(tmp_ps))
-     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
-     print(tmp_name)
-     assign(tmp_name, tmp_ps)
-     rm(list = ls(pattern = "tmp_"))
-}
-```
-
-
-```{r, echo=FALSE}
-samp_ps <- "ssu18_ps_pime_all"
-dist <- c("wunifrac", "unifrac", "jsd")
-for (d in dist){
-     tmp_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
-     tmp_name_plot <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
-     tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
-     ord_meths <- c("NMDS", "PCoA", "CCA", "DCA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
-     tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
-     tmp_plist <- llply(as.list(ord_meths), function(i, physeq, d) {
-        ordi = ordinate(physeq, method = i, distance = d)
-        plot_ordination(physeq, ordi, "samples", color = "TEMP")
-   }, tmp_get, d)
-
-  names(tmp_plist) <- ord_meths
-
-  tmp_df <- ldply(tmp_plist, function(x){
-      df = x$data[, 1:2]
-      colnames(df) = c("Axis_1", "Axis_2")
-      return(cbind(df, x$data))})
-  names(tmp_df)[1] = "method"
-  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2,
-                                 color = TEMP, shape = TEMP, fill = TEMP))
-  tmp_plot <- tmp_plot + geom_point(size = 2)
-  tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
-  tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
-  assign(tmp_plist_name, tmp_plist)
-  assign(tmp_name, tmp_df)
-  assign(tmp_name_plot, tmp_plot)
-  rm(list = ls(pattern = "tmp_"))
-}
-```
-
-```{r, echo=FALSE}
-samp_ps <- "ssu18_ps_pime_all"
-plist_name <- objects(pattern="_plist")
-plot_num <- c(1,2)
-for (i in plist_name) {
-  for (j in plot_num) {
-       tmp_get_i <- get(i)
-       tmp_ord <- names(tmp_get_i)[j]
-       tmp_name <- stringr::str_replace(i, "plist", tmp_ord)
-       tmp_plot <- tmp_get_i[[j]] + scale_colour_manual(values = swel_col)
-       tmp_plot <- tmp_plot + geom_point(size = 4, aes(shape = TEMP)) +
-         theme(legend.position = "bottom")
-       tmp_plot$labels$shape <- "TEMP"
-       assign(tmp_name, tmp_plot)
-       rm(list = ls(pattern = "tmp_"))
-  }
-}
-```
-
-```{r, echo=FALSE}
-ssu18_ps_pime_all_plots <-  (ssu18_ps_pime_all_jsd_NMDS + ssu18_ps_pime_all_unifrac_NMDS + ssu18_ps_pime_all_wunifrac_NMDS) /
-                        (ssu18_ps_pime_all_jsd_PCoA + ssu18_ps_pime_all_unifrac_PCoA + ssu18_ps_pime_all_wunifrac_PCoA) +
-  geom_point(size = 1)
-ssu18_ps_pime_all_plots <-  ssu18_ps_pime_all_plots +
-  plot_annotation(
-    title = 'PIME (ALL) Ordination Plots',
-    subtitle = 'Comparisons by three distance metrics & two ordination method') +
-  plot_layout(widths = c(3, 3), guides = "collect") &
-  theme(plot.title = element_text(size = 18),
-        plot.subtitle = element_text(size = 16),
-        plot.tag = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        legend.position = "bottom",
-        legend.title = element_text(size = rel(1.75)),
-        legend.text = element_text(size = rel(1.5)))
-```
-
-```{r, echo=FALSE}
-ssu18_ps_pime_all_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_pime_all_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_pime_all_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_pime_all_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_pime_all_plots
-dev.off()
-```
-
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-system("cp files/beta/figures/ssu18_ps_pime_all_beta_div_ord_plots.png include/beta/ssu18_ps_pime_all_beta_div_ord_plots.png")
-knitr::include_graphics("include/beta/ssu18_ps_pime_all_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-## CODE to Compare PCoA for all dist metrics across all data sets
-lab_1A <- "FULL JSD"
-lab_1B <- "PIME JSD"
-lab_1C <- "PERfect JSD"
-lab_1D <- "PIME (ALL) JSD"
-
-lab_2A <- "FULL UNIFRAC"
-lab_2B <- "PIME UNIFRAC"
-lab_2C <- "PERfect UNIFRAC"
-lab_2D <- "PIME (ALL) UNIFRAC"
-
-lab_3A <- "FULL W-UNIFRAC"
-lab_3B <- "PIME W-UNIFRAC"
-lab_3C <- "PERfect W-UNIFRAC"
-lab_3D <- "PIME (ALL) W-UNIFRAC"
-
-ssu18_ps_work_jsd_PCoA_n <- ssu18_ps_work_jsd_PCoA + ggtitle(lab_1A)
-ssu18_ps_pime_jsd_PCoA_n <- ssu18_ps_pime_jsd_PCoA + ggtitle(lab_1B)
-ssu18_ps_perfect_jsd_PCoA_n <- ssu18_ps_perfect_jsd_PCoA + ggtitle(lab_1C)
-ssu18_ps_pime_all_jsd_PCoA_n <- ssu18_ps_pime_all_jsd_PCoA + ggtitle(lab_1D)
-ssu18_ps_work_unifrac_PCoA_n <- ssu18_ps_work_unifrac_PCoA + ggtitle(lab_2A)
-ssu18_ps_pime_unifrac_PCoA_n <- ssu18_ps_pime_unifrac_PCoA + ggtitle(lab_2B)
-ssu18_ps_perfect_unifrac_PCoA_n <- ssu18_ps_perfect_unifrac_PCoA + ggtitle(lab_2C)
-ssu18_ps_pime_all_unifrac_PCoA_n <- ssu18_ps_pime_all_unifrac_PCoA + ggtitle(lab_2D)
-ssu18_ps_work_wunifrac_PCoA_n <- ssu18_ps_work_wunifrac_PCoA + ggtitle(lab_3A)
-ssu18_ps_pime_wunifrac_PCoA_n <- ssu18_ps_pime_wunifrac_PCoA + ggtitle(lab_3B)
-ssu18_ps_perfect_wunifrac_PCoA_n <- ssu18_ps_perfect_wunifrac_PCoA + ggtitle(lab_3C)
-ssu18_ps_pime_all_wunifrac_PCoA_n <- ssu18_ps_pime_all_wunifrac_PCoA + ggtitle(lab_3D)
-
-ssu18_ps_compare_plots <- ggarrange(ssu18_ps_work_jsd_PCoA_n, ssu18_ps_pime_jsd_PCoA_n, ssu18_ps_perfect_jsd_PCoA_n, ssu18_ps_pime_all_jsd_PCoA_n, ssu18_ps_work_unifrac_PCoA_n, ssu18_ps_pime_unifrac_PCoA_n, ssu18_ps_perfect_unifrac_PCoA_n, ssu18_ps_pime_all_unifrac_PCoA_n, ssu18_ps_work_wunifrac_PCoA_n, ssu18_ps_pime_wunifrac_PCoA_n, ssu18_ps_perfect_wunifrac_PCoA_n, ssu18_ps_pime_all_wunifrac_PCoA_n, 
-  ncol=4, nrow = 3)
-ssu18_ps_compare_plots
-```
-
-```{r, echo=FALSE}
-ssu18_ps_compare_plots <-  (ssu18_ps_work_jsd_PCoA + ssu18_ps_pime_jsd_PCoA + ssu18_ps_perfect_jsd_PCoA + ssu18_ps_pime_all_jsd_PCoA + ssu18_ps_work_unifrac_PCoA + ssu18_ps_pime_unifrac_PCoA + ssu18_ps_perfect_unifrac_PCoA + ssu18_ps_pime_all_unifrac_PCoA + ssu18_ps_work_wunifrac_PCoA + ssu18_ps_pime_wunifrac_PCoA + ssu18_ps_perfect_wunifrac_PCoA + ssu18_ps_pime_all_wunifrac_PCoA) +
-  geom_point(size = 1)
-ssu18_ps_compare_plots <-  ssu18_ps_compare_plots +
-  plot_annotation(
-    title = 'Beta Compare',
-    subtitle = 'Comparisons by four data sets & three distance metrics') +
-  plot_layout(widths = c(4, 3), guides = "collect") &
-  theme(plot.title = element_text(size = 18),
-        plot.subtitle = element_text(size = 16),
-        plot.tag = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        legend.position = "bottom",
-        legend.title = element_text(size = rel(1.75)),
-        legend.text = element_text(size = rel(1.5)))
-```
-
-```{r, echo=FALSE}
-ssu18_ps_compare_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_compare_plots_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_compare_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_compare_plots_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_compare_plots
-dev.off()
-```
-
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = UniFrac (unwieghted), **right** = UniFrac (wieghted); **Top** = NMDS, **bottom** = PCoA.'}
-system("cp files/beta/figures/ssu18_ps_compare_plots_beta_div_ord_plots.png include/beta/ssu18_ps_compare_plots_beta_div_ord_plots.png")
-knitr::include_graphics("include/beta/ssu18_ps_compare_plots_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-## CODE to Remove an "odd" sample.
-ssu18_ps_work_prune <- prune_samples(c("P01_D00_010_W3A", "P01_D00_010_W8A", "P10_D00_010_C0E", "P02_D00_010_C0A", "P03_D00_010_W3B", "P03_D00_010_W8B", "P04_D00_010_C0B", "P05_D00_010_W3C", "P05_D00_010_W8C", "P06_D00_010_C0C", "P07_D00_010_W3D", "P07_D00_010_W8D", "P08_D00_010_C0D", "P09_D00_010_W3E"), ssu18_ps_work)
-ssu18_ps_work_prune
-ssu18_ps_work_prune <- prune_taxa(taxa_sums(ssu18_ps_work_prune) > 0, ssu18_ps_work_prune)
-ssu18_ps_work_prune
-
-samp_ps <- c("ssu18_ps_work_prune")
-for (i in samp_ps) {
-     tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
-     tmp_get <- get(i)
-     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
-     tmp_ps@phy_tree <- NULL
-     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
-     tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE, tip.label = taxa_names(tmp_ps))
-     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
-     print(tmp_name)
-     assign(tmp_name, tmp_ps)
-     rm(list = ls(pattern = "tmp_"))
-}
-```
-
-```{r, echo=FALSE}
-samp_ps <- "ssu18_ps_work_prune"
-dist <- c("wunifrac", "unifrac", "jsd")
-for (d in dist){
-     tmp_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
-     tmp_name_plot <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
-     tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
-     ord_meths <- c("NMDS", "PCoA", "CCA", "DCA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
-     tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
-     tmp_plist <- llply(as.list(ord_meths), function(i, physeq, d) {
-        ordi = ordinate(physeq, method = i, distance = d)
-        plot_ordination(physeq, ordi, "samples", color = "TEMP")
-   }, tmp_get, d)
-
-  names(tmp_plist) <- ord_meths
-
-  tmp_df <- ldply(tmp_plist, function(x){
-      df = x$data[, 1:2]
-      colnames(df) = c("Axis_1", "Axis_2")
-      return(cbind(df, x$data))})
-  names(tmp_df)[1] = "method"
-  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2,
-                                 color = TEMP, shape = TEMP, fill = TEMP))
-  tmp_plot <- tmp_plot + geom_point(size = 2)
-  tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
-  tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
-  assign(tmp_plist_name, tmp_plist)
-  assign(tmp_name, tmp_df)
-  assign(tmp_name_plot, tmp_plot)
-  rm(list = ls(pattern = "tmp_"))
-}
-```
-
-```{r, echo=FALSE}
-ssu18_ps_work_prune_plots <-  (ssu18_ps_work_prune_jsd_NMDS + ssu18_ps_work_prune_unifrac_NMDS + ssu18_ps_work_prune_wunifrac_NMDS) /
-                        (ssu18_ps_work_prune_jsd_PCoA + ssu18_ps_work_prune_unifrac_PCoA + ssu18_ps_work_prune_wunifrac_PCoA) + geom_point(size = 1)
-ssu18_ps_work_prune_plots <-  ssu18_ps_work_prune_plots +
-  plot_annotation(
-    title = 'FULL data set Ordination Plots',
-    subtitle = 'Comparisons by three distance metrics & two ordination method') +
-  plot_layout(widths = c(3, 3), guides = "collect") &
-  theme(plot.title = element_text(size = 18),
-        plot.subtitle = element_text(size = 16),
-        plot.tag = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        legend.position = "bottom",
-        legend.title = element_text(size = rel(1.75)),
-        legend.text = element_text(size = rel(1.5)))
-```
-
-```{r, echo=FALSE}
-ssu18_ps_work_prune_plots
-dev.off()
-png("files/beta/figures/ssu18_ps_work_prune_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-ssu18_ps_work_prune_plots
-dev.off()
-pdf("files/beta/figures/ssu18_ps_work_prune_beta_div_ord_plots.pdf", height = 10, width = 12)
-ssu18_ps_work_prune_plots
-dev.off()
-```
-
-
-```{r, echo=FALSE}
-objects()
-save.image("page_build/beta_ssu18_part_2_wf.rdata")
-```
-
-```{r include=FALSE, eval=TRUE}
-remove(list = ls())
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 3),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 100, headerVAlign = "center",
+    style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2"
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")
+                            }
+    ), 
+  columns = list(
+    `distance metric` = colDef(name = "Distance metric", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 200),
+    dist = colDef(name = "distance", align = "left")
+    ),
+  columnGroups = list(colGroup(name = "p-values", columns = c("FULL", "FILT", "PERfect", "PIME"),
+                       headerStyle = list(fontSize = "1.3em"))
+    ),
+  searchable = FALSE, defaultPageSize = 12, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.9em")))
+rm(seq_table)
 ```
 
 # ITS
 
-```{r master_load_its18, include=FALSE, eval=TRUE}
-## Load to build page only #2
-remove(list = ls())
-load("page_build/beta_its18_part_1_wf.rdata")
-```
-
-```{r initial_load_its18, include=FALSE}
+```{r initial_load_its18, include=FALSE, eval=FALSE}
 ## Initial Load for  ANALYSIS #1
-remove(list = ls())
-set.seed(119)
+#remove(list = ls())
+#set.seed(119)
 its18_ps_work <- readRDS("files/alpha/rdata/its18_ps_work.rds")
-its18_ps_pime <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
+its18_ps_filt <- readRDS("files/alpha/rdata/its18_ps_filt.rds")
 its18_ps_perfect <- readRDS("files/alpha/rdata/its18_ps_perfect.rds")
-its18_ps_work_otu <- readRDS("files/alpha/rdata/its18_ps_work_otu.rds")
-its18_ps_pime_otu <- readRDS("files/alpha/rdata/its18_ps_pime_otu.rds")
-its18_ps_perfect_otu <- readRDS("files/alpha/rdata/its18_ps_perfect_otu.rds")
-
-its18_hill_hier <- readRDS("files/alpha/rdata/its18_hill_hier.rds")
-objects()
+its18_ps_pime <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
 ```
 
 ```{r, echo=FALSE}
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
-## Significance Tests
-
 In order to test for significance between sample groups, we must perform the following steps:
 
 1. Transform sample counts to relative abundance.
 2. Create distance matrices based on some metrics, for example `gower`, `bray`, and `jsd`. For this we use the function `phyloseq::distance`.
-3. Next, calculate beta dispersion using the `betadisper` function from the `vegan` package.
+3. Next, calculate beta dispersion using the `betadisper` function from the `vegan` package [@oksanen2013community].
 4. Then, use the function `permutest` to run a Permutation test for homogeneity of multivariate dispersions.
-5. If the beta dispersion tests are not significant we will run a PERMANOVA using `adonis` (since PERMANOVA assumes equal dispersion), otherwise we will use Analysis of Similarity (ANOSIM).
+5. If the beta dispersion tests are not significant we will run a PERMANOVA using `adonis` (since PERMANOVA aitsmes equal dispersion), otherwise we will use Analysis of Similarity (ANOSIM), both available in the `vegan` package [@oksanen2013community].
 
 Steps 2--4 are combined in a `for` loop that tests all three distance metrics.
 
-Before we begin, we must first transform sample counts to relative abundance for both data sets.
+Before we begin, we need to first transform sample counts to relative abundance and generate some new trees.
 
 ```{r, code_folding=TRUE}
-samp_ps <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
-             "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
-for (i in samp_ps) {
+its_samp_ps <- c("its18_ps_work", "its18_ps_filt", 
+             "its18_ps_perfect", "its18_ps_pime")
+for (i in its_samp_ps) {
      tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
      tmp_get <- get(i)
-     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
+     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 
+                                          1e5 * otu/sum(otu))
      tmp_ps@phy_tree <- NULL
      tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
      tmp_ps <- merge_phyloseq(tmp_ps, sample_data)
@@ -1309,41 +761,48 @@ for (i in samp_ps) {
 
 ### Beta Dispersion
 
-Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions.
+Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions. 
 
 ```{r, code_folding=TRUE}
-dist <- c("jsd", "bray", "gower")
-for (i in samp_ps) {
-        for (d in dist){
-             tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_prop")))
-             tmp_samp <- data.frame(sample_data(tmp_get))
-             tmp_df <- phyloseq::distance(tmp_get, method = d)
-             tmp_df_name <- purrr::map_chr(d, ~ paste0(i, "_beta_dist_", .))
-             assign(tmp_df_name, tmp_df)
-             tmp_df2 <- betadisper(tmp_df, tmp_samp$TEMP, bias.adjust = TRUE)
-             tmp_df_name2 <- purrr::map_chr(d, ~ paste0(i, "_beta_dispersion_", .))
-             assign(tmp_df_name2, tmp_df2)
-             tmp_df3 <- permutest(tmp_df2, pairwise = TRUE,
-                                  permutations = 1000, binary = FALSE)
-             tmp_df_name3 <- purrr::map_chr(d, ~ paste0(i, "_permutest_", .))
-             assign(tmp_df_name3, tmp_df3)
-             rm(list = ls(pattern = "tmp_"))
-       }
+its_dist <- c("jsd", "bray", "gower")
+for (i in its_samp_ps) {
+    for (d in its_dist){
+       tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_prop")))
+       tmp_samp <- data.frame(sample_data(tmp_get))
+       tmp_df <- phyloseq::distance(tmp_get, method = d)
+       tmp_df_name <- purrr::map_chr(d, ~ paste0(i, "_beta_dist_", .))
+       assign(tmp_df_name, tmp_df)
+       tmp_df2 <- betadisper(tmp_df, tmp_samp$TEMP, bias.adjust = TRUE)
+       tmp_df_name2 <- purrr::map_chr(d, ~ paste0(i, "_beta_dispersion_", .))
+       assign(tmp_df_name2, tmp_df2)
+       tmp_df3 <- permutest(tmp_df2, pairwise = TRUE,
+                            permutations = 1000, binary = FALSE)
+       tmp_df_name3 <- purrr::map_chr(d, ~ paste0(i, "_permutest_", .))
+       assign(tmp_df_name3, tmp_df3)
+       rm(list = ls(pattern = "tmp_"))
+    }
 }
 objects()
 ```
 
 <details markdown="1">
-<summary>Detailed results of Beta Dispersion & Permutation tests for ASV data</summary>
+<summary><strong>Detailed results</strong> of Beta Dispersion & Permutation tests</summary>
 
-#### Permutation tests (ASV)
+::: l-body
+::: {.panelset}
 
 ```{r, eval=TRUE, echo=FALSE}
-samp_ps_asv <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect")
-dist <- c("jsd", "bray", "gower")
-for (i in samp_ps_asv) {
-  cat("\n", "           *****", i, "*****", "\n")
-        for (d in dist){
+its_samp_ps <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
+its_dist <- c("jsd", "bray", "gower")
+```
+
+::: {.panel}
+#### FULL
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in its_samp_ps[1]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in its_dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
           cat("\n")
           cat("####################################################", "\n")
@@ -1356,19 +815,37 @@ for (i in samp_ps_asv) {
         }
 }
 ```
-</details>
+:::
 
-<details markdown="1">
-<summary>Detailed results of Beta Dispersion & Permutation tests for OTU data</summary>
-
-#### Permutation tests (OTU)
+::: {.panel}
+#### Arbitrary
 
 ```{r, eval=TRUE, echo=FALSE}
-samp_ps_otu <- c("its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
-dist <- c("jsd", "bray", "gower")
-for (i in samp_ps_otu) {
-  cat("\n", "*****", i, "*****", "\n")
-        for (d in dist){
+for (i in its_samp_ps[2]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in its_dist){
+          tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
+          cat("\n")
+          cat("####################################################", "\n")
+          tmp_print <- c("BETA DISPERSION significance test", d, "distance")
+          cat(tmp_print, "\n")
+          cat("####################################################")
+          cat("\n")
+          print(tmp_get)
+          rm(list = ls(pattern = "tmp_"))
+        }
+}
+
+```
+:::
+
+::: {.panel}
+#### PERfect
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in its_samp_ps[3]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in its_dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
           cat("\n")
           cat("####################################################", "\n")
@@ -1381,14 +858,38 @@ for (i in samp_ps_otu) {
         }
 }
 ```
+:::
+
+::: {.panel}
+#### PIME
+
+```{r, eval=TRUE, echo=FALSE}
+for (i in its_samp_ps[4]) {
+  #cat("\n", "           *****", i, "*****", "\n")
+        for (d in its_dist){
+          tmp_get <- get(purrr::map_chr(i, ~ paste0(i, "_permutest_", d)))
+          cat("\n")
+          cat("####################################################", "\n")
+          tmp_print <- c("BETA DISPERSION significance test", d, "distance")
+          cat(tmp_print, "\n")
+          cat("####################################################")
+          cat("\n")
+          print(tmp_get)
+          rm(list = ls(pattern = "tmp_"))
+        }
+}
+```
+:::
+:::
+:::
 </details>
 
 Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
 
 ```{r, echo=FALSE, eval=TRUE, results='markdown'}
 its18_perm_pvalues <- data.frame()
-for (i in samp_ps) {
-        for (d in dist){
+for (i in its_samp_ps) {
+        for (d in its_dist){
           tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_permutest_", d)))
           tmp_pv <- tmp_get$tab$`Pr(>F)`[1]
 
@@ -1405,13 +906,81 @@ for (i in samp_ps) {
 its18_perm_pvalues <- its18_perm_pvalues %>% 
   dplyr::rename(c("data_set" = 1, "dist" = 2, "pval" = 3, "test" = 4))
 its18_perm_pvalues <- its18_perm_pvalues %>% tibble::remove_rownames()
-knitr::kable(its18_perm_pvalues)
+```
+
+
+```{r, echo=FALSE}
+its18_perm_summary <- its18_perm_pvalues
+its18_perm_summary <- its18_perm_summary %>% separate(col = 1, 
+                                              into = c("dummy", "metric", "dataset"), 
+                                              sep = "_", remove = TRUE)
+its18_perm_summary[,1:2] <- NULL 
+
+its18_perm_summary$dataset <- stringr::str_replace(its18_perm_summary$dataset, "work", "FULL") %>%
+                              stringr::str_replace(., "filt", "FILT") %>%
+                              stringr::str_replace(., "pime", "PIME") %>%
+                              stringr::str_replace(., "perfect", "PERfect")
+its18_perm_summary$dist <- stringr::str_replace(its18_perm_summary$dist, "jsd", "Jensen–Shannon divergence") %>%
+                              stringr::str_replace(., "gower", "Gower distance") %>%
+                              stringr::str_replace(., "bray", "Bray-Curtis dissimilarity")
+its18_perm_summary$pval <- round(its18_perm_summary[[3]], 4)
+```
+<small>`r caption_tab_its("its_beta_disp_tests")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- its18_perm_summary
+seq_table %>%
+  download_this(
+    output_name = "its_beta_disp_tests",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 100, headerVAlign = "center"
+    ), 
+  columns = list(
+    dataset = colDef(name = "Dataset", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 50),
+    dist = colDef(name = "distance", align = "left"),
+    `pval` = colDef(name = "p-value", minWidth = 100, resizable = FALSE,
+                                   style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2"
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")
+    })
+    ), 
+  searchable = FALSE, defaultPageSize = 12, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 
 Now we to create sample data frames for each data set. 
 
 ```{r, code_folding=TRUE}
-for (i in samp_ps) {
+for (i in its_samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
      tmp_samp <- data.frame(sample_data(tmp_get))
      tmp_name <- purrr::map_chr(i, ~ paste0(., "_sampledf"))
@@ -1421,17 +990,18 @@ for (i in samp_ps) {
 objects(pattern="_sampledf")
 ```
 
-### Significance Tests 
+## Significance Tests 
 
 Depending on the test, we need different data structures. For `adonis` we use the sample metadata and for `anosim` we will start with a phyloseq object. So for each data set we create two variables: `adonis_sampledf` and `anosim_data`
+
 
 ::: l-body
 ::: {.panelset}
 ::: {.panel}
 
-#### FULL ASV
+#### FULL
 
-```{r, code_folding=TRUE}
+```{r, echo=FALSE}
 adonis_sampledf <- its18_ps_work_sampledf
 anosim_data <- its18_ps_work
 ```
@@ -1443,7 +1013,7 @@ tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_wo
 Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[1]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 its18_ps_work_adonis_jsd <-  adonis(its18_ps_work_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_work_adonis2_jsd <- adonis2(its18_ps_work_beta_dist_jsd ~ TEMP,
@@ -1453,7 +1023,7 @@ its18_ps_work_adonis2_jsd <- adonis2(its18_ps_work_beta_dist_jsd ~ TEMP,
 Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[2]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 its18_ps_work_adonis_bray <-  adonis(its18_ps_work_beta_dist_bray ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_work_adonis2_bray <- adonis2(its18_ps_work_beta_dist_bray ~ TEMP,
@@ -1463,101 +1033,63 @@ its18_ps_work_adonis2_bray <- adonis2(its18_ps_work_beta_dist_bray ~ TEMP,
 Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[3]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 its18_ps_work_adonis_gower <-  adonis(its18_ps_work_beta_dist_gower ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_work_adonis2_gower <- adonis2(its18_ps_work_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for FULL data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_work_adonis2_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_work_adonis2_bray
-cat("\n")
-
-cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
-its18_ps_work_adonis2_gower
-cat("\n")
-```
-</details>
-
 :::
 
 ::: {.panel}
 
-#### PIME ASV
+#### Arbitrary
 
-```{r, code_folding=TRUE}
-adonis_sampledf <- its18_ps_pime_sampledf
-anosim_data <- its18_ps_pime
+```{r, echo=FALSE}
+adonis_sampledf <- its18_ps_filt_sampledf
+anosim_data <- its18_ps_filt
 ```
 
 ```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pime',]
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_filt',]
 ```
 
 Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[1]`**.
 
-```{r, code_folding=TRUE}
-its18_ps_pime_adonis_jsd <-  adonis(its18_ps_pime_beta_dist_jsd ~ TEMP,
+```{r}
+its18_ps_filt_adonis_jsd <-  adonis(its18_ps_filt_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
-its18_ps_pime_adonis2_jsd <- adonis2(its18_ps_pime_beta_dist_jsd ~ TEMP,
+its18_ps_filt_adonis2_jsd <- adonis2(its18_ps_filt_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
 Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[2]`**.
 
-```{r, code_folding=TRUE}
-its18_ps_pime_adonis_bray <-  adonis(its18_ps_pime_beta_dist_bray ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_pime_adonis2_bray <- adonis2(its18_ps_pime_beta_dist_bray ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
+```{r}
+its18_ps_filt_adonis_bray <-  adonis(its18_ps_filt_beta_dist_bray ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+its18_ps_filt_adonis2_bray <- adonis2(its18_ps_filt_beta_dist_bray ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
 ```
 
 Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[3]`**.
 
-```{r, code_folding=TRUE}
-its18_ps_pime_groups <- get_variable(anosim_data, "TEMP")
-its18_ps_pime_anosim_gower <-
-  anosim(phyloseq::distance(its18_ps_pime_prop, "gower"),
-         grouping = its18_ps_pime_groups)
+```{r}
+its18_ps_filt_adonis_gower <-  adonis(its18_ps_filt_beta_dist_gower ~ TEMP,
+                                 data = adonis_sampledf, permutations = 1000)
+its18_ps_filt_adonis2_gower <- adonis2(its18_ps_filt_beta_dist_gower ~ TEMP,
+                                  data = adonis_sampledf, permutations = 1000)
 ```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_pime_adonis2_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_pime_adonis2_bray
-cat("\n")
-
-cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
-summary(its18_ps_pime_anosim_gower)
-cat("\n")
-```
-</details>
-
 :::
 
 ::: {.panel}
 
-#### PERfect ASV
+#### PERfect
 
-```{r, code_folding=TRUE}
+```{r, echo=FALSE}
 adonis_sampledf <- its18_ps_perfect_sampledf
 anosim_data <- its18_ps_perfect
 ```
@@ -1569,7 +1101,7 @@ tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pe
 Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[1]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 its18_ps_perfect_adonis_jsd <-  adonis(its18_ps_perfect_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_perfect_adonis2_jsd <- adonis2(its18_ps_perfect_beta_dist_jsd ~ TEMP,
@@ -1579,7 +1111,7 @@ its18_ps_perfect_adonis2_jsd <- adonis2(its18_ps_perfect_beta_dist_jsd ~ TEMP,
 Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[2]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 its18_ps_perfect_adonis_bray <-  adonis(its18_ps_perfect_beta_dist_bray ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_perfect_adonis2_bray <- adonis2(its18_ps_perfect_beta_dist_bray ~ TEMP,
@@ -1589,354 +1121,297 @@ its18_ps_perfect_adonis2_bray <- adonis2(its18_ps_perfect_beta_dist_bray ~ TEMP,
 Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[3]`**.
 
-```{r, code_folding=TRUE}
+```{r}
 its18_ps_perfect_adonis_gower <-  adonis(its18_ps_perfect_beta_dist_gower ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
 its18_ps_perfect_adonis2_gower <- adonis2(its18_ps_perfect_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_perfect_adonis_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_perfect_adonis_bray
-cat("\n")
-
-cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
-its18_ps_perfect_adonis_gower
-cat("\n")
-```
-</details>
-
 :::
 
 ::: {.panel}
 
-#### FULL OTU
+#### PIME
 
-```{r, code_folding=TRUE}
-adonis_sampledf <- its18_ps_work_otu_sampledf
-anosim_data <- its18_ps_work_otu
+```{r, echo=FALSE}
+adonis_sampledf <- its18_ps_pime_sampledf
+anosim_data <- its18_ps_pime
 ```
 
-
 ```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_work_otu',]
+tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pime',]
 ```
 
 Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[1]`**.
 
-```{r, code_folding=TRUE}
-its18_ps_work_otu_adonis_jsd <-  adonis(its18_ps_work_otu_beta_dist_jsd ~ TEMP,
+```{r}
+its18_ps_pime_adonis_jsd <-  adonis(its18_ps_pime_beta_dist_jsd ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
-its18_ps_work_otu_adonis2_jsd <- adonis2(its18_ps_work_otu_beta_dist_jsd ~ TEMP,
+its18_ps_pime_adonis2_jsd <- adonis2(its18_ps_pime_beta_dist_jsd ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
 Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[2]`**.
 
-```{r, code_folding=TRUE}
-its18_ps_work_otu_adonis_bray <-  adonis(its18_ps_work_otu_beta_dist_bray ~ TEMP,
+```{r}
+its18_ps_pime_adonis_bray <-  adonis(its18_ps_pime_beta_dist_bray ~ TEMP,
                                  data = adonis_sampledf, permutations = 1000)
-its18_ps_work_otu_adonis2_bray <- adonis2(its18_ps_work_otu_beta_dist_bray ~ TEMP,
+its18_ps_pime_adonis2_bray <- adonis2(its18_ps_pime_beta_dist_bray ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
 Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
 Then we use **`r tmp_perm_tests$test[3]`**.
 
-```{r, code_folding=TRUE}
-its18_ps_work_otu_adonis_gower <-  adonis(its18_ps_work_otu_beta_dist_gower ~ TEMP,
-                                 data = adonis_sampledf, permutations = 1000)
-its18_ps_work_otu_adonis2_gower <- adonis2(its18_ps_work_otu_beta_dist_gower ~ TEMP,
-                                  data = adonis_sampledf, permutations = 1000)
+```{r}
+its18_ps_pime_groups <- get_variable(anosim_data, "TEMP")
+its18_ps_pime_anosim_gower <-
+  anosim(phyloseq::distance(its18_ps_pime_prop, "gower"),
+         grouping = its18_ps_pime_groups)
 ```
+
+:::
+:::
+:::
 
 <details markdown="1">
-<summary>Detailed results of Significance tests for FULL data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_work_otu_adonis_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_work_otu_adonis_bray
-cat("\n")
-
-cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
-its18_ps_work_otu_adonis_gower
-cat("\n")
-```
-</details>
-
-:::
-
-::: {.panel}
-
-#### PIME OTU
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- its18_ps_pime_otu_sampledf
-anosim_data <- its18_ps_pime_otu
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pime_otu',]
-```
-
-Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-its18_ps_pime_otu_adonis_jsd <-  adonis(its18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_pime_otu_adonis2_jsd <- adonis2(its18_ps_pime_otu_beta_dist_jsd ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-its18_ps_pime_otu_adonis_bray <-  adonis(its18_ps_pime_otu_beta_dist_bray ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_pime_otu_adonis2_bray <- adonis2(its18_ps_pime_otu_beta_dist_bray ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-its18_ps_pime_otu_groups <- get_variable(anosim_data, "TEMP")
-its18_ps_pime_otu_anosim_gower <-
-  anosim(phyloseq::distance(its18_ps_pime_otu_prop, "gower"),
-         grouping = its18_ps_pime_otu_groups)
-```
-
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PIME data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_pime_otu_adonis2_jsd
-cat("\n")
-
-cat("\n", "***PERMANOVA for Bray distance, `bray`***", "\n\n")
-its18_ps_pime_otu_adonis2_bray
-cat("\n")
-
-cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
-summary(its18_ps_pime_otu_anosim_gower)
-cat("\n")
-```
-</details>
-
-:::
-
-::: {.panel}
-
-#### PERfect OTU
-
-```{r, code_folding=TRUE}
-adonis_sampledf <- its18_ps_perfect_otu_sampledf
-anosim_data <- its18_ps_perfect_otu
-```
-
-```{r, echo=FALSE, eval=TRUE}
-tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_perfect_otu',]
-```
-
-Is the p-value of the `r its18_perm_pvalues$dist[1]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[1] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[1]`**.
-
-```{r, code_folding=TRUE}
-its18_ps_perfect_otu_adonis_jsd <-  adonis(its18_ps_perfect_otu_beta_dist_jsd ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_perfect_otu_adonis2_jsd <- adonis2(its18_ps_perfect_otu_beta_dist_jsd ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[2]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[2] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[2]`**.
-
-```{r, code_folding=TRUE}
-its18_ps_perfect_otu_adonis_bray <-  adonis(its18_ps_perfect_otu_beta_dist_bray ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_perfect_otu_adonis2_bray <- adonis2(its18_ps_perfect_otu_beta_dist_bray ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-Is the p-value of the `r tmp_perm_tests$dist[3]` distance metric less than `0.05`?  `r eval(isTRUE(tmp_perm_tests$pval[3] < 0.05))`.  
-Then we use **`r tmp_perm_tests$test[3]`**.
-
-```{r, code_folding=TRUE}
-its18_ps_perfect_otu_adonis_gower <-  adonis(its18_ps_perfect_otu_beta_dist_gower ~ TEMP,
-                                     data = adonis_sampledf, permutations = 1000)
-its18_ps_perfect_otu_adonis2_gower <- adonis2(its18_ps_perfect_otu_beta_dist_gower ~ TEMP,
-                                      data = adonis_sampledf, permutations = 1000)
-```
-
-<details markdown="1">
-<summary>Detailed results of Significance tests for PERfect data set</summary>
-
-```{r, eval=TRUE, echo=FALSE}
-cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
-its18_ps_perfect_otu_adonis_jsd
-cat("\n")
-
-cat("\n", "***ANOSIM for Bray distance, `bray`***", "\n\n")
-its18_ps_perfect_otu_adonis_bray
-cat("\n")
-
-cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
-its18_ps_perfect_otu_adonis_gower
-cat("\n")
-```
-</details>
-
-:::
-:::
-:::
-
-### Summaries 
-
-Here is a quick summary of significance tests for the data sets against three distance matrices.
+<summary><strong>Detailed results</strong> of Significance tests.</summary>
 
 ::: l-body
 ::: {.panelset}
 ::: {.panel}
 
-#### ASV
+#### FULL
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_work_adonis2_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Bray-Curtis dissimilarity, `bray`***", "\n\n")
+summary(its18_ps_work_adonis2_bray)
+cat("\n")
+
+cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
+summary(its18_ps_work_adonis2_gower)
+cat("\n")
+```
+:::
+
+::: {.panel}
+
+#### Arbitrary
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_filt_adonis2_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Bray-Curtis dissimilarity, `bray`***", "\n\n")
+summary(its18_ps_filt_adonis2_bray)
+cat("\n")
+
+cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
+summary(its18_ps_filt_adonis2_gower)
+cat("\n")
+```
+:::
+
+::: {.panel}
+
+#### PERfect
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_perfect_adonis2_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Bray-Curtis dissimilarity, `bray`***", "\n\n")
+summary(its18_ps_perfect_adonis2_bray)
+cat("\n")
+
+cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
+summary(its18_ps_perfect_adonis2_gower)
+cat("\n")
+```
+:::
+
+::: {.panel}
+
+#### PIME
+
+```{r, eval=TRUE, echo=FALSE}
+cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
+its18_ps_pime_adonis2_jsd
+cat("\n")
+
+cat("\n", "***PERMANOVA for Bray-Curtis dissimilarity, `bray`***", "\n\n")
+its18_ps_pime_adonis2_bray
+cat("\n")
+
+cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
+summary(its18_ps_pime_anosim_gower)
+cat("\n")
+```
+
+:::
+:::
+:::
+</details>
+
+## Summaries 
+
+Here is a quick summary of significance tests for the data sets against three distance matrices.
 
 ```{r, echo=FALSE}
-data_set <- data.frame(c("FULL", "PIME", "PERfect"))
-dist_metric <- data.frame(c("Jensen-Shannon Divergence", "Bray", "Gower"))
+data_set <- data.frame(c("FULL", "FILT", "PERfect", "PIME"))
+its_dist_metric <- data.frame(c("Jensen-Shannon Divergence", "Bray-Curtis dissimilarity", "Gower distance"))
 
-tmp_p_value_full <- data.frame(c(its18_ps_work_adonis_jsd$aov.tab$`Pr(>F)`[1],
+tmp_p_value_work <- data.frame(c(its18_ps_work_adonis_jsd$aov.tab$`Pr(>F)`[1],
                                  its18_ps_work_adonis_bray$aov.tab$`Pr(>F)`[1],
                                  its18_ps_work_adonis_gower$aov.tab$`Pr(>F)`[1]))
+
+tmp_p_value_filt <- data.frame(c(its18_ps_filt_adonis_jsd$aov.tab$`Pr(>F)`[1],
+                                 its18_ps_filt_adonis_bray$aov.tab$`Pr(>F)`[1],
+                                 its18_ps_filt_adonis_gower$aov.tab$`Pr(>F)`[1]))
+
+tmp_p_value_perfect <- data.frame(c(its18_ps_perfect_adonis_jsd$aov.tab$`Pr(>F)`[1],
+                                 its18_ps_perfect_adonis_bray$aov.tab$`Pr(>F)`[1],
+                                 its18_ps_perfect_adonis_gower$aov.tab$`Pr(>F)`[1]))
 
 tmp_p_value_pime <- data.frame(c(its18_ps_pime_adonis_jsd$aov.tab$`Pr(>F)`[1],
                                  its18_ps_pime_adonis_bray$aov.tab$`Pr(>F)`[1],
                                  its18_ps_pime_anosim_gower$signif))
 
-tmp_p_value_perfect <- data.frame(c(its18_ps_perfect_adonis_jsd$aov.tab$`Pr(>F)`[1],
-                                    its18_ps_perfect_adonis_bray$aov.tab$`Pr(>F)`[1],
-                                    its18_ps_perfect_adonis_gower$aov.tab$`Pr(>F)`[1]))
-
-its18_tab_sig_test <- dplyr::bind_cols(dist_metric, tmp_p_value_full) %>%
-                      dplyr::bind_cols(., tmp_p_value_pime) %>%
+its18_tab_sig_test <- dplyr::bind_cols(its_dist_metric, tmp_p_value_work) %>%
+                      dplyr::bind_cols(., tmp_p_value_filt) %>%
                       dplyr::bind_cols(., tmp_p_value_perfect) %>%
-  dplyr::rename("distance metric" = 1, "p-value (FULL)" = 2, "p-value (PIME)" = 3, "p-value (PERfect)" = 4)
-rm(list = ls(pattern = "tmp_"))
+                      dplyr::bind_cols(., tmp_p_value_pime)  %>%
+  dplyr::rename("distance metric" = 1, "FULL" = 2, "FILT" = 3, "PERfect" = 4, "PIME" = 5) 
 
-objects(pattern="its18_ps_perfect_")
+its18_tab_sig_test <- its18_tab_sig_test %>%  
+  dplyr::mutate(across(.cols = c(2:ncol(its18_tab_sig_test)), round, digits = 4))
+rm(list = ls(pattern = "tmp_"))
 ```
+<small>`r caption_tab_its("its_sign_tests")`</small>
 
 ```{r, echo=FALSE, eval=TRUE}
-knitr::kable(its18_tab_sig_test)
+seq_table <- its18_tab_sig_test
+seq_table %>%
+  download_this(
+    output_name = "its_sign_tests",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
 ```
-*Summary of significant tests for the FULL, PIME, & PERfect ASV data sets.*
 
-:::
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 3),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 100, headerVAlign = "center",
+    style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2"
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")
+                            }
+    ), 
+  columns = list(
+    `distance metric` = colDef(name = "Distance metric", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 200),
+    dist = colDef(name = "distance", align = "left")
+    ),
+  columnGroups = list(colGroup(name = "p-values", columns = c("FULL", "FILT", "PERfect", "PIME"),
+                       headerStyle = list(fontSize = "1.3em"))
+    ),
+  searchable = FALSE, defaultPageSize = 12, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.9em")))
+rm(seq_table)
+```
 
-::: {.panel}
-
-#### OTU
 
 ```{r, echo=FALSE}
-data_set <- data.frame(c("FULL", "PIME", "PERfect"))
-dist_metric <- data.frame(c("Jensen-Shannon Divergence", "Bray", "Gower"))
-tmp_p_value_full <- data.frame(c(
-                           its18_ps_work_otu_adonis_jsd$aov.tab$`Pr(>F)`[1],
-                           its18_ps_work_otu_adonis_bray$aov.tab$`Pr(>F)`[1],
-                           its18_ps_work_otu_adonis_gower$aov.tab$`Pr(>F)`[1]))
-
-tmp_p_value_pime <- data.frame(c(
-                                 its18_ps_pime_otu_adonis_jsd$aov.tab$`Pr(>F)`[1],
-                                 its18_ps_pime_otu_adonis_bray$aov.tab$`Pr(>F)`[1],
-                                 its18_ps_pime_otu_anosim_gower$signif))
-
-tmp_p_value_perfect <- data.frame(c(
-                           its18_ps_perfect_otu_adonis_jsd$aov.tab$`Pr(>F)`[1],
-                           its18_ps_perfect_otu_adonis_bray$aov.tab$`Pr(>F)`[1],
-                           its18_ps_perfect_otu_adonis_gower$aov.tab$`Pr(>F)`[1]))
-
-its18_tab_sig_test_otu <- dplyr::bind_cols(dist_metric, tmp_p_value_full) %>%
-                          dplyr::bind_cols(., tmp_p_value_pime) %>%
-                          dplyr::bind_cols(., tmp_p_value_perfect) %>%
-  dplyr::rename("distance metric" = 1, "p-value (FULL)" = 2, "p-value (PIME)" = 3, "p-value (PERfect)" = 4)
-rm(list = ls(pattern = "tmp_"))
+save.image("page_build/beta_wf_part_1.rdata")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
-knitr::kable(its18_tab_sig_test_otu)
-```
-*Summary of significant tests for the FULL, PIME, & PERfect OTU data sets.*
-:::
-:::
-:::
+# Ordinations
 
-```{r echo=FALSE}
-save.image("page_build/beta_its18_part_1_wf.rdata")
-gdata::keep(its18_ps_work, its18_ps_pime, its18_ps_perfect, 
-            its18_ps_work_otu, its18_ps_pime_otu, its18_ps_perfect_otu, 
-            its18_ps_work_prop, its18_ps_pime_prop, its18_ps_perfect_prop, 
-            its18_ps_work_otu_prop, its18_ps_pime_otu_prop, its18_ps_perfect_otu_prop, 
+```{r, eval=TRUE, echo=FALSE}
+load("page_build/beta_wf_part_2.rdata")
+```
+
+```{r, echo=FALSE}
+remove(list = ls())
+load("page_build/beta_wf_part_1.rdata")
+gdata::keep(ssu18_ps_work, ssu18_ps_filt, ssu18_ps_pime, ssu18_ps_perfect, 
+            ssu18_ps_work_prop, ssu18_ps_filt_prop, ssu18_ps_pime_prop, ssu18_ps_perfect_prop, 
+            its18_ps_work, its18_ps_filt, its18_ps_pime, its18_ps_perfect, 
+            its18_ps_work_prop, its18_ps_filt_prop, its18_ps_pime_prop, its18_ps_perfect_prop, 
             swel_col, sure = TRUE)
+ssu18_ps_work_me <- readRDS("files/taxa/rdata/ssu18_ps_work_me.rds")
+ssu18_ps_filt_me <- readRDS("files/taxa/rdata/ssu18_ps_filt_me.rds")
+ssu18_ps_perfect_me <- readRDS("files/taxa/rdata/ssu18_ps_perfect_me.rds")
+ssu18_ps_pime_me <- readRDS("files/taxa/rdata/ssu18_ps_pime_me.rds")
+its18_ps_work_me <- readRDS("files/taxa/rdata/its18_ps_work_me.rds")
+its18_ps_filt_me <- readRDS("files/taxa/rdata/its18_ps_filt_me.rds")
+its18_ps_perfect_me <- readRDS("files/taxa/rdata/its18_ps_perfect_me.rds")
+its18_ps_pime_me <- readRDS("files/taxa/rdata/its18_ps_pime_me.rds")
 objects()
 ```
 
-## Beta Diversity Plots
+Now we can visualize the **Jensen-Shannon Divergence**, **unweighted-UniFrac**,  and **weighted-UniFrac** distance matrices to access dissimilarity among sample. Here we ordinate using Principal Coordinate Analysis (PCoA) but we could also test other methods like NMDS, CCA, etc. We will also test the whether there are any differences in ordination between the `phyloseq` package and the [`microeco` package](https://github.com/ChiLiubio/microeco).
 
-```{r echo=FALSE}
-remove(list = ls())
-load("page_build/beta_its18_part_2_wf.rdata")
-```
-
-Here we visualize the different distance matrices using several ordination methods on the FULL, PIME filtered, and PERfect filtered data sets to access dissimilarity among sample.
-
-### Plot Code
+#### Plot Code
 
 <details markdown="1">
-<summary>Code to reproduce plots</summary>
+<summary><strong>Code to reproduce plots</strong></summary>
 
-First, we inspect different ordination methods to see how the samples cluster using **Gower**,  **unGower**, and **Jensen-Shannon Divergence** distance measurements. We could also test different diversity metrics, different transformations, etc.
+**We begin with the code for the 16S rRNA data.**
+
+First the code for ordination implementation in `phyloseq`. 
 
 ```{r}
-list_of_samps <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
-                   "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
-dist <- c("gower", "bray", "jsd")
-for (samp_ps in list_of_samps) {
-for (d in dist){
+ssu18_data_sets <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
+ssu_dist <- c("jsd", "unifrac", "wunifrac")
+for (samp_ps in ssu18_data_sets) {
+for (d in ssu_dist){
      tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
      ord_meths <- c("NMDS", "PCoA", "CCA", "DCA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
-     tmp_plist <- llply(as.list(ord_meths), function(i, physeq, d) {
+     tmp_plist <- plyr::llply(as.list(ord_meths), function(i, physeq, d) {
         ordi = ordinate(physeq, method = i, distance = d)
         plot_ordination(physeq, ordi, "samples", color = "TEMP")
    }, tmp_get, d)
 
   names(tmp_plist) <- ord_meths
 
-  tmp_df <- ldply(tmp_plist, function(x){
+  tmp_df <- plyr::ldply(tmp_plist, function(x){
       df = x$data[, 1:2]
       colnames(df) = c("Axis_1", "Axis_2")
       return(cbind(df, x$data))})
   names(tmp_df)[1] = "method"
   
   tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2, color = TEMP, shape = TEMP, fill = TEMP))
-  tmp_plot <- tmp_plot + geom_point(size = 2)
+  tmp_plot <- tmp_plot + geom_point(size = 4)
   tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
   tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
   
@@ -1945,9 +1420,6 @@ for (d in dist){
   tmp_plot_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
   tmp_list <- list("tmp_df_name" = tmp_df, tmp_plist_name = tmp_plist, tmp_plot_name = tmp_plot)
   assign(paste0(samp_ps, "_",  d, "_ord_results"), tmp_list)
-  #assign(purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .)), tmp_df)
-  #assign(purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist")), tmp_plist)
-  #assign(purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot")), tmp_plot)
   rm(list = ls(pattern = "_tmp"))
  }
 }
@@ -1971,28 +1443,131 @@ for (i in plist_name) {
 }
 ```
 
-```{r, echo=FALSE}
-list_of_samps <- c("its18_ps_work", "its18_ps_pime", "its18_ps_perfect", 
-                   "its18_ps_work_otu", "its18_ps_pime_otu", "its18_ps_perfect_otu")
-its18_ps_work_title <- "FULL ASV Ordination Plots"
-its18_ps_pime_title <- "PIME ASV Ordination Plots"
-its18_ps_perfect_title <- "PERfect ASV Ordination Plots"
-its18_ps_work_otu_title <- "FULL OTU Ordination Plots"
-its18_ps_pime_otu_title <- "PIME OTU Ordination Plots" 
-its18_ps_perfect_otu_title <- "PERfect OTU Ordination Plots" 
+And now the code for ordination implementation in `microeco`. 
 
-for (samp_ps in list_of_samps) {
-  tmp_combo_plot <- (get(purrr::map_chr(samp_ps, ~ paste0(., "_jsd_NMDS"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_bray_NMDS"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_gower_NMDS")))) /
-                    (get(purrr::map_chr(samp_ps, ~ paste0(., "_jsd_PCoA"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_bray_PCoA"))) +
-                    get(purrr::map_chr(samp_ps, ~ paste0(., "_gower_PCoA")))) + 
-    geom_point(size = 1)
+```{r}
+microeco_path <- "files/beta/microeco/"
+for (i in ssu18_data_sets) {
+  tmp_dataset <- get(purrr::map_chr(i, ~paste0(., "_me")))
+  tmp_dataset$cal_betadiv(unifrac = TRUE)
+#### CODE TO ADD JSD DISTANCE ####  
+  tmp_jsd <- phyloseq::distance(get(i), method = "jsd") 
+  tmp_jsd <- forceSymmetric(as.matrix(tmp_jsd), uplo = "L")
+  tmp_jsd <- as.matrix(tmp_jsd)
+  tmp_dataset$beta_diversity$jsd <- tmp_jsd
+#### #### #### #### #### #### #### ####  
+  dir.create(paste(microeco_path, i, "/metrics/", sep = ""), recursive = TRUE)
+  tmp_dataset$save_betadiv(dirpath = paste(microeco_path, i, "/metrics/", sep = ""))
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=TRUE, eval=TRUE}
+class(ssu18_ps_perfect_me$beta_diversity)
+summary(ssu18_ps_perfect_me$beta_diversity)
+```
+
+Here I made a custom "function" to run the analysis, plot the graphs, save graph objects, and save plots (as `.png` and `.pdf` files). I am sure an actual programmer would be shocked, but it works. 
+
+```{r}
+microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {  
+  tmp_dataset <- get(purrr::map_chr(choose_input, ~paste0(., "_me")))
+  tmp_t1 <- trans_beta$new(dataset = tmp_dataset, group = "TEMP", measure = choose_metric)
+  tmp_t1$cal_ordination(ordination = choose_ord)
+  tmp_t1_ord_plot <- tmp_t1$plot_ordination(plot_color = "TEMP", 
+                                            plot_shape = "TEMP", 
+                                            plot_group_ellipse = FALSE, 
+                                            color_values = swel_col, 
+                                            shape_values = c(16, 17, 15)) + 
+                       geom_point(size = 4) +  theme(legend.position = "bottom")
+  tmp_t1$cal_group_distance()
+  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col)
+  tmp_t1$res_group_distance
+  tmp_t1$cal_group_distance(within_group = FALSE)
+  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col) 
+
+###### SET names
+  tmp_name_ord <- paste(choose_input, "_me_", choose_metric, "_", choose_ord, sep = "")
+  tmp_name_wg <- paste(choose_input, "_me_wg_", choose_metric, "_", choose_ord, sep = "")
+  tmp_name_bg <- paste(choose_input, "_me_bg_", choose_metric, "_", choose_ord, sep = "")
+  
+  assign(tmp_name_ord, tmp_t1_ord_plot, envir = parent.frame() )
+  assign(tmp_name_wg, tmp_t1_within_group_plot, envir = parent.frame() )
+  assign(tmp_name_bg, tmp_t1_btwn_group_plot, envir = parent.frame() )
+###### SET paths
+  dir.create(paste(microeco_path, choose_input, "/ordination/", sep = ""), recursive = TRUE)
+  tmp_path <- paste(microeco_path, choose_input, "/ordination/", sep = "")
+  tmp_path_ord <- paste(tmp_path, "ord_plots/", sep = "")
+  tmp_path_wg <- paste(tmp_path, "within_group/", sep = "")
+  tmp_path_bg <- paste(tmp_path, "between_group/", sep = "")
+###### SAVE plots  
+  ggplot2::ggsave(tmp_t1_ord_plot, path = paste(tmp_path_ord, sep = ""), filename = paste0(tmp_name_ord, ".png", sep = ""))
+  ggplot2::ggsave(tmp_t1_ord_plot, path = paste(tmp_path_ord, sep = ""), filename = paste0(tmp_name_ord, ".pdf", sep = ""))                    
+  ggplot2::ggsave(tmp_t1_within_group_plot, path = paste(tmp_path_wg, sep = ""), filename = paste0(tmp_name_wg, ".png", sep = ""))
+  ggplot2::ggsave(tmp_t1_within_group_plot, path = paste(tmp_path_wg, sep = ""), filename = paste0(tmp_name_wg, ".pdf", sep = ""))                  
+  ggplot2::ggsave(tmp_t1_btwn_group_plot, path = paste(tmp_path_bg, sep = ""), filename = paste0(tmp_name_bg, ".png", sep = ""))
+  ggplot2::ggsave(tmp_t1_btwn_group_plot, path = paste(tmp_path_bg, sep = ""), filename = paste0(tmp_name_bg, ".pdf", sep = ""))                  
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+And then run it like so:
+
+```{r}
+microeco_beta_plot(choose_input = "ssu18_ps_pime", choose_metric = "bray", choose_ord = "PCoA")
+```
+
+It would be super cool to have a function that looped through a bunch of data sets, distance metrics, and ordination methods. 
+
+```{r}
+for (j in 1:length(get(paste("ssu18_ps_work", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("ssu18_ps_work", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "ssu18_ps_work", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (j in 1:length(get(paste("ssu18_ps_filt", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("ssu18_ps_filt", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "ssu18_ps_filt", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (j in 1:length(get(paste("ssu18_ps_perfect", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("ssu18_ps_perfect", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "ssu18_ps_perfect", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (j in 1:length(get(paste("ssu18_ps_pime", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("ssu18_ps_pime", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "ssu18_ps_pime", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+
+```{r, echo=FALSE}
+ssu18_ps_work_title <- "FULL Ordination Plots"
+ssu18_ps_filt_title <- "Arbitrary Ordination Plots"
+ssu18_ps_perfect_title <- "PERfect Ordination Plots"
+ssu18_ps_pime_title <- "PIME Ordination Plots"
+
+for (samp_ps in ssu18_data_sets) {
+  tmp_combo_plot <- (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_jsd_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_unifrac_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_wunifrac_PCoA"))) 
+    ) /
+                    (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me",  "_jsd_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me", "_unwei_unifrac_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me", "_wei_unifrac_PCoA")))
+    ) + 
+    geom_point(size = 1, show.legend = FALSE)
   tmp_title <- paste(samp_ps, "_title", sep = "")
   tmp_combo_plot <-  tmp_combo_plot +
   plot_annotation(title = get(tmp_title),
-    subtitle = 'Comparisons by three distance metrics & two ordination method') +
+    subtitle = 'Comparisons of three distance metrics. Implemented in phyloseq (top) and microeco (bottom).') +
   plot_layout(widths = c(3, 3), guides = "collect") &
   theme(plot.title = element_text(size = 18),
         plot.subtitle = element_text(size = 16),
@@ -2000,6 +1575,7 @@ for (samp_ps in list_of_samps) {
         axis.title = element_text(size = 14),
         axis.text = element_text(size = 10),
         legend.position = "bottom",
+        legend.justification = "center",
         legend.title = element_text(size = rel(1.75)),
         legend.text = element_text(size = rel(1.5)))
   tmp_combo_plot_name <- purrr::map_chr(samp_ps, ~ paste0(., "_plots"))
@@ -2009,218 +1585,69 @@ for (samp_ps in list_of_samps) {
 ```
 
 ```{r, echo=FALSE}
-its18_ps_work_plots
-dev.off()
-png("files/beta/figures/its18_ps_work_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_work_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_work_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_work_plots
-dev.off()
-system("cp files/beta/figures/its18_ps_work_beta_div_ord_plots.png include/beta/its18_ps_work_beta_div_ord_plots.png")
+for (i in ssu18_data_sets) {
+  dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
+  tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
+  tmp_filename <- paste(i, "_beta_div_ord_plots", sep="")
+  tmp_get_plot <- get(purrr::map_chr(i, ~ paste0(., "_plots")))
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".png", sep = ""), height = 28, width = 36,
+    units = 'cm', dpi = 600, bg = "white")
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".pdf", sep = ""), height = 10, width = 12)
+}  
 ```
 
 ```{r, echo=FALSE}
-its18_ps_pime_plots
-dev.off()
-png("files/beta/figures/its18_ps_pime_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_pime_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_pime_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_pime_plots
-dev.off()
-system("cp files/beta/figures/its18_ps_pime_beta_div_ord_plots.png include/beta/its18_ps_pime_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_work_beta_div_ord_plots.png include/beta/ssu18_ps_work_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_filt_beta_div_ord_plots.png include/beta/ssu18_ps_filt_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_perfect_beta_div_ord_plots.png include/beta/ssu18_ps_perfect_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_pime_beta_div_ord_plots.png include/beta/ssu18_ps_pime_beta_div_ord_plots.png")
 ```
 
-```{r, echo=FALSE}
-its18_ps_perfect_plots
-dev.off()
-png("files/beta/figures/its18_ps_perfect_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_perfect_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_perfect_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_perfect_plots
-dev.off()
-system("cp files/beta/figures/its18_ps_perfect_beta_div_ord_plots.png include/beta/its18_ps_perfect_beta_div_ord_plots.png")
-```
+**And now the ITS code.**
 
-```{r, echo=FALSE}
-its18_ps_work_otu_plots
-dev.off()
-png("files/beta/figures/its18_ps_work_otu_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_work_otu_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_work_otu_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_work_otu_plots
-dev.off()
-system("cp files/beta/figures/its18_ps_work_otu_beta_div_ord_plots.png include/beta/its18_ps_work_otu_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-its18_ps_pime_otu_plots
-dev.off()
-png("files/beta/figures/its18_ps_pime_otu_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_pime_otu_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_pime_otu_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_pime_otu_plots
-dev.off()
-system("cp files/beta/figures/its18_ps_pime_otu_beta_div_ord_plots.png include/beta/its18_ps_pime_otu_beta_div_ord_plots.png")
-```
-
-```{r, echo=FALSE}
-its18_ps_perfect_otu_plots
-dev.off()
-png("files/beta/figures/its18_ps_perfect_otu_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_perfect_otu_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_perfect_otu_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_perfect_otu_plots
-dev.off()
-system("cp files/beta/figures/its18_ps_perfect_otu_beta_div_ord_plots.png include/beta/its18_ps_perfect_otu_beta_div_ord_plots.png")
-```
-</details>
-
-<br/>
-
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
-
-#### FULL ASV 
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', eval=TRUE, fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/its18_ps_work_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PIME ASV
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', eval=TRUE, fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/its18_ps_pime_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PERfect ASV
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', eval=TRUE, fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/its18_ps_perfect_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### FULL OTU 
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', eval=TRUE, fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/its18_ps_work_otu_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PIME OTU
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', eval=TRUE, fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/its18_ps_pime_otu_beta_div_ord_plots.png")
-```
-:::
-
-::: {.panel}
-
-#### PERfect OTU
-
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset', eval=TRUE, fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-knitr::include_graphics("include/beta/its18_ps_perfect_otu_beta_div_ord_plots.png")
-```
-:::
-:::
-:::
-
-
-```{r, echo=FALSE}
-objects()
-save.image("page_build/beta_its18_part_2_wf.rdata")
-```
-
-```{r include=FALSE, eval=TRUE}
-remove(list = ls())
-```
-
-```{r, echo=FALSE}
-## CODE to subset PIME ASVs from FULL without losing ASV
-## below PIME Prev
-pime_asvs <- colnames(otu_table(its18_ps_pime))
-its18_ps_pime_all <- prune_taxa(pime_asvs, its18_ps_work)
-
-samp_ps <- c("its18_ps_pime_all")
-for (i in samp_ps) {
-     tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
-     tmp_get <- get(i)
-     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
-     tmp_ps@phy_tree <- NULL
-     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
-     tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE, tip.label = taxa_names(tmp_ps))
-     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
-     print(tmp_name)
-     assign(tmp_name, tmp_ps)
-     rm(list = ls(pattern = "tmp_"))
-}
-```
-
-
-```{r, echo=FALSE}
-samp_ps <- "its18_ps_pime_all"
-dist <- c("gower", "bray", "jsd")
-for (d in dist){
-     tmp_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
-     tmp_name_plot <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
+```{r}
+its18_data_sets <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
+its_dist <- c("jsd", "bray", "gower")
+for (samp_ps in its18_data_sets) {
+for (d in its_dist){
      tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
      ord_meths <- c("NMDS", "PCoA", "CCA", "DCA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
-     tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
-     tmp_plist <- llply(as.list(ord_meths), function(i, physeq, d) {
+     tmp_plist <- plyr::llply(as.list(ord_meths), function(i, physeq, d) {
         ordi = ordinate(physeq, method = i, distance = d)
         plot_ordination(physeq, ordi, "samples", color = "TEMP")
    }, tmp_get, d)
 
   names(tmp_plist) <- ord_meths
 
-  tmp_df <- ldply(tmp_plist, function(x){
+  tmp_df <- plyr::ldply(tmp_plist, function(x){
       df = x$data[, 1:2]
       colnames(df) = c("Axis_1", "Axis_2")
       return(cbind(df, x$data))})
   names(tmp_df)[1] = "method"
-  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2,
-                                 color = TEMP, shape = TEMP, fill = TEMP))
-  tmp_plot <- tmp_plot + geom_point(size = 2)
+  
+  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2, color = TEMP, shape = TEMP, fill = TEMP))
+  tmp_plot <- tmp_plot + geom_point(size = 4)
   tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
   tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
-  assign(tmp_plist_name, tmp_plist)
-  assign(tmp_name, tmp_df)
-  assign(tmp_name_plot, tmp_plot)
-  rm(list = ls(pattern = "tmp_"))
+  
+  tmp_df_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
+  tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
+  tmp_plot_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
+  tmp_list <- list("tmp_df_name" = tmp_df, tmp_plist_name = tmp_plist, tmp_plot_name = tmp_plot)
+  assign(paste0(samp_ps, "_",  d, "_ord_results"), tmp_list)
+  rm(list = ls(pattern = "_tmp"))
+ }
 }
 ```
 
-```{r, echo=FALSE}
-samp_ps <- "its18_ps_pime_all"
-plist_name <- objects(pattern="_plist")
-plot_num <- c(1,2)
+```{r}
+plist_name <- objects(pattern="_ord_results")
+plot_num <- c(1,2,3,4)
 for (i in plist_name) {
   for (j in plot_num) {
-       tmp_get_i <- get(i)
+       tmp_get_i <- get(i)$tmp_plist_name
        tmp_ord <- names(tmp_get_i)[j]
-       tmp_name <- stringr::str_replace(i, "plist", tmp_ord)
+       tmp_name <- stringr::str_replace(i, "ord_results", tmp_ord)
        tmp_plot <- tmp_get_i[[j]] + scale_colour_manual(values = swel_col)
        tmp_plot <- tmp_plot + geom_point(size = 4, aes(shape = TEMP)) +
          theme(legend.position = "bottom")
@@ -2231,14 +1658,86 @@ for (i in plist_name) {
 }
 ```
 
+And now the code for ordination implementation in `microeco`. 
+
+```{r}
+microeco_path <- "files/beta/microeco/"
+for (i in its18_data_sets) {
+  tmp_dataset <- get(purrr::map_chr(i, ~paste0(., "_me")))
+  tmp_dataset$cal_betadiv(unifrac = FALSE)
+#### CODE TO ADD JSD DISTANCE ####  
+  tmp_jsd <- phyloseq::distance(get(i), method = "jsd") 
+  tmp_jsd <- forceSymmetric(as.matrix(tmp_jsd), uplo = "L")
+  tmp_jsd <- as.matrix(tmp_jsd)
+  tmp_dataset$beta_diversity$jsd <- tmp_jsd
+#### CODE TO ADD GOWER DISTANCE ####  
+  tmp_gower <- phyloseq::distance(get(i), method = "gower") 
+  tmp_gower <- forceSymmetric(as.matrix(tmp_gower), uplo = "L")
+  tmp_gower <- as.matrix(tmp_gower)
+  tmp_dataset$beta_diversity$gower <- tmp_gower
+#### #### #### #### #### #### #### ####  
+  dir.create(paste(microeco_path, i, "/metrics/", sep = ""), recursive = TRUE)
+  tmp_dataset$save_betadiv(dirpath = paste(microeco_path, i, "/metrics/", sep = ""))
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{r, echo=TRUE, eval=TRUE}
+class(its18_ps_perfect_me$beta_diversity)
+summary(its18_ps_perfect_me$beta_diversity)
+```
+
+Here we call the custom function described above. 
+
+```{r}
+for (j in 1:length(get(paste("its18_ps_work", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("its18_ps_work", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "its18_ps_work", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (j in 1:length(get(paste("its18_ps_filt", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("its18_ps_filt", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "its18_ps_filt", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (j in 1:length(get(paste("its18_ps_perfect", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("its18_ps_perfect", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "its18_ps_perfect", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (j in 1:length(get(paste("its18_ps_pime", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("its18_ps_pime", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "its18_ps_pime", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+
 ```{r, echo=FALSE}
-its18_ps_pime_all_plots <-  (its18_ps_pime_all_jsd_NMDS + its18_ps_pime_all_bray_NMDS + its18_ps_pime_all_gower_NMDS) /
-                        (its18_ps_pime_all_jsd_PCoA + its18_ps_pime_all_bray_PCoA + its18_ps_pime_all_gower_PCoA) +
-  geom_point(size = 1)
-its18_ps_pime_all_plots <-  its18_ps_pime_all_plots +
-  plot_annotation(
-    title = 'PIME (ALL) Ordination Plots',
-    subtitle = 'Comparisons by three distance metrics & two ordination method') +
+its18_ps_work_title <- "FULL Ordination Plots"
+its18_ps_filt_title <- "Arbitrary Ordination Plots"
+its18_ps_perfect_title <- "PERfect Ordination Plots"
+its18_ps_pime_title <- "PIME Ordination Plots"
+
+for (samp_ps in its18_data_sets) {
+  tmp_combo_plot <- (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_jsd_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_bray_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_gower_PCoA"))) 
+    ) /
+                    (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me",  "_jsd_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me", "_bray_PCoA"))) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me", "_gower_PCoA")))
+    ) + 
+    geom_point(size = 1, show.legend = FALSE)
+  tmp_title <- paste(samp_ps, "_title", sep = "")
+  tmp_combo_plot <-  tmp_combo_plot +
+  plot_annotation(title = get(tmp_title),
+    subtitle = 'Comparisons of three distance metrics. Implemented in phyloseq (top) and microeco (bottom).') +
   plot_layout(widths = c(3, 3), guides = "collect") &
   theme(plot.title = element_text(size = 18),
         plot.subtitle = element_text(size = 16),
@@ -2246,185 +1745,398 @@ its18_ps_pime_all_plots <-  its18_ps_pime_all_plots +
         axis.title = element_text(size = 14),
         axis.text = element_text(size = 10),
         legend.position = "bottom",
+        legend.justification = "center",
         legend.title = element_text(size = rel(1.75)),
         legend.text = element_text(size = rel(1.5)))
+  tmp_combo_plot_name <- purrr::map_chr(samp_ps, ~ paste0(., "_plots"))
+  assign(tmp_combo_plot_name, tmp_combo_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+its18_ps_pime_plots
 ```
 
 ```{r, echo=FALSE}
-its18_ps_pime_all_plots
-dev.off()
-png("files/beta/figures/its18_ps_pime_all_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_pime_all_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_pime_all_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_pime_all_plots
-dev.off()
-```
-
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-system("cp files/beta/figures/its18_ps_pime_all_beta_div_ord_plots.png include/beta/its18_ps_pime_all_beta_div_ord_plots.png")
-knitr::include_graphics("include/beta/its18_ps_pime_all_beta_div_ord_plots.png")
+for (i in its18_data_sets) {
+  dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
+  tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
+  tmp_filename <- paste(i, "_beta_div_ord_plots", sep="")
+  tmp_get_plot <- get(purrr::map_chr(i, ~ paste0(., "_plots")))
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".png", sep = ""), height=28, width=36,
+    units = 'cm', dpi = 600, bg = "white")
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".pdf", sep = ""), height=10, width=12)
+}  
 ```
 
 ```{r, echo=FALSE}
-## CODE to Compare PCoA for all dist metrics across all data sets
-lab_1A <- "FULL JSD"
-lab_1B <- "PIME JSD"
-lab_1C <- "PERfect JSD"
-lab_1D <- "PIME (ALL) JSD"
-
-lab_2A <- "FULL UNIFRAC"
-lab_2B <- "PIME UNIFRAC"
-lab_2C <- "PERfect UNIFRAC"
-lab_2D <- "PIME (ALL) UNIFRAC"
-
-lab_3A <- "FULL W-UNIFRAC"
-lab_3B <- "PIME W-UNIFRAC"
-lab_3C <- "PERfect W-UNIFRAC"
-lab_3D <- "PIME (ALL) W-UNIFRAC"
-
-its18_ps_work_jsd_PCoA_n <- its18_ps_work_jsd_PCoA + ggtitle(lab_1A)
-its18_ps_pime_jsd_PCoA_n <- its18_ps_pime_jsd_PCoA + ggtitle(lab_1B)
-its18_ps_perfect_jsd_PCoA_n <- its18_ps_perfect_jsd_PCoA + ggtitle(lab_1C)
-its18_ps_pime_all_jsd_PCoA_n <- its18_ps_pime_all_jsd_PCoA + ggtitle(lab_1D)
-its18_ps_work_bray_PCoA_n <- its18_ps_work_bray_PCoA + ggtitle(lab_2A)
-its18_ps_pime_bray_PCoA_n <- its18_ps_pime_bray_PCoA + ggtitle(lab_2B)
-its18_ps_perfect_bray_PCoA_n <- its18_ps_perfect_bray_PCoA + ggtitle(lab_2C)
-its18_ps_pime_all_bray_PCoA_n <- its18_ps_pime_all_bray_PCoA + ggtitle(lab_2D)
-its18_ps_work_gower_PCoA_n <- its18_ps_work_gower_PCoA + ggtitle(lab_3A)
-its18_ps_pime_gower_PCoA_n <- its18_ps_pime_gower_PCoA + ggtitle(lab_3B)
-its18_ps_perfect_gower_PCoA_n <- its18_ps_perfect_gower_PCoA + ggtitle(lab_3C)
-its18_ps_pime_all_gower_PCoA_n <- its18_ps_pime_all_gower_PCoA + ggtitle(lab_3D)
-
-its18_ps_compare_plots <- ggarrange(its18_ps_work_jsd_PCoA_n, its18_ps_pime_jsd_PCoA_n, its18_ps_perfect_jsd_PCoA_n, its18_ps_pime_all_jsd_PCoA_n, its18_ps_work_bray_PCoA_n, its18_ps_pime_bray_PCoA_n, its18_ps_perfect_bray_PCoA_n, its18_ps_pime_all_bray_PCoA_n, its18_ps_work_gower_PCoA_n, its18_ps_pime_gower_PCoA_n, its18_ps_perfect_gower_PCoA_n, its18_ps_pime_all_gower_PCoA_n, 
-  ncol=4, nrow = 3)
-its18_ps_compare_plots
+system("cp files/beta/figures/combo_plots/its18_ps_work_beta_div_ord_plots.png include/beta/its18_ps_work_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/its18_ps_filt_beta_div_ord_plots.png include/beta/its18_ps_filt_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/its18_ps_perfect_beta_div_ord_plots.png include/beta/its18_ps_perfect_beta_div_ord_plots.png")
+system("cp files/beta/figures/combo_plots/its18_ps_pime_beta_div_ord_plots.png include/beta/its18_ps_pime_beta_div_ord_plots.png")
 ```
+</details>
+
+<br/>
+
+## 16S rRNA
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL 
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_work_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_beta_div_plots_full")`</small>
+:::
+
+::: {.panel}
+
+#### Arbitrary
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_filt_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_beta_div_plots_filt")`</small>
+:::
+
+::: {.panel}
+#### PERfect
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_perfect_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_beta_div_plots_perfect")`</small>
+:::
+
+::: {.panel}
+#### PIME
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_pime_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_beta_div_plots_pime")`</small>
+:::
+
+:::
+:::
+
+## ITS
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### Arbitrary 
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_work_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_its("its_beta_div_plots_full")`</small>
+:::
+
+::: {.panel}
+
+#### FILT 
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_filt_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_its("its_beta_div_plots_filt")`</small>
+:::
+
+::: {.panel}
+#### PERfect
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_perfect_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_its("its_beta_div_plots_perfect")`</small>
+:::
+
+::: {.panel}
+#### PIME
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_pime_beta_div_ord_plots.png")
+```
+<small>`r caption_fig_its("its_beta_div_plots_pime")`</small>
+:::
+
+:::
+:::
+
 
 ```{r, echo=FALSE}
-its18_ps_compare_plots <-  (its18_ps_work_jsd_PCoA + its18_ps_pime_jsd_PCoA + its18_ps_perfect_jsd_PCoA + its18_ps_pime_all_jsd_PCoA + its18_ps_work_bray_PCoA + its18_ps_pime_bray_PCoA + its18_ps_perfect_bray_PCoA + its18_ps_pime_all_bray_PCoA + its18_ps_work_gower_PCoA + its18_ps_pime_gower_PCoA + its18_ps_perfect_gower_PCoA + its18_ps_pime_all_gower_PCoA) +
-  geom_point(size = 1)
-its18_ps_compare_plots <-  its18_ps_compare_plots +
-  plot_annotation(
-    title = 'Beta Compare',
-    subtitle = 'Comparisons by four data sets & three distance metrics') +
-  plot_layout(widths = c(4, 3), guides = "collect") &
-  theme(plot.title = element_text(size = 18),
-        plot.subtitle = element_text(size = 16),
-        plot.tag = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        legend.position = "bottom",
-        legend.title = element_text(size = rel(1.75)),
-        legend.text = element_text(size = rel(1.5)))
-```
-
-```{r, echo=FALSE}
-its18_ps_compare_plots
-dev.off()
-png("files/beta/figures/its18_ps_compare_plots_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_compare_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_compare_plots_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_compare_plots
-dev.off()
-```
-
-
-```{r, echo=FALSE, eval=FALSE, warning=FALSE, layout='l-body-outset', fig.cap='**Left** = Jensen-Shannon Divergence, **middle** = Bray-Curtis, **right** = Gower; **Top** = NMDS, **bottom** = PCoA.'}
-system("cp files/beta/figures/its18_ps_compare_plots_beta_div_ord_plots.png include/beta/its18_ps_compare_plots_beta_div_ord_plots.png")
-knitr::include_graphics("include/beta/its18_ps_compare_plots_beta_div_ord_plots.png")
-```
-
-
-
-```{r, echo=FALSE}
-## CODE to Remove an "odd" sample.
-its18_ps_work_prune <- prune_samples(c("P01_D00_010_W3A", "P01_D00_010_W8A", "P10_D00_010_C0E", "P02_D00_010_C0A", "P03_D00_010_W3B", "P03_D00_010_W8B", "P04_D00_010_C0B", "P05_D00_010_W3C", "P05_D00_010_W8C", "P06_D00_010_C0C", "P07_D00_010_W3D", "P07_D00_010_W8D", "P08_D00_010_C0D", "P09_D00_010_W3E"), its18_ps_work)
-its18_ps_work_prune
-its18_ps_work_prune <- prune_taxa(taxa_sums(its18_ps_work_prune) > 0, its18_ps_work_prune)
-its18_ps_work_prune
-
-samp_ps <- c("its18_ps_work_prune")
-for (i in samp_ps) {
-     tmp_name <- purrr::map_chr(i, ~ paste0(., "_prop"))
-     tmp_get <- get(i)
-     tmp_ps <- transform_sample_counts(tmp_get, function(otu) 1e5 * otu/sum(otu))
-     tmp_ps@phy_tree <- NULL
-     tmp_ps <- prune_samples(sample_sums(tmp_ps) > 0, tmp_ps)
-     tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE, tip.label = taxa_names(tmp_ps))
-     tmp_ps <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
-     print(tmp_name)
-     assign(tmp_name, tmp_ps)
-     rm(list = ls(pattern = "tmp_"))
+## NEXT few blocks are to modify with and between group plots
+for (i in objects(pattern = "_wg_")) {
+  tmp_dataset <- get(i)
+  tmp_wg <- tmp_dataset + geom_boxplot(fill=swel_col) + 
+    scale_colour_manual(values=c("#191919", "#191919", "#191919"))
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_mod"))
+  assign(tmp_name, tmp_wg)
+  rm(list = ls(pattern = "tmp_"))
 }
 ```
 
-
-```{r, echo=FALSE}
-samp_ps <- "its18_ps_work_prune"
-dist <- c("gower", "bray", "jsd")
-for (d in dist){
-     tmp_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
-     tmp_name_plot <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
-     tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
-     ord_meths <- c("NMDS", "PCoA", "CCA", "DCA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
-     tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
-     tmp_plist <- llply(as.list(ord_meths), function(i, physeq, d) {
-        ordi = ordinate(physeq, method = i, distance = d)
-        plot_ordination(physeq, ordi, "samples", color = "TEMP")
-   }, tmp_get, d)
-
-  names(tmp_plist) <- ord_meths
-
-  tmp_df <- ldply(tmp_plist, function(x){
-      df = x$data[, 1:2]
-      colnames(df) = c("Axis_1", "Axis_2")
-      return(cbind(df, x$data))})
-  names(tmp_df)[1] = "method"
-  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2,
-                                 color = TEMP, shape = TEMP, fill = TEMP))
-  tmp_plot <- tmp_plot + geom_point(size = 2)
-  tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
-  tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
-  assign(tmp_plist_name, tmp_plist)
-  assign(tmp_name, tmp_df)
-  assign(tmp_name_plot, tmp_plot)
+```{r, eval=FALSE, echo=FALSE}
+btw_colors <- c("#FF00FF", "#FFFF00", "#00FFFF")
+for (i in objects(pattern = "_bg_")) {
+  tmp_dataset <- get(i)
+  tmp_wg <- tmp_dataset + geom_boxplot(fill = "grey90") + 
+    scale_colour_manual(values=c("#191919", "#191919", "#191919"))
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_mod"))
+  assign(tmp_name, tmp_wg)
   rm(list = ls(pattern = "tmp_"))
 }
 ```
 
 ```{r, echo=FALSE}
-its18_ps_work_prune_plots <-  (its18_ps_work_prune_jsd_NMDS + its18_ps_work_prune_bray_NMDS + its18_ps_work_prune_gower_NMDS) /
-                        (its18_ps_work_prune_jsd_PCoA + its18_ps_work_prune_bray_PCoA + its18_ps_work_prune_gower_PCoA) + geom_point(size = 1)
-its18_ps_work_prune_plots <-  its18_ps_work_prune_plots +
-  plot_annotation(
-    title = 'FULL data set Ordination Plots',
-    subtitle = 'Comparisons by three distance metrics & two ordination method') +
-  plot_layout(widths = c(3, 3), guides = "collect") &
+for (i in objects(pattern = "_jsd_PCoA_mod")) {
+  tmp_wg <- get(i)
+  tmp_wg <- tmp_wg + ylab("Jensen-Shannon divergence")
+  tmp_name <- i
+  assign(tmp_name, tmp_wg)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in objects(pattern = "_bray_PCoA_mod")) {
+  tmp_wg <- get(i)
+  tmp_wg <- tmp_wg + ylab("Bray-Curtis dissimilarity")
+  tmp_name <- i
+  assign(tmp_name, tmp_wg)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in objects(pattern = "_gower_PCoA_mod")) {
+  tmp_wg <- get(i)
+  tmp_wg <- tmp_wg + ylab("Gower distance")
+  tmp_name <- i
+  assign(tmp_name, tmp_wg)
+  rm(list = ls(pattern = "tmp_"))
+}
+```
+
+# Within & Between Group Distances
+
+Above we calculated the sample distances within groups. Let's see what those plots look like.
+
+## 16S rRNA
+
+```{r, echo=FALSE}
+ssu18_ps_work_title <- "FULL (unfiltered)"
+ssu18_ps_filt_title <- "Arbitrary filtered"
+ssu18_ps_perfect_title <- "PERfect filtered"
+ssu18_ps_pime_title <- "PIME filtered"
+
+for (samp_ps in ssu18_data_sets) {
+  tmp_combo_plot <- (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_wg_jsd_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +  ggtitle("Within-group") +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_wg_unwei_unifrac_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_wg_wei_unifrac_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) 
+    ) /
+    (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_bg_jsd_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE)  + ggtitle(title = "Between-group") +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_bg_unwei_unifrac_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_bg_wei_unifrac_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE)
+    )
+  
+  tmp_title <- paste(samp_ps, "_title", sep = "")
+  tmp_combo_plot <-  tmp_combo_plot +
+  plot_annotation(title = get(tmp_title),
+    subtitle = 'Treatment-level variation of three distance metrics.') +
+  plot_layout(widths = c(6, 6), guides = "collect") &
   theme(plot.title = element_text(size = 18),
         plot.subtitle = element_text(size = 16),
         plot.tag = element_text(size = 12),
-        axis.title = element_text(size = 14),
+        axis.title = element_text(size = 13),
         axis.text = element_text(size = 10),
-        legend.position = "bottom",
+        axis.text.x = element_text(size = 14),
+        legend.position = "none",
+        legend.justification = "center",
         legend.title = element_text(size = rel(1.75)),
         legend.text = element_text(size = rel(1.5)))
+  tmp_combo_plot_name <- purrr::map_chr(samp_ps, ~ paste0(., "_me_variation_plots"))
+  assign(tmp_combo_plot_name, tmp_combo_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+ssu18_ps_pime_me_variation_plots
+objects(pattern = "_plots")
 ```
 
 ```{r, echo=FALSE}
-its18_ps_work_prune_plots
-dev.off()
-png("files/beta/figures/its18_ps_work_prune_beta_div_ord_plots.png", height=28, width=36,
-    units = 'cm', res = 600, bg = "white")
-its18_ps_work_prune_plots
-dev.off()
-pdf("files/beta/figures/its18_ps_work_prune_beta_div_ord_plots.pdf", height = 10, width = 12)
-its18_ps_work_prune_plots
-dev.off()
+for (i in ssu18_data_sets) {
+  dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
+  tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
+  tmp_filename <- paste(i, "_variation_plots", sep="")
+  tmp_get_plot <- get(purrr::map_chr(i, ~ paste0(., "_me_variation_plots")))
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".png", sep = ""), height=26, width=36,
+    units = 'cm', dpi = 600, bg = "white")
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".pdf", sep = ""), height=9, width=12)
+}  
+```
+
+```{r, echo=FALSE}
+system("cp files/beta/figures/combo_plots/ssu18_ps_work_variation_plots.png include/beta/ssu18_ps_work_variation_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_filt_variation_plots.png include/beta/ssu18_ps_filt_variation_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_perfect_variation_plots.png include/beta/ssu18_ps_perfect_variation_plots.png")
+system("cp files/beta/figures/combo_plots/ssu18_ps_pime_variation_plots.png include/beta/ssu18_ps_pime_variation_plots.png")
+```
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL 
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_work_variation_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_variation_plots_full")`</small>
+:::
+
+::: {.panel}
+
+#### Arbitrary
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_filt_variation_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_variation_plots_filt")`</small>
+:::
+
+::: {.panel}
+#### PERfect
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_perfect_variation_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_variation_plots_perfect")`</small>
+:::
+
+::: {.panel}
+#### PIME
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/ssu18_ps_pime_variation_plots.png")
+```
+<small>`r caption_fig_ssu("ssu_variation_plots_pime")`</small>
+:::
+
+:::
+:::
+
+## ITS
+
+```{r, echo=FALSE}
+its18_ps_work_title <- "FULL (unfiltered)"
+its18_ps_filt_title <- "Arbitrary filtered"
+its18_ps_perfect_title <- "PERfect filtered"
+its18_ps_pime_title <- "PIME filtered"
+
+for (samp_ps in its18_data_sets) {
+  tmp_combo_plot <- (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_wg_jsd_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +  ggtitle("Within-group")+
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_wg_bray_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_wg_gower_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE)
+    ) /
+    (
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_bg_jsd_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +  ggtitle("Between-group")+
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_bg_bray_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE) +
+    get(purrr::map_chr(samp_ps, ~ paste0(., "_me_bg_gower_PCoA_mod"))) + geom_point(size = 2, show.legend = FALSE)
+    )
+  
+  tmp_title <- paste(samp_ps, "_title", sep = "")
+  tmp_combo_plot <-  tmp_combo_plot +
+  plot_annotation(title = get(tmp_title),
+    subtitle = 'Treatment-level variation of three distance metrics.') +
+  plot_layout(widths = c(6, 6), guides = "collect") &
+  theme(plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 16),
+        plot.tag = element_text(size = 12),
+        axis.title = element_text(size = 13),
+        axis.text = element_text(size = 10),
+        axis.text.x = element_text(size = 14),
+        legend.position = "none",
+        legend.justification = "center",
+        legend.title = element_text(size = rel(1.75)),
+        legend.text = element_text(size = rel(1.5)))
+  tmp_combo_plot_name <- purrr::map_chr(samp_ps, ~ paste0(., "_me_variation_plots"))
+  assign(tmp_combo_plot_name, tmp_combo_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+its18_ps_pime_me_variation_plots
+objects(pattern = "_plots")
+```
+
+```{r, echo=FALSE}
+for (i in its18_data_sets) {
+  dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
+  tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
+  tmp_filename <- paste(i, "_variation_plots", sep="")
+  tmp_get_plot <- get(purrr::map_chr(i, ~ paste0(., "_me_variation_plots")))
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".png", sep = ""), height=26, width=36,
+    units = 'cm', dpi = 600, bg = "white")
+  ggplot2::ggsave(tmp_get_plot, path = tmp_path, filename = paste(tmp_filename, ".pdf", sep = ""), height=9, width=12)
+}  
+```
+
+```{r, echo=FALSE}
+system("cp files/beta/figures/combo_plots/its18_ps_work_variation_plots.png include/beta/its18_ps_work_variation_plots.png")
+system("cp files/beta/figures/combo_plots/its18_ps_filt_variation_plots.png include/beta/its18_ps_filt_variation_plots.png")
+system("cp files/beta/figures/combo_plots/its18_ps_perfect_variation_plots.png include/beta/its18_ps_perfect_variation_plots.png")
+system("cp files/beta/figures/combo_plots/its18_ps_pime_variation_plots.png include/beta/its18_ps_pime_variation_plots.png")
+```
+
+::: l-body-outset
+::: {.panelset}
+::: {.panel}
+
+#### FULL 
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_work_variation_plots.png")
+```
+<small>`r caption_fig_its("its_variation_plots_full")`</small>
+:::
+
+::: {.panel}
+
+#### Arbitrary 
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_filt_variation_plots.png")
+```
+<small>`r caption_fig_its("its_variation_plots_filt")`</small>
+:::
+
+::: {.panel}
+#### PERfect
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_perfect_variation_plots.png")
+```
+<small>`r caption_fig_its("its_variation_plots_perfect")`</small>
+:::
+
+::: {.panel}
+#### PIME
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+knitr::include_graphics("include/beta/its18_ps_pime_variation_plots.png")
+```
+<small>`r caption_fig_its("its_variation_plots_pime")`</small>
+:::
+
+:::
+:::
+
+```{r, echo=FALSE}
+#objects()
+#rm(ssu18_ps_filt, ssu18_ps_work, ssu18_ps_perfect, ssu18_ps_pime)
+save.image("page_build/beta_wf_part_2.rdata")
 ```
 
 ##  Source Code {.appendix}

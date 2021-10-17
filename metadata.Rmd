@@ -1,7 +1,7 @@
 ---
-title: "9. Metadata Analysis"
+title: "8. Metadata Analysis"
 description: |
-  Workflow for ...
+  Workflow for to compare environmental metadata with microbial communities. 
 author:
 #  - name: Jarrod J Scott
 #    url: https://example.com/norajones
@@ -11,9 +11,9 @@ bibliography: assets/cite.bib
 ---
 
 <details markdown="1">
-<summary>Show setup information.</summary>
+<summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup, message = FALSE, warning = FALSE}
+```{r setup, message=FALSE, results = 'hide'}
 knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
 set.seed(119)
 #library(conflicted)
@@ -21,7 +21,8 @@ set.seed(119)
 #pacman::p_depends_reverse(vegan, local = TRUE)  
 library(phyloseq); packageVersion("phyloseq")
 pacman::p_load(ape, bestNormalize, DT, tidyverse, gdata, mctoolsr, 
-               ggpubr, ggvegan, ggfortify, vegan,
+               ggpubr, ggvegan, ggfortify, vegan, reactable, 
+               downloadthis, captioner, codefolder,
                install = FALSE, update = FALSE)
 
 options(scipen=999)
@@ -45,6 +46,27 @@ remove(list = ls())
 load("page_build/metadata_summary.rdata")
 ```
 
+
+```{r, echo = FALSE, eval=TRUE, results = 'hide'}
+# Create the caption(s) with captioner
+caption_tab_ssu <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
+caption_fig_ssu <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
+
+caption_tab_its <- captioner(prefix = "(ITS) Table", suffix = " |", style = "b")
+caption_fig_its <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
+
+caption_tab <- captioner(prefix = "(common) Table", suffix = " |", style = "b")
+caption_fig <- captioner(prefix = "(common) Figure", suffix = " |", style = "b")
+
+# Create a function for referring to the tables in text
+ref <- function(x) str_extract(x, "[^|]*") %>% 
+  trimws(which = "right", whitespace = "[ ]")
+```
+
+```{r, echo = FALSE, eval = TRUE}
+source("assets/captions/captions_metadata.R")
+```
+
 # Multivariate Summary
 
 Summary results for of `envfit` and `bioenv` tests for edaphic properties, soil functional response, and temperature adaptation for both 16S rRNA and ITS data sets.
@@ -54,7 +76,7 @@ Summary results for of `envfit` and `bioenv` tests for edaphic properties, soil 
 Metadata parameters removed based on autocorrelation results.
 
 - edaphic properties: TEB + DON + Na + Al + Ca
-- soil functional response: micN + micNP + enzCN + enzCP + BP_ase + CE_ase + LP_ase + N_ase + P_ase
+- soil functional response: micN + micNP + enzCN + enzCP + BP~ase~ + CE~ase~ + LP~ase~ + N~ase~ + P~ase~
 - temperature adaptation: NUE + PUE + SI
 
 Metadata parameters removed from capscale analysis based on Degrees of Freedom.
@@ -65,23 +87,83 @@ Metadata parameters removed from capscale analysis based on Degrees of Freedom.
 
 <br/>
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
-datatable(ssu18_sig_summary, width = "100%", rownames = FALSE, caption = htmltools::tags$caption(
-            style = 'caption-side: bottom; text-align: left;',
-            'Table: ', htmltools::em('Results of envfit & bioenv test for the 16S rRNA data set.')),
-          elementId = "95p2uxf1n8lpjbc2t0r9",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blftip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = -1,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )%>%
-    DT::formatRound(columns = c(3:ncol(ssu18_sig_summary)),
-                    digits = 3) %>%
-    DT::formatStyle(columns = colnames(ssu18_sig_summary),
-                    fontSize = '80%')
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- read.table("files/metadata/tables/ssu18_sig_envfit_bioenv_summary.txt", header = TRUE, sep = "\t")
+seq_table %>%
+  download_this(
+    output_name = "ssu_multivariate_summary",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- ssu18_sig_summary %>% dplyr::rename("envfit_r2" = 3, 
+                                                         "envfit_pval" = 4, 
+                                                         "bioenv_r" = 5, 
+                                                         "bioenv_pval" = 6)
+seq_table <- seq_table %>% dplyr::mutate(across(.cols = c(3:6), round, digits = 3)) 
+seq_table[is.na(seq_table)] <- ""
+```
+
+<small>`r caption_tab_ssu("ssu_multi_summ")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+reactable(seq_table, groupBy = "metadata_set", defaultExpanded = TRUE,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 3),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 50), 
+  columns = list(
+    metadata_set = colDef(name = "Metadata group", 
+                       sticky = "left", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       align = "left",
+                       minWidth = 90),
+    parameter = colDef(name = "parameter", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee")),
+    envfit_r2 = colDef(name = "r2"),
+    envfit_pval = colDef(name = "P(>r)", 
+                                style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold", 
+                                              borderRight = "5px solid #eee")}, 
+                         headerStyle = list(borderRight = "5px solid #eee")),
+    bioenv_r = colDef(name = "r", minWidth = 40),
+    bioenv_pval = colDef(name = "p-value", 
+                                style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")})), 
+    columnGroups = list(
+      colGroup(name = "envfit", 
+             columns = c("envfit_r2", "envfit_pval"), headerStyle = list(fontSize = "1.2em")),
+      colGroup(name = "bioenv", 
+             columns = c("bioenv_r", "bioenv_pval"), headerStyle = list(fontSize = "1.2em"))),
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = FALSE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 
 ## ITS
@@ -89,41 +171,100 @@ datatable(ssu18_sig_summary, width = "100%", rownames = FALSE, caption = htmltoo
 Metadata parameters removed based on autocorrelation results.
 
 - edaphic properties: TEB + DON + Na + Al + Ca
-- soil functional response: micN + micNP + enzCN + enzCP + BP_ase + CE_ase + LP_ase + N_ase + P_ase
-- temperature adaptation: NUE + PUE + P_Q10 + SI
+- soil functional response: micN + micNP + enzCN + enzCP + BP~ase~ + CE~ase~ + LP~ase~ + N~ase~ + P~ase~
+- temperature adaptation: NUE + PUE + P~Q10~ + SI
 
 Metadata parameters removed from capscale analysis based on Degrees of Freedom.
 
 - edaphic properties: Mg + Mn + Na + Al + Fe + K
 - soil functional response: NONE
-- temperature adaptation: S_Q10
+- temperature adaptation: S~Q10~
 
 <br/>
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
-datatable(its18_sig_summary, width = "100%", rownames = FALSE, caption = htmltools::tags$caption(
-            style = 'caption-side: bottom; text-align: left;',
-            'Table: ', htmltools::em('Results of envfit & bioenv test for the ITS data set.')),
-          elementId = "w114ycn9zt4kx4ip8165",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blftip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = -1,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )%>%
-    DT::formatRound(columns = c(3:ncol(its18_sig_summary)),
-                    digits = 3) %>%
-    DT::formatStyle(columns = colnames(its18_sig_summary),
-                    fontSize = '80%')
-remove(list = ls())
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- read.table("files/metadata/tables/its18_sig_envfit_bioenv_summary.txt", header = TRUE, sep = "\t")
+seq_table %>%
+  download_this(
+    output_name = "its_multivariate_summary",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- its18_sig_summary %>% dplyr::rename("envfit_r2" = 3, 
+                                                         "envfit_pval" = 4, 
+                                                         "bioenv_r" = 5, 
+                                                         "bioenv_pval" = 6)
+seq_table <- seq_table %>% dplyr::mutate(across(.cols = c(3:6), round, digits = 3)) 
+seq_table[is.na(seq_table)] <- ""
 ```
 
 
+<small>`r caption_tab_its("its_multi_summ")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+reactable(seq_table, groupBy = "metadata_set", defaultExpanded = TRUE,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 3),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 50), 
+  columns = list(
+    metadata_set = colDef(name = "Metadata group", 
+                       sticky = "left", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       align = "left",
+                       minWidth = 90),
+    parameter = colDef(name = "parameter", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee")),
+    envfit_r2 = colDef(name = "r2"),
+    envfit_pval = colDef(name = "P(>r)", 
+                                style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold", 
+                                              borderRight = "5px solid #eee")}, 
+                         headerStyle = list(borderRight = "5px solid #eee")),
+    bioenv_r = colDef(name = "r", minWidth = 40),
+    bioenv_pval = colDef(name = "p-value", 
+                                style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")})), 
+    columnGroups = list(
+      colGroup(name = "envfit", 
+             columns = c("envfit_r2", "envfit_pval"), headerStyle = list(fontSize = "1.2em")),
+      colGroup(name = "bioenv", 
+             columns = c("bioenv_r", "bioenv_pval"), headerStyle = list(fontSize = "1.2em"))),
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = FALSE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
 ```{r master_load_ssu18, include=FALSE, eval=TRUE}
 ## Load to build page only #2
-remove(list = ls())
 load("page_build/metadata_ssu18_wf.rdata")
 ```
 
@@ -157,23 +298,51 @@ In this workflow we compare the environmental metadata with the microbial commun
 
 <br/>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE, eval=TRUE}
 metad <- read.table("files/metadata/tables/metadata.txt",
                         header = TRUE, sep = "\t")
-datatable(metad, width = "100%", caption = htmltools::tags$caption(
-            style = 'caption-side: bottom; text-align: left;',
-            'Table: ', htmltools::em('Metadata summary for each sample.')),
-          elementId = "hgiy1zr42yw7eymtlich",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )%>%
-    DT::formatStyle(columns = colnames(metad),
-                    fontSize = '80%')
+```
+
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table <- metad
+seq_table %>%
+  download_this(
+    output_name = "metadata",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+<small>`r caption_tab("metadata_results")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(headerStyle = list(fontSize = "0.8em"),
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee", fontSize = "0.9em"), 
+                       align = "left",
+                       minWidth = 150), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 
 # 16s rRNA
@@ -184,11 +353,9 @@ datatable(metad, width = "100%", caption = htmltools::tags$caption(
 ## Initial Load for  ANALYSIS #1
 set.seed(119)
 ssu18_ps_work <- readRDS("files/alpha/rdata/ssu18_ps_work.rds")
-ssu18_ps_pime <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
+ssu18_ps_filt <- readRDS("files/alpha/rdata/ssu18_ps_filt.rds")
 ssu18_ps_perfect <- readRDS("files/alpha/rdata/ssu18_ps_perfect.rds")
-ssu18_ps_work_otu <- readRDS("files/alpha/rdata/ssu18_ps_work_otu.rds")
-ssu18_ps_pime_otu <- readRDS("files/alpha/rdata/ssu18_ps_pime_otu.rds")
-ssu18_ps_perfect_otu <- readRDS("files/alpha/rdata/ssu18_ps_perfect_otu.rds")
+ssu18_ps_pime <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
 ```
 
 1. Transform `ps` Objects
@@ -278,12 +445,10 @@ rm(list = ls(pattern = "_otu_tax"))
 
 At this point in the code we need to choose a data set to use, formatted with `mctoolsr`. Remember, there are four choices:
 
-1) Complete ASV data set.
-2) PIME filtered ASV data set.
-3) PERfect filtered ASV data set.
-4) Complete OTU data set.
-5) PIME filtered OTU data set.
-6) PERfect filtered OTU data set.
+1) FULL, unfiltered data set.
+2) Arbitrary filtered data set.
+3) PERfect filtered data set.
+4) PIME filtered data set.
 
 This way, if we want to test other data sets we only need to change the name here.
 
@@ -315,10 +480,45 @@ md_to_tranform <- shap_results$parameter[shap_results$tranform == TRUE]
 rm(list = ls(pattern = "temp_md"))
 ```
 <details markdown="1">
-<summary>Show the results of each normality test for metadata parameters</summary>
+<summary>**Show the results** of each normality test for metadata parameters</summary>
 
-```{r, echo=FALSE, eval=TRUE}
-shap_results
+</br>
+
+<small>`r caption_tab_ssu("ssu_normality_tests")`</small>
+
+```{r, echo=FALSE, eval=TRUE, layout="l-body"}
+seq_table <- shap_results
+reactable(seq_table,
+  defaultColDef = colDef(headerStyle = list(fontSize = "0.8em"),
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    parameter = colDef(name = "Parameter", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee", fontSize = "0.9em"), 
+                       align = "left",
+                       minWidth = 150), 
+    `p-value` = colDef(name = "p-value", style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")})
+    ), 
+  searchable = TRUE, defaultPageSize = 60, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 </details>
 
@@ -434,31 +634,56 @@ Ok. Looks like `bestNormalize` was unable to find a suitable transformation for 
 
 Finally, here is a new summary table that includes all of the normalized data.
 
-<br/>
+</br>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE, eval=TRUE}
 metad_norm <- ssu18_select_mc_norm$map_loaded
-metad_norm <- metad_norm %>% tibble::rownames_to_column("id")
-metad_norm[,6:8] <- NULL
-
-datatable(metad_norm, width = "100%", caption = htmltools::tags$caption(
-            style = 'caption-side: bottom; text-align: left;',
-            'Table: ', htmltools::em('Metadata summary for each sample.')),
-          elementId = "ffn29i70ljbq7tir2u6u",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )%>%
-    DT::formatRound(columns = c(8:10,12:14,19:20,24:25,29,31,35,39:43,45,47:48,54,57:58,60,62,65:67),
-                    digits = 3) %>%
-    DT::formatStyle(columns = colnames(metad_norm),
-                    fontSize = '80%')
+metad_norm <- metad_norm %>% tibble::rownames_to_column("Sample_ID")
+metad_norm <- metad_norm[order(match(metad_norm$Sample_ID, metad$Sample_ID)), ]
+metad_norm[,2:9] <- NULL
+seq_table <- metad_norm
+seq_table %>%
+  download_this(
+    output_name = "normalized_metadata",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
 ```
 
+<small>`r caption_tab_ssu("ssu_normalized_metadata")`</small>
+
+```{r, echo=FALSE, eval=TRUE, layout="l-page"}
+seq_table <- seq_table %>% dplyr::mutate(across(.cols = c(3:5, 7:9, 14:15,19:20, 
+                                                            24,26,30,34:38,40, 42:43, 
+                                                            49, 52:53,55,57,60:62), 
+                                                  round, digits = 3)) 
+reactable(seq_table,
+  defaultColDef = colDef(headerStyle = list(fontSize = "0.8em"),
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee", fontSize = "0.9em"), 
+                       align = "left",
+                       minWidth = 150), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
 
 ```{r, echo=FALSE}
 # Code to run individual transformations for each metadata and generate histograms
@@ -516,7 +741,6 @@ datatable(metad_norm, width = "100%", caption = htmltools::tags$caption(
 ##     rm(list = ls(pattern = "tmp_"))
 ##}
 ```
-
 
 ## Autocorrelation Tests
 
@@ -668,25 +892,30 @@ for (i in objects(pattern = "_cor$")) {
 objects(pattern = "_ggheatmap")
 ```
 
+
 ## Autocorrelation Plots
 <br/>
 
 ::: l-body-outset
 ::: {.panelset}
 ::: {.panel}
+
 #### Edaphic properties
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 edaphic_cor_ggheatmap
 ```
+<small>`r caption_fig_ssu("ssu_autocor_edaph_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Edaphic properties (normalized)
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 edaphic_norm_cor_ggheatmap
 ```
+<small>`r caption_fig_ssu("ssu_autocor_edaph_norm_plots")`</small>
 :::
 
 ::: {.panel}
@@ -695,30 +924,37 @@ edaphic_norm_cor_ggheatmap
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 soil_funct_cor_ggheatmap
 ```
+<small>`r caption_fig_ssu("ssu_autocor_funct_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Functional responses (normalized)
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 soil_funct_norm_cor_ggheatmap
 ```
+<small>`r caption_fig_ssu("ssu_autocor_funct_norm_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Temperature adaptation 
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 temp_adapt_cor_ggheatmap
 ```
+<small>`r caption_fig_ssu("ssu_autocor_temp_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Temperature adaptation (normalized)
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 temp_adapt_norm_cor_ggheatmap
 ```
+<small>`r caption_fig_ssu("ssu_autocor_temp_norm_plots")`</small>
 :::
 :::
 :::
@@ -742,15 +978,10 @@ auto_cor_figs
 dev.off()
 ```
 
-```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=FALSE, fig.cap='**Top row** = Environmental and edaphic; **middle row** = Microbial functional responses; **bottom row** = Temperature adaptation. **Left** = Original data; **right** = Normalized data.'}
-system("cp files/metadata/figures/ssu18_auto_cor_figs.png include/metadata/ssu18_auto_cor_figs.png")
-knitr::include_graphics("include/metadata/ssu18_auto_cor_figs.png")
-```
-
 Now we can remove parameters based on the autocorrelation analysis:
 
 A) Environmental and edaphic properties: TEB, DON, Na, Al, Ca.
-B) Microbial functional responses: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase.
+B) Microbial functional responses: micN, micNP, enzCN, enzCP, BP~ase~, CE~ase~, LP~ase~, N~ase~, P~ase~.
 C) Temperature adaptation properties: NUE, PUE, SI.
 
 ```{r, eval=FALSE, echo=FALSE}
@@ -907,9 +1138,80 @@ rm(list = ls(pattern = "tmp_"))
 
 <br/>
 
+<small>`r caption_tab_ssu("ssu_mantel_summ")`</small>
+
+
 ```{r, echo=FALSE, layout="l-page", eval=TRUE}
-knitr::kable(ssu18_ps_pime_mantel_summary)
+seq_table <- ssu18_ps_pime_mantel_summary
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 3),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE, minWidth = 50,
+    style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color)}
+    ), 
+  
+  columns = list(
+    `normalized?` = colDef(name = "normalized?", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       align = "left",
+                       minWidth = 70
+                       ),
+    `AC removed?` = colDef(name = "AC removed?", 
+                       align = "left",
+                       minWidth = 70,
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       style = list(borderRight = "5px solid #eee")
+                       ),
+    edaphic_ape = colDef(name = "ape", 
+                                ),
+    edaphic_vegan = colDef(name = "vegan"
+                           ),
+    soil_funct_ape = colDef(name = "ape"
+                       ),
+    soil_funct_vegan = colDef(name = "vegan"
+                              ),
+    temp_adapt_ape = colDef(name = "ape"
+                       ),
+    temp_adapt_vegan = colDef(name = "vegan"
+                              )
+    ), 
+  
+    columnGroups = list(
+      colGroup(name = "Environmental & edaphic", 
+             columns = c("edaphic_ape", "edaphic_vegan"), 
+             headerStyle = list(fontSize = "1.2em"
+                                ),
+             ),
+      colGroup(name = "Functional responses", 
+             columns = c("soil_funct_ape", "soil_funct_vegan"), 
+             headerStyle = list(fontSize = "1.2em"
+                                )
+             ),
+      colGroup(name = "Temperature adaptation", 
+             columns = c("temp_adapt_ape", "temp_adapt_vegan"), 
+             headerStyle = list(fontSize = "1.2em")
+             )
+      ),
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = FALSE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
+
 
 Moving on.
 
@@ -1336,11 +1638,6 @@ dev.off()
 ```
 </details>
 
-```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for edaphic properties.'}
-system("cp files/metadata/figures/ssu18_edaphic_capscale.png include/metadata/ssu18_edaphic_capscale.png")
-knitr::include_graphics("include/metadata/ssu18_edaphic_capscale.png")
-```
-
 ```{r, echo=FALSE}
 rm(list = ls(pattern = "tmp_"))
 ```
@@ -1603,11 +1900,6 @@ soil_funct_plot
 dev.off()
 ```
 </details>
-
-```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for soil functional response'}
-system("cp files/metadata/figures/ssu18_soil_funct_capscale.png include/metadata/ssu18_soil_funct_capscale.png")
-knitr::include_graphics("include/metadata/ssu18_soil_funct_capscale.png")
-```
 
 ```{r, echo=FALSE}
 rm(list = ls(pattern = "tmp_"))
@@ -1872,11 +2164,6 @@ dev.off()
 ```
 </details>
 
-```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for temperature adaptation'}
-system("cp files/metadata/figures/ssu18_temp_adapt_capscale.png include/metadata/ssu18_temp_adapt_capscale.png")
-knitr::include_graphics("include/metadata/ssu18_temp_adapt_capscale.png")
-```
-
 
 ```{r, echo=FALSE}
 rm(list = ls(pattern = "tmp_"))
@@ -1892,6 +2179,8 @@ rm(list = ls(pattern = "tmp_"))
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 edaphic_plot
 ```
+<small>`r caption_fig_ssu("ssu_cap_edaph_plots")`</small>
+
 :::
 
 ::: {.panel}
@@ -1900,6 +2189,7 @@ edaphic_plot
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 soil_funct_plot
 ```
+<small>`r caption_fig_ssu("ssu_cap_funct_plots")`</small>
 :::
 
 ::: {.panel}
@@ -1908,6 +2198,7 @@ soil_funct_plot
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 temp_adapt_plot
 ```
+<small>`r caption_fig_ssu("ssu_cap_temp_plots")`</small>
 :::
 :::
 :::
@@ -2067,11 +2358,9 @@ load("page_build/metadata_its18_wf.rdata")
 #remove(list = ls())
 set.seed(119)
 its18_ps_work <- readRDS("files/alpha/rdata/its18_ps_work.rds")
-its18_ps_pime <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
+its18_ps_filt <- readRDS("files/alpha/rdata/its18_ps_filt.rds")
 its18_ps_perfect <- readRDS("files/alpha/rdata/its18_ps_perfect.rds")
-its18_ps_work_otu <- readRDS("files/alpha/rdata/its18_ps_work_otu.rds")
-its18_ps_pime_otu <- readRDS("files/alpha/rdata/its18_ps_pime_otu.rds")
-its18_ps_perfect_otu <- readRDS("files/alpha/rdata/its18_ps_perfect_otu.rds")
+its18_ps_pime <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
 ```
 
 1. Transform `ps` Objects
@@ -2162,11 +2451,9 @@ rm(list = ls(pattern = "_otu_tax"))
 At this point in the code we need to choose a data set to use, formatted with `mctoolsr`. Remember, there are four choices:
 
 1) Complete ASV data set.
-2) PIME filtered ASV data set.
+2) Arbitrary filtered ASV data set.
 3) PERfect filtered ASV data set.
-4) Complete OTU data set.
-5) PIME filtered OTU data set.
-6) PERfect filtered OTU data set.
+4) PIME filtered ASV data set.
 
 This way, if we want to test other data sets we only need to change the name here.
 
@@ -2197,11 +2484,47 @@ dplyr::filter(shap_results, tranform == "TRUE")
 md_to_tranform <- shap_results$parameter[shap_results$tranform == TRUE]
 rm(list = ls(pattern = "temp_md"))
 ```
-<details markdown="1">
-<summary>Show the results of each normality test for metadata parameters</summary>
 
-```{r, echo=FALSE, eval=TRUE}
-shap_results
+<details markdown="1">
+<summary>**Show the results** of each normality test for metadata parameters</summary>
+
+</br>
+
+<small>`r caption_tab_its("its_normality_tests")`</small>
+
+```{r, echo=FALSE, eval=TRUE, layout="l-body"}
+seq_table <- shap_results
+reactable(seq_table,
+  defaultColDef = colDef(headerStyle = list(fontSize = "0.8em"),
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    parameter = colDef(name = "Parameter", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee", fontSize = "0.9em"), 
+                       align = "left",
+                       minWidth = 150), 
+    `p-value` = colDef(name = "p-value", style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")})
+    ), 
+  searchable = TRUE, defaultPageSize = 60, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 </details>
 
@@ -2318,29 +2641,55 @@ Ok. Looks like `bestNormalize` was unable to find a suitable transformation for 
 
 Finally, here is a new summary table that includes all of the normalized data.
 
-<br/>
+</br>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE, eval=TRUE}
 metad_norm <- its18_select_mc_norm$map_loaded
-metad_norm <- metad_norm %>% tibble::rownames_to_column("id")
-metad_norm[,6:8] <- NULL
+metad_norm <- metad_norm %>% tibble::rownames_to_column("Sample_ID")
+metad_norm <- metad_norm[order(match(metad_norm$Sample_ID, metad$Sample_ID)), ]
+metad_norm[,2:9] <- NULL
+seq_table <- metad_norm
+seq_table %>%
+  download_this(
+    output_name = "normalized_metadata",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
 
-datatable(metad_norm, width = "100%", caption = htmltools::tags$caption(
-            style = 'caption-side: bottom; text-align: left;',
-            'Table: ', htmltools::em('Metadata summary for each sample.')),
-          elementId = "ffn29i70ljbq7tir2u6u",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )%>%
-    DT::formatRound(columns = c(8:10,12:14,19:20,24:25,29,31,35,39:43,45,47:48,54,57:58,60,62,65:67),
-                    digits = 3) %>%
-    DT::formatStyle(columns = colnames(metad_norm),
-                    fontSize = '80%')
+<small>`r caption_tab_its("its_normalized_metadata")`</small>
+
+```{r, echo=FALSE, eval=TRUE, layout="l-page"}
+seq_table <- seq_table %>% dplyr::mutate(across(.cols = c(3:5, 7:9, 14:15,19:20, 
+                                                            24,26,30,34:38,40, 42:43, 
+                                                            49, 52:53,55,57,60:62), 
+                                                  round, digits = 3)) 
+reactable(seq_table,
+  defaultColDef = colDef(headerStyle = list(fontSize = "0.8em"),
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee", fontSize = "0.9em"), 
+                       align = "left",
+                       minWidth = 150), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 
 
@@ -2551,25 +2900,30 @@ for (i in objects(pattern = "_cor$")) {
 objects(pattern = "_ggheatmap")
 ```
 
+
 ## Autocorrelation Plots
 <br/>
 
 ::: l-body-outset
 ::: {.panelset}
 ::: {.panel}
+
 #### Edaphic properties
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 edaphic_cor_ggheatmap
 ```
+<small>`r caption_fig_its("its_autocor_edaph_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Edaphic properties (normalized)
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 edaphic_norm_cor_ggheatmap
 ```
+<small>`r caption_fig_its("its_autocor_edaph_norm_plots")`</small>
 :::
 
 ::: {.panel}
@@ -2578,34 +2932,40 @@ edaphic_norm_cor_ggheatmap
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 soil_funct_cor_ggheatmap
 ```
+<small>`r caption_fig_its("its_autocor_funct_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Functional responses (normalized)
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 soil_funct_norm_cor_ggheatmap
 ```
+<small>`r caption_fig_its("its_autocor_funct_norm_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Temperature adaptation 
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 temp_adapt_cor_ggheatmap
 ```
+<small>`r caption_fig_its("its_autocor_temp_plots")`</small>
 :::
 
 ::: {.panel}
+
 #### Temperature adaptation (normalized)
 
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 temp_adapt_norm_cor_ggheatmap
 ```
+<small>`r caption_fig_its("its_autocor_temp_norm_plots")`</small>
 :::
 :::
 :::
-
 
 ```{r, echo=FALSE}
 auto_cor_figs <- ggarrange(
@@ -2624,12 +2984,6 @@ pdf("files/metadata/figures/its18_auto_cor_figs.pdf",
 auto_cor_figs
 dev.off()
 ```
-
-```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=FALSE, fig.cap='**Top row** = Environmental and edaphic; **middle row** = Microbial functional responses; **bottom row** = Temperature adaptation. **Left** = Original data; **right** = Normalized data.'}
-system("cp files/metadata/figures/its18_auto_cor_figs.png include/metadata/its18_auto_cor_figs.png")
-knitr::include_graphics("include/metadata/its18_auto_cor_figs.png")
-```
-
 
 Now we can remove parameters based on the autocorrelation analysis:
 
@@ -2780,10 +3134,78 @@ rm(list = ls(pattern = "tmp_"))
 
 ### Dissimilarity Correlation Results
 
-<br/>
+<small>`r caption_tab_its("its_mantel_summ")`</small>
+
 
 ```{r, echo=FALSE, layout="l-page", eval=TRUE}
-knitr::kable(its18_ps_pime_mantel_summary)
+seq_table <- its18_ps_pime_mantel_summary
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 3),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE, minWidth = 50,
+    style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#2271B2" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color)}
+    ), 
+  
+  columns = list(
+    `normalized?` = colDef(name = "normalized?", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       align = "left",
+                       minWidth = 70
+                       ),
+    `AC removed?` = colDef(name = "AC removed?", 
+                       align = "left",
+                       minWidth = 70,
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       style = list(borderRight = "5px solid #eee")
+                       ),
+    edaphic_ape = colDef(name = "ape", 
+                                ),
+    edaphic_vegan = colDef(name = "vegan"
+                           ),
+    soil_funct_ape = colDef(name = "ape"
+                       ),
+    soil_funct_vegan = colDef(name = "vegan"
+                              ),
+    temp_adapt_ape = colDef(name = "ape"
+                       ),
+    temp_adapt_vegan = colDef(name = "vegan"
+                              )
+    ), 
+  
+    columnGroups = list(
+      colGroup(name = "Environmental & edaphic", 
+             columns = c("edaphic_ape", "edaphic_vegan"), 
+             headerStyle = list(fontSize = "1.2em"
+                                ),
+             ),
+      colGroup(name = "Functional responses", 
+             columns = c("soil_funct_ape", "soil_funct_vegan"), 
+             headerStyle = list(fontSize = "1.2em"
+                                )
+             ),
+      colGroup(name = "Temperature adaptation", 
+             columns = c("temp_adapt_ape", "temp_adapt_vegan"), 
+             headerStyle = list(fontSize = "1.2em")
+             )
+      ),
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = FALSE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 
 Moving on.
@@ -3207,10 +3629,6 @@ dev.off()
 ```
 </details>
 
-```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for edaphic properties.'}
-system("cp files/metadata/figures/its18_edaphic_capscale.png include/metadata/its18_edaphic_capscale.png")
-knitr::include_graphics("include/metadata/its18_edaphic_capscale.png")
-```
 
 ```{r, echo=FALSE}
 rm(list = ls(pattern = "tmp_"))
@@ -3475,12 +3893,6 @@ dev.off()
 ```
 </details>
 
-```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for soil functional response'}
-system("cp files/metadata/figures/its18_soil_funct_capscale.png include/metadata/its18_soil_funct_capscale.png")
-knitr::include_graphics("include/metadata/its18_soil_funct_capscale.png")
-```
-
-
 ```{r, echo=FALSE}
 rm(list = ls(pattern = "tmp_"))
 ```
@@ -3744,12 +4156,6 @@ dev.off()
 ```
 </details>
 
-```{r, echo=FALSE, warning=FALSE, fig.height=1, layout='l-body', eval=FALSE, fig.cap='Results of capscale analysis for temperature adaptation'}
-system("cp files/metadata/figures/its18_temp_adapt_capscale.png include/metadata/its18_temp_adapt_capscale.png")
-knitr::include_graphics("include/metadata/its18_temp_adapt_capscale.png")
-```
-
-
 ```{r, echo=FALSE}
 rm(list = ls(pattern = "tmp_"))
 ```
@@ -3764,6 +4170,8 @@ rm(list = ls(pattern = "tmp_"))
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 edaphic_plot
 ```
+<small>`r caption_fig_its("its_cap_edaph_plots")`</small>
+
 :::
 
 ::: {.panel}
@@ -3772,6 +4180,7 @@ edaphic_plot
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 soil_funct_plot
 ```
+<small>`r caption_fig_its("its_cap_funct_plots")`</small>
 :::
 
 ::: {.panel}
@@ -3780,9 +4189,12 @@ soil_funct_plot
 ```{r, echo=FALSE, warning=FALSE, fig.height=4.5, layout='l-body-outset', eval=TRUE}
 temp_adapt_plot
 ```
+<small>`r caption_fig_its("its_cap_temp_plots")`</small>
 :::
 :::
 :::
+
+
 
 ```{r, echo=FALSE}
 its18_capscale_plots <- ggarrange(
@@ -3932,6 +4344,3 @@ remove(list = ls())
 
 You can find the source code for this page by [clicking this link](https://github.com/sweltr/high-temp/blob/master/metadata.Rmd).
 
-## Data Availability {.appendix}
-
-Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [XXXXXXXX](). Output files from this workflow available on figshare at [XXXXXXXX.]().

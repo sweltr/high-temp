@@ -1,0 +1,47 @@
+---
+title: "Electronic Supplementary Material"
+description: |
+  Extended supplementary material for the publication.
+bibliography: assets/cite.bib 
+output:
+    distill::distill_article:
+      css: assets/styles.css
+      toc: true
+      toc_depth: 3
+---
+
+```{r setup, message = FALSE, warning = FALSE, results='hide', echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(0199)
+library(phyloseq); packageVersion("phyloseq")
+library(Biostrings); packageVersion("Biostrings")
+require(gdata)
+pacman::p_load(DT, ggplot2, dplyr, microbiome, tidyverse, 
+               data.table, plyr, stringr, labdsv, reshape, 
+               metacoder, naniar,   
+               install = FALSE, update = FALSE)
+options(scipen=999)
+knitr::opts_current$get(c(
+  "cache",
+  "cache.path",
+  "cache.rebuild",
+  "dependson",
+  "autodep"
+))
+```
+
+
+```{r, include=FALSE, eval=TRUE}
+## Load to build page only #2
+remove(list = ls())
+```
+
+> Content coming  soon!
+
+This page will contain the Supplementary Information for the manuscript once the paper has been accepted for publication. It will basically be the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly. 
+
+Have a nice day. 
+
+## Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/web/blob/master/som.Rmd).

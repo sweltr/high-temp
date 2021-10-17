@@ -1,7 +1,7 @@
 ---
-title: "1 DADA2 Workflow"
+title: "1. DADA2 Workflow"
 description: |
-  DADA2 workflow for processing the **2018 16S rRNA** and the **2018 ITS** high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.
+  DADA2 workflow for processing the **16S rRNA** and the **ITS** high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.
 author:
 #  - name: Jarrod J Scott
 #    url: https://example.com/norajones
@@ -12,9 +12,9 @@ bibliography: assets/cite.bib
 
 
 <details markdown="1">
-<summary>Click here for setup information.</summary>
+<summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup}
+```{r setup, message=FALSE, results = 'hide'}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(919191)
 #pacman::p_depends(ape, local = TRUE)  
@@ -23,6 +23,8 @@ library(dada2); packageVersion("dada2")
 library(ShortRead); packageVersion("ShortRead")
 library(ggplot2); packageVersion("ggplot2")
 pacman::p_load(rmarkdown, DT, gridExtra, grid, 
+               formatR, reactable, downloadthis,
+               captioner, dplyr, sparkline, 
                install = FALSE, update = FALSE)
 
 options(scipen=999)
@@ -35,25 +37,35 @@ knitr::opts_current$get(c(
 ))
 remove(list = ls())
 ```
+
 </details>
+
+```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+# Create the caption(s) with captioner
+caption_tab <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
+caption_fig <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
+# Create a function for referring to the tables in text
+ref <- function(x) str_extract(x, "[^|]*") %>% 
+  trimws(which = "right", whitespace = "[ ]")
+```
+
+```{r, echo = FALSE, eval = TRUE}
+source("assets/captions/captions_dada2.R")
+```
 
 # Prerequisites
 
-In order to run this workflow, you either need the *raw* data, available on the figshare project site, or the *trimmed* data, available from the ENA under project accession number ... See the [Data Availability](data-availability.html) page for complete details.
+In order to run this workflow, you either need the *raw* data, available on the [figshare project site](), or the *trimmed* data, available from the European Nucleotide Archive (ENA) under project accession number [PRJEB45074](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). See the [Data Availability](data-availability.html) page for more details.
 
-This workflow is how we processed our 16S rRNA and ITS data sets using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2] from samples collected in **2018**. Workflow construction is based on the [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) and the primer identification section of the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html).
+This workflow contains the code we used to process the 16S rRNA and ITS data sets using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2]. Workflow construction is based on the [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) and the primer identification section of the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html).
 
 <aside>
-Because the workflows share many common variable names, you must either split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
+Because the workflows share many variable names, you must either split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
 </aside>
 
 # 16s rRNA Data
 
-```{r, include=FALSE}
-remove(list = ls())
-```
-
-> NOTE: The reverse reads for 16s rRNA data set are unusable, therefore this workflow deals with forward reads *only*.
+> NOTE: The reverse reads for 16S rRNA data set are unusable (see below), therefore this workflow deals with forward reads *only*.
 
 We will screen the forward reads for reverse primers and show the quality plots of the reverse reads at the beginning of the workflow. After that, reverse reads are not used.
 
@@ -63,21 +75,49 @@ We will screen the forward reads for reverse primers and show the quality plots 
 
 We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
 
-<br/>
-
 ```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
 seq_table <- read.table("files/dada2/tables/ssu18_sample_seq_info.txt",
                         header = TRUE, sep = "\t")
-datatable(seq_table, width = "100%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
 ```
+
+<small>`r caption_tab("seq_dets_ssu")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu18_sample_seq_info",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+```
+
+</br>
 
 ### Workflow
 
@@ -144,17 +184,20 @@ p3a <- grid.arrange(p1a, p2a, nrow = 1)
 ggsave("plot_qscores_2018a.png", p3a, width = 7, height = 3)
 ```
 
+```{r, echo=FALSE}
+system("cp files/dada2/figures/ssu18_plot_qscores_a.png include/dada2/ssu18_plot_qscores_a.png")
+```
+
 Unfortunately, the reverse reads are unusable.
 
 ```{r, echo=FALSE, layout="l-body", warning=FALSE, fig.height=4, fig.width=4, eval=TRUE}
-system("cp files/dada2/figures/ssu18_plot_qscores_a.png include/dada2/ssu18_plot_qscores_a.png")
 knitr::include_graphics("include/dada2/ssu18_plot_qscores_a.png")
 ```
-<small><em>Aggregated quality score plots for forward reads & reverse reads.</em></small>
+<small>`r caption_fig("qual_scores_ssu")`</small>
 
 ## 2. Define Primers
 
-Before we start the DADA2 workflow we need to run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] on all `fastq.gz` files to trim the primers. For this part of the study we used  the primer pair 505F (GTGCCAGCMGCCGCGGTAA) and 806R   (GGACTACHVGGGTWTCTAAT) [@caporaso2011global] which should yield an amplicon length of about 253 bp.
+Before we start the DADA2 workflow we need to run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] on all `fastq.gz` files to trim the primers. For bacteria and archaea, we amplified the V4 hypervariable region of the 16S rRNA gene using the primer pair 515F (GTGCCAGCMGCCGCGGTAA) and 806R (GGACTACHVGGGTWTCTAAT) [@caporaso2011global], which should yield an amplicon length of about 253 bp.
 
 First we define the primers.
 
@@ -163,9 +206,7 @@ FWD <- "GTGCCAGCMGCCGCGGTAA"
 REV <- "GGACTACHVGGGTWTCTAAT"
 ```
 
-Next, we check the presence and orientation of these primers in the data. I started doing this for ITS data because of primer read-through but I really like the general idea of doing it just to make sure nothing funny is going of with the data.
-
-To do this we will create all orientations of the input primer sequences. In other words the *Forward*, *Complement*, *Reverse*, and *Reverse Complement* variations.
+Next, we check the presence and orientation of these primers in the data. I started doing this for ITS data because of primer read-through but I really like the general idea of doing it just to make sure nothing funny is going of with the data. To do this, we will create all orientations of the input primer sequences. In other words the *Forward*, *Complement*, *Reverse*, and *Reverse Complement* variations.
 
 ```{r}
 allOrients <- function(primer) {
@@ -202,9 +243,9 @@ filterAndTrim(fnFs, fnFs.filtN,
               maxN = 0, multithread = TRUE)
 ```
 
-Nice.  Time to assess the number of times a primer (and all possible primer orientation) appear in the forward and reverse reads. According to the workflow, counting the primers on one set of paired end fastq files is sufficient to see if there is a problem. This assumes that all the files were created using the same library prep. Basically for both primers, we will search for all four orientations in both forward and reverse reads. Since this is 16S rRNA we do not anticipate any issues but it is worth checking.
+Nice.  Time to assess the number of times a primer (and all primer orientations) appear in the forward and reverse reads. According to the workflow, counting the primers on one set of paired end fastq files is sufficient to see if there is a problem. This assumes that all the files were created using the same library prep. Basically for both primers, we will search for all four orientations in both forward and reverse reads. Since this is 16S rRNA we do not anticipate any issues but it is worth checking anyway.
 
-```{r, echo=FALSE, eval=TRUE}
+```{r, eval=TRUE}
 sampnum <- 2
 ```
 
@@ -277,7 +318,9 @@ for(i in seq_along(fnFs)) {system2(cutadapt,
 
 ```
 This is cutadapt 2.8 with Python 3.7.6
-Command line parameters: -g GTGCCAGCMGCCGCGGTAA -a ATTAGAWACCCBDGTAGTCC -m 20 -n 2 -e 0.12 -o RAW/cutadapt/P1_R1.fastq.gz RAW/filtN/P1_R1.fastq.gz
+Command line parameters: -g GTGCCAGCMGCCGCGGTAA -a ATTAGAWACCCBDGTAGTCC \
+                         -m 20 -n 2 -e 0.12 \
+                         -o RAW/cutadapt/P1_R1.fastq.gz RAW/filtN/P1_R1.fastq.gz
 ```
 
 *Note*. If the code above removes all of the base pairs in a sequence, you will get downstream errors unless you set the `-m` flag. This flag sets the minimum length and reads shorter than this will be discarded. Without this flag, reads of length 0 will be kept and cause issues. *Also, a lot of output will be written to the screen by cutadapt!*.
@@ -304,25 +347,57 @@ temp1[, 4:6] <- list(NULL)
 write.table(temp1, "files/dada2/tables/ssu18_cut.txt", sep = "\t", quote = FALSE)
 ```
 
-<br/>
+```{r, echo=FALSE, eval=TRUE}
+seq_table <- read.table("files/dada2/tables/ssu18_cut.txt",
+                       header = TRUE, sep = "\t")
 
-```{r echo=FALSE, eval=TRUE}
-cut_t <- read.table("files/dada2/tables/ssu18_cut.txt",
-                       header = TRUE)
-datatable(cut_t, width = "80%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+seq_table$per_reads_kept <- round(seq_table$cutadapt_reads/seq_table$raw_reads, 
+                                  digits = 3)
 ```
+
+<small>`r caption_tab("seq_cutadapt_ssu")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu18_cutadapt",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    pre_filt_reads = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    cutadapt_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+```
+
 
 ## 4. Quality Assessment & Filtering
 
-We need the forward and reverse fastq file names and the sample names.
+We need the forward and reverse fastq file names plus the sample names.
 
 ```{r}
 cutFs <- sort(list.files(path.cut, pattern = "_R1.fastq.gz",
@@ -336,7 +411,7 @@ head(sample.names)
 c("P1", "P1-8C", "P10", "P2", "P3", "P3-8C")
 ```
 
-First let's look at the quality of our reads. The numbers in brackets specify which samples to view. Here we are looking at an aggregate plot of all data (except the negative control)
+First let's look at the quality of our reads. The numbers in brackets specify which samples to view. Here we are looking at an aggregate plot of all data (except the negative control).
 
 ### Quality plots
 
@@ -346,11 +421,14 @@ ggsave("ssu18_plot_qscores.png", p1, width = 7, height = 3)
 ggsave("ssu18_plot_qscores.png", p1)
 ```
 
-```{r, echo=FALSE, layout="l-body", warning=FALSE, fig.height=2, eval=TRUE}
+```{r, echo=FALSE}
 system("cp files/dada2/figures/ssu18_plot_qscores_b.png include/dada2/ssu18_plot_qscores_b.png")
+```
+
+```{r, echo=FALSE, warning=FALSE, eval=TRUE, out.width = "55%", fig.align="center"}
 knitr::include_graphics("include/dada2/ssu18_plot_qscores_b.png")
 ```
-<small><em>Aggregated quality score plots for forward reads.</em></small>
+<small>`r caption_fig("qual_scores_after_ssu")`</small>
 
 The forward reads look good.
 
@@ -378,20 +456,49 @@ These parameters should be set based on the anticipated length of the amplicon a
 
 And here is a table of how the filtering step affected the number of reads in each sample. As you can see, there are a few samples that started with a low read count to begin with---we will likely remove those samples at some point.
 
-<br/>
-
 ```{r, echo=FALSE, eval=TRUE}
-out <- read.table("files/dada2/tables/ssu18_out_T.txt",
-                       header = TRUE)
-datatable(out, width = "80%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+seq_table <- read.table("files/dada2/tables/ssu18_filter.txt",
+                       header = TRUE, sep = "\t")
+
+seq_table$per_reads_kept <- round(seq_table$reads_out/seq_table$reads_in, 
+                                  digits = 3)
+```
+<small>`r caption_tab("filter_ssu")`</small>
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu18_filter",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    reads_in = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    reads_out = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
 ## 5. Learn Error Rates
@@ -412,10 +519,14 @@ errF <- learnErrors(filtFs, multithread = FALSE)
 plotErrors(errF, nominalQ=TRUE)
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
-system("cp files/dada2/figures/ssu18_plot_errorF_1.png include/dada2/ssu18_plot_errorF_1.png")
-knitr::include_graphics("include/dada2/ssu18_plot_errorF_1.png")
+```{r, echo=FALSE}
+system("cp files/dada2/figures/ssu18_plot_errorF.png include/dada2/ssu18_plot_errorF.png")
 ```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+knitr::include_graphics("include/dada2/ssu18_plot_errorF.png")
+```
+<small>`r caption_fig("error_F_ssu")`</small>
 
 The error rates for each possible transition (A to C, A to G, etc.) are shown. Points are the observed error rates for each consensus quality score. The black line shows the estimated error rates after convergence of the machine-learning algorithm. The red line shows the error rates expected under the nominal definition of the Q-score. Here the estimated error rates (black line) are a good fit to the observed rates (points), and the error rates drop with increased quality as expected.
 
@@ -476,7 +587,7 @@ Encountered 13673 unique sequences from 33000 total sequences read.
 
 ## 7. DADA2 & ASV Inference
 
-At this point we are ready to apply the core sample inference algorithm (dada) to the filtered and trimmed sequence data. DADA2 offers three options for whether and how to pool samples for ASV inference. 
+At this point we are ready to apply the core sample inference algorithm (`dada`) to the filtered and trimmed sequence data. DADA2 offers three options for whether and how to pool samples for ASV inference. 
 
 If `pool = TRUE`, the algorithm will pool together all samples prior to sample inference.  
 If `pool = FALSE`, sample inference is performed on each sample individually.  
@@ -487,30 +598,85 @@ We tested all three methods through the full pipeline. Click the `+` to see the 
 <details markdown="1">
 <summary>Show/hide  Results of `dada` pooling options </summary>
 
-Here are a few summary tables of results from the tests. Values are from the final sequence table prodcuced by each option. 
-
 <br/>
 
-*Total number of reads, total number of ASV, minimum and maximum ASVs, followed by the number of singletons, doubletons, etc.*
+Here are summary tables of results from the tests. Values are from the final sequence table produced by each option. 
+
+
 ```{r, echo=FALSE, layout="l-body", eval=TRUE}
-dada_pool_comp <- read.table("files/dada2/tables/ssu18_dada_compare.txt",
+seq_table <- read.table("files/dada2/tables/ssu18_dada_compare.txt",
                         header = TRUE, sep = "\t", row.names = 1)
-knitr::kable(dada_pool_comp)
+```
+<small>`r caption_tab("pooling_summary_ssu")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu18_pooling_summary",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
-*Total number of reads by sample.*
+
 ```{r, echo=FALSE, layout="l-body", eval=TRUE}
-dada_pool_reads <- read.table("files/dada2/tables/ssu18_dada_compare_final_reads.txt",
-                        header = TRUE, sep = "\t", row.names = 1)
-knitr::kable(dada_pool_reads)
+seq_table <- read.table("files/dada2/tables/ssu18_dada_compare_by_samp.txt",
+                        header = TRUE, sep = "\t")
+```
+<small>`r caption_tab("pooling_ssu")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu18_pooling_results",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", minWidth = 150, filterable = FALSE, 
+    sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150) 
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
-*Total number of ASVs by sample.*
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
-dada_pool_asvs <- read.table("files/dada2/tables/ssu18_dada_compare_final_asvs.txt",
-                        header = TRUE, sep = "\t", row.names = 1)
-knitr::kable(dada_pool_asvs)
-```
 </details>
 
 
@@ -563,7 +729,7 @@ dim(seqtab)
 ```
 
 ```{r, echo=FALSE, eval=TRUE}
-seqtab <- c(15, 14985)
+seqtab <- c(15, 21685)
 seqtab
 ```
 
@@ -593,10 +759,14 @@ plot_a <- qplot(length, data = read_length,
 ggsave("read_length_before.png", plot_a, width = 7, height = 3)
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE}
 system("cp files/dada2/figures/ssu18_read_length_before.png include/dada2/ssu18_read_length_before.png")
+```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
 knitr::include_graphics("include/dada2/ssu18_read_length_before.png")
 ```
+<small>`r caption_fig("read_length_ssu")`</small>
 
 ```{r}
 seqtab.2 <- seqtab[,nchar(colnames(seqtab)) %in% seq(230,235)]
@@ -678,24 +848,54 @@ colnames(track) <- c("input", "filtered", "denoisedF", "nonchim")
 rownames(track) <- sample.names
 ```
 
-<br/>
 
 ```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
-#X# NOTE. For some reason this datatable was being given the same
-#X# elementId as the first table. So I had to add elementId
-trackT <- read.table("files/dada2/tables/ssu18_read_changes.txt")
-datatable(trackT, width = "100%", escape = FALSE,
-          elementId = "5becfm0ylbqxfrglu40z",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+seq_table <- read.table("files/dada2/tables/ssu18_read_changes.txt",
+                        header = TRUE, sep = "\t")
 ```
 
+<small>`r caption_tab("track_ssu")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu18_track_read_changes",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    raw = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    pre_filt = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    pre_filt = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    cut = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    filtered = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    denoisedF = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    nonchim = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+```
 
 And we can save a copy of the table for later use.
 
@@ -719,7 +919,7 @@ remove(list = ls())
 seqtab <- readRDS("ssu18_seqtab.nochim.rds")
 ```
 
-And then native Bayesian classifier against the Silva database.
+And then native Bayesian [@wang2007naive] classifier against the Silva database.
 
 ```{r}
 tax_silva <- assignTaxonomy(
@@ -910,26 +1110,82 @@ devtools::session_info()
 remove(list = ls())
 ```
 
+```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+# Create the caption(s) with captioner
+caption_tab <- captioner(prefix = "(ITS) Table", suffix = " |", style = "b")
+caption_fig <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
+# Create a function for referring to the tables in text
+ref <- function(x) str_extract(x, "[^|]*") %>% 
+  trimws(which = "right", whitespace = "[ ]")
+```
+</details>
+
+```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+## Table captions
+caption_tab("seq_dets_its", "Sample data & associated sequencing information.")
+caption_tab("seq_cutadapt_its", "Total reads per sample after prefiltering and primer removal (using cutadapt).")
+caption_tab("filter_its", "Total reads per sample after filtering.")
+caption_tab("pooling_summary_its", "Total number of reads, total number of ASVs, minimum and maximum ASVs, followed by the number of singletons, doubletons, etc. for pooling options.")
+caption_tab("pooling_its", "Total number of reads and ASVs by sample for pooling options.")
+caption_tab("track_its", "Tracking reads changes at each step of the DADA2 workflow.")
+#<small>`r caption_tab("qual_scores_after_its")`</small>
+```
+
+```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+## Figure captions
+caption_fig("qual_scores_its", "Aggregated quality score plots for forward (left) & reverse (right) reads before filtering.")
+caption_fig("qual_scores_after_its", "Aggregated quality score plot for forward reads after prefilter & primer removal.")
+caption_fig("error_F_its", "Forward reads: Observed frequency of each transition (e.g., T -> G) as a function of the associated quality score.")
+caption_fig("error_R_its", "Reverse reads: Observed frequency of each transition (e.g., T -> G) as a function of the associated quality score.")
+caption_fig("read_length_its", "Distribution of read length by total ASVs before removing extreme length variants.")
+#<small>`r caption_fig("read_length_its")`</small>
+```
 ## Overview
 
 ### Sequence Files & Samples
 
 We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
 
-<br/>
-
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+````{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
 seq_table <- read.table("files/dada2/tables/its18_sample_seq_info.txt",
                         header = TRUE, sep = "\t")
-datatable(seq_table, width = "100%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+```
+
+<small>`r caption_tab("seq_dets_its")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "its18_sample_seq_info",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
 ### Workflow
@@ -991,7 +1247,7 @@ fnRs <- sort(list.files(path, pattern = "_R2.fastq.gz", full.names = TRUE))
 
 ## 2. Define Primers
 
-Before we start the DADA2 workflow we need to run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] on all `fastq.gz` files to trim the primers. For this part of the study we used  the primer pair ITS1f (CTTGGTCATTTAGAGGAAGTAA) and ITS2   (GCTGCGTTCTTCATCGATGC)[REF] which should yield variable amplicon lengths between 100 to 400 bp. What we are looking for is potential read-through scenarios that are possible when sequencing the length variable ITS region as described in the [DADA2 ITS Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html). Please refer to this document for a complete explanation.
+Before we start the DADA2 workflow we need to run [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt] on all `fastq.gz` files to trim the primers. For this part of the study we used  the primer pair ITS1f (CTTGGTCATTTAGAGGAAGTAA) [@gardes1993its] and ITS2   (GCTGCGTTCTTCATCGATGC) [@white1990amplification] which should yield variable amplicon lengths between 100 to 400 bp. What we are looking for is potential read-through scenarios that are possible when sequencing the length variable ITS region as described in the [DADA2 ITS Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html). Please refer to this document for a complete explanation.
 
 First we define the primers.
 
@@ -1125,7 +1381,11 @@ for(i in seq_along(fnFs)) {system2(cutadapt,
 
 ```
 This is cutadapt 2.8 with Python 3.7.6
-Command line parameters: -g CTTGGTCATTTAGAGGAAGTAA -a GCATCGATGAAGAACGCAGC -G GCTGCGTTCTTCATCGATGC -A TTACTTCCTCTAAATGACCAAG -m 20 -n 2 -o RAW/cutadapt/P1_R1.fastq.gz -p RAW/cutadapt/P1_R2.fastq.gz RAW/filtN/P1_R1.fastq.gz RAW/filtN/P1_R2.fastq.gz
+Command line parameters: -g CTTGGTCATTTAGAGGAAGTAA -a GCATCGATGAAGAACGCAGC \
+                         -G GCTGCGTTCTTCATCGATGC -A TTACTTCCTCTAAATGACCAAG \
+                         -m 20 -n 2 \
+                         -o RAW/cutadapt/P1_R1.fastq.gz \
+                         -p RAW/cutadapt/P1_R2.fastq.gz RAW/filtN/P1_R1.fastq.gz RAW/filtN/P1_R2.fastq.gz
 ```
 
 *Note*. If the code above removes all of the base pairs in a sequence, you will get downstream errors unless you set the `-m` flag. This flag sets the minimum length and reads shorter than this will be discarded. Without this flag, reads of length 0 will be kept and cause issues. *Also, a lot of output will be written to the screen by cutadapt!*
@@ -1156,20 +1416,51 @@ temp1[, 4:8] <- list(NULL)
 write.table(temp1, "files/dada2/tables/its18_cut.txt", sep = "\t", quote = FALSE)
 ```
 
-<br/>
-
 ```{r, echo=FALSE, eval=TRUE}
-out <- read.table("files/dada2/tables/its18_cut.txt",
-                       header = TRUE)
-datatable(out, width = "80%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+seq_table <- read.table("files/dada2/tables/its18_cut.txt",
+                       header = TRUE, sep = "\t")
+
+seq_table$per_reads_kept <- round(seq_table$cutadapt_reads/seq_table$raw_reads, 
+                                  digits = 3)
+```
+
+<small>`r caption_tab("seq_cutadapt_its")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "its18_cutadapt",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    raw_reads = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    pre_filt_reads = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    cutadapt_reads = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
 ## 4. Quality Assessment & Filtering
@@ -1203,11 +1494,16 @@ p3 <- grid.arrange(p1, p2, nrow = 1)
 ggsave("plot_qscores_2018.png", p3, width = 7, height = 3)
 ```
 
+```{r, echo=FALSE}
+system("cp files/dada2/figures/its18_plot_qscores.png include/dada2/its18_plot_qscores.png")
+```
+
 ```{r, echo=FALSE, layout="l-body-outset", warning=FALSE, fig.height=3, eval=TRUE}
-#system("cp files/dada2/figures/its18_plot_qscores.png include/dada2/its18_plot_qscores.png")
 knitr::include_graphics("include/dada2/its18_plot_qscores.png")
 ```
-<small><em>Aggregated quality score plots for forward (left) & reverse (right) reads.</em></small>
+<small>`r caption_fig("qual_scores_its")`</small>
+
+
 
 ### Filtering
 
@@ -1232,20 +1528,50 @@ These parameters should be set based on the anticipated length of the amplicon a
 
 And here is a table of how the filtering step affected the number of reads in each sample.
 
-<br/>
 
 ```{r, echo=FALSE, eval=TRUE}
-out_T <- read.table("files/dada2/tables/its18_out.txt",
-                       header = TRUE)
-datatable(out_T, width = "80%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+seq_table <- read.table("files/dada2/tables/its18_filter.txt",
+                       header = TRUE, sep = "\t")
+
+seq_table$per_reads_kept <- round(seq_table$reads_out/seq_table$reads_in, 
+                                  digits = 3)
+```
+<small>`r caption_tab("filter_its")`</small>
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "its18_filter",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    reads_in = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    reads_out = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
 ## 5. Learn Error Rates
@@ -1273,10 +1599,14 @@ ggsave("plot_errorF_1.png", p3, width = 7, height = 5)
 ggsave("plot_errorF_2.png", p3)
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
-#system("cp files/dada2/figures/its18_plot_errorF_1.png include/dada2/its18_plot_errorF_1.png")
-knitr::include_graphics("include/dada2/its18_plot_errorF_1.png")
+```{r, echo=FALSE}
+system("cp files/dada2/figures/its18_plot_errorF.png include/dada2/its18_plot_errorF.png")
 ```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+knitr::include_graphics("include/dada2/its18_plot_errorF.png")
+```
+<small>`r caption_fig("error_F_its")`</small>
 
 #### Reverse Reads
 
@@ -1298,10 +1628,14 @@ ggsave("plot_errorR_1.png", p4, width = 7, height = 5)
 ggsave("plot_errorR_2.png", p4)
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
-#system("cp files/dada2/figures/its18_plot_errorR_1.png include/dada2/its18_plot_errorR_1.png")
-knitr::include_graphics("include/dada2/its18_plot_errorR_1.png")
+```{r, echo=FALSE}
+system("cp files/dada2/figures/its18_plot_errorR.png include/dada2/its18_plot_errorR.png")
 ```
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+knitr::include_graphics("include/dada2/its18_plot_errorR.png")
+```
+<small>`r caption_fig("error_R_its")`</small>
 
 ## 6. Dereplicate Reads
 
@@ -1414,28 +1748,81 @@ We tested all three methods through the full pipeline. Click the `+` to see the 
 
 Here are a few summary tables of results from the tests. Values are from the final sequence table prodcuced by each option. 
 
-<br/>
-
-*Total number of reads, total number of ASV, minimum and maximum ASVs, followed by the number of singletons, doubletons, etc.*
 ```{r, echo=FALSE, layout="l-body", eval=TRUE}
-dada_pool_comp <- read.table("files/dada2/tables/its18_dada_compare.txt",
+seq_table <- read.table("files/dada2/tables/its18_dada_compare.txt",
                         header = TRUE, sep = "\t", row.names = 1)
-knitr::kable(dada_pool_comp)
+```
+<small>`r caption_tab("pooling_summary_its")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "its18_pooling_summary",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
-*Total number of reads by sample.*
+
 ```{r, echo=FALSE, layout="l-body", eval=TRUE}
-dada_pool_reads <- read.table("files/dada2/tables/its18_dada_compare_final_reads.txt",
-                        header = TRUE, sep = "\t", row.names = 1)
-knitr::kable(dada_pool_reads)
+seq_table <- read.table("files/dada2/tables/its18_dada_compare_by_samp.txt",
+                        header = TRUE, sep = "\t")
+```
+<small>`r caption_tab("pooling_its")`</small>
+
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "its18_pooling_results",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", minWidth = 150, filterable = FALSE, 
+    sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150) 
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
-*Total number of ASVs by sample.*
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
-dada_pool_asvs <- read.table("files/dada2/tables/its18_dada_compare_final_asvs.txt",
-                        header = TRUE, sep = "\t", row.names = 1)
-knitr::kable(dada_pool_asvs)
-```
+
 </details>
 
 #### Forward Reads
@@ -1581,10 +1968,15 @@ plot_a <- qplot(length, data = read_length,
 ggsave("read_length_before.png", plot_a, width = 7, height = 3)
 ```
 
+```{r, echo=FALSE}
+system("cp files/dada2/figures/its18_read_length_before.png include/dada2/its18_read_length_before.png")
+```
+
 ```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
-#system("cp files/dada2/figures/its18_read_length_before.png include/dada2/its18_read_length_before.png")
 knitr::include_graphics("include/dada2/its18_read_length_before.png")
 ```
+
+<small>`r caption_fig("read_length_its")`</small>
 
 As expected, a wide range of length variability in the the amplified ITS region.
 
@@ -1669,20 +2061,54 @@ table(nchar(getSequences(seqtab.nochim)))
 
 ## 11. Track Reads through Workflow
 
-<br/>
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+seq_table <- read.table("files/dada2/tables/its18_read_changes.txt",
+                        header = TRUE, sep = "\t")
+```
+
+<small>`r caption_tab("track_its")`</small>
 
 ```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
-sum_2018 <- read.table("files/dada2/tables/its18_read_changes.txt",
-                       header = TRUE)
-datatable(sum_2018, width = "80%",
-          extensions = 'Buttons', options = list(
-            scrollX = TRUE,
-            dom = 'Blfrtip',
-            buttons = c('copy', 'csv', 'excel'),
-            pageLength = 5,
-            lengthMenu = list(c(5, 10, -1), c("5", "10", "All"))
-            )
-          )
+seq_table %>%
+  download_this(
+    output_name = "its18_track_read_changes",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 1),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID", 
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 150, footer = "Total reads"), 
+    raw = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    pre_filt = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    pre_filt = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    cut = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    filtered = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    denoisedF = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    denoisedR = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    merged = colDef(footer = function(values) sprintf("%.0f", sum(values))),
+    nonchim = colDef(footer = function(values) sprintf("%.0f", sum(values)))
+    ), 
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
 ```{r, echo=FALSE}

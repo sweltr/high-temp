@@ -62,12 +62,13 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
         pairwisetable$ypos <- ypos
     }
     if (chart == "box") {
-        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", 
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", outlier.size = 3,
             color = "Group", fill = "Group", x.text.angle = 0) + 
             ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
-            scale_colour_manual(values = scales::alpha(colour, 
-                1)) + scale_fill_manual(values = scales::alpha(colour, 
-            0.5))
+            #scale_colour_manual(values = scales::alpha(colour, 1)) + 
+            scale_colour_manual(values=c("#191919", "#191919", "#191919")) + 
+            scale_fill_manual(values = scales::alpha(colour, 1)) +
+            scale_linetype_manual()
         if (posthoc == TRUE) {
             plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
                 label = "p", y.position = "ypos"))

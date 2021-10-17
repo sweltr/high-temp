@@ -22,6 +22,26 @@ author:
     url: https://www.ars.usda.gov/midwest-area/peoria-il/national-center-for-agricultural-utilization-research/mycotoxin-prevention-and-applied-microbiology-research/people/kirk-broders/
     affiliation: USDA-ARS
 #    affiliation_url: https://stri.si.edu/
+  - name: "Maria Montero-Sanchez"
+    orcid_id: 
+    url: 
+    affiliation: Smithsonian Tropical Research Institute
+    affiliation_url: https://stri.si.edu/
+  - name: "Johann Püspök"
+    orcid_id: 
+    url: 
+    affiliation: Smithsonian Tropical Research Institute
+    affiliation_url: https://stri.si.edu/
+  - name: "Erland Bååth"
+    orcid_id: 0000-0002-2616-1342 
+    url: 
+    affiliation: Lund University
+    affiliation_url: 
+  - name: "Patrick Meir"
+    orcid_id: 0000-0002-2362-0398 
+    url: https://biology.anu.edu.au/research/groups/meir-group-tropical-forest-ecosystems
+    affiliation: Australian National University
+    affiliation_url: 
 bibliography: assets/cite.bib
 site: distill::distill_website
 ---
@@ -42,64 +62,23 @@ Each workflow page within a pipeline also contains a Data Availability appendix 
 
 # Pipelines & Workflows
 
-There are 9 workflows in total. Each workflow contains code for processing the 16S rRNA and ITS data sets. These workflows are complete, reproducible, and designed to be run in order. That said, each ends with the creation of R data packages that can be used as input for the next workflow, allowing you to skip any individual section. In order, these are:
+There are **8** workflows in total. Each workflow contains code for processing the 16S rRNA and ITS data sets. These workflows are complete, reproducible, and designed to be run in order. That said, each ends with the creation of R data packages that can be used as input for the next workflow, allowing you to skip any individual section. In order, these are:
 
 ## Processing Workflow
 
 1. [DADA2](dada2.html).  Workflow begins with raw fastq files and goes through the process of primer removal (using [catadapt](https://github.com/marcelm/cutadapt) [@martin2011cutadapt]), filtering, quality screening, trimming, error correction, chimera removal, and taxonomic assignment using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2]. The workflow ends with the generation of an Rdata file for the next step. Depending on the DADA2 version you have installed, you may get [slightly different results](https://github.com/benjjneb/dada2/issues/532) due to fundamental changes in the code-base. This is unavoidable at times and the developers do the best they can to maintain fidelity across versions. We set random number seeds at the beginning of each workflow to ensure reproducibility. To see the package versions of tools used in each workflow, please see the R Session Information section on the bottom of each page.
 2. [Data Set Prep](data-prep.html). Workflow begins with the initial sequence and taxonomy tables from the DADA2 workflow and uses [phyloseq](https://joey711.github.io/phyloseq/) [@mcmurdie2013phyloseq] to define samples and sample groups, create phyloseq objects, and curate data sets. Summary data is provided throughout the workflow. Again, workflow ends with the generation of an Rdata file for the next step.
-3. [OTU Clustering](otu.html). Cluster ASVs into operational taxonomic units (OTUs) using the [`kmer` package](https://github.com/shaunpwilkinson/kmer).  
-4. Filtering  
-4a. [PIME Filtering](pime.html). In Part A, we used PIME [(Prevalence Interval for Microbiome Evaluation)](https://github.com/microEcology/pime) [@roesch2020pime] to filter the FULL 16S rRNA (ASV & OTU) and ITS (ASV & OTU) data sets.  
-4b. [PERFect Filtering](perfect.html). In Part B we use PERFect [(PERmutation Filtering test for microbiome data)](https://github.com/katiasmirn/PERFect) [@smirnova2019perfect] to filter the same data sets. 
+3. [Filtering](filtering.html). In [Part A](#a.-arbitrary-filtering), we apply arbitrary filtering to the 16S rRNA and ITS data sets. In [Part B](#b.-perfect-filtering) we use PERFect [(PERmutation Filtering test for microbiome data)](https://github.com/katiasmirn/PERFect) [@smirnova2019perfect] to filter the data sets. And in [Part C](#c.-pime-filtering) of this workflow, we use PIME [(Prevalence Interval for Microbiome Evaluation)](https://github.com/microEcology/pime) [@roesch2020pime] to filter the FULL 16S rRNA and ITS data sets.
 
 ## Diversity Workflow
 
-5. [Taxonomic](taxa.html). Taxonomic diversity primarily focused on taxon bar charts.
-6. [Alpha Diversity](alpha.html). This section covers the distribution of reads across samples and includes histograms of read counts & rarefaction curves. Also covers estimates of alpha diversity using Hill numbers [@alberdi2019guide] and includes normality tests, significance tests, & diversity plots. 
-7. [Beta Diversity](beta.html) Estimates of beta diversity including significance tests, beta dispersion, and ordination plots.
-8. [DA ASVs & OTUs](da.html). Results and visualizations from Indicator Analysis and LEfSe. 
-9. [Metadata](metadata.html). Multivariate Analysis Overview of environmental metadata and community composition. Includes metadata Normality Tests, Normalization, Autocorrelation Tests, Dissimilarity Correlation Tests, Best Subset of Variables, Distance-based Redundancy, and Capscale analysis.
+4. [Taxonomic](taxa.html). Taxonomic diversity primarily focused on taxon bar charts.
+5. [Alpha Diversity](alpha.html). This section covers the distribution of reads across samples and includes histograms of read counts & rarefaction curves. Also covers estimates of alpha diversity using Hill numbers [@alberdi2019guide] and includes normality tests, significance tests, & diversity plots. 
+6. [Beta Diversity](beta.html) Estimates of beta diversity including significance tests, beta dispersion, and ordination plots.
+7. [DA ASVs & OTUs](da.html). Results and visualizations from Indicator Analysis and LEfSe. 
+8. [Metadata](metadata.html). Multivariate Analysis Overview of environmental metadata and community composition. Includes metadata Normality Tests, Normalization, Autocorrelation Tests, Dissimilarity Correlation Tests, Best Subset of Variables, Distance-based Redundancy, and Capscale analysis.
 
-Though the workflows are annotated, they are not necessarily meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into. See the [Resources](#resources) section below for some of the sites we used. We also reference other sources on individual workflow pages.
-
-# Primers
-
-Here is a description of the primers used in this study. Primer information can also be found of the individual workflow pages.
-
-```{r, echo=FALSE, eval=TRUE}
-pipeline <- c("16S rRNA", "ITS")
-FWD <- c("515F", "ITS1f")
-FWD_sequence <- c("GTGCCAGCMGCCGCGGTAA", "CTTGGTCATTTAGAGGAAGTAA")
-REV <- c("806R", "ITS2")
-REV_sequence <- c("GGACTACHVGGGTWTCTAAT", "GCTGCGTTCTTCATCGATGC")
-length <- c("253", "100-450")
-ref <- c("[@caporaso2011global]", "insert ref")
-```
-
-```{r, layout='l-page', echo=FALSE, eval=TRUE}
-primer_tab <- data.frame(pipeline, FWD, FWD_sequence,
-                         REV, REV_sequence, length, ref)
-knitr::kable(primer_tab, escape = TRUE)
-```
-
-<br/>
-
-# Resources
-
-Here are some general resources we used in workflow construction. Specific tools and programs can be found in the Reference sections of individual workflows.
-
-## 16S rRNA
-
-- Earth Microbiome Project [16S Illumina Amplicon Protocol](https://earthmicrobiome.org/protocols-and-standards/16s/) for primer description and amplification protocols.
-- [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) for 16S rRNA read processing.
-- [Another DADA2 16S rRNA tutorial](https://github.com/amoliverio/dada2_fiererlab).
-
-## ITS
-
-- Earth Microbiome Project [ITS Illumina Amplicon Protocol](https://www.earthmicrobiome.org/protocols-and-standards/its/) for primer description and amplification protocols.
-- [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html) for ITS read processing.
-
+Though the workflows are annotated, they are not necessarily meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into. S
 
 ##  Source Code {.appendix}
 
