@@ -1,7 +1,7 @@
 ---
 title: "5. Alpha Diversity Estimates"
-descriptiokabn: |
-  Reproducible workflow to assess alpha diversity across temperature treatments.
+description: |
+  Reproducible workflow to assess alpha diversity across temperature treatments using Hill numbers.
 author:
 #  - name: Jarrod J Scott
 #    url: https://example.com/norajones
@@ -75,8 +75,6 @@ source("assets/captions/captions_alpha.R")
 # Synopsis
 
 This workflow contains diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) **and** the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation workflow. See the [Data Availability](data-availability.html) page for complete details.
-
-In this workflow...
 
 # 16s rRNA
 
