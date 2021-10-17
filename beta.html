@@ -81,24 +81,24 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 </style>
 
   <!--radix_placeholder_meta_tags-->
-  <title>sweltr: 6 Beta Diversity &amp; Dispersion Estimates</title>
+  <title>sweltr: 6. Beta Diversity &amp; Dispersion Estimates</title>
 
-  <meta property="description" itemprop="description" content="Reproducible workflow for ... In this workflow, ...."/>
+  <meta property="description" itemprop="description" content="Reproducible workflow for assessing community dissimilarity across temperature treatments."/>
 
   <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="sweltr: 6 Beta Diversity &amp; Dispersion Estimates"/>
+  <meta property="og:title" content="sweltr: 6. Beta Diversity &amp; Dispersion Estimates"/>
   <meta property="og:type" content="article"/>
-  <meta property="og:description" content="Reproducible workflow for ... In this workflow, ...."/>
+  <meta property="og:description" content="Reproducible workflow for assessing community dissimilarity across temperature treatments."/>
   <meta property="og:locale" content="en_US"/>
   <meta property="og:site_name" content="sweltr"/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="sweltr: 6 Beta Diversity &amp; Dispersion Estimates"/>
-  <meta property="twitter:description" content="Reproducible workflow for ... In this workflow, ...."/>
+  <meta property="twitter:title" content="sweltr: 6. Beta Diversity &amp; Dispersion Estimates"/>
+  <meta property="twitter:description" content="Reproducible workflow for assessing community dissimilarity across temperature treatments."/>
 
   <!--/radix_placeholder_meta_tags-->
   
@@ -106,7 +106,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography","output"]}},"value":[{"type":"character","attributes":{},"value":["6 Beta Diversity & Dispersion Estimates"]},{"type":"character","attributes":{},"value":["Reproducible workflow for ... In this workflow, ....\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography","output"]}},"value":[{"type":"character","attributes":{},"value":["6. Beta Diversity & Dispersion Estimates"]},{"type":"character","attributes":{},"value":["Reproducible workflow for assessing community dissimilarity across temperature treatments.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -457,6 +457,265 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet"/>
   <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet"/>
   <script src="site_libs/headroom-0.9.4/headroom.min.js"></script>
+  <script src="site_libs/autocomplete-0.37.1/autocomplete.min.js"></script>
+  <script src="site_libs/fuse-6.4.1/fuse.min.js"></script>
+
+  <script type="application/javascript">
+
+  function getMeta(metaName) {
+    var metas = document.getElementsByTagName('meta');
+    for (let i = 0; i < metas.length; i++) {
+      if (metas[i].getAttribute('name') === metaName) {
+        return metas[i].getAttribute('content');
+      }
+    }
+    return '';
+  }
+
+  function offsetURL(url) {
+    var offset = getMeta('distill:offset');
+    return offset ? offset + '/' + url : url;
+  }
+
+  function createFuseIndex() {
+
+    // create fuse index
+    var options = {
+      keys: [
+        { name: 'title', weight: 20 },
+        { name: 'categories', weight: 15 },
+        { name: 'description', weight: 10 },
+        { name: 'contents', weight: 5 },
+      ],
+      ignoreLocation: true,
+      threshold: 0
+    };
+    var fuse = new window.Fuse([], options);
+
+    // fetch the main search.json
+    return fetch(offsetURL('search.json'))
+      .then(function(response) {
+        if (response.status == 200) {
+          return response.json().then(function(json) {
+            // index main articles
+            json.articles.forEach(function(article) {
+              fuse.add(article);
+            });
+            // download collections and index their articles
+            return Promise.all(json.collections.map(function(collection) {
+              return fetch(offsetURL(collection)).then(function(response) {
+                if (response.status === 200) {
+                  return response.json().then(function(articles) {
+                    articles.forEach(function(article) {
+                      fuse.add(article);
+                    });
+                  })
+                } else {
+                  return Promise.reject(
+                    new Error('Unexpected status from search index request: ' +
+                              response.status)
+                  );
+                }
+              });
+            })).then(function() {
+              return fuse;
+            });
+          });
+
+        } else {
+          return Promise.reject(
+            new Error('Unexpected status from search index request: ' +
+                        response.status)
+          );
+        }
+      });
+  }
+
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+
+    // get search element (bail if we don't have one)
+    var searchEl = window.document.getElementById('distill-search');
+    if (!searchEl)
+      return;
+
+    createFuseIndex()
+      .then(function(fuse) {
+
+        // make search box visible
+        searchEl.classList.remove('hidden');
+
+        // initialize autocomplete
+        var options = {
+          autoselect: true,
+          hint: false,
+          minLength: 2,
+        };
+        window.autocomplete(searchEl, options, [{
+          source: function(query, callback) {
+            const searchOptions = {
+              isCaseSensitive: false,
+              shouldSort: true,
+              minMatchCharLength: 2,
+              limit: 10,
+            };
+            var results = fuse.search(query, searchOptions);
+            callback(results
+              .map(function(result) { return result.item; })
+            );
+          },
+          templates: {
+            suggestion: function(suggestion) {
+              var img = suggestion.preview && Object.keys(suggestion.preview).length > 0
+                ? `<img src="${offsetURL(suggestion.preview)}"</img>`
+                : '';
+              var html = `
+                <div class="search-item">
+                  <h3>${suggestion.title}</h3>
+                  <div class="search-item-description">
+                    ${suggestion.description || ''}
+                  </div>
+                  <div class="search-item-preview">
+                    ${img}
+                  </div>
+                </div>
+              `;
+              return html;
+            }
+          }
+        }]).on('autocomplete:selected', function(event, suggestion) {
+          window.location.href = offsetURL(suggestion.path);
+        });
+        // remove inline display style on autocompleter (we want to
+        // manage responsive display via css)
+        $('.algolia-autocomplete').css("display", "");
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+
+  });
+
+  </script>
+
+  <style type="text/css">
+
+  .nav-search {
+    font-size: x-small;
+  }
+
+  /* Algolioa Autocomplete */
+
+  .algolia-autocomplete {
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: sub;
+    background-color: white;
+    color: black;
+    padding: 6px;
+    padding-top: 8px;
+    padding-bottom: 0;
+    border-radius: 6px;
+    border: 1px #0F2E3D solid;
+    width: 180px;
+  }
+
+
+  @media screen and (max-width: 768px) {
+    .distill-site-nav .algolia-autocomplete {
+      display: none;
+      visibility: hidden;
+    }
+    .distill-site-nav.responsive .algolia-autocomplete {
+      display: inline-block;
+      visibility: visible;
+    }
+    .distill-site-nav.responsive .algolia-autocomplete .aa-dropdown-menu {
+      margin-left: 0;
+      width: 400px;
+      max-height: 400px;
+    }
+  }
+
+  .algolia-autocomplete .aa-input, .algolia-autocomplete .aa-hint {
+    width: 90%;
+    outline: none;
+    border: none;
+  }
+
+  .algolia-autocomplete .aa-hint {
+    color: #999;
+  }
+  .algolia-autocomplete .aa-dropdown-menu {
+    width: 550px;
+    max-height: 70vh;
+    overflow-x: visible;
+    overflow-y: scroll;
+    padding: 5px;
+    margin-top: 3px;
+    margin-left: -150px;
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #999;
+    border-top: none;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion {
+    cursor: pointer;
+    padding: 5px 4px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion:last-of-type {
+    border-bottom: none;
+    margin-bottom: 2px;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item {
+    overflow: hidden;
+    font-size: 0.8em;
+    line-height: 1.4em;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item h3 {
+    font-size: 1rem;
+    margin-block-start: 0;
+    margin-block-end: 5px;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-description {
+    display: inline-block;
+    overflow: hidden;
+    height: 2.8em;
+    width: 80%;
+    margin-right: 4%;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview {
+    display: inline-block;
+    width: 15%;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img {
+    height: 3em;
+    width: auto;
+    display: none;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img[src] {
+    display: initial;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion.aa-cursor {
+    background-color: #eee;
+  }
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion em {
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  </style>
+
+
   <!--/radix_placeholder_navigation_in_header-->
   <!--radix_placeholder_distill-->
 
@@ -2067,7 +2326,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"6 Beta Diversity & Dispersion Estimates","description":"Reproducible workflow for ... In this workflow, ....","authors":[]}
+{"title":"6. Beta Diversity & Dispersion Estimates","description":"Reproducible workflow for assessing community dissimilarity across temperature treatments.","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2101,13 +2360,15 @@ B. Diversity Workflows
 <a href="taxa.html">4. Taxonomic</a>
 <a href="alpha.html">5. Alpha Diversity</a>
 <a href="beta.html">6. Beta Diversity</a>
-<a href="da.html">7. DA ASVs &amp; OTUs</a>
+<a href="da.html">7. DA ASVs &amp; Taxa</a>
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<a href="data-availability.html">Data Products</a>
+<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
 </div>
 <div class="nav-right">
+<a href="data-availability.html">Data Products</a>
+<a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2120,10 +2381,10 @@ B. Diversity Workflows
 <!--/radix_placeholder_site_before_body-->
 
 <div class="d-title">
-<h1>6 Beta Diversity &amp; Dispersion Estimates</h1>
+<h1>6. Beta Diversity &amp; Dispersion Estimates</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
-<p><p>Reproducible workflow for … In this workflow, ….</p></p>
+<p><p>Reproducible workflow for assessing community dissimilarity across temperature treatments.</p></p>
 </div>
 
 
@@ -2135,28 +2396,33 @@ B. Diversity Workflows
 <li><a href="#synopsis">Synopsis</a></li>
 <li><a href="#s-rrna">16s rRNA</a>
 <ul>
-<li><a href="#significance-tests">Significance Tests</a>
-<ul>
 <li><a href="#beta-dispersion">Beta Dispersion</a></li>
-<li><a href="#significance-tests-1">Significance Tests</a></li>
+<li><a href="#significance-tests">Significance Tests</a></li>
 <li><a href="#summaries">Summaries</a></li>
-</ul></li>
 </ul></li>
 <li><a href="#its">ITS</a>
 <ul>
-<li><a href="#significance-tests-2">Significance Tests</a>
-<ul>
 <li><a href="#beta-dispersion-1">Beta Dispersion</a></li>
-<li><a href="#significance-tests-3">Significance Tests</a></li>
+<li><a href="#significance-tests-1">Significance Tests</a></li>
 <li><a href="#summaries-1">Summaries</a></li>
 </ul></li>
+<li><a href="#ordinations">Ordinations</a>
+<ul>
+<li><a href="#s-rrna-1">16S rRNA</a></li>
+<li><a href="#its-1">ITS</a></li>
+</ul></li>
+<li><a href="#within-between-group-distances">Within &amp; Between Group Distances</a>
+<ul>
+<li><a href="#s-rrna-2">16S rRNA</a></li>
+<li><a href="#its-2">ITS</a></li>
+<li><a href="#source-code">Source Code</a></li>
 </ul></li>
 </ul>
 </nav>
 </div>
 <details>
 <summary>
-Click here for setup information.
+<strong>Click here</strong> for setup information.
 </summary>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">eval =</span> <span class="cn">FALSE</span>)</span>
@@ -2164,7 +2430,7 @@ Click here for setup information.
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(phyloseq); <span class="fu">packageVersion</span>(<span class="st">&quot;phyloseq&quot;</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Biostrings); <span class="fu">packageVersion</span>(<span class="st">&quot;Biostrings&quot;</span>)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, DT, ampvis2, hilldiv, </span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>               microbiome, phytools, phangorn, reactable,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>               microbiome, phytools, phangorn, reactable, Matrix, </span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>               pairwiseAdonis, codefolder, naniar, downloadthis,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>               labdsv, patchwork, agricolae, captioner, microeco,</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>               <span class="at">install =</span> <span class="cn">FALSE</span>, <span class="at">update =</span> <span class="cn">FALSE</span>)</span>
@@ -2191,17 +2457,13 @@ Click here for setup information.
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
 <h1 id="synopsis">Synopsis</h1>
-<p>This workflow contains diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the <a href="dada2.html">DADA2 Workflow for 2018 High Temp samples</a> <strong>and</strong> the <a href="data-prep.html">Data Preparation workflow</a> <strong>or</strong> begin with the output files from the Data Preparation workflow. See the <a href="data-availability.html">Data Availability</a> page for complete details.</p>
+<p>This workflow contains diversity assessments for the high temperature data sets. In order to run the workflow, you either need to first run the <a href="dada2.html">DADA2 Workflow for 2018 High Temp samples</a> <strong>and</strong> the <a href="data-prep.html">Data Preparation workflow</a> <strong>or</strong> begin with the output files from the Data Preparation workflow. See the <a href="data-availability.html">Data Availability</a> page for complete details.</p>
 <p>In this workflow…</p>
 <h1 id="s-rrna">16s rRNA</h1>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<h2 id="significance-tests">Significance Tests</h2>
 <p>In order to test for significance between sample groups, we must perform the following steps:</p>
 <ol type="1">
 <li>Transform sample counts to relative abundance.</li>
@@ -2235,7 +2497,7 @@ Show code
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </details>
 </div>
-<h3 id="beta-dispersion">Beta Dispersion</h3>
+<h2 id="beta-dispersion">Beta Dispersion</h2>
 <p>Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions.</p>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2579,8 +2841,8 @@ diagonal)
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-b775a5087c271847a29c" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-b775a5087c271847a29c">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"pval":[0.1089,0.01,0.006,0.0889,0.006,0.005,0.021,0.004,0.003,0.4356,0.2398,0.009],"test":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.1089","0.0100","0.0060","0.0889","0.0060","0.0050","0.0210","0.0040","0.0030","0.4356","0.2398","0.0090"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"125489211532ae68fedb7a51e9633aab"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-fc5f7b00899a1383a230" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-fc5f7b00899a1383a230">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"pval":[0.1089,0.01,0.006,0.0889,0.006,0.005,0.021,0.004,0.003,0.4356,0.2398,0.009],"test":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac","Jensen–Shannon divergence","unweighted UniFrac","weighted UniFrac"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.1089","0.0100","0.0060","0.0889","0.0060","0.0050","0.0210","0.0040","0.0030","0.4356","0.2398","0.0090"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ANOSIM","ANOSIM","ADONIS","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ANOSIM","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"125489211532ae68fedb7a51e9633aab"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <p>Now we to create sample data frames for each data set.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -2598,12 +2860,8 @@ Show code
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_sampledf&quot;</span>)</span></code></pre></div>
 </details>
 </div>
-<h3 id="significance-tests-1">Significance Tests</h3>
+<h2 id="significance-tests">Significance Tests</h2>
 <p>Depending on the test, we need different data structures. For <code>adonis</code> we use the sample metadata and for <code>anosim</code> we will start with a phyloseq object. So for each data set we create two variables: <code>adonis_sampledf</code> and <code>anosim_data</code></p>
-<details>
-<summary>
-<strong>Detailed results</strong> of Beta Dispersion &amp; Permutation tests
-</summary>
 <div class="l-body">
 <div class="panelset">
 <section id="full-1" class="panel">
@@ -2638,10 +2896,116 @@ Then we use <strong>ANOSIM</strong>.</p>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_work_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_work_groups)</span></code></pre></div>
 </div>
+</section>
+<section id="arbitrary-1" class="panel">
+<h4>Arbitrary</h4>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(ssu18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(ssu18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the unifrac distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_anosim_unifrac <span class="ot">&lt;-</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_filt_prop, <span class="st">&quot;unifrac&quot;</span>),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_filt_groups)</span></code></pre></div>
+</div>
+<p>Is the p-value of the wunifrac distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_anosim_wunifrac <span class="ot">&lt;-</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_filt_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_filt_groups)</span></code></pre></div>
+</div>
+</section>
+<section id="perfect-1" class="panel">
+<h4>PERfect</h4>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_anosim_jsd <span class="ot">&lt;-</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_perfect_prop, <span class="st">&quot;jsd&quot;</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_perfect_groups)</span></code></pre></div>
+</div>
+<p>Is the p-value of the unifrac distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_anosim_unifrac <span class="ot">&lt;-</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_perfect_prop, <span class="st">&quot;unifrac&quot;</span>),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_perfect_groups)</span></code></pre></div>
+</div>
+<p>Is the p-value of the wunifrac distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_anosim_wunifrac <span class="ot">&lt;-</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_perfect_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_perfect_groups)</span></code></pre></div>
+</div>
+</section>
+<section id="pime-1" class="panel">
+<h4>PIME</h4>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(ssu18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(ssu18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the unifrac distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis_unifrac <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(ssu18_ps_pime_beta_dist_unifrac <span class="sc">~</span> TEMP,</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis2_unifrac <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(ssu18_ps_pime_beta_dist_unifrac <span class="sc">~</span> TEMP,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the wunifrac distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_anosim_wunifrac <span class="ot">&lt;-</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_pime_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_pime_groups)</span></code></pre></div>
+</div>
+</section>
+</div>
+</div>
 <details>
 <summary>
-<strong>Detailed results</strong> of Significance tests for FULL data set
+<strong>Detailed results</strong> of Significance tests
 </summary>
+<div class="l-body">
+<div class="panelset">
+<section id="full-2" class="panel">
+<h4>FULL</h4>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -2704,44 +3068,9 @@ Between  2 36.50 59.0  81.50  102 75
 3        1 14.50 19.0  27.75   48 10
 8       17 66.75 80.5 102.00  105 10</code></pre>
 </div>
-</details>
 </section>
-<section id="arbitrary-1" class="panel">
+<section id="arbitrary-2" class="panel">
 <h4>Arbitrary</h4>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(ssu18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(ssu18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the unifrac distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_anosim_unifrac <span class="ot">&lt;-</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_filt_prop, <span class="st">&quot;unifrac&quot;</span>),</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_filt_groups)</span></code></pre></div>
-</div>
-<p>Is the p-value of the wunifrac distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_filt_anosim_wunifrac <span class="ot">&lt;-</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_filt_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_filt_groups)</span></code></pre></div>
-</div>
-<details>
-<summary>
-<strong>Detailed results</strong> of Significance tests for Arbitrary data set
-</summary>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -2804,44 +3133,9 @@ Between  3 37.50  61 82.50  104 75
 3        2 13.00  27 37.75   43 10
 8       23 59.25  76 99.00  105 10</code></pre>
 </div>
-</details>
 </section>
-<section id="perfect-1" class="panel">
+<section id="perfect-2" class="panel">
 <h4>PERfect</h4>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_anosim_jsd <span class="ot">&lt;-</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_perfect_prop, <span class="st">&quot;jsd&quot;</span>),</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_perfect_groups)</span></code></pre></div>
-</div>
-<p>Is the p-value of the unifrac distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_anosim_unifrac <span class="ot">&lt;-</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_perfect_prop, <span class="st">&quot;unifrac&quot;</span>),</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_perfect_groups)</span></code></pre></div>
-</div>
-<p>Is the p-value of the wunifrac distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_perfect_anosim_wunifrac <span class="ot">&lt;-</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_perfect_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_perfect_groups)</span></code></pre></div>
-</div>
-<details>
-<summary>
-<strong>Detailed results</strong> of Significance tests for PIME data set
-</summary>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***ANOSIM for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -2913,44 +3207,9 @@ Between  2 36.00 61.0 80.50  105 75
 3        3  6.25 15.5 20.75   42 10
 8       14 61.00 92.5 99.25  104 10</code></pre>
 </div>
-</details>
 </section>
-<section id="pime-1" class="panel">
+<section id="pime-2" class="panel">
 <h4>PIME</h4>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(ssu18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(ssu18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the unifrac distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis_unifrac <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(ssu18_ps_pime_beta_dist_unifrac <span class="sc">~</span> TEMP,</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_adonis2_unifrac <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(ssu18_ps_pime_beta_dist_unifrac <span class="sc">~</span> TEMP,</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the wunifrac distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>ssu18_ps_pime_anosim_wunifrac <span class="ot">&lt;-</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(ssu18_ps_pime_prop, <span class="st">&quot;wunifrac&quot;</span>),</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> ssu18_ps_pime_groups)</span></code></pre></div>
-</div>
-<details>
-<summary>
-<strong>Detailed results</strong> of Significance tests for PIME data set
-</summary>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -3004,12 +3263,11 @@ Between  9 41.00  62 85.5  105 75
 3        2  5.50  17 26.5   39 10
 8        4 50.50  73 81.0   97 10</code></pre>
 </div>
-</details>
 </section>
 </div>
 </div>
 </details>
-<h3 id="summaries">Summaries</h3>
+<h2 id="summaries">Summaries</h2>
 <p>Here is a quick summary of significance tests for the data sets against three distance matrices.</p>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -3021,17 +3279,13 @@ Between  9 41.00  62 85.5  105 75
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-cb0816ce6ff1673807da" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-cb0816ce6ff1673807da">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"FULL":[0.006,0.003,0.001],"FILT":[0.01,0.009,0.001],"PERfect":[0.001,0.007,0.001],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.006","0.003","0.001"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.010","0.009","0.001"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.007","0.001"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"bd26b561fb9059d6b0e32a959b06d95c"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
+<div id="htmlwidget-cecec87b5299f1f465f5" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-cecec87b5299f1f465f5">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"FULL":[0.006,0.003,0.001],"FILT":[0.01,0.009,0.001],"PERfect":[0.001,0.007,0.001],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","unweighted UniFrac","weighted UniFrac"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.006","0.003","0.001"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.010","0.009","0.001"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.007","0.001"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"bd26b561fb9059d6b0e32a959b06d95c"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h1 id="its">ITS</h1>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<h2 id="significance-tests-2">Significance Tests</h2>
 <p>In order to test for significance between sample groups, we must perform the following steps:</p>
 <ol type="1">
 <li>Transform sample counts to relative abundance.</li>
@@ -3100,7 +3354,7 @@ Show code
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<section id="full-2" class="panel">
+<section id="full-3" class="panel">
 <h4>FULL</h4>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
@@ -3168,7 +3422,7 @@ diagonal)
 8 0.22060 0.33265       </code></pre>
 </div>
 </section>
-<section id="arbitrary-2" class="panel">
+<section id="arbitrary-3" class="panel">
 <h4>Arbitrary</h4>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
@@ -3236,7 +3490,7 @@ diagonal)
 8 0.464903 0.264060       </code></pre>
 </div>
 </section>
-<section id="perfect-2" class="panel">
+<section id="perfect-3" class="panel">
 <h4>PERfect</h4>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
@@ -3304,7 +3558,7 @@ diagonal)
 8 0.091826 0.229457       </code></pre>
 </div>
 </section>
-<section id="pime-2" class="panel">
+<section id="pime-3" class="panel">
 <h4>PIME</h4>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
@@ -3391,8 +3645,8 @@ diagonal)
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-7fd4afb8222fd904c361" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-7fd4afb8222fd904c361">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"pval":[0.7522,0.7093,0.3247,0.9101,0.8801,0.1419,0.8831,0.8062,0.2138,0.7163,0.7602,0.002],"test":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.7522","0.7093","0.3247","0.9101","0.8801","0.1419","0.8831","0.8062","0.2138","0.7163","0.7602","0.0020"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"0e627cd3ad28b39af93d6fd48b0e16b6"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-0206c46563879bcb8d51" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-0206c46563879bcb8d51">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"dist":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"pval":[0.7522,0.7093,0.3247,0.9101,0.8801,0.1419,0.8831,0.8062,0.2138,0.7163,0.7602,0.002],"test":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PERfect","PERfect","PERfect","PIME","PIME","PIME"],"header":"Dataset","minWidth":50,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dist","name":"distance","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance","Jensen–Shannon divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"distance","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"pval","name":"p-value","type":"numeric","sortable":true,"resizable":false,"filterable":true,"cell":["0.7522","0.7093","0.3247","0.9101","0.8801","0.1419","0.8831","0.8062","0.2138","0.7163","0.7602","0.0020"],"header":"p-value","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]},{"accessor":"test","name":"test","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ADONIS","ANOSIM"],"header":"test","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"0e627cd3ad28b39af93d6fd48b0e16b6"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <p>Now we to create sample data frames for each data set.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -3410,15 +3664,11 @@ Show code
 <span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_sampledf&quot;</span>)</span></code></pre></div>
 </details>
 </div>
-<h3 id="significance-tests-3">Significance Tests</h3>
+<h2 id="significance-tests-1">Significance Tests</h2>
 <p>Depending on the test, we need different data structures. For <code>adonis</code> we use the sample metadata and for <code>anosim</code> we will start with a phyloseq object. So for each data set we create two variables: <code>adonis_sampledf</code> and <code>anosim_data</code></p>
-<details>
-<summary>
-<strong>Detailed results</strong> of Beta Dispersion &amp; Permutation tests
-</summary>
 <div class="l-body">
 <div class="panelset">
-<section id="full-3" class="panel">
+<section id="full-4" class="panel">
 <h4>FULL</h4>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -3450,10 +3700,116 @@ Then we use <strong>ADONIS</strong>.</p>
 <span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>its18_ps_work_adonis2_gower <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_work_beta_dist_gower <span class="sc">~</span> TEMP,</span>
 <span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
 </div>
+</section>
+<section id="arbitrary-4" class="panel">
+<h4>Arbitrary</h4>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the bray distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis_bray <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_filt_beta_dist_bray <span class="sc">~</span> TEMP,</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis2_bray <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_filt_beta_dist_bray <span class="sc">~</span> TEMP,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the gower distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis_gower <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_filt_beta_dist_gower <span class="sc">~</span> TEMP,</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis2_gower <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_filt_beta_dist_gower <span class="sc">~</span> TEMP,</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+</section>
+<section id="perfect-4" class="panel">
+<h4>PERfect</h4>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_perfect_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_perfect_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the bray distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis_bray <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_perfect_beta_dist_bray <span class="sc">~</span> TEMP,</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis2_bray <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_perfect_beta_dist_bray <span class="sc">~</span> TEMP,</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the gower distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis_gower <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_perfect_beta_dist_gower <span class="sc">~</span> TEMP,</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis2_gower <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_perfect_beta_dist_gower <span class="sc">~</span> TEMP,</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+</section>
+<section id="pime-4" class="panel">
+<h4>PIME</h4>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the bray distance metric less than <code>0.05</code>? FALSE.<br />
+Then we use <strong>ADONIS</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis_bray <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_pime_beta_dist_bray <span class="sc">~</span> TEMP,</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis2_bray <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_pime_beta_dist_bray <span class="sc">~</span> TEMP,</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
+</div>
+<p>Is the p-value of the gower distance metric less than <code>0.05</code>? TRUE.<br />
+Then we use <strong>ANOSIM</strong>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_anosim_gower <span class="ot">&lt;-</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(its18_ps_pime_prop, <span class="st">&quot;gower&quot;</span>),</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> its18_ps_pime_groups)</span></code></pre></div>
+</div>
+</section>
+</div>
+</div>
 <details>
 <summary>
-<strong>Detailed results</strong> of Significance tests for FULL data set
+<strong>Detailed results</strong> of Significance tests.
 </summary>
+<div class="l-body">
+<div class="panelset">
+<section id="full-5" class="panel">
+<h4>FULL</h4>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -3506,44 +3862,9 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
  Max.   :0.00999  
  NA&#39;s   :2        </code></pre>
 </div>
-</details>
 </section>
-<section id="arbitrary-3" class="panel">
+<section id="arbitrary-5" class="panel">
 <h4>Arbitrary</h4>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_filt_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the bray distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis_bray <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_filt_beta_dist_bray <span class="sc">~</span> TEMP,</span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis2_bray <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_filt_beta_dist_bray <span class="sc">~</span> TEMP,</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the gower distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis_gower <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_filt_beta_dist_gower <span class="sc">~</span> TEMP,</span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_adonis2_gower <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_filt_beta_dist_gower <span class="sc">~</span> TEMP,</span>
-<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<details>
-<summary>
-<strong>Detailed results</strong> of Significance tests for Arbitrary data set
-</summary>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -3596,44 +3917,9 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
  Max.   :0.006993  
  NA&#39;s   :2         </code></pre>
 </div>
-</details>
 </section>
-<section id="perfect-3" class="panel">
+<section id="perfect-5" class="panel">
 <h4>PERfect</h4>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_perfect_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_perfect_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the bray distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis_bray <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_perfect_beta_dist_bray <span class="sc">~</span> TEMP,</span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis2_bray <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_perfect_beta_dist_bray <span class="sc">~</span> TEMP,</span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the gower distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis_gower <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_perfect_beta_dist_gower <span class="sc">~</span> TEMP,</span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_adonis2_gower <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_perfect_beta_dist_gower <span class="sc">~</span> TEMP,</span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<details>
-<summary>
-<strong>Detailed results</strong> of Significance tests for PIME data set
-</summary>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -3686,44 +3972,9 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
  Max.   :0.001998  
  NA&#39;s   :2         </code></pre>
 </div>
-</details>
 </section>
-<section id="pime-3" class="panel">
+<section id="pime-5" class="panel">
 <h4>PIME</h4>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<p>Is the p-value of the jsd distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis_jsd <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis2_jsd <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_pime_beta_dist_jsd <span class="sc">~</span> TEMP,</span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the bray distance metric less than <code>0.05</code>? FALSE.<br />
-Then we use <strong>ADONIS</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis_bray <span class="ot">&lt;-</span>  <span class="fu">adonis</span>(its18_ps_pime_beta_dist_bray <span class="sc">~</span> TEMP,</span>
-<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span>
-<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_adonis2_bray <span class="ot">&lt;-</span> <span class="fu">adonis2</span>(its18_ps_pime_beta_dist_bray <span class="sc">~</span> TEMP,</span>
-<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">data =</span> adonis_sampledf, <span class="at">permutations =</span> <span class="dv">1000</span>)</span></code></pre></div>
-</div>
-<p>Is the p-value of the gower distance metric less than <code>0.05</code>? TRUE.<br />
-Then we use <strong>ANOSIM</strong>.</p>
-<div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_groups <span class="ot">&lt;-</span> <span class="fu">get_variable</span>(anosim_data, <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_anosim_gower <span class="ot">&lt;-</span></span>
-<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anosim</span>(phyloseq<span class="sc">::</span><span class="fu">distance</span>(its18_ps_pime_prop, <span class="st">&quot;gower&quot;</span>),</span>
-<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">grouping =</span> its18_ps_pime_groups)</span></code></pre></div>
-</div>
-<details>
-<summary>
-<strong>Detailed results</strong> of Significance tests for PIME data set
-</summary>
 <div class="layout-chunk" data-layout="l-body">
 <pre><code>
  ***PERMANOVA for Jensen-Shannon Divergence, `jsd`*** </code></pre>
@@ -3777,12 +4028,11 @@ Between  4 31.50 48.5 64.25   78 56
 3        8 12.75 15.5 16.75   19  6
 8        1  2.25  4.0  5.75    7  6</code></pre>
 </div>
-</details>
 </section>
 </div>
 </div>
 </details>
-<h3 id="summaries-1">Summaries</h3>
+<h2 id="summaries-1">Summaries</h2>
 <p>Here is a quick summary of significance tests for the data sets against three distance matrices.</p>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -3794,12 +4044,474 @@ Between  4 31.50 48.5 64.25   78 56
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-773c115742fdb336dddb" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-773c115742fdb336dddb">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"FULL":[0.04,0.046,0.014],"FILT":[0.037,0.033,0.008],"PERfect":[0.0599,0.0819,0.002],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.040","0.046","0.014"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.037","0.033","0.008"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.0599","0.0819","0.002"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"079db4e6c2e9ed19842eac9085e5d884"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-b85f030edf0c79c9706a" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-b85f030edf0c79c9706a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"distance metric":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"FULL":[0.04,0.046,0.014],"FILT":[0.037,0.033,0.008],"PERfect":[0.0599,0.0819,0.002],"PIME":[0.001,0.001,0.001]},"columns":[{"accessor":"distance metric","name":"Distance metric","type":"character","sortable":false,"resizable":true,"filterable":false,"cell":["Jensen-Shannon Divergence","Bray-Curtis dissimilarity","Gower distance"],"header":"Distance metric","minWidth":200,"align":"left","headerVAlign":"center","style":{"borderRight":"1px solid #eee"},"footerStyle":{"fontWeight":"bold"},"sticky":"left","headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"FULL","name":"FULL","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.040","0.046","0.014"],"header":"FULL","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"FILT","name":"FILT","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.037","0.033","0.008"],"header":"FILT","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PERfect","name":"PERfect","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.0599","0.0819","0.002"],"header":"PERfect","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}},{"accessor":"PIME","name":"PIME","type":"numeric","sortable":false,"resizable":true,"filterable":false,"cell":["0.001","0.001","0.001"],"header":"PIME","minWidth":100,"align":"center","headerVAlign":"center","style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}],"footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"p-values","headerStyle":{"fontSize":"1.3em"},"columns":["FULL","FILT","PERfect","PIME"]}],"defaultPageSize":12,"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.9em"}},"dataKey":"079db4e6c2e9ed19842eac9085e5d884"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
+<h1 id="ordinations">Ordinations</h1>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>Now we can visualize the <strong>Jensen-Shannon Divergence</strong>, <strong>unweighted-UniFrac</strong>, and <strong>weighted-UniFrac</strong> distance matrices to access dissimilarity among sample. Here we ordinate using Principal Coordinate Analysis (PCoA) but we could also test other methods like NMDS, CCA, etc. We will also test the whether there are any differences in ordination between the <code>phyloseq</code> package and the <a href="https://github.com/ChiLiubio/microeco"><code>microeco</code> package</a>.</p>
+<h4 id="plot-code">Plot Code</h4>
+<details>
+<summary>
+<strong>Code to reproduce plots</strong>
+</summary>
+<p><strong>We begin with the code for the 16S rRNA data.</strong></p>
+<p>First the code for ordination implementation in <code>phyloseq</code>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>ssu18_data_sets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="st">&quot;ssu18_ps_filt&quot;</span>, <span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;ssu18_ps_pime&quot;</span>)</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>ssu_dist <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;jsd&quot;</span>, <span class="st">&quot;unifrac&quot;</span>, <span class="st">&quot;wunifrac&quot;</span>)</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (samp_ps <span class="cf">in</span> ssu18_data_sets) {</span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (d <span class="cf">in</span> ssu_dist){</span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(samp_ps, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prop&quot;</span>)))</span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a>     ord_meths <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;NMDS&quot;</span>, <span class="st">&quot;PCoA&quot;</span>, <span class="st">&quot;CCA&quot;</span>, <span class="st">&quot;DCA&quot;</span>) <span class="co"># MDS = PCoA, &quot;CCA&quot;, &quot;DCA&quot;, &quot;DPCoA&quot;, &quot;RDA&quot;</span></span>
+<span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a>     tmp_plist <span class="ot">&lt;-</span> plyr<span class="sc">::</span><span class="fu">llply</span>(<span class="fu">as.list</span>(ord_meths), <span class="cf">function</span>(i, physeq, d) {</span>
+<span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>        ordi <span class="ot">=</span> <span class="fu">ordinate</span>(physeq, <span class="at">method =</span> i, <span class="at">distance =</span> d)</span>
+<span id="cb88-9"><a href="#cb88-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">plot_ordination</span>(physeq, ordi, <span class="st">&quot;samples&quot;</span>, <span class="at">color =</span> <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb88-10"><a href="#cb88-10" aria-hidden="true" tabindex="-1"></a>   }, tmp_get, d)</span>
+<span id="cb88-11"><a href="#cb88-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-12"><a href="#cb88-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(tmp_plist) <span class="ot">&lt;-</span> ord_meths</span>
+<span id="cb88-13"><a href="#cb88-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-14"><a href="#cb88-14" aria-hidden="true" tabindex="-1"></a>  tmp_df <span class="ot">&lt;-</span> plyr<span class="sc">::</span><span class="fu">ldply</span>(tmp_plist, <span class="cf">function</span>(x){</span>
+<span id="cb88-15"><a href="#cb88-15" aria-hidden="true" tabindex="-1"></a>      df <span class="ot">=</span> x<span class="sc">$</span>data[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
+<span id="cb88-16"><a href="#cb88-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">colnames</span>(df) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Axis_1&quot;</span>, <span class="st">&quot;Axis_2&quot;</span>)</span>
+<span id="cb88-17"><a href="#cb88-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(<span class="fu">cbind</span>(df, x<span class="sc">$</span>data))})</span>
+<span id="cb88-18"><a href="#cb88-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(tmp_df)[<span class="dv">1</span>] <span class="ot">=</span> <span class="st">&quot;method&quot;</span></span>
+<span id="cb88-19"><a href="#cb88-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb88-20"><a href="#cb88-20" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(tmp_df, <span class="fu">aes</span>(Axis_1, Axis_2, <span class="at">color =</span> TEMP, <span class="at">shape =</span> TEMP, <span class="at">fill =</span> TEMP))</span>
+<span id="cb88-21"><a href="#cb88-21" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>)</span>
+<span id="cb88-22"><a href="#cb88-22" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>method, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>)</span>
+<span id="cb88-23"><a href="#cb88-23" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> swel_col)</span>
+<span id="cb88-24"><a href="#cb88-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb88-25"><a href="#cb88-25" aria-hidden="true" tabindex="-1"></a>  tmp_df_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(d, <span class="sc">~</span> <span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_dist_&quot;</span>, .))</span>
+<span id="cb88-26"><a href="#cb88-26" aria-hidden="true" tabindex="-1"></a>  tmp_plist_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(d, <span class="sc">~</span> <span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_plist&quot;</span>))</span>
+<span id="cb88-27"><a href="#cb88-27" aria-hidden="true" tabindex="-1"></a>  tmp_plot_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(d, <span class="sc">~</span> <span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_dist_&quot;</span>, ., <span class="st">&quot;_plot&quot;</span>))</span>
+<span id="cb88-28"><a href="#cb88-28" aria-hidden="true" tabindex="-1"></a>  tmp_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;tmp_df_name&quot;</span> <span class="ot">=</span> tmp_df, <span class="at">tmp_plist_name =</span> tmp_plist, <span class="at">tmp_plot_name =</span> tmp_plot)</span>
+<span id="cb88-29"><a href="#cb88-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(<span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_&quot;</span>,  d, <span class="st">&quot;_ord_results&quot;</span>), tmp_list)</span>
+<span id="cb88-30"><a href="#cb88-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_tmp&quot;</span>))</span>
+<span id="cb88-31"><a href="#cb88-31" aria-hidden="true" tabindex="-1"></a> }</span>
+<span id="cb88-32"><a href="#cb88-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb89"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>plist_name <span class="ot">&lt;-</span> <span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_ord_results&quot;</span>)</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>plot_num <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>)</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> plist_name) {</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> plot_num) {</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>       tmp_get_i <span class="ot">&lt;-</span> <span class="fu">get</span>(i)<span class="sc">$</span>tmp_plist_name</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>       tmp_ord <span class="ot">&lt;-</span> <span class="fu">names</span>(tmp_get_i)[j]</span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>       tmp_name <span class="ot">&lt;-</span> stringr<span class="sc">::</span><span class="fu">str_replace</span>(i, <span class="st">&quot;ord_results&quot;</span>, tmp_ord)</span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>       tmp_plot <span class="ot">&lt;-</span> tmp_get_i[[j]] <span class="sc">+</span> <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> swel_col)</span>
+<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a>       tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>, <span class="fu">aes</span>(<span class="at">shape =</span> TEMP)) <span class="sc">+</span></span>
+<span id="cb89-10"><a href="#cb89-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span>
+<span id="cb89-11"><a href="#cb89-11" aria-hidden="true" tabindex="-1"></a>       tmp_plot<span class="sc">$</span>labels<span class="sc">$</span>shape <span class="ot">&lt;-</span> <span class="st">&quot;TEMP&quot;</span></span>
+<span id="cb89-12"><a href="#cb89-12" aria-hidden="true" tabindex="-1"></a>       <span class="fu">assign</span>(tmp_name, tmp_plot)</span>
+<span id="cb89-13"><a href="#cb89-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb89-14"><a href="#cb89-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb89-15"><a href="#cb89-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<p>And now the code for ordination implementation in <code>microeco</code>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>microeco_path <span class="ot">&lt;-</span> <span class="st">&quot;files/beta/microeco/&quot;</span></span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_data_sets) {</span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>  tmp_dataset <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)))</span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span><span class="fu">cal_betadiv</span>(<span class="at">unifrac =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a><span class="do">#### CODE TO ADD JSD DISTANCE ####  </span></span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>  tmp_jsd <span class="ot">&lt;-</span> phyloseq<span class="sc">::</span><span class="fu">distance</span>(<span class="fu">get</span>(i), <span class="at">method =</span> <span class="st">&quot;jsd&quot;</span>) </span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a>  tmp_jsd <span class="ot">&lt;-</span> <span class="fu">forceSymmetric</span>(<span class="fu">as.matrix</span>(tmp_jsd), <span class="at">uplo =</span> <span class="st">&quot;L&quot;</span>)</span>
+<span id="cb90-8"><a href="#cb90-8" aria-hidden="true" tabindex="-1"></a>  tmp_jsd <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_jsd)</span>
+<span id="cb90-9"><a href="#cb90-9" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span>beta_diversity<span class="sc">$</span>jsd <span class="ot">&lt;-</span> tmp_jsd</span>
+<span id="cb90-10"><a href="#cb90-10" aria-hidden="true" tabindex="-1"></a><span class="do">#### #### #### #### #### #### #### ####  </span></span>
+<span id="cb90-11"><a href="#cb90-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="fu">paste</span>(microeco_path, i, <span class="st">&quot;/metrics/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb90-12"><a href="#cb90-12" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span><span class="fu">save_betadiv</span>(<span class="at">dirpath =</span> <span class="fu">paste</span>(microeco_path, i, <span class="st">&quot;/metrics/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb90-13"><a href="#cb90-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb90-14"><a href="#cb90-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(ssu18_ps_perfect_me<span class="sc">$</span>beta_diversity)</span></code></pre></div>
+<pre><code>[1] &quot;list&quot;</code></pre>
+<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ssu18_ps_perfect_me<span class="sc">$</span>beta_diversity)</span></code></pre></div>
+<pre><code>              Length Class  Mode   
+bray          225    -none- numeric
+jaccard       225    -none- numeric
+wei_unifrac   225    -none- numeric
+unwei_unifrac 225    -none- numeric
+jsd           225    -none- numeric</code></pre>
+</div>
+<p>Here I made a custom “function” to run the analysis, plot the graphs, save graph objects, and save plots (as <code>.png</code> and <code>.pdf</code> files). I am sure an actual programmer would be shocked, but it works.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>microeco_beta_plot <span class="ot">&lt;-</span> <span class="cf">function</span>(choose_input, choose_metric, choose_ord) {  </span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  tmp_dataset <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(choose_input, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)))</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>  tmp_t1 <span class="ot">&lt;-</span> trans_beta<span class="sc">$</span><span class="fu">new</span>(<span class="at">dataset =</span> tmp_dataset, <span class="at">group =</span> <span class="st">&quot;TEMP&quot;</span>, <span class="at">measure =</span> choose_metric)</span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>  tmp_t1<span class="sc">$</span><span class="fu">cal_ordination</span>(<span class="at">ordination =</span> choose_ord)</span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>  tmp_t1_ord_plot <span class="ot">&lt;-</span> tmp_t1<span class="sc">$</span><span class="fu">plot_ordination</span>(<span class="at">plot_color =</span> <span class="st">&quot;TEMP&quot;</span>, </span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">plot_shape =</span> <span class="st">&quot;TEMP&quot;</span>, </span>
+<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">plot_group_ellipse =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb95-8"><a href="#cb95-8" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">color_values =</span> swel_col, </span>
+<span id="cb95-9"><a href="#cb95-9" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">shape_values =</span> <span class="fu">c</span>(<span class="dv">16</span>, <span class="dv">17</span>, <span class="dv">15</span>)) <span class="sc">+</span> </span>
+<span id="cb95-10"><a href="#cb95-10" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span>
+<span id="cb95-11"><a href="#cb95-11" aria-hidden="true" tabindex="-1"></a>  tmp_t1<span class="sc">$</span><span class="fu">cal_group_distance</span>()</span>
+<span id="cb95-12"><a href="#cb95-12" aria-hidden="true" tabindex="-1"></a>  tmp_t1_within_group_plot <span class="ot">&lt;-</span> tmp_t1<span class="sc">$</span><span class="fu">plot_group_distance</span>(<span class="at">distance_pair_stat =</span> <span class="cn">TRUE</span>, <span class="at">color_values =</span> swel_col)</span>
+<span id="cb95-13"><a href="#cb95-13" aria-hidden="true" tabindex="-1"></a>  tmp_t1<span class="sc">$</span>res_group_distance</span>
+<span id="cb95-14"><a href="#cb95-14" aria-hidden="true" tabindex="-1"></a>  tmp_t1<span class="sc">$</span><span class="fu">cal_group_distance</span>(<span class="at">within_group =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb95-15"><a href="#cb95-15" aria-hidden="true" tabindex="-1"></a>  tmp_t1_btwn_group_plot <span class="ot">&lt;-</span> tmp_t1<span class="sc">$</span><span class="fu">plot_group_distance</span>(<span class="at">distance_pair_stat =</span> <span class="cn">TRUE</span>, <span class="at">color_values =</span> swel_col) </span>
+<span id="cb95-16"><a href="#cb95-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-17"><a href="#cb95-17" aria-hidden="true" tabindex="-1"></a><span class="do">###### SET names</span></span>
+<span id="cb95-18"><a href="#cb95-18" aria-hidden="true" tabindex="-1"></a>  tmp_name_ord <span class="ot">&lt;-</span> <span class="fu">paste</span>(choose_input, <span class="st">&quot;_me_&quot;</span>, choose_metric, <span class="st">&quot;_&quot;</span>, choose_ord, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-19"><a href="#cb95-19" aria-hidden="true" tabindex="-1"></a>  tmp_name_wg <span class="ot">&lt;-</span> <span class="fu">paste</span>(choose_input, <span class="st">&quot;_me_wg_&quot;</span>, choose_metric, <span class="st">&quot;_&quot;</span>, choose_ord, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-20"><a href="#cb95-20" aria-hidden="true" tabindex="-1"></a>  tmp_name_bg <span class="ot">&lt;-</span> <span class="fu">paste</span>(choose_input, <span class="st">&quot;_me_bg_&quot;</span>, choose_metric, <span class="st">&quot;_&quot;</span>, choose_ord, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-21"><a href="#cb95-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb95-22"><a href="#cb95-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name_ord, tmp_t1_ord_plot, <span class="at">envir =</span> <span class="fu">parent.frame</span>() )</span>
+<span id="cb95-23"><a href="#cb95-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name_wg, tmp_t1_within_group_plot, <span class="at">envir =</span> <span class="fu">parent.frame</span>() )</span>
+<span id="cb95-24"><a href="#cb95-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name_bg, tmp_t1_btwn_group_plot, <span class="at">envir =</span> <span class="fu">parent.frame</span>() )</span>
+<span id="cb95-25"><a href="#cb95-25" aria-hidden="true" tabindex="-1"></a><span class="do">###### SET paths</span></span>
+<span id="cb95-26"><a href="#cb95-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="fu">paste</span>(microeco_path, choose_input, <span class="st">&quot;/ordination/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb95-27"><a href="#cb95-27" aria-hidden="true" tabindex="-1"></a>  tmp_path <span class="ot">&lt;-</span> <span class="fu">paste</span>(microeco_path, choose_input, <span class="st">&quot;/ordination/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-28"><a href="#cb95-28" aria-hidden="true" tabindex="-1"></a>  tmp_path_ord <span class="ot">&lt;-</span> <span class="fu">paste</span>(tmp_path, <span class="st">&quot;ord_plots/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-29"><a href="#cb95-29" aria-hidden="true" tabindex="-1"></a>  tmp_path_wg <span class="ot">&lt;-</span> <span class="fu">paste</span>(tmp_path, <span class="st">&quot;within_group/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-30"><a href="#cb95-30" aria-hidden="true" tabindex="-1"></a>  tmp_path_bg <span class="ot">&lt;-</span> <span class="fu">paste</span>(tmp_path, <span class="st">&quot;between_group/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb95-31"><a href="#cb95-31" aria-hidden="true" tabindex="-1"></a><span class="do">###### SAVE plots  </span></span>
+<span id="cb95-32"><a href="#cb95-32" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_t1_ord_plot, <span class="at">path =</span> <span class="fu">paste</span>(tmp_path_ord, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">filename =</span> <span class="fu">paste0</span>(tmp_name_ord, <span class="st">&quot;.png&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb95-33"><a href="#cb95-33" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_t1_ord_plot, <span class="at">path =</span> <span class="fu">paste</span>(tmp_path_ord, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">filename =</span> <span class="fu">paste0</span>(tmp_name_ord, <span class="st">&quot;.pdf&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))                    </span>
+<span id="cb95-34"><a href="#cb95-34" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_t1_within_group_plot, <span class="at">path =</span> <span class="fu">paste</span>(tmp_path_wg, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">filename =</span> <span class="fu">paste0</span>(tmp_name_wg, <span class="st">&quot;.png&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb95-35"><a href="#cb95-35" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_t1_within_group_plot, <span class="at">path =</span> <span class="fu">paste</span>(tmp_path_wg, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">filename =</span> <span class="fu">paste0</span>(tmp_name_wg, <span class="st">&quot;.pdf&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))                  </span>
+<span id="cb95-36"><a href="#cb95-36" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_t1_btwn_group_plot, <span class="at">path =</span> <span class="fu">paste</span>(tmp_path_bg, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">filename =</span> <span class="fu">paste0</span>(tmp_name_bg, <span class="st">&quot;.png&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb95-37"><a href="#cb95-37" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_t1_btwn_group_plot, <span class="at">path =</span> <span class="fu">paste</span>(tmp_path_bg, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">filename =</span> <span class="fu">paste0</span>(tmp_name_bg, <span class="st">&quot;.pdf&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))                  </span>
+<span id="cb95-38"><a href="#cb95-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb95-39"><a href="#cb95-39" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<p>And then run it like so:</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;ssu18_ps_pime&quot;</span>, <span class="at">choose_metric =</span> <span class="st">&quot;bray&quot;</span>, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span></code></pre></div>
+</div>
+<p>It would be super cool to have a function that looped through a bunch of data sets, distance metrics, and ordination methods.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb97-7"><a href="#cb97-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_filt&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb97-8"><a href="#cb97-8" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_filt&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb97-9"><a href="#cb97-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;ssu18_ps_filt&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb97-10"><a href="#cb97-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb97-11"><a href="#cb97-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb97-12"><a href="#cb97-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb97-13"><a href="#cb97-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb97-14"><a href="#cb97-14" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb97-15"><a href="#cb97-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb97-16"><a href="#cb97-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb97-17"><a href="#cb97-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb97-18"><a href="#cb97-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb97-19"><a href="#cb97-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_pime&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb97-20"><a href="#cb97-20" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;ssu18_ps_pime&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb97-21"><a href="#cb97-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;ssu18_ps_pime&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb97-22"><a href="#cb97-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb97-23"><a href="#cb97-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p><strong>And now the ITS code.</strong></p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>its18_data_sets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;its18_ps_filt&quot;</span>, <span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;its18_ps_pime&quot;</span>)</span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>its_dist <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;jsd&quot;</span>, <span class="st">&quot;bray&quot;</span>, <span class="st">&quot;gower&quot;</span>)</span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (samp_ps <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (d <span class="cf">in</span> its_dist){</span>
+<span id="cb98-5"><a href="#cb98-5" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(samp_ps, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_prop&quot;</span>)))</span>
+<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>     ord_meths <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;NMDS&quot;</span>, <span class="st">&quot;PCoA&quot;</span>, <span class="st">&quot;CCA&quot;</span>, <span class="st">&quot;DCA&quot;</span>) <span class="co"># MDS = PCoA, &quot;CCA&quot;, &quot;DCA&quot;, &quot;DPCoA&quot;, &quot;RDA&quot;</span></span>
+<span id="cb98-7"><a href="#cb98-7" aria-hidden="true" tabindex="-1"></a>     tmp_plist <span class="ot">&lt;-</span> plyr<span class="sc">::</span><span class="fu">llply</span>(<span class="fu">as.list</span>(ord_meths), <span class="cf">function</span>(i, physeq, d) {</span>
+<span id="cb98-8"><a href="#cb98-8" aria-hidden="true" tabindex="-1"></a>        ordi <span class="ot">=</span> <span class="fu">ordinate</span>(physeq, <span class="at">method =</span> i, <span class="at">distance =</span> d)</span>
+<span id="cb98-9"><a href="#cb98-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">plot_ordination</span>(physeq, ordi, <span class="st">&quot;samples&quot;</span>, <span class="at">color =</span> <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb98-10"><a href="#cb98-10" aria-hidden="true" tabindex="-1"></a>   }, tmp_get, d)</span>
+<span id="cb98-11"><a href="#cb98-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb98-12"><a href="#cb98-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(tmp_plist) <span class="ot">&lt;-</span> ord_meths</span>
+<span id="cb98-13"><a href="#cb98-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb98-14"><a href="#cb98-14" aria-hidden="true" tabindex="-1"></a>  tmp_df <span class="ot">&lt;-</span> plyr<span class="sc">::</span><span class="fu">ldply</span>(tmp_plist, <span class="cf">function</span>(x){</span>
+<span id="cb98-15"><a href="#cb98-15" aria-hidden="true" tabindex="-1"></a>      df <span class="ot">=</span> x<span class="sc">$</span>data[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]</span>
+<span id="cb98-16"><a href="#cb98-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">colnames</span>(df) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;Axis_1&quot;</span>, <span class="st">&quot;Axis_2&quot;</span>)</span>
+<span id="cb98-17"><a href="#cb98-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(<span class="fu">cbind</span>(df, x<span class="sc">$</span>data))})</span>
+<span id="cb98-18"><a href="#cb98-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(tmp_df)[<span class="dv">1</span>] <span class="ot">=</span> <span class="st">&quot;method&quot;</span></span>
+<span id="cb98-19"><a href="#cb98-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb98-20"><a href="#cb98-20" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(tmp_df, <span class="fu">aes</span>(Axis_1, Axis_2, <span class="at">color =</span> TEMP, <span class="at">shape =</span> TEMP, <span class="at">fill =</span> TEMP))</span>
+<span id="cb98-21"><a href="#cb98-21" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>)</span>
+<span id="cb98-22"><a href="#cb98-22" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>method, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>)</span>
+<span id="cb98-23"><a href="#cb98-23" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> swel_col)</span>
+<span id="cb98-24"><a href="#cb98-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb98-25"><a href="#cb98-25" aria-hidden="true" tabindex="-1"></a>  tmp_df_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(d, <span class="sc">~</span> <span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_dist_&quot;</span>, .))</span>
+<span id="cb98-26"><a href="#cb98-26" aria-hidden="true" tabindex="-1"></a>  tmp_plist_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(d, <span class="sc">~</span> <span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_plist&quot;</span>))</span>
+<span id="cb98-27"><a href="#cb98-27" aria-hidden="true" tabindex="-1"></a>  tmp_plot_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(d, <span class="sc">~</span> <span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_dist_&quot;</span>, ., <span class="st">&quot;_plot&quot;</span>))</span>
+<span id="cb98-28"><a href="#cb98-28" aria-hidden="true" tabindex="-1"></a>  tmp_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="st">&quot;tmp_df_name&quot;</span> <span class="ot">=</span> tmp_df, <span class="at">tmp_plist_name =</span> tmp_plist, <span class="at">tmp_plot_name =</span> tmp_plot)</span>
+<span id="cb98-29"><a href="#cb98-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(<span class="fu">paste0</span>(samp_ps, <span class="st">&quot;_&quot;</span>,  d, <span class="st">&quot;_ord_results&quot;</span>), tmp_list)</span>
+<span id="cb98-30"><a href="#cb98-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_tmp&quot;</span>))</span>
+<span id="cb98-31"><a href="#cb98-31" aria-hidden="true" tabindex="-1"></a> }</span>
+<span id="cb98-32"><a href="#cb98-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>plist_name <span class="ot">&lt;-</span> <span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_ord_results&quot;</span>)</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>plot_num <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>)</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> plist_name) {</span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> plot_num) {</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>       tmp_get_i <span class="ot">&lt;-</span> <span class="fu">get</span>(i)<span class="sc">$</span>tmp_plist_name</span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>       tmp_ord <span class="ot">&lt;-</span> <span class="fu">names</span>(tmp_get_i)[j]</span>
+<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>       tmp_name <span class="ot">&lt;-</span> stringr<span class="sc">::</span><span class="fu">str_replace</span>(i, <span class="st">&quot;ord_results&quot;</span>, tmp_ord)</span>
+<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a>       tmp_plot <span class="ot">&lt;-</span> tmp_get_i[[j]] <span class="sc">+</span> <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> swel_col)</span>
+<span id="cb99-9"><a href="#cb99-9" aria-hidden="true" tabindex="-1"></a>       tmp_plot <span class="ot">&lt;-</span> tmp_plot <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>, <span class="fu">aes</span>(<span class="at">shape =</span> TEMP)) <span class="sc">+</span></span>
+<span id="cb99-10"><a href="#cb99-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span>
+<span id="cb99-11"><a href="#cb99-11" aria-hidden="true" tabindex="-1"></a>       tmp_plot<span class="sc">$</span>labels<span class="sc">$</span>shape <span class="ot">&lt;-</span> <span class="st">&quot;TEMP&quot;</span></span>
+<span id="cb99-12"><a href="#cb99-12" aria-hidden="true" tabindex="-1"></a>       <span class="fu">assign</span>(tmp_name, tmp_plot)</span>
+<span id="cb99-13"><a href="#cb99-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb99-14"><a href="#cb99-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb99-15"><a href="#cb99-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<p>And now the code for ordination implementation in <code>microeco</code>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>microeco_path <span class="ot">&lt;-</span> <span class="st">&quot;files/beta/microeco/&quot;</span></span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>  tmp_dataset <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)))</span>
+<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span><span class="fu">cal_betadiv</span>(<span class="at">unifrac =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a><span class="do">#### CODE TO ADD JSD DISTANCE ####  </span></span>
+<span id="cb100-6"><a href="#cb100-6" aria-hidden="true" tabindex="-1"></a>  tmp_jsd <span class="ot">&lt;-</span> phyloseq<span class="sc">::</span><span class="fu">distance</span>(<span class="fu">get</span>(i), <span class="at">method =</span> <span class="st">&quot;jsd&quot;</span>) </span>
+<span id="cb100-7"><a href="#cb100-7" aria-hidden="true" tabindex="-1"></a>  tmp_jsd <span class="ot">&lt;-</span> <span class="fu">forceSymmetric</span>(<span class="fu">as.matrix</span>(tmp_jsd), <span class="at">uplo =</span> <span class="st">&quot;L&quot;</span>)</span>
+<span id="cb100-8"><a href="#cb100-8" aria-hidden="true" tabindex="-1"></a>  tmp_jsd <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_jsd)</span>
+<span id="cb100-9"><a href="#cb100-9" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span>beta_diversity<span class="sc">$</span>jsd <span class="ot">&lt;-</span> tmp_jsd</span>
+<span id="cb100-10"><a href="#cb100-10" aria-hidden="true" tabindex="-1"></a><span class="do">#### CODE TO ADD GOWER DISTANCE ####  </span></span>
+<span id="cb100-11"><a href="#cb100-11" aria-hidden="true" tabindex="-1"></a>  tmp_gower <span class="ot">&lt;-</span> phyloseq<span class="sc">::</span><span class="fu">distance</span>(<span class="fu">get</span>(i), <span class="at">method =</span> <span class="st">&quot;gower&quot;</span>) </span>
+<span id="cb100-12"><a href="#cb100-12" aria-hidden="true" tabindex="-1"></a>  tmp_gower <span class="ot">&lt;-</span> <span class="fu">forceSymmetric</span>(<span class="fu">as.matrix</span>(tmp_gower), <span class="at">uplo =</span> <span class="st">&quot;L&quot;</span>)</span>
+<span id="cb100-13"><a href="#cb100-13" aria-hidden="true" tabindex="-1"></a>  tmp_gower <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_gower)</span>
+<span id="cb100-14"><a href="#cb100-14" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span>beta_diversity<span class="sc">$</span>gower <span class="ot">&lt;-</span> tmp_gower</span>
+<span id="cb100-15"><a href="#cb100-15" aria-hidden="true" tabindex="-1"></a><span class="do">#### #### #### #### #### #### #### ####  </span></span>
+<span id="cb100-16"><a href="#cb100-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="fu">paste</span>(microeco_path, i, <span class="st">&quot;/metrics/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb100-17"><a href="#cb100-17" aria-hidden="true" tabindex="-1"></a>  tmp_dataset<span class="sc">$</span><span class="fu">save_betadiv</span>(<span class="at">dirpath =</span> <span class="fu">paste</span>(microeco_path, i, <span class="st">&quot;/metrics/&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb100-18"><a href="#cb100-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb100-19"><a href="#cb100-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(its18_ps_perfect_me<span class="sc">$</span>beta_diversity)</span></code></pre></div>
+<pre><code>[1] &quot;list&quot;</code></pre>
+<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(its18_ps_perfect_me<span class="sc">$</span>beta_diversity)</span></code></pre></div>
+<pre><code>        Length Class  Mode   
+bray    169    -none- numeric
+jaccard 169    -none- numeric
+jsd     169    -none- numeric
+gower   169    -none- numeric</code></pre>
+</div>
+<p>Here we call the custom function described above.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;its18_ps_work&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-7"><a href="#cb105-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_filt&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb105-8"><a href="#cb105-8" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_filt&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb105-9"><a href="#cb105-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;its18_ps_filt&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb105-10"><a href="#cb105-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb105-11"><a href="#cb105-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb105-15"><a href="#cb105-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb105-16"><a href="#cb105-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb105-17"><a href="#cb105-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb105-18"><a href="#cb105-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-19"><a href="#cb105-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_pime&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity)) {</span>
+<span id="cb105-20"><a href="#cb105-20" aria-hidden="true" tabindex="-1"></a>  tmp_metric <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">get</span>(<span class="fu">paste</span>(<span class="st">&quot;its18_ps_pime&quot;</span>, <span class="st">&quot;_me&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))<span class="sc">$</span>beta_diversity[j])</span>
+<span id="cb105-21"><a href="#cb105-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">microeco_beta_plot</span>(<span class="at">choose_input =</span> <span class="st">&quot;its18_ps_pime&quot;</span>, <span class="at">choose_metric =</span> tmp_metric, <span class="at">choose_ord =</span> <span class="st">&quot;PCoA&quot;</span>)</span>
+<span id="cb105-22"><a href="#cb105-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb105-23"><a href="#cb105-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+</details>
+<p><br/></p>
+<h2 id="s-rrna-1">16S rRNA</h2>
+<div class="l-body-outset">
+<div class="panelset">
+<section id="full-6" class="panel">
+<h4>FULL</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_work_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 1 | PCoA ordination plots of the FULL data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted).</strong></small></p>
+</section>
+<section id="arbitrary-6" class="panel">
+<h4>Arbitrary</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_filt_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 2 | PCoA ordination plots of the Arbitrary filtered data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted).</strong></small></p>
+</section>
+<section id="perfect-6" class="panel">
+<h4>PERfect</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_perfect_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 3 | PCoA ordination plots of the PERfect filtered data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted).</strong></small></p>
+</section>
+<section id="pime-6" class="panel">
+<h4>PIME</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_pime_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 4 | PCoA ordination plots of the PIME filtered data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted).</strong></small></p>
+</section>
+</div>
+</div>
+<h2 id="its-1">ITS</h2>
+<div class="l-body-outset">
+<div class="panelset">
+<section id="arbitrary-7" class="panel">
+<h4>Arbitrary</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_work_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 1 | PCoA ordination plots of the FULL data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance.</strong></small></p>
+</section>
+<section id="filt" class="panel">
+<h4>FILT</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_filt_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 2 | PCoA ordination plots of the Arbitrary filtered data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance.</strong></small></p>
+</section>
+<section id="perfect-7" class="panel">
+<h4>PERfect</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_perfect_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 3 | PCoA ordination plots of the PERfect filtered data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance.</strong></small></p>
+</section>
+<section id="pime-7" class="panel">
+<h4>PIME</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_pime_beta_div_ord_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 4 | PCoA ordination plots of the PIME filtered data set. Top = phyloseq, bottom = microeco; Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance.</strong></small></p>
+</section>
+</div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<h1 id="within-between-group-distances">Within &amp; Between Group Distances</h1>
+<p>Above we calculated the sample distances within groups. Let’s see what those plots look like.</p>
+<h2 id="s-rrna-2">16S rRNA</h2>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="l-body-outset">
+<div class="panelset">
+<section id="full-7" class="panel">
+<h4>FULL</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_work_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 5 | Within (top) and between (bottom) group variation plots of the FULL data set. Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted). Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+<section id="arbitrary-8" class="panel">
+<h4>Arbitrary</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_filt_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 6 | Within (top) and between (bottom) group variation plots of the Arbitrary filtered data set. Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted). Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+<section id="perfect-8" class="panel">
+<h4>PERfect</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_perfect_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 7 | Within (top) and between (bottom) group variation plots of the PERfect filtered data set. Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted). Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+<section id="pime-8" class="panel">
+<h4>PIME</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/ssu18_ps_pime_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 8 | Within (top) and between (bottom) group variation plots of the PIME filtered data set. Left = Jensen-Shannon Divergence, middle = UniFrac (unwieghted), right = UniFrac (wieghted). Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+</div>
+</div>
+<h2 id="its-2">ITS</h2>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="l-body-outset">
+<div class="panelset">
+<section id="full-8" class="panel">
+<h4>FULL</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_work_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 5 | Within (top) and between (bottom) group variation plots of the FULL data set. Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance. Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+<section id="arbitrary-9" class="panel">
+<h4>Arbitrary</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_filt_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 6 | Within (top) and between (bottom) group variation plots of the Arbitrary filtered data set. Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance. Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+<section id="perfect-9" class="panel">
+<h4>PERfect</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_perfect_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 7 | Within (top) and between (bottom) group variation plots of the PERfect filtered data set. Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance. Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+<section id="pime-9" class="panel">
+<h4>PIME</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/beta/its18_ps_pime_variation_plots.png" width="4252" /></p>
+</div>
+<p><small><strong>(ITS) Figure 8 | Within (top) and between (bottom) group variation plots of the PIME filtered data set. Left = Jensen-Shannon Divergence, middle = Bray-Curtis dissimilarity, right = Gower distance. Significant differences denoted by asterisks (* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001, **** p &lt; 0.0001). ns = not significant. </strong></small></p>
+</section>
+</div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<h2 class="appendix" id="source-code">Source Code</h2>
+<p>The source code for this page can be accessed on GitHub by <a href="https://github.com/sweltr/high-temp/blob/master/beta.Rmd">clicking this link</a>. Please note, that in order to process the data <em>and</em> build the website, we needed to run the workflow and get the results. Then hard code the results and turn off the individual commands. So the raw file for this page is a bit messy—you have been warned.</p>
 <div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
 <div id="ref-oksanen2013community" class="csl-entry" role="doc-biblioentry">
 Oksanen, Jari, F. Guillaume Blanchet, Roeland Kindt, Pierre Legendre, Peter R. Minchin, R. B. O’Hara, Gavin L. Simpson, Peter Sólymos, M. Henry H. Stevens, and Helene Wagner. 2012. <span>“Vegan: Community Ecology Package.”</span> <em>R Package Version</em> 2 (0). <a href="https://cran.r-project.org/web/packages/vegan/index.html">https://cran.r-project.org/web/packages/vegan/index.html</a>.

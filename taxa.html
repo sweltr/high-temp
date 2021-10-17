@@ -81,7 +81,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 </style>
 
   <!--radix_placeholder_meta_tags-->
-  <title>sweltr: 4 Taxonomic Diversity</title>
+  <title>sweltr: 4. Taxonomic Diversity</title>
 
   <meta property="description" itemprop="description" content="Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets."/>
 
@@ -89,7 +89,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="sweltr: 4 Taxonomic Diversity"/>
+  <meta property="og:title" content="sweltr: 4. Taxonomic Diversity"/>
   <meta property="og:type" content="article"/>
   <meta property="og:description" content="Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets."/>
   <meta property="og:locale" content="en_US"/>
@@ -97,7 +97,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="sweltr: 4 Taxonomic Diversity"/>
+  <meta property="twitter:title" content="sweltr: 4. Taxonomic Diversity"/>
   <meta property="twitter:description" content="Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets."/>
 
   <!--/radix_placeholder_meta_tags-->
@@ -105,7 +105,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography","output"]}},"value":[{"type":"character","attributes":{},"value":["4 Taxonomic Diversity"]},{"type":"character","attributes":{},"value":["Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography","output"]}},"value":[{"type":"character","attributes":{},"value":["4. Taxonomic Diversity"]},{"type":"character","attributes":{},"value":["Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -456,6 +456,265 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet"/>
   <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet"/>
   <script src="site_libs/headroom-0.9.4/headroom.min.js"></script>
+  <script src="site_libs/autocomplete-0.37.1/autocomplete.min.js"></script>
+  <script src="site_libs/fuse-6.4.1/fuse.min.js"></script>
+
+  <script type="application/javascript">
+
+  function getMeta(metaName) {
+    var metas = document.getElementsByTagName('meta');
+    for (let i = 0; i < metas.length; i++) {
+      if (metas[i].getAttribute('name') === metaName) {
+        return metas[i].getAttribute('content');
+      }
+    }
+    return '';
+  }
+
+  function offsetURL(url) {
+    var offset = getMeta('distill:offset');
+    return offset ? offset + '/' + url : url;
+  }
+
+  function createFuseIndex() {
+
+    // create fuse index
+    var options = {
+      keys: [
+        { name: 'title', weight: 20 },
+        { name: 'categories', weight: 15 },
+        { name: 'description', weight: 10 },
+        { name: 'contents', weight: 5 },
+      ],
+      ignoreLocation: true,
+      threshold: 0
+    };
+    var fuse = new window.Fuse([], options);
+
+    // fetch the main search.json
+    return fetch(offsetURL('search.json'))
+      .then(function(response) {
+        if (response.status == 200) {
+          return response.json().then(function(json) {
+            // index main articles
+            json.articles.forEach(function(article) {
+              fuse.add(article);
+            });
+            // download collections and index their articles
+            return Promise.all(json.collections.map(function(collection) {
+              return fetch(offsetURL(collection)).then(function(response) {
+                if (response.status === 200) {
+                  return response.json().then(function(articles) {
+                    articles.forEach(function(article) {
+                      fuse.add(article);
+                    });
+                  })
+                } else {
+                  return Promise.reject(
+                    new Error('Unexpected status from search index request: ' +
+                              response.status)
+                  );
+                }
+              });
+            })).then(function() {
+              return fuse;
+            });
+          });
+
+        } else {
+          return Promise.reject(
+            new Error('Unexpected status from search index request: ' +
+                        response.status)
+          );
+        }
+      });
+  }
+
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+
+    // get search element (bail if we don't have one)
+    var searchEl = window.document.getElementById('distill-search');
+    if (!searchEl)
+      return;
+
+    createFuseIndex()
+      .then(function(fuse) {
+
+        // make search box visible
+        searchEl.classList.remove('hidden');
+
+        // initialize autocomplete
+        var options = {
+          autoselect: true,
+          hint: false,
+          minLength: 2,
+        };
+        window.autocomplete(searchEl, options, [{
+          source: function(query, callback) {
+            const searchOptions = {
+              isCaseSensitive: false,
+              shouldSort: true,
+              minMatchCharLength: 2,
+              limit: 10,
+            };
+            var results = fuse.search(query, searchOptions);
+            callback(results
+              .map(function(result) { return result.item; })
+            );
+          },
+          templates: {
+            suggestion: function(suggestion) {
+              var img = suggestion.preview && Object.keys(suggestion.preview).length > 0
+                ? `<img src="${offsetURL(suggestion.preview)}"</img>`
+                : '';
+              var html = `
+                <div class="search-item">
+                  <h3>${suggestion.title}</h3>
+                  <div class="search-item-description">
+                    ${suggestion.description || ''}
+                  </div>
+                  <div class="search-item-preview">
+                    ${img}
+                  </div>
+                </div>
+              `;
+              return html;
+            }
+          }
+        }]).on('autocomplete:selected', function(event, suggestion) {
+          window.location.href = offsetURL(suggestion.path);
+        });
+        // remove inline display style on autocompleter (we want to
+        // manage responsive display via css)
+        $('.algolia-autocomplete').css("display", "");
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+
+  });
+
+  </script>
+
+  <style type="text/css">
+
+  .nav-search {
+    font-size: x-small;
+  }
+
+  /* Algolioa Autocomplete */
+
+  .algolia-autocomplete {
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: sub;
+    background-color: white;
+    color: black;
+    padding: 6px;
+    padding-top: 8px;
+    padding-bottom: 0;
+    border-radius: 6px;
+    border: 1px #0F2E3D solid;
+    width: 180px;
+  }
+
+
+  @media screen and (max-width: 768px) {
+    .distill-site-nav .algolia-autocomplete {
+      display: none;
+      visibility: hidden;
+    }
+    .distill-site-nav.responsive .algolia-autocomplete {
+      display: inline-block;
+      visibility: visible;
+    }
+    .distill-site-nav.responsive .algolia-autocomplete .aa-dropdown-menu {
+      margin-left: 0;
+      width: 400px;
+      max-height: 400px;
+    }
+  }
+
+  .algolia-autocomplete .aa-input, .algolia-autocomplete .aa-hint {
+    width: 90%;
+    outline: none;
+    border: none;
+  }
+
+  .algolia-autocomplete .aa-hint {
+    color: #999;
+  }
+  .algolia-autocomplete .aa-dropdown-menu {
+    width: 550px;
+    max-height: 70vh;
+    overflow-x: visible;
+    overflow-y: scroll;
+    padding: 5px;
+    margin-top: 3px;
+    margin-left: -150px;
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #999;
+    border-top: none;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion {
+    cursor: pointer;
+    padding: 5px 4px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion:last-of-type {
+    border-bottom: none;
+    margin-bottom: 2px;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item {
+    overflow: hidden;
+    font-size: 0.8em;
+    line-height: 1.4em;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item h3 {
+    font-size: 1rem;
+    margin-block-start: 0;
+    margin-block-end: 5px;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-description {
+    display: inline-block;
+    overflow: hidden;
+    height: 2.8em;
+    width: 80%;
+    margin-right: 4%;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview {
+    display: inline-block;
+    width: 15%;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img {
+    height: 3em;
+    width: auto;
+    display: none;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img[src] {
+    display: initial;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion.aa-cursor {
+    background-color: #eee;
+  }
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion em {
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  </style>
+
+
   <!--/radix_placeholder_navigation_in_header-->
   <!--radix_placeholder_distill-->
 
@@ -2059,7 +2318,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"4 Taxonomic Diversity","description":"Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.","authors":[]}
+{"title":"4. Taxonomic Diversity","description":"Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2093,13 +2352,15 @@ B. Diversity Workflows
 <a href="taxa.html">4. Taxonomic</a>
 <a href="alpha.html">5. Alpha Diversity</a>
 <a href="beta.html">6. Beta Diversity</a>
-<a href="da.html">7. DA ASVs &amp; OTUs</a>
+<a href="da.html">7. DA ASVs &amp; Taxa</a>
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<a href="data-availability.html">Data Products</a>
+<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
 </div>
 <div class="nav-right">
+<a href="data-availability.html">Data Products</a>
+<a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2112,7 +2373,7 @@ B. Diversity Workflows
 <!--/radix_placeholder_site_before_body-->
 
 <div class="d-title">
-<h1>4 Taxonomic Diversity</h1>
+<h1>4. Taxonomic Diversity</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
 <p><p>Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.</p></p>
@@ -2125,13 +2386,13 @@ B. Diversity Workflows
 <h3>Contents</h3>
 <ul>
 <li><a href="#synopsis">Synopsis</a></li>
-<li><a href="#s-rrna">16s rRNA</a>
+<li><a href="#taxonomic-assessment">Taxonomic Assessment</a>
 <ul>
-<li><a href="#bar-charts-of-major-taxa">Bar charts of Major Taxa</a></li>
+<li><a href="#s-rrna">16s rRNA</a></li>
+<li><a href="#its">ITS</a></li>
 </ul></li>
-<li><a href="#its">ITS</a>
+<li><a href="#major-bacterial-taxa-by-family">Major Bacterial taxa by Family</a>
 <ul>
-<li><a href="#bar-charts-of-major-taxa-1">Bar charts of Major Taxa</a></li>
 <li><a href="#source-code">Source Code</a></li>
 </ul></li>
 </ul>
@@ -2139,7 +2400,7 @@ B. Diversity Workflows
 </div>
 <details>
 <summary>
-Click here for setup information.
+<strong>Click here</strong> for setup information.
 </summary>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">eval =</span> <span class="cn">FALSE</span>)</span>
@@ -2150,34 +2411,46 @@ Click here for setup information.
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(phyloseq); <span class="fu">packageVersion</span>(<span class="st">&quot;phyloseq&quot;</span>)</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Biostrings); <span class="fu">packageVersion</span>(<span class="st">&quot;Biostrings&quot;</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, metacoder, hilldiv, patchwork, ampvis2, </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, metacoder, hilldiv, patchwork, codefolder,</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>               agricolae, labdsv, naniar, codefolder, pairwiseAdonis, </span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               microbiome, seqRFLP, DT, microeco, file2meco, ggplot, cowplot,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               microbiome, seqRFLP, DT, microeco, file2meco, cowplot,</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>               GUniFrac, ggalluvial, ggdendro, tidytree, igraph, reactable,</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>               pheatmap, SpiecEasi, Tax4Fun, WGCNA, microbiomeMarker,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>               <span class="at">install =</span> <span class="cn">FALSE</span>, <span class="at">update =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">999</span>)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_current<span class="sc">$</span><span class="fu">get</span>(<span class="fu">c</span>(</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache&quot;</span>,</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.path&quot;</span>,</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.rebuild&quot;</span>,</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;dependson&quot;</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;autodep&quot;</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>               captioner, downloadthis,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">install =</span> <span class="cn">FALSE</span>, <span class="at">update =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">999</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_current<span class="sc">$</span><span class="fu">get</span>(<span class="fu">c</span>(</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache&quot;</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.path&quot;</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.rebuild&quot;</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;dependson&quot;</span>,</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;autodep&quot;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div>
 </div>
 </details>
-<p><br/></p>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
 <h1 id="synopsis">Synopsis</h1>
 <p>This workflow contains taxonomic diversity assessments for the 16S rRNA and ITS data sets. In order to run the workflow, you either need to first run the <a href="dada2.html">DADA2 Workflow</a>, then the <a href="data-prep.html">Data Preparation workflow</a>, and finally the <a href="filtering.html">Filtering workflow</a>.</p>
 <p>In this workflow, we use the <a href="https://github.com/ChiLiubio/microeco">microeco</a> to look at the taxonomic distribution of microbial communities.</p>
-<h1 id="s-rrna">16s rRNA</h1>
+<h1 id="taxonomic-assessment">Taxonomic Assessment</h1>
+<h2 id="s-rrna">16s rRNA</h2>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<h2 id="bar-charts-of-major-taxa">Bar charts of Major Taxa</h2>
 <p>Here we compare the taxonomic breakdown of the Full (unfiltered), Arbitrary filtered, PERfect filtered, and PIME filtered data sets, split by temperature treatment.</p>
 <p>Before we plot the data, we want to separate out the Proteobacteria classes so we can plot these along with other phyla. To accomplish this we perform the following steps:</p>
 <ol type="1">
@@ -2560,12 +2833,6 @@ Show code
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
 <p><br/></p>
 <blockquote>
 <p>It is important to note that while most of the dominant taxa are the same across the FULL, Arbitrary, PIME, and PERfect data sets, there a few key difference:</p>
@@ -2581,139 +2848,133 @@ Show code
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_work_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 1 | Dominant taxonomic groups from the FULL (unfiltered) 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="arbitrary-filtered" class="panel">
 <h4>Arbitrary filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_filt_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 2 | Dominant taxonomic groups from the Arbitrary filtered 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="perfect-filtered" class="panel">
 <h4>PERFECT filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_perfect_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 3 | Dominant taxonomic groups from the PERfect filtered 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="pime-filtered" class="panel">
 <h4>PIME filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_pime_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 4 | Dominant taxonomic groups from the PIME filtered 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 </div>
 </div>
-<h1 id="its">ITS</h1>
+<h2 id="its">ITS</h2>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<h2 id="bar-charts-of-major-taxa-1">Bar charts of Major Taxa</h2>
-<p>Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment.</p>
+<p>Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment for the ITS data. The workflow is basically the same as the 16S rRNA data. Click the box below to see the entire workflow.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>its18_data_sets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>,  <span class="st">&quot;its18_ps_filt&quot;</span>,</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                     <span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;its18_ps_pime&quot;</span>)</span></code></pre></div>
+
 </div>
+<details>
+<summary>
+<strong>Detailed workflow</strong> for ITS taxonomic analysis.
+</summary>
 <ol type="1">
 <li>Choose the <strong>number</strong> of taxa to display and the taxonomic <strong>level</strong>. Aggregate the rest into “Other.”</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>top_hits <span class="ot">&lt;-</span> <span class="dv">14</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>top_level <span class="ot">&lt;-</span> <span class="st">&quot;Order&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>top_hits <span class="ot">&lt;-</span> <span class="dv">14</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>top_level <span class="ot">&lt;-</span> <span class="st">&quot;Order&quot;</span></span></code></pre></div>
 </div>
 <p>As above, in order to use <code>microeco</code>, we need to add the rank designation as a prefix to each taxa. For example, <code>Basidiomycota</code> is changed to <code>p__Basidiomycota</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  tmp_sam_data <span class="ot">&lt;-</span> <span class="fu">sample_data</span>(tmp_get)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get))</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>ASV_ID <span class="ot">&lt;-</span> <span class="cn">NULL</span> <span class="co"># Some have, some do not</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>ASV_SEQ <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="co">#  tmp_tax_data[] &lt;- data.frame(lapply(tmp_tax_data, gsub, </span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co">#                                      pattern = &quot;^[k | p | c | o | f]_.*&quot;, </span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co">#                                      replacement = &quot;&quot;, fixed = FALSE))</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Kingdom <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;k__&quot;</span>, tmp_tax_data<span class="sc">$</span>Kingdom, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Phylum <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;p__&quot;</span>, tmp_tax_data<span class="sc">$</span>Phylum, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Class <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;c__&quot;</span>, tmp_tax_data<span class="sc">$</span>Class, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Order <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;o__&quot;</span>, tmp_tax_data<span class="sc">$</span>Order, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Family <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;f__&quot;</span>, tmp_tax_data<span class="sc">$</span>Family, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Genus <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;g__&quot;</span>, tmp_tax_data<span class="sc">$</span>Genus, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_tax_data)</span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">phyloseq</span>(<span class="fu">otu_table</span>(tmp_get),</span>
-<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">tax_table</span>(tmp_tax_data),</span>
-<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>                     tmp_sam_data)</span>
-<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(i, tmp_ps)</span>
-<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="fu">tax_table</span>(its18_ps_pime))</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  tmp_sam_data <span class="ot">&lt;-</span> <span class="fu">sample_data</span>(tmp_get)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>ASV_ID <span class="ot">&lt;-</span> <span class="cn">NULL</span> <span class="co"># Some have, some do not</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>ASV_SEQ <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">#  tmp_tax_data[] &lt;- data.frame(lapply(tmp_tax_data, gsub, </span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">#                                      pattern = &quot;^[k | p | c | o | f]_.*&quot;, </span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">#                                      replacement = &quot;&quot;, fixed = FALSE))</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Kingdom <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;k__&quot;</span>, tmp_tax_data<span class="sc">$</span>Kingdom, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Phylum <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;p__&quot;</span>, tmp_tax_data<span class="sc">$</span>Phylum, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Class <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;c__&quot;</span>, tmp_tax_data<span class="sc">$</span>Class, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Order <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;o__&quot;</span>, tmp_tax_data<span class="sc">$</span>Order, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Family <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;f__&quot;</span>, tmp_tax_data<span class="sc">$</span>Family, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data<span class="sc">$</span>Genus <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;g__&quot;</span>, tmp_tax_data<span class="sc">$</span>Genus, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  tmp_tax_data <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_tax_data)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">phyloseq</span>(<span class="fu">otu_table</span>(tmp_get),</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">tax_table</span>(tmp_tax_data),</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>                     tmp_sam_data)</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(i, tmp_ps)</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="fu">tax_table</span>(its18_ps_pime))</span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    tmp_otu_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    tmp_sample_info <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    tmp_taxonomy_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get))</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tmp_taxonomy_table %&lt;&gt;% tidy_taxonomy</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    tmp_dataset <span class="ot">&lt;-</span> microtable<span class="sc">$</span><span class="fu">new</span>(<span class="at">sample_table =</span> tmp_sample_info, </span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">otu_table =</span> tmp_otu_table, </span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">tax_table =</span> tmp_taxonomy_table)</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    tmp_dataset<span class="sc">$</span><span class="fu">tidy_dataset</span>()</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tmp_dataset)</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    tmp_dataset<span class="sc">$</span>tax_table <span class="sc">%&lt;&gt;%</span> base<span class="sc">::</span><span class="fu">subset</span>(Kingdom <span class="sc">==</span> <span class="st">&quot;k__Fungi&quot;</span>)</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tmp_dataset)</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    tmp_dataset<span class="sc">$</span><span class="fu">tidy_dataset</span>()</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tmp_dataset)</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)) </span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_name, tmp_dataset)</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>}  </span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    tmp_otu_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    tmp_sample_info <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    tmp_taxonomy_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get))</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tmp_taxonomy_table %&lt;&gt;% tidy_taxonomy</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    tmp_dataset <span class="ot">&lt;-</span> microtable<span class="sc">$</span><span class="fu">new</span>(<span class="at">sample_table =</span> tmp_sample_info, </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">otu_table =</span> tmp_otu_table, </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">tax_table =</span> tmp_taxonomy_table)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    tmp_dataset<span class="sc">$</span><span class="fu">tidy_dataset</span>()</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tmp_dataset)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    tmp_dataset<span class="sc">$</span>tax_table <span class="sc">%&lt;&gt;%</span> base<span class="sc">::</span><span class="fu">subset</span>(Kingdom <span class="sc">==</span> <span class="st">&quot;k__Fungi&quot;</span>)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tmp_dataset)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    tmp_dataset<span class="sc">$</span><span class="fu">tidy_dataset</span>()</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tmp_dataset)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)) </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">assign</span>(tmp_name, tmp_dataset)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>}  </span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </div>
 <p>Here is an example of what a new microeco object looks like when you call it.</p>
 <div class="layout-chunk" data-layout="l-body">
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_me</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_me</span></code></pre></div>
 <pre><code>microtable class:
 sample_table have 13 rows and 6 columns
 otu_table have 3355 rows and 13 columns
 tax_table have 3355 rows and 6 columns
 Taxa abundance: calculated for Kingdom,Phylum,Class,Order,Family,Genus </code></pre>
 </div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
 <ol start="5" type="1">
 <li>Now, we calculate the taxa abundance at each taxonomic rank using <code>cal_abund()</code>. This function return a list called <code>taxa_abund</code> containing several data frame of the abundance information at each taxonomic rank. The list is stored in the microtable object automatically. It’s worth noting that the <code>cal_abund()</code> function can be used to solve some complex cases, such as supporting both the relative and absolute abundance calculation and selecting the partial taxonomic columns. More information can be found in the description of the <a href="https://github.com/ChiLiubio/file2meco">file2meco package</a>. In the same loop we also create a <code>trans_abund</code> class, which is used to transform taxonomic abundance data for plotting.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  tmp_me <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)))</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  tmp_me<span class="sc">$</span><span class="fu">cal_abund</span>()</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund <span class="ot">&lt;-</span> trans_abund<span class="sc">$</span><span class="fu">new</span>(<span class="at">dataset =</span> tmp_me, <span class="at">taxrank =</span> top_level, <span class="at">ntaxa =</span> top_hits)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="ot">&lt;-</span> tmp_me_abund<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="sc">/</span> <span class="dv">100</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund_gr <span class="ot">&lt;-</span> trans_abund<span class="sc">$</span><span class="fu">new</span>(<span class="at">dataset =</span> tmp_me, <span class="at">taxrank =</span> top_level, <span class="at">ntaxa =</span> top_hits, </span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">groupmean =</span> <span class="st">&quot;TEMP&quot;</span>)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund_gr<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="ot">&lt;-</span> tmp_me_abund_gr<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="sc">/</span> <span class="dv">100</span></span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund&quot;</span>)) </span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_me_abund)  </span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  tmp_name_gr <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund_group&quot;</span>)) </span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name_gr, tmp_me_abund_gr)  </span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  tmp_me <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me&quot;</span>)))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  tmp_me<span class="sc">$</span><span class="fu">cal_abund</span>()</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund <span class="ot">&lt;-</span> trans_abund<span class="sc">$</span><span class="fu">new</span>(<span class="at">dataset =</span> tmp_me, <span class="at">taxrank =</span> top_level, <span class="at">ntaxa =</span> top_hits)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="ot">&lt;-</span> tmp_me_abund<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="sc">/</span> <span class="dv">100</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund_gr <span class="ot">&lt;-</span> trans_abund<span class="sc">$</span><span class="fu">new</span>(<span class="at">dataset =</span> tmp_me, <span class="at">taxrank =</span> top_level, <span class="at">ntaxa =</span> top_hits, </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">groupmean =</span> <span class="st">&quot;TEMP&quot;</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  tmp_me_abund_gr<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="ot">&lt;-</span> tmp_me_abund_gr<span class="sc">$</span>abund_data<span class="sc">$</span>Abundance <span class="sc">/</span> <span class="dv">100</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund&quot;</span>)) </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_me_abund)  </span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  tmp_name_gr <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund_group&quot;</span>)) </span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name_gr, tmp_me_abund_gr)  </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <pre><code>The result is stored in object$taxa_abund ...</code></pre>
 <ol start="6" type="1">
@@ -2728,204 +2989,168 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;c_Agaricomycetes&quot;</span>, <span class="st">&quot;Agaricales&quot;</span>,  </span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>,  </span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Helotiales&quot;</span>, <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>,  </span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Xylariales&quot;</span>))   </span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;Polyporales&quot;</span>, <span class="st">&quot;Agaricales&quot;</span>,  </span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>,  </span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Mortierellales&quot;</span>, <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>,  </span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Xylariales&quot;</span>))   </span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;c_Agaricomycetes&quot;</span>, <span class="st">&quot;Agaricales&quot;</span>,  </span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>,  </span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Helotiales&quot;</span>,   <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>, </span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Pezizales&quot;</span>))   </span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;Polyporales&quot;</span>,  <span class="st">&quot;Agaricales&quot;</span>,  </span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>, </span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Mortierellales&quot;</span>,  <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>,  </span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Pezizales&quot;</span>))   </span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;c_Agaricomycetes&quot;</span>, <span class="st">&quot;Agaricales&quot;</span>,  </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>,  </span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Helotiales&quot;</span>, <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>,  </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Xylariales&quot;</span>))   </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>its18_ps_filt_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;Polyporales&quot;</span>, <span class="st">&quot;Agaricales&quot;</span>,  </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>,  </span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Mortierellales&quot;</span>, <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>,  </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Xylariales&quot;</span>))   </span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>its18_ps_perfect_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;c_Agaricomycetes&quot;</span>, <span class="st">&quot;Agaricales&quot;</span>,  </span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>,  </span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Helotiales&quot;</span>,   <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>, </span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Pezizales&quot;</span>))   </span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>its18_ps_pime_tax_ord <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;k_Fungi&quot;</span>,  <span class="st">&quot;p_Ascomycota&quot;</span>,  <span class="st">&quot;Polyporales&quot;</span>,  <span class="st">&quot;Agaricales&quot;</span>,  </span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Archaeorhizomycetales&quot;</span>,  <span class="st">&quot;Capnodiales&quot;</span>,  <span class="st">&quot;Eurotiales&quot;</span>,  <span class="st">&quot;Geastrales&quot;</span>, </span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Glomerales&quot;</span>,  <span class="st">&quot;Mortierellales&quot;</span>,  <span class="st">&quot;Hypocreales&quot;</span>,  <span class="st">&quot;Saccharomycetales&quot;</span>,  </span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Trichosporonales&quot;</span>,  <span class="st">&quot;Pezizales&quot;</span>))   </span></code></pre></div>
 </details>
 </div>
 <ol start="7" type="1">
 <li>And one more little step before plotting. Here we <strong>a</strong>) specify a custom color palette and <strong>b</strong>) specify the sample order.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>top_level <span class="ot">&lt;-</span> <span class="st">&quot;Phylum&quot;</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>its18_colvec.tax <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;#323232&quot;</span>, <span class="st">&quot;#004949&quot;</span>, <span class="st">&quot;#924900&quot;</span>, <span class="st">&quot;#490092&quot;</span>, </span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;#6db6ff&quot;</span>, <span class="st">&quot;#920000&quot;</span>, <span class="st">&quot;#ffb6db&quot;</span>, <span class="st">&quot;#24ff24&quot;</span>, </span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;#006ddb&quot;</span>, <span class="st">&quot;#db6d00&quot;</span>, <span class="st">&quot;#b66dff&quot;</span>, <span class="st">&quot;#ffff6d&quot;</span>, </span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;#009292&quot;</span>, <span class="st">&quot;#b6dbff&quot;</span>, <span class="st">&quot;#ff6db6&quot;</span>))</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>its18_samp_order <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;P02_D00_010_C0A&quot;</span>, <span class="st">&quot;P04_D00_010_C0B&quot;</span>, <span class="st">&quot;P06_D00_010_C0C&quot;</span>, <span class="st">&quot;P08_D00_010_C0D&quot;</span>, <span class="st">&quot;P10_D00_010_C0E&quot;</span>, </span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;P01_D00_010_W3A&quot;</span>, <span class="st">&quot;P03_D00_010_W3B&quot;</span>, <span class="st">&quot;P07_D00_010_W3D&quot;</span>, <span class="st">&quot;P09_D00_010_W3E&quot;</span>, </span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;P01_D00_010_W8A&quot;</span>, <span class="st">&quot;P03_D00_010_W8B&quot;</span>, <span class="st">&quot;P05_D00_010_W8C&quot;</span>, <span class="st">&quot;P07_D00_010_W8D&quot;</span>)</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>its18_colvec.tax <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;#323232&quot;</span>, <span class="st">&quot;#004949&quot;</span>, <span class="st">&quot;#924900&quot;</span>, <span class="st">&quot;#490092&quot;</span>, </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;#6db6ff&quot;</span>, <span class="st">&quot;#920000&quot;</span>, <span class="st">&quot;#ffb6db&quot;</span>, <span class="st">&quot;#24ff24&quot;</span>, </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;#006ddb&quot;</span>, <span class="st">&quot;#db6d00&quot;</span>, <span class="st">&quot;#b66dff&quot;</span>, <span class="st">&quot;#ffff6d&quot;</span>, </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                      <span class="st">&quot;#009292&quot;</span>, <span class="st">&quot;#b6dbff&quot;</span>, <span class="st">&quot;#ff6db6&quot;</span>))</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>its18_samp_order <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;P02_D00_010_C0A&quot;</span>, <span class="st">&quot;P04_D00_010_C0B&quot;</span>, <span class="st">&quot;P06_D00_010_C0C&quot;</span>, <span class="st">&quot;P08_D00_010_C0D&quot;</span>, <span class="st">&quot;P10_D00_010_C0E&quot;</span>, </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;P01_D00_010_W3A&quot;</span>, <span class="st">&quot;P03_D00_010_W3B&quot;</span>, <span class="st">&quot;P07_D00_010_W3D&quot;</span>, <span class="st">&quot;P09_D00_010_W3E&quot;</span>, </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;P01_D00_010_W8A&quot;</span>, <span class="st">&quot;P03_D00_010_W8B&quot;</span>, <span class="st">&quot;P05_D00_010_W8C&quot;</span>, <span class="st">&quot;P07_D00_010_W8D&quot;</span>)</span></code></pre></div>
 </div>
 <ol start="8" type="1">
 <li>Now we can generate plots (in a loop) for each faceted data set.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  tmp_abund <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund&quot;</span>)))</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  tmp_tax_order <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_tax_ord&quot;</span>)))</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  tmp_abund<span class="sc">$</span>use_taxanames <span class="ot">&lt;-</span> tmp_tax_order</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  tmp_facet_plot <span class="ot">&lt;-</span> tmp_abund<span class="sc">$</span><span class="fu">plot_bar</span>(<span class="at">use_colors =</span> its18_colvec.tax, </span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">others_color =</span> <span class="st">&quot;#323232&quot;</span>, </span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">facet =</span> <span class="st">&quot;TEMP&quot;</span>, </span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_keep =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_type_hor =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">legend_text_italic =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_size =</span> <span class="dv">6</span>, </span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">facet_color =</span> <span class="st">&quot;#cccccc&quot;</span>, </span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">order_x =</span> its18_samp_order)</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  tmp_facet_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_facet_plot&quot;</span>)) </span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_facet_name, tmp_facet_plot)  </span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  tmp_abund <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund&quot;</span>)))</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  tmp_tax_order <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_tax_ord&quot;</span>)))</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  tmp_abund<span class="sc">$</span>use_taxanames <span class="ot">&lt;-</span> tmp_tax_order</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  tmp_facet_plot <span class="ot">&lt;-</span> tmp_abund<span class="sc">$</span><span class="fu">plot_bar</span>(<span class="at">use_colors =</span> its18_colvec.tax, </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">others_color =</span> <span class="st">&quot;#323232&quot;</span>, </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">facet =</span> <span class="st">&quot;TEMP&quot;</span>, </span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_keep =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_type_hor =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">legend_text_italic =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_size =</span> <span class="dv">6</span>, </span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">facet_color =</span> <span class="st">&quot;#cccccc&quot;</span>, </span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">order_x =</span> its18_samp_order)</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  tmp_facet_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_facet_plot&quot;</span>)) </span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_facet_name, tmp_facet_plot)  </span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <p>Then add a little formatting to the faceted plots.</p>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>set_to_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work_facet_plot&quot;</span>, <span class="st">&quot;its18_ps_filt_facet_plot&quot;</span>, <span class="st">&quot;its18_ps_perfect_facet_plot&quot;</span>, <span class="st">&quot;its18_ps_pime_facet_plot&quot;</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span>  set_to_plot) {</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> tmp_get <span class="sc">+</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_cowplot</span>() <span class="sc">+</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> top_level, <span class="at">reverse =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">keywidth =</span> <span class="fl">0.7</span>, <span class="at">keyheight =</span> <span class="fl">0.7</span>)) <span class="sc">+</span></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">&quot;Sample&quot;</span>) <span class="sc">+</span></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>),</span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">7</span>),</span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>,</span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">6</span>, <span class="at">angle =</span> <span class="dv">90</span>),</span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>, <span class="at">angle =</span> <span class="dv">0</span>),</span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>)) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_y_continuous</span>()</span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(i, tmp_get)</span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>)) </span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>set_to_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work_facet_plot&quot;</span>, <span class="st">&quot;its18_ps_filt_facet_plot&quot;</span>, <span class="st">&quot;its18_ps_perfect_facet_plot&quot;</span>, <span class="st">&quot;its18_ps_pime_facet_plot&quot;</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span>  set_to_plot) {</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    tmp_get <span class="ot">&lt;-</span> tmp_get <span class="sc">+</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_cowplot</span>() <span class="sc">+</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> top_level, <span class="at">reverse =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">keywidth =</span> <span class="fl">0.7</span>, <span class="at">keyheight =</span> <span class="fl">0.7</span>)) <span class="sc">+</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">&quot;Sample&quot;</span>) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>),</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">7</span>),</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">6</span>, <span class="at">angle =</span> <span class="dv">90</span>),</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>, <span class="at">angle =</span> <span class="dv">0</span>),</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>)) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_y_continuous</span>()</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(i, tmp_get)</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>)) </span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <p>And now plots for the groupmeans sets. We can use the same taxa order since that should not have changed.</p>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>set_to_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work_group_plot&quot;</span>, <span class="st">&quot;its18_ps_filt_group_plot&quot;</span>, <span class="st">&quot;its18_ps_perfect_group_plot&quot;</span>, <span class="st">&quot;its18_ps_pime_group_plot&quot;</span>)</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  tmp_abund <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund_group&quot;</span>)))</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  tmp_tax_order <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_tax_ord&quot;</span>)))</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  tmp_abund<span class="sc">$</span>use_taxanames <span class="ot">&lt;-</span> tmp_tax_order</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  tmp_group_plot <span class="ot">&lt;-</span> tmp_abund<span class="sc">$</span><span class="fu">plot_bar</span>(<span class="at">use_colors =</span> its18_colvec.tax, </span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">others_color =</span> <span class="st">&quot;#323232&quot;</span>, </span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_keep =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_type_hor =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">legend_text_italic =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_size =</span> <span class="dv">10</span>, </span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">facet_color =</span> <span class="st">&quot;#cccccc&quot;</span>)</span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  tmp_group_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_group_plot&quot;</span>)) </span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_group_name, tmp_group_plot)  </span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>set_to_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work_group_plot&quot;</span>, <span class="st">&quot;its18_ps_filt_group_plot&quot;</span>, <span class="st">&quot;its18_ps_perfect_group_plot&quot;</span>, <span class="st">&quot;its18_ps_pime_group_plot&quot;</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  tmp_abund <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_me_abund_group&quot;</span>)))</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  tmp_tax_order <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_tax_ord&quot;</span>)))</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  tmp_abund<span class="sc">$</span>use_taxanames <span class="ot">&lt;-</span> tmp_tax_order</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  tmp_group_plot <span class="ot">&lt;-</span> tmp_abund<span class="sc">$</span><span class="fu">plot_bar</span>(<span class="at">use_colors =</span> its18_colvec.tax, </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">others_color =</span> <span class="st">&quot;#323232&quot;</span>, </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_keep =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_type_hor =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">legend_text_italic =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">xtext_size =</span> <span class="dv">10</span>, </span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">facet_color =</span> <span class="st">&quot;#cccccc&quot;</span>)</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>  tmp_group_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_group_plot&quot;</span>)) </span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_group_name, tmp_group_plot)  </span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <p>Let’s also add a little formatting to the groupmean plots.</p>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span>  set_to_plot) {</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> tmp_get <span class="sc">+</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">theme_cowplot</span>() <span class="sc">+</span></span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>       <span class="fu">ylab</span>(<span class="st">&quot;Relative Abundance (% total reads)&quot;</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">&quot;Temperature&quot;</span>) <span class="sc">+</span></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>),</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>,</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>)) <span class="sc">+</span> </span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">scale_y_continuous</span>()</span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(i, tmp_get)</span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-</details>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span>  set_to_plot) {</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> tmp_get <span class="sc">+</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">theme_cowplot</span>() <span class="sc">+</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>       <span class="fu">ylab</span>(<span class="st">&quot;Relative Abundance (% total reads)&quot;</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">&quot;Temperature&quot;</span>) <span class="sc">+</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>       <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>),</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>,</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>)) <span class="sc">+</span> </span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">scale_y_continuous</span>()</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(i, tmp_get)</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <ol start="10" type="1">
 <li>Finally we use the <code>patchwork</code> package to combine the two plots and customize the look.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
-<details>
-<summary>
-Show code
-</summary>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="do">## single index that acts as an index for referencing elements (variables) in a list</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="do">##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>var_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">var1 =</span> its18_data_sets,</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">var2 =</span> <span class="fu">c</span>(<span class="st">&quot;FULL&quot;</span>, <span class="st">&quot;Arbitrary filtered&quot;</span>, <span class="st">&quot;PERfect filtered&quot;</span>, <span class="st">&quot;PIME filtered&quot;</span>)</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span>  <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(var_list<span class="sc">$</span>var1)) {</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>     tmp_plot_final_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(var_list<span class="sc">$</span>var1[j], <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_&quot;</span>, top_level, <span class="st">&quot;_plot_final&quot;</span>))</span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>     tmp_set_type <span class="ot">&lt;-</span> var_list<span class="sc">$</span>var2[j]</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>     tmp_p_plot <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(var_list<span class="sc">$</span>var1[j], <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_group_plot&quot;</span>)))</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>     tmp_m_plot <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(var_list<span class="sc">$</span>var1[j], <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_facet_plot&quot;</span>)))</span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>     tmp_plot_final <span class="ot">&lt;-</span> tmp_p_plot <span class="sc">+</span> tmp_m_plot</span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>     tmp_plot_final <span class="ot">&lt;-</span> tmp_plot_final <span class="sc">+</span></span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>         <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">&quot;a&quot;</span>, </span>
-<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>                         <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">&quot;Top&quot;</span>, top_level, <span class="st">&quot;of&quot;</span>, tmp_set_type, <span class="st">&quot;data set&quot;</span>), </span>
-<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>                         <span class="co">#subtitle = &#39;Top taxa of non-filtered data&#39;,</span></span>
-<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>                         <span class="at">caption =</span> <span class="st">&quot;a) grouped by temperature.,</span></span>
-<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="st">                         b) All samples, faceted by temperature.&quot;</span>) <span class="sc">+</span> </span>
-<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>       <span class="fu">plot_layout</span>(<span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)) <span class="sc">&amp;</span></span>
-<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>       <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">13</span>),</span>
-<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>             <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>), </span>
-<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>             <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>), </span>
-<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>), </span>
-<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>)) </span>
-<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_plot_final_name, tmp_plot_final)</span>
-<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="do">## single index that acts as an index for referencing elements (variables) in a list</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="do">##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>var_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">var1 =</span> its18_data_sets,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">var2 =</span> <span class="fu">c</span>(<span class="st">&quot;FULL&quot;</span>, <span class="st">&quot;Arbitrary filtered&quot;</span>, <span class="st">&quot;PERfect filtered&quot;</span>, <span class="st">&quot;PIME filtered&quot;</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span>  <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(var_list<span class="sc">$</span>var1)) {</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>     tmp_plot_final_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(var_list<span class="sc">$</span>var1[j], <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_&quot;</span>, top_level, <span class="st">&quot;_plot_final&quot;</span>))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>     tmp_set_type <span class="ot">&lt;-</span> var_list<span class="sc">$</span>var2[j]</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>     tmp_p_plot <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(var_list<span class="sc">$</span>var1[j], <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_group_plot&quot;</span>)))</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>     tmp_m_plot <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(var_list<span class="sc">$</span>var1[j], <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_facet_plot&quot;</span>)))</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>     tmp_plot_final <span class="ot">&lt;-</span> tmp_p_plot <span class="sc">+</span> tmp_m_plot</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>     tmp_plot_final <span class="ot">&lt;-</span> tmp_plot_final <span class="sc">+</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>         <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">&quot;a&quot;</span>, </span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>                         <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">&quot;Top&quot;</span>, top_level, <span class="st">&quot;of&quot;</span>, tmp_set_type, <span class="st">&quot;data set&quot;</span>), </span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>                         <span class="co">#subtitle = &#39;Top taxa of non-filtered data&#39;,</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>                         <span class="at">caption =</span> <span class="st">&quot;a) grouped by temperature.,</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a><span class="st">                         b) All samples, faceted by temperature.&quot;</span>) <span class="sc">+</span> </span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>       <span class="fu">plot_layout</span>(<span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)) <span class="sc">&amp;</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>       <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">13</span>),</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>             <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>), </span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>             <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>), </span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>), </span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>             <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>)) </span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_plot_final_name, tmp_plot_final)</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
 </details>
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
 <p><br/></p>
 <blockquote>
 <p>It is important to note that while most of the dominant taxa are the same across the FULL, Arbitrary, PIME, and PERfect data sets, there a few key difference:</p>
@@ -2941,26 +3166,424 @@ Show code
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_work_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 5 | Dominant taxonomic groups from the FULL (unfiltered) ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="arbitrary-filtered-1" class="panel">
 <h4>Arbitrary filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_filt_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 6 | Dominant taxonomic groups from the Arbitrary filtered ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="perfect-filtered-1" class="panel">
 <h4>PERFECT filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_perfect_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 7 | Dominant taxonomic groups from the PERfect filtered ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="pime-filtered-1" class="panel">
 <h4>PIME filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_pime_tax_div_bar_plots.png" width="1240" /></p>
 </div>
+<p><small><strong>(16S rRNA) Figure 8 | Dominant taxonomic groups from the PIME filtered ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 </div>
+</div>
+<h1 id="major-bacterial-taxa-by-family">Major Bacterial taxa by Family</h1>
+<p>We also look at the relative abundance of groups within dominant Phyla. <strong>Please note</strong> these analyses are for the FULL data set only, before any type of filtering. For this analysis, we use the phyloseq object created in the Data Preparation wokflow section <a href="data-prep.html#rename-na-taxonomic-ranks">Rename NA taxonomic ranks</a> where unclassified ranks were renamed by the next highest rank. See step #1 below for an example of the taxa table structure.</p>
+<aside>
+This code <strong><em>only</em></strong> works for multiple taxa from a <em>single</em> phyloseq object.
+</aside>
+<details>
+<summary>
+<strong>Detailed workflow</strong> for assessing Bacterial families.
+</summary>
+<ol type="1">
+<li>Subset Phyla of interest.</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;files/data-prep/rdata/ssu18_ps_work.rds&quot;</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">data.frame</span>(<span class="fu">tax_table</span>(ssu18_ps_work)))[,<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<pre><code>          Kingdom          Phylum               Class
+ASV9128  Bacteria Acidobacteriota         Subgroup_22
+ASV7870  Bacteria Planctomycetota               OM190
+ASV8537  Bacteria     Chloroflexi        Anaerolineae
+ASV15357 Bacteria  Proteobacteria Gammaproteobacteria
+ASV19533 Bacteria      k_Bacteria          k_Bacteria
+ASV18180 Bacteria Planctomycetota      Planctomycetes
+                      Order              Family                 Genus
+ASV9128       c_Subgroup_22       c_Subgroup_22         c_Subgroup_22
+ASV7870             c_OM190             c_OM190               c_OM190
+ASV8537             SBR1031                 A4b                 f_A4b
+ASV15357 Diplorickettsiales Diplorickettsiaceae f_Diplorickettsiaceae
+ASV19533         k_Bacteria          k_Bacteria            k_Bacteria
+ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pre>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>ssu18_data_sets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_data_sets) {</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_proteo&quot;</span>))</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">subset_taxa</span>(tmp_get, Phylum <span class="sc">==</span> <span class="st">&quot;Proteobacteria&quot;</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>     tmp_get_taxa <span class="ot">&lt;-</span> <span class="fu">get_taxa_unique</span>(tmp_df,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">taxonomic.rank =</span> <span class="fu">rank_names</span>(tmp_df)[<span class="dv">3</span>],</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">errorIfNULL=</span><span class="cn">TRUE</span>)</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_get_taxa)</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_proteo&quot;</span>))</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<ol start="2" type="1">
+<li>Replace Phylum Proteobacteria with the Class name.</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> ssu18_data_sets) {</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_proteo_clean&quot;</span>))</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(j)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  tmp_clean <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get))</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>   <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(tmp_clean)){</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>       <span class="cf">if</span> (tmp_clean[i,<span class="dv">2</span>] <span class="sc">==</span> <span class="st">&quot;Proteobacteria&quot;</span> <span class="sc">&amp;</span> tmp_clean[i,<span class="dv">3</span>] <span class="sc">==</span> <span class="st">&quot;Alphaproteobacteria&quot;</span>){</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>           phylum <span class="ot">&lt;-</span> base<span class="sc">::</span><span class="fu">paste</span>(<span class="st">&quot;Alphaproteobacteria&quot;</span>)</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>           tmp_clean[i, <span class="dv">2</span>] <span class="ot">&lt;-</span> phylum</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>   }   <span class="cf">else</span> <span class="cf">if</span> (tmp_clean[i,<span class="dv">2</span>] <span class="sc">==</span> <span class="st">&quot;Proteobacteria&quot;</span> <span class="sc">&amp;</span> tmp_clean[i,<span class="dv">3</span>] <span class="sc">==</span> <span class="st">&quot;Gammaproteobacteria&quot;</span>){</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>           phylum <span class="ot">&lt;-</span> base<span class="sc">::</span><span class="fu">paste</span>(<span class="st">&quot;Gammaproteobacteria&quot;</span>)</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>           tmp_clean[i, <span class="dv">2</span>] <span class="ot">&lt;-</span> phylum</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>   }   <span class="cf">else</span> <span class="cf">if</span> (tmp_clean[i,<span class="dv">2</span>] <span class="sc">==</span> <span class="st">&quot;Proteobacteria&quot;</span> <span class="sc">&amp;</span> tmp_clean[i,<span class="dv">3</span>] <span class="sc">==</span> <span class="st">&quot;Zetaproteobacteria&quot;</span>){</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>              phylum <span class="ot">&lt;-</span> base<span class="sc">::</span><span class="fu">paste</span>(<span class="st">&quot;Zetaproteobacteria&quot;</span>)</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>           tmp_clean[i, <span class="dv">2</span>] <span class="ot">&lt;-</span> phylum</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>   }   <span class="cf">else</span> <span class="cf">if</span> (tmp_clean[i,<span class="dv">2</span>] <span class="sc">==</span> <span class="st">&quot;Proteobacteria&quot;</span> <span class="sc">&amp;</span> tmp_clean[i,<span class="dv">3</span>] <span class="sc">==</span> <span class="st">&quot;p_Proteobacteria&quot;</span>){</span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>           phylum <span class="ot">&lt;-</span> base<span class="sc">::</span><span class="fu">paste</span>(<span class="st">&quot;p_Proteobacteria&quot;</span>)</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>           tmp_clean[i, <span class="dv">2</span>] <span class="ot">&lt;-</span> phylum</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>       }</span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>     }</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tax_table</span>(tmp_get) <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_clean)</span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rank_names</span>(tmp_get)</span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_get)</span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">c</span>(tmp_name, tmp_get))</span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">length</span>(<span class="fu">get_taxa_unique</span>(tmp_get,</span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>                               <span class="at">taxonomic.rank =</span> <span class="fu">rank_names</span>(tmp_get)[<span class="dv">2</span>],</span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>                               <span class="at">errorIfNULL=</span><span class="cn">TRUE</span>)))</span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>  tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/taxa/rdata/&quot;</span>)</span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(tmp_get, <span class="fu">paste</span>(tmp_path, j, <span class="st">&quot;_clean.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(class, order, phylum)</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>set_to_plot <span class="ot">&lt;-</span> <span class="st">&quot;ssu18_ps_work&quot;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>tax_group <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Alphaproteobacteria&quot;</span>, <span class="st">&quot;Gammaproteobacteria&quot;</span>, </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;Acidobacteriota&quot;</span>, <span class="st">&quot;Actinobacteriota&quot;</span>, </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;Bacteroidota&quot;</span>, <span class="st">&quot;Firmicutes&quot;</span>, </span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>               <span class="st">&quot;Myxococcota&quot;</span>, <span class="st">&quot;Verrucomicrobiota&quot;</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> set_to_plot) {</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> tax_group) {</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_proteo_clean&quot;</span>)))</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  tmp_sub <span class="ot">&lt;-</span> <span class="fu">subset_taxa</span>(tmp_get, Phylum <span class="sc">==</span> j)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_&quot;</span>, j))</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_sub)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<ol start="3" type="1">
+<li>Choose the <strong>number</strong> of taxa to display and the taxonomic <strong>level</strong>. Aggregate the rest into “Other.”</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>top_hits <span class="ot">&lt;-</span> <span class="dv">12</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>top_level <span class="ot">&lt;-</span> <span class="st">&quot;Family&quot;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i)))</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  tmp_otu <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_get)))</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  tmp_otu[] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(tmp_otu, as.numeric)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  tmp_otu <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(tmp_otu)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  tmp_tax <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">data.frame</span>(<span class="fu">tax_table</span>(tmp_get)))</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  tmp_samples <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_get))</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  tmp_clean_df <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_otu, <span class="at">taxa_are_rows =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">tax_table</span>(tmp_tax),</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">sample_data</span>(tmp_samples))</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>  tmp_agg_df <span class="ot">&lt;-</span> microbiome<span class="sc">::</span><span class="fu">aggregate_top_taxa</span>(tmp_clean_df,</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>                                                    <span class="at">top =</span> top_hits,</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>                                                    <span class="at">level =</span> top_level)</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>  tmp_agg_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i, <span class="st">&quot;_agg&quot;</span>))</span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_agg_name, tmp_agg_df)</span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;_sep_agg&quot;</span>))</span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group){</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  tmp_data <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i, <span class="st">&quot;_agg&quot;</span>))</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(tmp_data)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  tmp_list <span class="ot">&lt;-</span> <span class="fu">get_taxa_unique</span>(tmp_get, <span class="at">taxonomic.rank =</span> <span class="fu">rank_names</span>(tmp_get)[<span class="dv">2</span>],</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">errorIfNULL =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(tmp_data, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_order&quot;</span>))</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_list)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i, <span class="st">&quot;_agg_order&quot;</span>)))</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;#########&quot;</span>, i, <span class="st">&quot;########&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  tmp_print <span class="ot">&lt;-</span> <span class="fu">c</span>(tmp_get)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(tmp_print, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;####################################################&quot;</span>)</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(i, j)</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;c_Alphaproteobacteria&quot;</span>, <span class="st">&quot;o_Elsterales&quot;</span>, <span class="st">&quot;o_Azospirillales&quot;</span>, <span class="st">&quot;Rhizobiales_Incertae_Sedis&quot;</span>, <span class="st">&quot;Xanthobacteraceae&quot;</span>, <span class="st">&quot;Sphingomonadaceae&quot;</span>, <span class="st">&quot;Rhizobiaceae&quot;</span>, <span class="st">&quot;Micropepsaceae&quot;</span>, <span class="st">&quot;Methyloligellaceae&quot;</span>, <span class="st">&quot;KF-JG30-B3&quot;</span>, <span class="st">&quot;Hyphomicrobiaceae&quot;</span>, <span class="st">&quot;Dongiaceae&quot;</span>))</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Alphaproteobacteria&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;c_Gammaproteobacteria&quot;</span>, <span class="st">&quot;o_PLTA13&quot;</span>, <span class="st">&quot;o_CCD24&quot;</span>, <span class="st">&quot;Unknown_Family&quot;</span>, <span class="st">&quot;Xanthomonadaceae&quot;</span>, <span class="st">&quot;TRA3-20&quot;</span>, <span class="st">&quot;Steroidobacteraceae&quot;</span>, <span class="st">&quot;SC-I-84&quot;</span>, <span class="st">&quot;Nitrosomonadaceae&quot;</span>, <span class="st">&quot;Comamonadaceae&quot;</span>, <span class="st">&quot;Burkholderiaceae&quot;</span>, <span class="st">&quot;B1-7BS&quot;</span>))</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Gammaproteobacteria&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;c_Subgroup_22&quot;</span>, <span class="st">&quot;c_Subgroup_25&quot;</span>, <span class="st">&quot;c_Subgroup_5&quot;</span>, <span class="st">&quot;o_Vicinamibacterales&quot;</span>, <span class="st">&quot;o_11-24&quot;</span>, <span class="st">&quot;o_Subgroup_17&quot;</span>, <span class="st">&quot;o_Subgroup_2&quot;</span>, <span class="st">&quot;o_Subgroup_7&quot;</span>, <span class="st">&quot;o_Acidobacteriales&quot;</span>, <span class="st">&quot;Vicinamibacteraceae&quot;</span>, <span class="st">&quot;Solibacteraceae&quot;</span>, <span class="st">&quot;Pyrinomonadaceae&quot;</span>))</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Acidobacteriota&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;c_MB-A2-108&quot;</span>, <span class="st">&quot;o_IMCC26256&quot;</span>, <span class="st">&quot;o_Gaiellales&quot;</span>, <span class="st">&quot;o_Frankiales&quot;</span>, <span class="st">&quot;Streptomycetaceae&quot;</span>, <span class="st">&quot;Solirubrobacteraceae&quot;</span>, <span class="st">&quot;Nocardioidaceae&quot;</span>, <span class="st">&quot;Mycobacteriaceae&quot;</span>, <span class="st">&quot;Micromonosporaceae&quot;</span>, <span class="st">&quot;Gaiellaceae&quot;</span>, <span class="st">&quot;Acidothermaceae&quot;</span>, <span class="st">&quot;67-14&quot;</span>))</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Actinobacteriota&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;c_SJA-28&quot;</span>, <span class="st">&quot;o_Chitinophagales&quot;</span>, <span class="st">&quot;Sphingobacteriaceae&quot;</span>, <span class="st">&quot;Saprospiraceae&quot;</span>, <span class="st">&quot;Microscillaceae&quot;</span>, <span class="st">&quot;Hymenobacteraceae&quot;</span>, <span class="st">&quot;Flavobacteriaceae&quot;</span>, <span class="st">&quot;Cytophagaceae&quot;</span>, <span class="st">&quot;Chitinophagaceae&quot;</span>, <span class="st">&quot;BSV26&quot;</span>, <span class="st">&quot;env.OPS_17&quot;</span>, <span class="st">&quot;AKYH767&quot;</span>))</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Bacteroidota&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;p_Firmicutes&quot;</span>, <span class="st">&quot;c_Bacilli&quot;</span>, <span class="st">&quot;o_Bacillales&quot;</span>, <span class="st">&quot;Thermoactinomycetaceae&quot;</span>, <span class="st">&quot;type_III&quot;</span>, <span class="st">&quot;Paenibacillaceae&quot;</span>, <span class="st">&quot;Lachnospiraceae&quot;</span>, <span class="st">&quot;Hungateiclostridiaceae&quot;</span>, <span class="st">&quot;Clostridiaceae&quot;</span>, <span class="st">&quot;Bacillaceae&quot;</span>, <span class="st">&quot;Alicyclobacillaceae&quot;</span>, <span class="st">&quot;Planococcaceae&quot;</span>))</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Firmicutes&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;p_Myxococcota&quot;</span>, <span class="st">&quot;c_bacteriap25&quot;</span>, <span class="st">&quot;c_Polyangia&quot;</span>, <span class="st">&quot;o_mle1-27&quot;</span>, <span class="st">&quot;o_MSB-4B10&quot;</span>, <span class="st">&quot;Sandaracinaceae&quot;</span>, <span class="st">&quot;Polyangiaceae&quot;</span>, <span class="st">&quot;Phaselicystidaceae&quot;</span>, <span class="st">&quot;Myxococcaceae&quot;</span>, <span class="st">&quot;Haliangiaceae&quot;</span>, <span class="st">&quot;BIrii41&quot;</span>, <span class="st">&quot;Anaeromyxobacteraceae&quot;</span>))</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Myxococcota&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>tmp_order <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;Other&quot;</span>, <span class="st">&quot;c_Verrucomicrobiae&quot;</span>, <span class="st">&quot;o_Chlamydiales&quot;</span>, <span class="st">&quot;o_LD1-PA32&quot;</span>, <span class="st">&quot;o_S-BQ2-57_soil_group&quot;</span>, <span class="st">&quot;Xiphinematobacteraceae&quot;</span>, <span class="st">&quot;Simkaniaceae&quot;</span>, <span class="st">&quot;Pedosphaeraceae&quot;</span>, <span class="st">&quot;Parachlamydiaceae&quot;</span>, <span class="st">&quot;Opitutaceae&quot;</span>, <span class="st">&quot;Omnitrophaceae&quot;</span>, <span class="st">&quot;cvE6&quot;</span>, <span class="st">&quot;Chthoniobacteraceae&quot;</span>))</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a><span class="fu">assign</span>(<span class="fu">paste</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, <span class="st">&quot;Verrucomicrobiota&quot;</span>, <span class="st">&quot;_agg_order&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), tmp_order) </span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a><span class="do">###################</span></span></code></pre></div>
+</div>
+<ol start="4" type="1">
+<li>Now, transform the data to relative abundance.</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  tmp_agg <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i, <span class="st">&quot;_agg&quot;</span>))</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  tmp_order <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(tmp_agg, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_order&quot;</span>))</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  tmp_get_agg <span class="ot">&lt;-</span> <span class="fu">get</span>(tmp_agg)</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  tmp_get_order <span class="ot">&lt;-</span> <span class="fu">get</span>(tmp_order)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  tmp_df <span class="ot">&lt;-</span> tmp_get_agg <span class="sc">%&gt;%</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">transform_sample_counts</span>(<span class="cf">function</span>(x) {x<span class="sc">/</span><span class="fu">sum</span>(x)} ) <span class="sc">%&gt;%</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>            <span class="fu">psmelt</span>()</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  tmp_df[[top_level]] <span class="ot">&lt;-</span> gdata<span class="sc">::</span><span class="fu">reorder.factor</span>(tmp_df[[top_level]],</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>                                                  <span class="at">new.order =</span> <span class="fu">rev</span>(tmp_get_order))</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>  tmp_df <span class="ot">&lt;-</span> tmp_df <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">get</span>(top_level))</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(tmp_agg, <span class="sc">~</span><span class="fu">paste0</span>(., <span class="st">&quot;_tax&quot;</span>))</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_df)</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#print(c(i, tmp_name, tmp_agg))</span></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i, <span class="st">&quot;_agg_tax&quot;</span>)))</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  tmp_levels <span class="ot">&lt;-</span> <span class="fu">levels</span>(tmp_get[[top_level]])</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">c</span>(i, tmp_levels))</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<ol start="5" type="1">
+<li>Plot the data for a single phyloseq object. Here you use an aggregated tax file.</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>      tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, i, <span class="st">&quot;_agg_tax&quot;</span>)))</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>      tmp_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(tmp_get, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">factor</span>(TEMP), </span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">y =</span> Abundance, <span class="at">fill =</span> <span class="fu">get</span>(top_level))) <span class="sc">+</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="at">position =</span> <span class="st">&quot;fill&quot;</span>) <span class="sc">+</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>          <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> ssu18_colvec.tax) <span class="sc">+</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>          <span class="co">#scale_x_discrete(&quot;Temperature&quot;, expand = waiver(), position = &quot;bottom&quot;, drop = FALSE) +</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>          <span class="fu">theme_cowplot</span>() <span class="sc">+</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>          <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> top_level)) <span class="sc">+</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>          <span class="co">#guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ylab</span>(<span class="st">&quot;Relative Abundance (% total reads)&quot;</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">&quot;Temperature&quot;</span>) <span class="sc">+</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>          <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>                <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>                <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>                <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>),</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>                <span class="co">#axis.text = element_text(size = 6),</span></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>                <span class="co">#axis.title = element_text(size = 8),</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>                <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)</span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>      tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_plot&quot;</span>))</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">assign</span>(tmp_name, tmp_plot)</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<ol start="6" type="1">
+<li>Plot the data for multiple taxa. Here again you use an aggregated tax file. This code can be used to generate plots for multiple data frames by adding the base phyloseq names to the <code>ssu18_split_df</code> variable. This code will also facet the plots by a metadata variable. If you do not want to facet remove the line beginning with <code>facet_grid</code>.</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  tmp_level_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, .)))</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  tmp_level <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_level_get))</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  tmp_level <span class="ot">&lt;-</span> tmp_level[<span class="fu">order</span>(tmp_level<span class="sc">$</span>TEMP), ]</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  tmp_level <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(tmp_level<span class="sc">$</span>SamName)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>  tmp_agg_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, .,  <span class="st">&quot;_agg_tax&quot;</span>))</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(tmp_agg_name)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  tmp_df <span class="ot">&lt;-</span> reshape<span class="sc">::</span><span class="fu">melt</span>(tmp_get, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">&quot;Sample&quot;</span>, <span class="st">&quot;TEMP&quot;</span>, <span class="st">&quot;Abundance&quot;</span>, <span class="st">&quot;Family&quot;</span>))</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  tmp_plot_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_plot_melt&quot;</span>))</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>  tmp_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(tmp_df,</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>                <span class="fu">aes</span>(<span class="at">x =</span> Sample,</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>                    <span class="at">y =</span> Abundance, <span class="at">fill =</span> <span class="fu">get</span>(top_level))) <span class="sc">+</span></span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>(. <span class="sc">~</span>TEMP, <span class="at">scale =</span> <span class="st">&quot;free_x&quot;</span>, <span class="at">space =</span> <span class="st">&quot;free_x&quot;</span>)<span class="sc">+</span></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="at">position =</span> <span class="st">&quot;fill&quot;</span>)  <span class="sc">+</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> ssu18_colvec.tax) <span class="sc">+</span></span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">#scale_x_discrete(&quot;Treatment&quot;, expand = waiver(),</span></span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">#                 position = &quot;bottom&quot;, drop = FALSE, limits = tmp_level) +</span></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_cowplot</span>() <span class="sc">+</span></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">guides</span>(<span class="at">fill =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> top_level, <span class="at">reverse =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>                               <span class="at">keywidth =</span> <span class="fl">0.7</span>, <span class="at">keyheight =</span> <span class="fl">0.7</span>)) <span class="sc">+</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(), <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb43-26"><a href="#cb43-26" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb43-27"><a href="#cb43-27" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>),</span>
+<span id="cb43-28"><a href="#cb43-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>,</span>
+<span id="cb43-29"><a href="#cb43-29" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.text = element_text(size = 6),</span></span>
+<span id="cb43-30"><a href="#cb43-30" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.title = element_text(size = 8),</span></span>
+<span id="cb43-31"><a href="#cb43-31" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.key.size = unit(1.5, &quot;cm&quot;),</span></span>
+<span id="cb43-32"><a href="#cb43-32" aria-hidden="true" tabindex="-1"></a>        <span class="co">#axis.text.y = element_text(size = 6),</span></span>
+<span id="cb43-33"><a href="#cb43-33" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>)</span>
+<span id="cb43-34"><a href="#cb43-34" aria-hidden="true" tabindex="-1"></a>        <span class="co">#strip.text = element_text(size = 8, angle = 0),</span></span>
+<span id="cb43-35"><a href="#cb43-35" aria-hidden="true" tabindex="-1"></a>        <span class="co">#axis.title = element_text(size = 8)</span></span>
+<span id="cb43-36"><a href="#cb43-36" aria-hidden="true" tabindex="-1"></a>        ) <span class="sc">+</span> </span>
+<span id="cb43-37"><a href="#cb43-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="cn">NULL</span>)</span>
+<span id="cb43-38"><a href="#cb43-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb43-39"><a href="#cb43-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_plot_name, tmp_plot)</span>
+<span id="cb43-40"><a href="#cb43-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb43-41"><a href="#cb43-41" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<ol start="7" type="1">
+<li>Finally we use the <code>patchwork</code> package to combine the two plots and customize the look.</li>
+</ol>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  tmp_plot_main <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_plot&quot;</span>)))</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  tmp_plot_melt <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_plot_melt&quot;</span>)))</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  tmp_final <span class="ot">&lt;-</span> tmp_plot_main <span class="sc">+</span> tmp_plot_melt</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  tmp_final <span class="ot">&lt;-</span> tmp_final <span class="sc">+</span> </span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">&#39;a&#39;</span>, </span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">title =</span> i) <span class="sc">+</span> </span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#subtitle = &#39;Top taxa of non-filtered data&#39;,</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#caption = &#39;A) grouped by temperature.,</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>                    <span class="co">#B) All samples, faceted by temperature.&#39;) + </span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot_layout</span>(<span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)) <span class="sc">&amp;</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>),</span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">1</span>),</span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">6</span>),</span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">7</span>),</span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">6</span>),</span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>, <span class="at">angle =</span> <span class="dv">0</span>),</span>
+<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">7</span>),</span>
+<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>),</span>
+<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb44-21"><a href="#cb44-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.position = &quot;right&quot;)</span></span>
+<span id="cb44-22"><a href="#cb44-22" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.position = &quot;right&quot;,</span></span>
+<span id="cb44-23"><a href="#cb44-23" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.title = element_text(size = rel(1)),</span></span>
+<span id="cb44-24"><a href="#cb44-24" aria-hidden="true" tabindex="-1"></a>        <span class="co">#legend.text = element_text(size = rel(1)))</span></span>
+<span id="cb44-25"><a href="#cb44-25" aria-hidden="true" tabindex="-1"></a>  tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span><span class="fu">paste0</span>(set_to_plot, <span class="st">&quot;_&quot;</span>, ., <span class="st">&quot;_final_plot&quot;</span>))</span>
+<span id="cb44-26"><a href="#cb44-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_name, tmp_final)</span>
+<span id="cb44-27"><a href="#cb44-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb44-28"><a href="#cb44-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>taxa_to_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Acidobacteriota&quot;</span>, <span class="st">&quot;Actinobacteriota&quot;</span>, <span class="st">&quot;Alphaproteobacteria&quot;</span>, </span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;Bacteroidota&quot;</span>, <span class="st">&quot;Firmicutes&quot;</span>, <span class="st">&quot;Gammaproteobacteria&quot;</span>, <span class="st">&quot;Myxococcota&quot;</span>, </span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>                  <span class="st">&quot;Verrucomicrobiota&quot;</span>)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> taxa_to_plot) {</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;ssu18_ps_work_&quot;</span>, i, <span class="st">&quot;_final_plot&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>)))</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_get, </span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">file =</span> <span class="fu">paste0</span>(<span class="st">&quot;files/taxa/figures/&quot;</span>, i, <span class="st">&quot;_tax_div_bar_plots.png&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), </span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">height =</span> <span class="dv">14</span>, <span class="at">width =</span> <span class="dv">21</span>, <span class="at">units =</span> <span class="st">&#39;cm&#39;</span>, <span class="at">bg =</span> <span class="st">&quot;white&quot;</span>)</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(tmp_get, </span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">file =</span> <span class="fu">paste0</span>(<span class="st">&quot;files/taxa/figures/&quot;</span>, i, <span class="st">&quot;_tax_div_bar_plots.pdf&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>), </span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">height =</span> <span class="dv">14</span>, <span class="at">width =</span> <span class="dv">21</span>, <span class="at">units =</span> <span class="st">&#39;cm&#39;</span>, <span class="at">bg =</span> <span class="st">&quot;white&quot;</span>)</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+</details>
+<p><br/></p>
+<div class="l-body-outset">
+<div class="panelset">
+<section id="alphaproteobacteria" class="panel">
+<h4>Alphaproteobacteria</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/ggg-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 9 | Alphaproteobacteria family plots.</strong></small></p>
+</section>
+<section id="gammaproteobacteria" class="panel">
+<h4>Gammaproteobacteria</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-68-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 10 | Gammaproteobacteria family plots.</strong></small></p>
+</section>
+<section id="acidobacteriota" class="panel">
+<h4>Acidobacteriota</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-69-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 11 | Acidobacteriota family plots.</strong></small></p>
+</section>
+<section id="actinobacteriota" class="panel">
+<h4>Actinobacteriota</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-70-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 12 | Actinobacteriota family plots.</strong></small></p>
+</section>
+<section id="bacteroidota" class="panel">
+<h4>Bacteroidota</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-71-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 13 | Bacteroidota family plots.</strong></small></p>
+</section>
+<section id="firmicutes" class="panel">
+<h4>Firmicutes</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-72-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 14 | Firmicutes family plots.</strong></small></p>
+</section>
+<section id="myxococcota" class="panel">
+<h4>Myxococcota</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-73-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 15 | Myxococcota family plots.</strong></small></p>
+</section>
+<section id="verrucomicrobiota" class="panel">
+<h4>Verrucomicrobiota</h4>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="taxa_files/figure-html5/unnamed-chunk-74-1.png" width="624" /></p>
+</div>
+<p><small><strong>(16S rRNA) Figure 16 | Verrucomicrobiota family plots.</strong></small></p>
+</section>
+</div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
 </div>
 <h2 class="appendix" id="source-code">Source Code</h2>
 <p>The source code for this page can be accessed on GitHub by <a href="https://github.com/sweltr/high-temp/blob/master/taxa.Rmd">clicking this link</a>.</p>

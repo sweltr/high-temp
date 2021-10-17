@@ -81,21 +81,21 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 </style>
 
   <!--radix_placeholder_meta_tags-->
-  <title>sweltr: 5 Alpha Diversity Estimates</title>
+  <title>sweltr: 5. Alpha Diversity Estimates</title>
 
 
   <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="sweltr: 5 Alpha Diversity Estimates"/>
+  <meta property="og:title" content="sweltr: 5. Alpha Diversity Estimates"/>
   <meta property="og:type" content="article"/>
   <meta property="og:locale" content="en_US"/>
   <meta property="og:site_name" content="sweltr"/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="sweltr: 5 Alpha Diversity Estimates"/>
+  <meta property="twitter:title" content="sweltr: 5. Alpha Diversity Estimates"/>
 
   <!--/radix_placeholder_meta_tags-->
   
@@ -104,7 +104,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","descriptiokabn","bibliography","output"]}},"value":[{"type":"character","attributes":{},"value":["5 Alpha Diversity Estimates"]},{"type":"character","attributes":{},"value":["Reproducible workflow for ... In this workflow, ....\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","descriptiokabn","bibliography","output"]}},"value":[{"type":"character","attributes":{},"value":["5. Alpha Diversity Estimates"]},{"type":"character","attributes":{},"value":["Reproducible workflow to assess alpha diversity across temperature treatments.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -455,6 +455,265 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet"/>
   <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet"/>
   <script src="site_libs/headroom-0.9.4/headroom.min.js"></script>
+  <script src="site_libs/autocomplete-0.37.1/autocomplete.min.js"></script>
+  <script src="site_libs/fuse-6.4.1/fuse.min.js"></script>
+
+  <script type="application/javascript">
+
+  function getMeta(metaName) {
+    var metas = document.getElementsByTagName('meta');
+    for (let i = 0; i < metas.length; i++) {
+      if (metas[i].getAttribute('name') === metaName) {
+        return metas[i].getAttribute('content');
+      }
+    }
+    return '';
+  }
+
+  function offsetURL(url) {
+    var offset = getMeta('distill:offset');
+    return offset ? offset + '/' + url : url;
+  }
+
+  function createFuseIndex() {
+
+    // create fuse index
+    var options = {
+      keys: [
+        { name: 'title', weight: 20 },
+        { name: 'categories', weight: 15 },
+        { name: 'description', weight: 10 },
+        { name: 'contents', weight: 5 },
+      ],
+      ignoreLocation: true,
+      threshold: 0
+    };
+    var fuse = new window.Fuse([], options);
+
+    // fetch the main search.json
+    return fetch(offsetURL('search.json'))
+      .then(function(response) {
+        if (response.status == 200) {
+          return response.json().then(function(json) {
+            // index main articles
+            json.articles.forEach(function(article) {
+              fuse.add(article);
+            });
+            // download collections and index their articles
+            return Promise.all(json.collections.map(function(collection) {
+              return fetch(offsetURL(collection)).then(function(response) {
+                if (response.status === 200) {
+                  return response.json().then(function(articles) {
+                    articles.forEach(function(article) {
+                      fuse.add(article);
+                    });
+                  })
+                } else {
+                  return Promise.reject(
+                    new Error('Unexpected status from search index request: ' +
+                              response.status)
+                  );
+                }
+              });
+            })).then(function() {
+              return fuse;
+            });
+          });
+
+        } else {
+          return Promise.reject(
+            new Error('Unexpected status from search index request: ' +
+                        response.status)
+          );
+        }
+      });
+  }
+
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+
+    // get search element (bail if we don't have one)
+    var searchEl = window.document.getElementById('distill-search');
+    if (!searchEl)
+      return;
+
+    createFuseIndex()
+      .then(function(fuse) {
+
+        // make search box visible
+        searchEl.classList.remove('hidden');
+
+        // initialize autocomplete
+        var options = {
+          autoselect: true,
+          hint: false,
+          minLength: 2,
+        };
+        window.autocomplete(searchEl, options, [{
+          source: function(query, callback) {
+            const searchOptions = {
+              isCaseSensitive: false,
+              shouldSort: true,
+              minMatchCharLength: 2,
+              limit: 10,
+            };
+            var results = fuse.search(query, searchOptions);
+            callback(results
+              .map(function(result) { return result.item; })
+            );
+          },
+          templates: {
+            suggestion: function(suggestion) {
+              var img = suggestion.preview && Object.keys(suggestion.preview).length > 0
+                ? `<img src="${offsetURL(suggestion.preview)}"</img>`
+                : '';
+              var html = `
+                <div class="search-item">
+                  <h3>${suggestion.title}</h3>
+                  <div class="search-item-description">
+                    ${suggestion.description || ''}
+                  </div>
+                  <div class="search-item-preview">
+                    ${img}
+                  </div>
+                </div>
+              `;
+              return html;
+            }
+          }
+        }]).on('autocomplete:selected', function(event, suggestion) {
+          window.location.href = offsetURL(suggestion.path);
+        });
+        // remove inline display style on autocompleter (we want to
+        // manage responsive display via css)
+        $('.algolia-autocomplete').css("display", "");
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+
+  });
+
+  </script>
+
+  <style type="text/css">
+
+  .nav-search {
+    font-size: x-small;
+  }
+
+  /* Algolioa Autocomplete */
+
+  .algolia-autocomplete {
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: sub;
+    background-color: white;
+    color: black;
+    padding: 6px;
+    padding-top: 8px;
+    padding-bottom: 0;
+    border-radius: 6px;
+    border: 1px #0F2E3D solid;
+    width: 180px;
+  }
+
+
+  @media screen and (max-width: 768px) {
+    .distill-site-nav .algolia-autocomplete {
+      display: none;
+      visibility: hidden;
+    }
+    .distill-site-nav.responsive .algolia-autocomplete {
+      display: inline-block;
+      visibility: visible;
+    }
+    .distill-site-nav.responsive .algolia-autocomplete .aa-dropdown-menu {
+      margin-left: 0;
+      width: 400px;
+      max-height: 400px;
+    }
+  }
+
+  .algolia-autocomplete .aa-input, .algolia-autocomplete .aa-hint {
+    width: 90%;
+    outline: none;
+    border: none;
+  }
+
+  .algolia-autocomplete .aa-hint {
+    color: #999;
+  }
+  .algolia-autocomplete .aa-dropdown-menu {
+    width: 550px;
+    max-height: 70vh;
+    overflow-x: visible;
+    overflow-y: scroll;
+    padding: 5px;
+    margin-top: 3px;
+    margin-left: -150px;
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #999;
+    border-top: none;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion {
+    cursor: pointer;
+    padding: 5px 4px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion:last-of-type {
+    border-bottom: none;
+    margin-bottom: 2px;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item {
+    overflow: hidden;
+    font-size: 0.8em;
+    line-height: 1.4em;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item h3 {
+    font-size: 1rem;
+    margin-block-start: 0;
+    margin-block-end: 5px;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-description {
+    display: inline-block;
+    overflow: hidden;
+    height: 2.8em;
+    width: 80%;
+    margin-right: 4%;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview {
+    display: inline-block;
+    width: 15%;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img {
+    height: 3em;
+    width: auto;
+    display: none;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img[src] {
+    display: initial;
+  }
+
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion.aa-cursor {
+    background-color: #eee;
+  }
+  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion em {
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  </style>
+
+
   <!--/radix_placeholder_navigation_in_header-->
   <!--radix_placeholder_distill-->
 
@@ -2065,7 +2324,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"5 Alpha Diversity Estimates","authors":[]}
+{"title":"5. Alpha Diversity Estimates","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2099,13 +2358,15 @@ B. Diversity Workflows
 <a href="taxa.html">4. Taxonomic</a>
 <a href="alpha.html">5. Alpha Diversity</a>
 <a href="beta.html">6. Beta Diversity</a>
-<a href="da.html">7. DA ASVs &amp; OTUs</a>
+<a href="da.html">7. DA ASVs &amp; Taxa</a>
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<a href="data-availability.html">Data Products</a>
+<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
 </div>
 <div class="nav-right">
+<a href="data-availability.html">Data Products</a>
+<a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
 </a>
@@ -2118,7 +2379,7 @@ B. Diversity Workflows
 <!--/radix_placeholder_site_before_body-->
 
 <div class="d-title">
-<h1>5 Alpha Diversity Estimates</h1>
+<h1>5. Alpha Diversity Estimates</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
 
@@ -2162,55 +2423,36 @@ B. Diversity Workflows
 </div>
 <details>
 <summary>
-Click here for setup information.
+<strong>Click here</strong> for setup information.
 </summary>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">eval =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">119</span>)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#library(conflicted)</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(phyloseq); <span class="fu">packageVersion</span>(<span class="st">&quot;phyloseq&quot;</span>)</span></code></pre></div>
-<pre><code>[1] &#39;1.36.0&#39;</code></pre>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Biostrings); <span class="fu">packageVersion</span>(<span class="st">&quot;Biostrings&quot;</span>)</span></code></pre></div>
-<pre><code>[1] &#39;2.60.2&#39;</code></pre>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, DT, ampvis2, hilldiv, </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>               microbiome, phytools, phangorn, </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>               pairwiseAdonis, codefolder, naniar, </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>               labdsv, patchwork, agricolae, ggpubr,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>               reactable, downloadthis, captioner,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">install =</span> <span class="cn">FALSE</span>, <span class="at">update =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_plot_jjs.R&quot;</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_jjs.R&quot;</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">999</span>)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_current<span class="sc">$</span><span class="fu">get</span>(<span class="fu">c</span>(</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache&quot;</span>,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.path&quot;</span>,</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.rebuild&quot;</span>,</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;dependson&quot;</span>,</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;autodep&quot;</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div>
-<pre><code>$cache
-[1] 0
-
-$cache.path
-[1] &quot;alpha_cache/html5/&quot;
-
-$cache.rebuild
-[1] FALSE
-
-$dependson
-NULL
-
-$autodep
-[1] FALSE</code></pre>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(phyloseq); <span class="fu">packageVersion</span>(<span class="st">&quot;phyloseq&quot;</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Biostrings); <span class="fu">packageVersion</span>(<span class="st">&quot;Biostrings&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, DT, ampvis2, hilldiv, </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>               microbiome, phytools, phangorn, </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>               pairwiseAdonis, codefolder, naniar, </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>               labdsv, patchwork, agricolae, ggpubr,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>               reactable, downloadthis, captioner,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">install =</span> <span class="cn">FALSE</span>, <span class="at">update =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_plot_jjs.R&quot;</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_jjs.R&quot;</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">999</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_current<span class="sc">$</span><span class="fu">get</span>(<span class="fu">c</span>(</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache&quot;</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.path&quot;</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;cache.rebuild&quot;</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;dependson&quot;</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;autodep&quot;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 </details>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
@@ -2255,20 +2497,20 @@ $autodep
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ssu18_alpha_ds <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="st">&quot;ssu18_ps_filt&quot;</span>, <span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;ssu18_ps_pime&quot;</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">transform_sample_counts</span>(<span class="fu">get</span>(i), <span class="cf">function</span>(otu) otu<span class="sc">/</span><span class="fu">sum</span>(otu))</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  tmp_ps<span class="sc">@</span>phy_tree <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  tmp_ps_norm <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  tmp_asv <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_ps_norm)))</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_norm&quot;</span>))</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_ps_norm)</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  tmp_asv_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>))</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_asv_name, tmp_asv)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ssu18_alpha_ds <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ssu18_ps_work&quot;</span>, <span class="st">&quot;ssu18_ps_filt&quot;</span>, <span class="st">&quot;ssu18_ps_perfect&quot;</span>, <span class="st">&quot;ssu18_ps_pime&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">transform_sample_counts</span>(<span class="fu">get</span>(i), <span class="cf">function</span>(otu) otu<span class="sc">/</span><span class="fu">sum</span>(otu))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  tmp_ps<span class="sc">@</span>phy_tree <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  tmp_ps_norm <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  tmp_asv <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_ps_norm)))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_norm&quot;</span>))</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_ps_norm)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  tmp_asv_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>))</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_asv_name, tmp_asv)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </details>
 </div>
 <p>Next, we run the analysis for all three metrics on the data sets (without a tree).</p>
@@ -2277,20 +2519,20 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> qvalue) {</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> ssu18_alpha_ds) {</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>     tmp_asv <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">hill_div</span>(tmp_asv, <span class="at">qvalue =</span> i))</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> tmp_df <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;tmp_name&quot;</span> <span class="ot">=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                              tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;SamName&quot;</span>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h&quot;</span>, i))</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_h&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> qvalue) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> ssu18_alpha_ds) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>     tmp_asv <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">hill_div</span>(tmp_asv, <span class="at">qvalue =</span> i))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> tmp_df <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;tmp_name&quot;</span> <span class="ot">=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                              tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;SamName&quot;</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h&quot;</span>, i))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_h&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>And make summary tables to add back into each <code>ps</code> object.</p>
@@ -2299,19 +2541,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>     tmp_obs <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h0&quot;</span>)))</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>     tmp_sha <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h1&quot;</span>)))</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>     tmp_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h2&quot;</span>)))</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_obs, tmp_sha, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">left_join</span>(., tmp_sim, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;Observed&quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Shannon_exp&quot;</span> <span class="ot">=</span> <span class="dv">3</span>, <span class="st">&quot;InvSimpson&quot;</span> <span class="ot">=</span> <span class="dv">4</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>))</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_hill)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_hill&quot;</span>)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>     tmp_obs <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h0&quot;</span>)))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>     tmp_sha <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h1&quot;</span>)))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>     tmp_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h2&quot;</span>)))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_obs, tmp_sha, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">left_join</span>(., tmp_sim, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;Observed&quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Shannon_exp&quot;</span> <span class="ot">=</span> <span class="dv">3</span>, <span class="st">&quot;InvSimpson&quot;</span> <span class="ot">=</span> <span class="dv">4</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_hill)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_hill&quot;</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </details>
 </div>
 <p>And then create the new objects with the diversity data.</p>
@@ -2320,26 +2562,26 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>     tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>)))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(<span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps)),</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                                         tmp_hill, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>)</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp<span class="sc">$</span>ID <span class="ot">&lt;-</span> tmp_hill_samp<span class="sc">$</span>SamName</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> tmp_hill_samp <span class="sc">%&gt;%</span>  tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>     tmp_ps2 <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_ps),</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">sample_data</span>(tmp_hill_samp),</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tax_table</span>(tmp_ps),</span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">phy_tree</span>(tmp_ps))</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(i, tmp_ps2)</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>     tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/alpha/rdata/&quot;</span>)</span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>     <span class="fu">saveRDS</span>(tmp_ps2, <span class="fu">paste</span>(tmp_path, i, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>     tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>)))</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(<span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps)),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                                         tmp_hill, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp<span class="sc">$</span>ID <span class="ot">&lt;-</span> tmp_hill_samp<span class="sc">$</span>SamName</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> tmp_hill_samp <span class="sc">%&gt;%</span>  tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>     tmp_ps2 <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_ps),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">sample_data</span>(tmp_hill_samp),</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tax_table</span>(tmp_ps),</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">phy_tree</span>(tmp_ps))</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(i, tmp_ps2)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>     tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/alpha/rdata/&quot;</span>)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>     <span class="fu">saveRDS</span>(tmp_ps2, <span class="fu">paste</span>(tmp_path, i, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
@@ -2363,8 +2605,8 @@ Show code
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-page">
-<div id="htmlwidget-9eceb20dc2a931752ae4" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-9eceb20dc2a931752ae4">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"Sample_ID":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W3C","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P09_D00_010_W8E","P10_D00_010_C0E"],"Observed":[2371,1610,2272,2356,1575,2040,1663,2124,3065,2010,2157,2441,2386,813,2066],"Observed_fi":[831,620,884,922,422,802,680,572,1011,843,771,813,874,376,670],"Observed_pe":[707,563,737,764,411,663,574,661,857,725,671,681,751,332,571],"Observed_pi":[502,322,590,596,224,570,499,289,664,516,276,594,563,170,491],"Shannon_exp":[760.7,236.1,781.1,686.8,501,797.8,578.8,307.3,1098.4,598.8,560.8,973.3,680.1,375.3,886.8],"Shannon_exp_fi":[385.1,127.8,437.1,373.7,181,439.4,329.4,102.4,518.7,353.4,284.2,464.8,352.7,165.6,416.5],"Shannon_exp_pe":[353.4,126.5,397.4,337.3,211.9,388.4,299.2,146.9,481.3,327.5,270.3,419.8,334.5,149.9,379.4],"Shannon_exp_pi":[226.3,59.2,291.2,235,90.1,309.2,246.1,47.9,324.7,208,88.1,331.3,224.4,67.9,298.3],"InvSimpson":[200.3,25.5,261.5,159.4,153.3,272,201.2,27.3,309.4,146.8,91.5,394.2,168.5,120.2,427.6],"InvSimpson_fi":[128,18.9,178.5,108.7,69.2,178.8,139.5,14.9,182,103.7,60.2,230,110.3,55.7,242.8],"InvSimpson_pe":[123.6,19.1,171.6,103.8,82.6,166.8,132.6,18.5,179.7,99.7,60.2,220.5,109.4,56.8,231.4],"InvSimpson_pi":[84.2,12,129.3,75.8,38.6,130.7,111,9.6,120.6,67.5,24.4,168.7,76.5,26.4,174.7]},"columns":[{"accessor":"Sample_ID","name":"Sample_ID","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W3C","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P09_D00_010_W8E","P10_D00_010_C0E"],"header":"Sample ID","minWidth":150,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Observed","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["2371","1610","2272","2356","1575","2040","1663","2124","3065","2010","2157","2441","2386","813","2066"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["831","620","884","922","422","802","680","572","1011","843","771","813","874","376","670"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["707","563","737","764","411","663","574","661","857","725","671","681","751","332","571"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["502","322","590","596","224","570","499","289","664","516","276","594","563","170","491"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Shannon_exp","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["760.7","236.1","781.1","686.8","501","797.8","578.8","307.3","1098.4","598.8","560.8","973.3","680.1","375.3","886.8"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["385.1","127.8","437.1","373.7","181","439.4","329.4","102.4","518.7","353.4","284.2","464.8","352.7","165.6","416.5"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["353.4","126.5","397.4","337.3","211.9","388.4","299.2","146.9","481.3","327.5","270.3","419.8","334.5","149.9","379.4"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["226.3","59.2","291.2","235","90.1","309.2","246.1","47.9","324.7","208","88.1","331.3","224.4","67.9","298.3"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"InvSimpson","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["200.3","25.5","261.5","159.4","153.3","272","201.2","27.3","309.4","146.8","91.5","394.2","168.5","120.2","427.6"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["128","18.9","178.5","108.7","69.2","178.8","139.5","14.9","182","103.7","60.2","230","110.3","55.7","242.8"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["123.6","19.1","171.6","103.8","82.6","166.8","132.6","18.5","179.7","99.7","60.2","220.5","109.4","56.8","231.4"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["84.2","12","129.3","75.8","38.6","130.7","111","9.6","120.6","67.5","24.4","168.7","76.5","26.4","174.7"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"Observed richness","headerStyle":{"borderRight":"5px solid #eee","fontSize":"1.1em"},"columns":["Observed","Observed_fi","Observed_pe","Observed_pi"]},{"name":"Shannon exponential","headerStyle":{"fontSize":"1.1em"},"columns":["Shannon_exp","Shannon_exp_fi","Shannon_exp_pe","Shannon_exp_pi"]},{"name":"Simpson multiplicative inverse","headerStyle":{"fontSize":"1.1em"},"columns":["InvSimpson","InvSimpson_fi","InvSimpson_pe","InvSimpson_pi"]}],"searchable":true,"defaultPageSize":5,"showPageSizeOptions":true,"pageSizeOptions":[5,10,15],"paginationType":"numbers","showPagination":true,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"9e0e1d6b4f7db79bfc534bba13d02de4"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-a193bdecd0d80589300a" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-a193bdecd0d80589300a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"Sample_ID":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W3C","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P09_D00_010_W8E","P10_D00_010_C0E"],"Observed":[2371,1610,2272,2356,1575,2040,1663,2124,3065,2010,2157,2441,2386,813,2066],"Observed_fi":[831,620,884,922,422,802,680,572,1011,843,771,813,874,376,670],"Observed_pe":[707,563,737,764,411,663,574,661,857,725,671,681,751,332,571],"Observed_pi":[502,322,590,596,224,570,499,289,664,516,276,594,563,170,491],"Shannon_exp":[760.7,236.1,781.1,686.8,501,797.8,578.8,307.3,1098.4,598.8,560.8,973.3,680.1,375.3,886.8],"Shannon_exp_fi":[385.1,127.8,437.1,373.7,181,439.4,329.4,102.4,518.7,353.4,284.2,464.8,352.7,165.6,416.5],"Shannon_exp_pe":[353.4,126.5,397.4,337.3,211.9,388.4,299.2,146.9,481.3,327.5,270.3,419.8,334.5,149.9,379.4],"Shannon_exp_pi":[226.3,59.2,291.2,235,90.1,309.2,246.1,47.9,324.7,208,88.1,331.3,224.4,67.9,298.3],"InvSimpson":[200.3,25.5,261.5,159.4,153.3,272,201.2,27.3,309.4,146.8,91.5,394.2,168.5,120.2,427.6],"InvSimpson_fi":[128,18.9,178.5,108.7,69.2,178.8,139.5,14.9,182,103.7,60.2,230,110.3,55.7,242.8],"InvSimpson_pe":[123.6,19.1,171.6,103.8,82.6,166.8,132.6,18.5,179.7,99.7,60.2,220.5,109.4,56.8,231.4],"InvSimpson_pi":[84.2,12,129.3,75.8,38.6,130.7,111,9.6,120.6,67.5,24.4,168.7,76.5,26.4,174.7]},"columns":[{"accessor":"Sample_ID","name":"Sample_ID","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W3C","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P09_D00_010_W8E","P10_D00_010_C0E"],"header":"Sample ID","minWidth":150,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Observed","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["2371","1610","2272","2356","1575","2040","1663","2124","3065","2010","2157","2441","2386","813","2066"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["831","620","884","922","422","802","680","572","1011","843","771","813","874","376","670"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["707","563","737","764","411","663","574","661","857","725","671","681","751","332","571"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["502","322","590","596","224","570","499","289","664","516","276","594","563","170","491"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Shannon_exp","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["760.7","236.1","781.1","686.8","501","797.8","578.8","307.3","1098.4","598.8","560.8","973.3","680.1","375.3","886.8"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["385.1","127.8","437.1","373.7","181","439.4","329.4","102.4","518.7","353.4","284.2","464.8","352.7","165.6","416.5"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["353.4","126.5","397.4","337.3","211.9","388.4","299.2","146.9","481.3","327.5","270.3","419.8","334.5","149.9","379.4"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["226.3","59.2","291.2","235","90.1","309.2","246.1","47.9","324.7","208","88.1","331.3","224.4","67.9","298.3"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"InvSimpson","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["200.3","25.5","261.5","159.4","153.3","272","201.2","27.3","309.4","146.8","91.5","394.2","168.5","120.2","427.6"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["128","18.9","178.5","108.7","69.2","178.8","139.5","14.9","182","103.7","60.2","230","110.3","55.7","242.8"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["123.6","19.1","171.6","103.8","82.6","166.8","132.6","18.5","179.7","99.7","60.2","220.5","109.4","56.8","231.4"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["84.2","12","129.3","75.8","38.6","130.7","111","9.6","120.6","67.5","24.4","168.7","76.5","26.4","174.7"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"Observed richness","headerStyle":{"borderRight":"5px solid #eee","fontSize":"1.1em"},"columns":["Observed","Observed_fi","Observed_pe","Observed_pi"]},{"name":"Shannon exponential","headerStyle":{"fontSize":"1.1em"},"columns":["Shannon_exp","Shannon_exp_fi","Shannon_exp_pe","Shannon_exp_pi"]},{"name":"Simpson multiplicative inverse","headerStyle":{"fontSize":"1.1em"},"columns":["InvSimpson","InvSimpson_fi","InvSimpson_pe","InvSimpson_pi"]}],"searchable":true,"defaultPageSize":5,"showPageSizeOptions":true,"pageSizeOptions":[5,10,15],"paginationType":"numbers","showPagination":true,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"9e0e1d6b4f7db79bfc534bba13d02de4"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h2 id="normality-tests">Normality Tests</h2>
 <p>Before running significance tests, we need to know if data is normally distributed, which will tell use whether to use a parametric or non-parametric test. To test if the data are normally distributed, we use the Shapiro-Wilk Normality test and the Bartlett Test of Homogeneity of Variances.</p>
@@ -2378,19 +2620,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ssu_tab_alpha_div</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>ssu18_div_tab <span class="ot">&lt;-</span> ssu_tab_alpha_div</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>ssu18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(ssu18_div_tab[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(ssu18_div_tab)])) {</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;ssu18_shap_asv_&quot;</span>, .))</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>   ssu18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(ssu18_shap_tests_asv, tmp_name)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">shapiro.test</span>(ssu18_div_tab[[i]]))</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;shap_&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ssu_tab_alpha_div</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ssu18_div_tab <span class="ot">&lt;-</span> ssu_tab_alpha_div</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ssu18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(ssu18_div_tab[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(ssu18_div_tab)])) {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;ssu18_shap_asv_&quot;</span>, .))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>   ssu18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(ssu18_shap_tests_asv, tmp_name)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">shapiro.test</span>(ssu18_div_tab[[i]]))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;shap_&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>And then the Bartlett Test of Homogeneity of Variances.</p>
@@ -2399,17 +2641,17 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ssu18_div_tab_asv <span class="ot">&lt;-</span> ssu_tab_alpha_div</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>ssu18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(ssu18_div_tab_asv[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(ssu18_div_tab_asv)])) {</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;ssu18_bart_asv_&quot;</span>, .))</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>   ssu18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(ssu18_bart_tests_asv, tmp_name)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">bartlett.test</span>(ssu18_div_tab_asv[[i]] <span class="sc">~</span> TEMP, <span class="at">data =</span> ssu18_div_tab_asv))</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_bart_&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ssu18_div_tab_asv <span class="ot">&lt;-</span> ssu_tab_alpha_div</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ssu18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(ssu18_div_tab_asv[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(ssu18_div_tab_asv)])) {</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;ssu18_bart_asv_&quot;</span>, .))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>   ssu18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(ssu18_bart_tests_asv, tmp_name)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">bartlett.test</span>(ssu18_div_tab_asv[[i]] <span class="sc">~</span> TEMP, <span class="at">data =</span> ssu18_div_tab_asv))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_bart_&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>Here we see which Shapiro-Wilk Normality <strong>and</strong> Bartlett tests were significant and which were not. So wherever the value of both p-values in <code>&gt; 0.05</code> we can use an ANOVA, otherwise we use Kruskal-Wallis.</p>
@@ -2423,8 +2665,8 @@ Show code
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-f30d7598595affc4f25a" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-f30d7598595affc4f25a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"metric":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"dataset":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"p-value (normality)":[0.2682,0.3671,0.1905,0.0552,0.994,0.2293,0.3311,0.0365,0.5844,0.6731,0.7466,0.3708],"p-value (homogeneity)":[0.5992,0.5851,0.437,0.7551,0.4905,0.1064,0.1592,0.8812,0.1544,0.4116,0.3497,0.3727],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis","ANOVA","ANOVA","ANOVA","ANOVA"]},"columns":[{"accessor":"metric","name":"Metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"header":"Metric","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dataset","name":"dataset","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"header":"dataset","minWidth":80,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"p-value (normality)","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.2682","0.3671","0.1905","0.0552","0.994","0.2293","0.3311","0.0365","0.5844","0.6731","0.7466","0.3708"],"header":"p-value (normality)","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"p-value (homogeneity)","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.5992","0.5851","0.437","0.7551","0.4905","0.1064","0.1592","0.8812","0.1544","0.4116","0.3497","0.3727"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"88811c9ba2d03ce860741156afc68a50"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-9ecb46afe5020008df84" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-9ecb46afe5020008df84">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"metric":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"dataset":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"p-value (normality)":[0.2682,0.3671,0.1905,0.0552,0.994,0.2293,0.3311,0.0365,0.5844,0.6731,0.7466,0.3708],"p-value (homogeneity)":[0.5992,0.5851,0.437,0.7551,0.4905,0.1064,0.1592,0.8812,0.1544,0.4116,0.3497,0.3727],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis","ANOVA","ANOVA","ANOVA","ANOVA"]},"columns":[{"accessor":"metric","name":"Metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"header":"Metric","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dataset","name":"dataset","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"header":"dataset","minWidth":80,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"p-value (normality)","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.2682","0.3671","0.1905","0.0552","0.994","0.2293","0.3311","0.0365","0.5844","0.6731","0.7466","0.3708"],"header":"p-value (normality)","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"p-value (homogeneity)","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.5992","0.5851","0.437","0.7551","0.4905","0.1064","0.1592","0.8812","0.1544","0.4116","0.3497","0.3727"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"88811c9ba2d03ce860741156afc68a50"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h2 id="significance-tests">Significance Tests</h2>
 <p>To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).</p>
@@ -2433,13 +2675,13 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu_tab_alpha_div</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu18_hill_hier <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="st">&quot;Sample_ID&quot;</span>, <span class="st">&quot;TEMP&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu18_hill_hier[<span class="fu">order</span>(ssu18_hill_hier<span class="sc">$</span>TEMP), ]</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier<span class="sc">$</span>TEMP <span class="ot">=</span> <span class="fu">paste</span>(ssu18_hill_hier<span class="sc">$</span>TEMP, <span class="st">&#39;C&#39;</span>, <span class="at">sep=</span><span class="st">&#39;&#39;</span>)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu18_hill_hier <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_hill_hier, <span class="st">&quot;files/alpha/rdata/ssu18_hill_hier.rds&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu_tab_alpha_div</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu18_hill_hier <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="st">&quot;Sample_ID&quot;</span>, <span class="st">&quot;TEMP&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu18_hill_hier[<span class="fu">order</span>(ssu18_hill_hier<span class="sc">$</span>TEMP), ]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier<span class="sc">$</span>TEMP <span class="ot">=</span> <span class="fu">paste</span>(ssu18_hill_hier<span class="sc">$</span>TEMP, <span class="st">&#39;C&#39;</span>, <span class="at">sep=</span><span class="st">&#39;&#39;</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>ssu18_hill_hier <span class="ot">&lt;-</span> ssu18_hill_hier <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(ssu18_hill_hier, <span class="st">&quot;files/alpha/rdata/ssu18_hill_hier.rds&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>Again, we start by testing significance of ASV diversity for the data sets against each of the three metrics using the <code>div_test</code> function.</p>
@@ -2452,19 +2694,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>     <span class="cf">for</span> (j <span class="cf">in</span> qvalue) {</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>         tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>         tmp_test <span class="ot">&lt;-</span> <span class="fu">div_test</span>(tmp_get, <span class="at">qvalue =</span> j,</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">hierarchy =</span> ssu18_hill_hier,</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>         tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_q&quot;</span>, j, <span class="st">&quot;_adt&quot;</span>))</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">print</span>(tmp_name)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">assign</span>(tmp_name, tmp_test)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>         <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a> }</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> ssu18_alpha_ds) {</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>     <span class="cf">for</span> (j <span class="cf">in</span> qvalue) {</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>         tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>         tmp_test <span class="ot">&lt;-</span> <span class="fu">div_test</span>(tmp_get, <span class="at">qvalue =</span> j,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">hierarchy =</span> ssu18_hill_hier,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>         tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_q&quot;</span>, j, <span class="st">&quot;_adt&quot;</span>))</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">print</span>(tmp_name)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">assign</span>(tmp_name, tmp_test)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>         <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a> }</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
@@ -2487,8 +2729,8 @@ Show code
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-page">
-<div id="htmlwidget-b85bf888dc62471906a9" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-b85bf888dc62471906a9">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"metric":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"q-value":["0","1","2","0","1","2","0","1","2","0","1","2"],"normality p-value":[0.2682,0.994,0.584,0.3671,0.2299,0.6733,0.0552,0.0366,0.3701,0.1905,0.3311,0.7468],"homogeneity p-value":[0.5992,0.4904,0.1546,0.5851,0.1065,0.413,0.7551,0.88,0.3714,0.437,0.1592,0.3484],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis Test","ANOVA","ANOVA","ANOVA","ANOVA"],"posthoc method":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Dunn test with Benjamini-Hochberg correction","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"posthoc p-value":[0.0605073993041881,6.27145211886132e-05,4.67424377288973e-05,0.00607979325574134,2.61619222669151e-06,1.30357980637008e-06,1.44158556313704e-06,0.00193045413622771,9.87158271400671e-07,0.0504542685916543,7.13607164161826e-06,3.19719103137226e-06]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"header":"Dataset","minWidth":80,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"metric","name":"metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"header":"metric","minWidth":140,"align":"left","footerStyle":{"fontWeight":"bold"}},{"accessor":"q-value","name":"q-value","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["0","1","2","0","1","2","0","1","2","0","1","2"],"header":"q-value","minWidth":70,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"normality p-value","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.2682","0.994","0.584","0.3671","0.2299","0.6733","0.0552","0.0366","0.3701","0.1905","0.3311","0.7468"],"header":"p-value (normality)","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"homogeneity p-value","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.5992","0.4904","0.1546","0.5851","0.1065","0.413","0.7551","0.88","0.3714","0.437","0.1592","0.3484"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis Test","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc method","name":"posthoc method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Dunn test with Benjamini-Hochberg correction","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"header":"posthoc method","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc p-value","name":"posthoc p-value","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["6.05e-02","6.27e-05","4.67e-05","6.08e-03","2.62e-06","1.3e-06","1.44e-06","1.93e-03","9.87e-07","5.05e-02","7.14e-06","3.2e-06"],"header":"posthoc p-value","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"theme":{"style":{"fontSize":"0.7em"}},"dataKey":"690f29c658c374e839a7e63b38ea970a"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-ef7caf86f93c66248b97" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-ef7caf86f93c66248b97">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"metric":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"q-value":["0","1","2","0","1","2","0","1","2","0","1","2"],"normality p-value":[0.2682,0.994,0.584,0.3671,0.2299,0.6733,0.0552,0.0366,0.3701,0.1905,0.3311,0.7468],"homogeneity p-value":[0.5992,0.4904,0.1546,0.5851,0.1065,0.413,0.7551,0.88,0.3714,0.437,0.1592,0.3484],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis Test","ANOVA","ANOVA","ANOVA","ANOVA"],"posthoc method":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Dunn test with Benjamini-Hochberg correction","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"posthoc p-value":[0.0605073993041881,6.27145211886132e-05,4.67424377288973e-05,0.00607979325574134,2.61619222669151e-06,1.30357980637008e-06,1.44158556313704e-06,0.00193045413622771,9.87158271400671e-07,0.0504542685916543,7.13607164161826e-06,3.19719103137226e-06]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"header":"Dataset","minWidth":80,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"metric","name":"metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"header":"metric","minWidth":140,"align":"left","footerStyle":{"fontWeight":"bold"}},{"accessor":"q-value","name":"q-value","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["0","1","2","0","1","2","0","1","2","0","1","2"],"header":"q-value","minWidth":70,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"normality p-value","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.2682","0.994","0.584","0.3671","0.2299","0.6733","0.0552","0.0366","0.3701","0.1905","0.3311","0.7468"],"header":"p-value (normality)","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"homogeneity p-value","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.5992","0.4904","0.1546","0.5851","0.1065","0.413","0.7551","0.88","0.3714","0.437","0.1592","0.3484"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","Kruskal-Wallis Test","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc method","name":"posthoc method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Dunn test with Benjamini-Hochberg correction","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"header":"posthoc method","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc p-value","name":"posthoc p-value","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["6.05e-02","6.27e-05","4.67e-05","6.08e-03","2.62e-06","1.3e-06","1.44e-06","1.93e-03","9.87e-07","5.05e-02","7.14e-06","3.2e-06"],"header":"posthoc p-value","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"}]}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"theme":{"style":{"fontSize":"0.7em"}},"dataKey":"690f29c658c374e839a7e63b38ea970a"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h2 id="posthoc-analyses">PostHoc Analyses</h2>
 <p>First let’s check the results of each posthoc analysis.</p>
@@ -2611,19 +2853,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_plot_jjs.R&quot;</span>)</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>(<span class="at">pattern=</span><span class="st">&quot;_adt_plot&quot;</span>))</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_adt&quot;</span>)) {</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_plot&quot;</span>))</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">div_test_plot_jjs</span>(tmp_get, <span class="at">chart =</span> <span class="st">&quot;box&quot;</span>,</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">colour =</span> swel_col, <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">ggpar</span>(tmp_df, <span class="at">legend =</span> <span class="st">&quot;none&quot;</span>)</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_q0_adt_plot</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_plot_jjs.R&quot;</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern=</span><span class="st">&quot;_adt_plot&quot;</span>))</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_adt&quot;</span>)) {</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_plot&quot;</span>))</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">div_test_plot_jjs</span>(tmp_get, <span class="at">chart =</span> <span class="st">&quot;box&quot;</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">colour =</span> swel_col, <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">ggpar</span>(tmp_df, <span class="at">legend =</span> <span class="st">&quot;none&quot;</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_q0_adt_plot</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
@@ -2664,20 +2906,20 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>its18_alpha_ds <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;its18_ps_filt&quot;</span>, <span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;its18_ps_pime&quot;</span>)</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">transform_sample_counts</span>(<span class="fu">get</span>(i), <span class="cf">function</span>(otu) otu<span class="sc">/</span><span class="fu">sum</span>(otu))</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  tmp_ps<span class="sc">@</span>phy_tree <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  tmp_ps_norm <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  tmp_asv <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_ps_norm)))</span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_norm&quot;</span>))</span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_ps_norm)</span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  tmp_asv_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>))</span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_asv_name, tmp_asv)</span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>its18_alpha_ds <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work&quot;</span>, <span class="st">&quot;its18_ps_filt&quot;</span>, <span class="st">&quot;its18_ps_perfect&quot;</span>, <span class="st">&quot;its18_ps_pime&quot;</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  tmp_ps <span class="ot">&lt;-</span> <span class="fu">transform_sample_counts</span>(<span class="fu">get</span>(i), <span class="cf">function</span>(otu) otu<span class="sc">/</span><span class="fu">sum</span>(otu))</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  tmp_ps<span class="sc">@</span>phy_tree <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  tmp_ps_norm <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  tmp_asv <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(<span class="fu">otu_table</span>(tmp_ps_norm)))</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  tmp_ps_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_norm&quot;</span>))</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_ps_name, tmp_ps_norm)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  tmp_asv_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>))</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assign</span>(tmp_asv_name, tmp_asv)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </details>
 </div>
 <p>Next, we run the analysis for all three metrics on the data sets (without a tree).</p>
@@ -2686,20 +2928,20 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> qvalue) {</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> its18_alpha_ds) {</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>     tmp_asv <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">hill_div</span>(tmp_asv, <span class="at">qvalue =</span> i))</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> tmp_df <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;tmp_name&quot;</span> <span class="ot">=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>                              tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;SamName&quot;</span>)</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h&quot;</span>, i))</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_h&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> qvalue) {</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> its18_alpha_ds) {</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>     tmp_asv <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">hill_div</span>(tmp_asv, <span class="at">qvalue =</span> i))</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> tmp_df <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;tmp_name&quot;</span> <span class="ot">=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                              tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">&quot;SamName&quot;</span>)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(j, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h&quot;</span>, i))</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_h&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>And make summary tables to add back into each <code>ps</code> object.</p>
@@ -2708,19 +2950,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>     tmp_obs <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h0&quot;</span>)))</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>     tmp_sha <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h1&quot;</span>)))</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>     tmp_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h2&quot;</span>)))</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_obs, tmp_sha, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">left_join</span>(., tmp_sim, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;Observed&quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Shannon_exp&quot;</span> <span class="ot">=</span> <span class="dv">3</span>, <span class="st">&quot;InvSimpson&quot;</span> <span class="ot">=</span> <span class="dv">4</span>)</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>))</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_hill)</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_hill&quot;</span>)</span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>     tmp_obs <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h0&quot;</span>)))</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>     tmp_sha <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h1&quot;</span>)))</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>     tmp_sim <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_h2&quot;</span>)))</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(tmp_obs, tmp_sha, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">left_join</span>(., tmp_sim, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>       dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">&quot;Observed&quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Shannon_exp&quot;</span> <span class="ot">=</span> <span class="dv">3</span>, <span class="st">&quot;InvSimpson&quot;</span> <span class="ot">=</span> <span class="dv">4</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>))</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_hill)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_hill&quot;</span>)</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </details>
 </div>
 <p>And then create the new objects with the diversity data.</p>
@@ -2729,26 +2971,26 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>     tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>)))</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(<span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps)),</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>                                         tmp_hill, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>)</span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp<span class="sc">$</span>ID <span class="ot">&lt;-</span> tmp_hill_samp<span class="sc">$</span>SamName</span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> tmp_hill_samp <span class="sc">%&gt;%</span>  tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>     tmp_ps2 <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_ps),</span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">sample_data</span>(tmp_hill_samp),</span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tax_table</span>(tmp_ps),</span>
-<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">phy_tree</span>(tmp_ps))</span>
-<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(i, tmp_ps2)</span>
-<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>     tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/alpha/rdata/&quot;</span>)</span>
-<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>     <span class="fu">saveRDS</span>(tmp_ps2, <span class="fu">paste</span>(tmp_path, i, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
-<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>     tmp_tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(<span class="fu">ntaxa</span>(tmp_ps), <span class="at">rooted =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">tip.label =</span> <span class="fu">taxa_names</span>(tmp_ps))</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>     tmp_ps <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(tmp_ps, sample_data, tmp_tree)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>     tmp_hill <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_hill&quot;</span>)))</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(<span class="fu">data.frame</span>(<span class="fu">sample_data</span>(tmp_ps)),</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>                                         tmp_hill, <span class="at">by =</span> <span class="st">&quot;SamName&quot;</span>)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp<span class="sc">$</span>ID <span class="ot">&lt;-</span> tmp_hill_samp<span class="sc">$</span>SamName</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>     tmp_hill_samp <span class="ot">&lt;-</span> tmp_hill_samp <span class="sc">%&gt;%</span>  tibble<span class="sc">::</span><span class="fu">column_to_rownames</span>(<span class="st">&quot;ID&quot;</span>)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>     tmp_ps2 <span class="ot">&lt;-</span> <span class="fu">merge_phyloseq</span>(<span class="fu">otu_table</span>(tmp_ps),</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">sample_data</span>(tmp_hill_samp),</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">tax_table</span>(tmp_ps),</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">phy_tree</span>(tmp_ps))</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(i, tmp_ps2)</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>     tmp_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;files/alpha/rdata/&quot;</span>)</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>     <span class="fu">saveRDS</span>(tmp_ps2, <span class="fu">paste</span>(tmp_path, i, <span class="st">&quot;.rds&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </details>
 </div>
 <h2 id="hill-numbers-summary-1">Hill Numbers Summary</h2>
@@ -2769,8 +3011,8 @@ Show code
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-page">
-<div id="htmlwidget-88fdd2a34d502a66744b" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-88fdd2a34d502a66744b">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"Sample_ID":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P10_D00_010_C0E"],"Observed":[945,719,1011,765,349,1017,616,954,867,335,702,745,812],"Observed_fi":[499,344,494,423,204,471,296,486,492,223,345,390,404],"Observed_pe":[148,98,147,136,64,161,90,157,147,76,105,118,143],"Observed_pi":[181,123,238,196,109,229,131,246,205,97,198,196,203],"Shannon_exp":[55.9,141.5,112.5,132.9,112.1,60.9,157.5,99.5,160.4,35,87.2,232.7,24.6],"Shannon_exp_fi":[33.8,79,64,83,72.2,43.3,76.6,58.4,102.9,28,46.7,133.6,14.7],"Shannon_exp_pe":[18.5,31.8,38.1,45.7,26.2,25.2,34.2,34.2,46.3,16.9,25.7,51.9,11.1],"Shannon_exp_pi":[14.8,31.6,43.3,56.5,42.8,39.5,35.1,35.2,48,18.1,30.7,66.6,8.1],"InvSimpson":[10.7,42.4,36.1,44.1,49,17.6,41.8,23.9,56.2,13.7,25.5,96,4.9],"InvSimpson_fi":[8.4,28.1,26.2,29.1,36.4,15.5,20.7,16.5,42.8,12.3,17.9,61.7,4],"InvSimpson_pe":[6.8,17.3,21.9,24.4,17.8,12.5,15.3,14.8,27.2,9.1,14.2,33.9,3.8],"InvSimpson_pi":[5.6,12.5,19.9,26.9,23.7,20.6,11.5,13.1,22.5,9.9,14.2,34.9,2.5]},"columns":[{"accessor":"Sample_ID","name":"Sample_ID","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P10_D00_010_C0E"],"header":"Sample ID","minWidth":150,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Observed","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["945","719","1011","765","349","1017","616","954","867","335","702","745","812"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["499","344","494","423","204","471","296","486","492","223","345","390","404"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["148","98","147","136","64","161","90","157","147","76","105","118","143"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["181","123","238","196","109","229","131","246","205","97","198","196","203"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Shannon_exp","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["55.9","141.5","112.5","132.9","112.1","60.9","157.5","99.5","160.4","35","87.2","232.7","24.6"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["33.8","79","64","83","72.2","43.3","76.6","58.4","102.9","28","46.7","133.6","14.7"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["18.5","31.8","38.1","45.7","26.2","25.2","34.2","34.2","46.3","16.9","25.7","51.9","11.1"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["14.8","31.6","43.3","56.5","42.8","39.5","35.1","35.2","48","18.1","30.7","66.6","8.1"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"InvSimpson","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["10.7","42.4","36.1","44.1","49","17.6","41.8","23.9","56.2","13.7","25.5","96","4.9"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["8.4","28.1","26.2","29.1","36.4","15.5","20.7","16.5","42.8","12.3","17.9","61.7","4"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["6.8","17.3","21.9","24.4","17.8","12.5","15.3","14.8","27.2","9.1","14.2","33.9","3.8"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["5.6","12.5","19.9","26.9","23.7","20.6","11.5","13.1","22.5","9.9","14.2","34.9","2.5"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"Observed richness","headerStyle":{"borderRight":"5px solid #eee","fontSize":"1.1em"},"columns":["Observed","Observed_fi","Observed_pe","Observed_pi"]},{"name":"Shannon exponential","headerStyle":{"fontSize":"1.1em"},"columns":["Shannon_exp","Shannon_exp_fi","Shannon_exp_pe","Shannon_exp_pi"]},{"name":"Simpson multiplicative inverse","headerStyle":{"fontSize":"1.1em"},"columns":["InvSimpson","InvSimpson_fi","InvSimpson_pe","InvSimpson_pi"]}],"searchable":true,"defaultPageSize":5,"showPageSizeOptions":true,"pageSizeOptions":[5,10,13],"paginationType":"numbers","showPagination":true,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"484a2a1d115ced7d1614beaeae762c62"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-7cc3b59c0f66a8380c40" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-7cc3b59c0f66a8380c40">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"Sample_ID":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P10_D00_010_C0E"],"Observed":[945,719,1011,765,349,1017,616,954,867,335,702,745,812],"Observed_fi":[499,344,494,423,204,471,296,486,492,223,345,390,404],"Observed_pe":[148,98,147,136,64,161,90,157,147,76,105,118,143],"Observed_pi":[181,123,238,196,109,229,131,246,205,97,198,196,203],"Shannon_exp":[55.9,141.5,112.5,132.9,112.1,60.9,157.5,99.5,160.4,35,87.2,232.7,24.6],"Shannon_exp_fi":[33.8,79,64,83,72.2,43.3,76.6,58.4,102.9,28,46.7,133.6,14.7],"Shannon_exp_pe":[18.5,31.8,38.1,45.7,26.2,25.2,34.2,34.2,46.3,16.9,25.7,51.9,11.1],"Shannon_exp_pi":[14.8,31.6,43.3,56.5,42.8,39.5,35.1,35.2,48,18.1,30.7,66.6,8.1],"InvSimpson":[10.7,42.4,36.1,44.1,49,17.6,41.8,23.9,56.2,13.7,25.5,96,4.9],"InvSimpson_fi":[8.4,28.1,26.2,29.1,36.4,15.5,20.7,16.5,42.8,12.3,17.9,61.7,4],"InvSimpson_pe":[6.8,17.3,21.9,24.4,17.8,12.5,15.3,14.8,27.2,9.1,14.2,33.9,3.8],"InvSimpson_pi":[5.6,12.5,19.9,26.9,23.7,20.6,11.5,13.1,22.5,9.9,14.2,34.9,2.5]},"columns":[{"accessor":"Sample_ID","name":"Sample_ID","type":"character","sortable":true,"resizable":true,"filterable":true,"cell":["P01_D00_010_W3A","P01_D00_010_W8A","P02_D00_010_C0A","P03_D00_010_W3B","P03_D00_010_W8B","P04_D00_010_C0B","P05_D00_010_W8C","P06_D00_010_C0C","P07_D00_010_W3D","P07_D00_010_W8D","P08_D00_010_C0D","P09_D00_010_W3E","P10_D00_010_C0E"],"header":"Sample ID","minWidth":150,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Observed","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["945","719","1011","765","349","1017","616","954","867","335","702","745","812"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["499","344","494","423","204","471","296","486","492","223","345","390","404"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["148","98","147","136","64","161","90","157","147","76","105","118","143"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Observed_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["181","123","238","196","109","229","131","246","205","97","198","196","203"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"Shannon_exp","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["55.9","141.5","112.5","132.9","112.1","60.9","157.5","99.5","160.4","35","87.2","232.7","24.6"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["33.8","79","64","83","72.2","43.3","76.6","58.4","102.9","28","46.7","133.6","14.7"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["18.5","31.8","38.1","45.7","26.2","25.2","34.2","34.2","46.3","16.9","25.7","51.9","11.1"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"Shannon_exp_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["14.8","31.6","43.3","56.5","42.8","39.5","35.1","35.2","48","18.1","30.7","66.6","8.1"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":{"borderRight":"5px solid #eee"},"headerStyle":{"borderRight":"5px solid #eee"}},{"accessor":"InvSimpson","name":"FULL","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["10.7","42.4","36.1","44.1","49","17.6","41.8","23.9","56.2","13.7","25.5","96","4.9"],"header":"FULL","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_fi","name":"Arbitrary","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["8.4","28.1","26.2","29.1","36.4","15.5","20.7","16.5","42.8","12.3","17.9","61.7","4"],"header":"Arbitrary","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pe","name":"PERfect","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["6.8","17.3","21.9","24.4","17.8","12.5","15.3","14.8","27.2","9.1","14.2","33.9","3.8"],"header":"PERfect","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"InvSimpson_pi","name":"PIME","type":"numeric","sortable":true,"resizable":true,"filterable":true,"cell":["5.6","12.5","19.9","26.9","23.7","20.6","11.5","13.1","22.5","9.9","14.2","34.9","2.5"],"header":"PIME","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}}],"columnGroups":[{"name":"Observed richness","headerStyle":{"borderRight":"5px solid #eee","fontSize":"1.1em"},"columns":["Observed","Observed_fi","Observed_pe","Observed_pi"]},{"name":"Shannon exponential","headerStyle":{"fontSize":"1.1em"},"columns":["Shannon_exp","Shannon_exp_fi","Shannon_exp_pe","Shannon_exp_pi"]},{"name":"Simpson multiplicative inverse","headerStyle":{"fontSize":"1.1em"},"columns":["InvSimpson","InvSimpson_fi","InvSimpson_pe","InvSimpson_pi"]}],"searchable":true,"defaultPageSize":5,"showPageSizeOptions":true,"pageSizeOptions":[5,10,13],"paginationType":"numbers","showPagination":true,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"showSortable":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"484a2a1d115ced7d1614beaeae762c62"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h2 id="normality-tests-1">Normality Tests</h2>
 <p>Before running significance tests, we need to know if data is normally distributed, which will tell use whether to use a parametric or non-parametric test. To test if the data are normally distributed, we use the Shapiro-Wilk Normality test and the Bartlett Test of Homogeneity of Variances.</p>
@@ -2784,19 +3026,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>its_tab_alpha_div</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>its18_div_tab <span class="ot">&lt;-</span> its_tab_alpha_div</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>its18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(its18_div_tab[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(its18_div_tab)])) {</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;its18_shap_asv_&quot;</span>, .))</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>   its18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(its18_shap_tests_asv, tmp_name)</span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">shapiro.test</span>(its18_div_tab[[i]]))</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;shap_&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>its_tab_alpha_div</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>its18_div_tab <span class="ot">&lt;-</span> its_tab_alpha_div</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>its18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(its18_div_tab[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(its18_div_tab)])) {</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;its18_shap_asv_&quot;</span>, .))</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>   its18_shap_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(its18_shap_tests_asv, tmp_name)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">shapiro.test</span>(its18_div_tab[[i]]))</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;shap_&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>And then the Bartlett Test of Homogeneity of Variances.</p>
@@ -2805,17 +3047,17 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>its18_div_tab_asv <span class="ot">&lt;-</span> its_tab_alpha_div</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>its18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(its18_div_tab_asv[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(its18_div_tab_asv)])) {</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;its18_bart_asv_&quot;</span>, .))</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>   its18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(its18_bart_tests_asv, tmp_name)</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">bartlett.test</span>(its18_div_tab_asv[[i]] <span class="sc">~</span> TEMP, <span class="at">data =</span> its18_div_tab_asv))</span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_bart_&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>its18_div_tab_asv <span class="ot">&lt;-</span> its_tab_alpha_div</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>its18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">colnames</span>(its18_div_tab_asv[,<span class="dv">7</span><span class="sc">:</span><span class="fu">ncol</span>(its18_div_tab_asv)])) {</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>   tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;its18_bart_asv_&quot;</span>, .))</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>   its18_bart_tests_asv <span class="ot">&lt;-</span> <span class="fu">append</span>(its18_bart_tests_asv, tmp_name)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>   tmp_test <span class="ot">&lt;-</span> <span class="fu">eval</span>(<span class="fu">bartlett.test</span>(its18_div_tab_asv[[i]] <span class="sc">~</span> TEMP, <span class="at">data =</span> its18_div_tab_asv))</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>   tmp_test<span class="sc">$</span>data.name <span class="ot">&lt;-</span> tmp_name</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">assign</span>(tmp_name, tmp_test)</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>(<span class="at">pattern =</span> <span class="st">&quot;_bart_&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>Here we see which Shapiro-Wilk Normality <strong>and</strong> Bartlett tests were significant and which were not. So wherever the value of both p-values in <code>&gt; 0.05</code> we can use an ANOVA, otherwise we use Kruskal-Wallis.</p>
@@ -2829,8 +3071,8 @@ Show code
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<div id="htmlwidget-8e1fe96c0688a849169a" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-8e1fe96c0688a849169a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"metric":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"dataset":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"p-value (normality)":[0.1284,0.1148,0.1616,0.1343,0.8465,0.9339,0.9213,0.9724,0.1837,0.3503,0.9607,0.9581],"p-value (homogeneity)":[0.5161,0.9381,0.6674,0.4543,0.4455,0.3632,0.5551,0.4325,0.1255,0.1601,0.2372,0.4763],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"]},"columns":[{"accessor":"metric","name":"Metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"header":"Metric","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dataset","name":"dataset","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"header":"dataset","minWidth":80,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"p-value (normality)","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.1284","0.1148","0.1616","0.1343","0.8465","0.9339","0.9213","0.9724","0.1837","0.3503","0.9607","0.9581"],"header":"p-value (normality)","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"p-value (homogeneity)","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.5161","0.9381","0.6674","0.4543","0.4455","0.3632","0.5551","0.4325","0.1255","0.1601","0.2372","0.4763"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"57ccf5f6f62b87e32127f70dae384abd"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-564573b3d9000a38e67a" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-564573b3d9000a38e67a">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"metric":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"dataset":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"p-value (normality)":[0.1284,0.1148,0.1616,0.1343,0.8465,0.9339,0.9213,0.9724,0.1837,0.3503,0.9607,0.9581],"p-value (homogeneity)":[0.5161,0.9381,0.6674,0.4543,0.4455,0.3632,0.5551,0.4325,0.1255,0.1601,0.2372,0.4763],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"]},"columns":[{"accessor":"metric","name":"Metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Observed","Observed","Observed","Shannon","Shannon","Shannon","Shannon","InvSimpson","InvSimpson","InvSimpson","InvSimpson"],"header":"Metric","minWidth":100,"align":"left","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"dataset","name":"dataset","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME","FULL","FILT","PERfect","PIME"],"header":"dataset","minWidth":80,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"p-value (normality)","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.1284","0.1148","0.1616","0.1343","0.8465","0.9339","0.9213","0.9724","0.1837","0.3503","0.9607","0.9581"],"header":"p-value (normality)","minWidth":100,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"p-value (homogeneity)","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":false,"filterable":false,"cell":["0.5161","0.9381","0.6674","0.4543","0.4455","0.3632","0.5551","0.4325","0.1255","0.1601","0.2372","0.4763"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":false,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","headerVAlign":"center","footerStyle":{"fontWeight":"bold"}}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"theme":{"style":{"fontSize":"0.8em"}},"dataKey":"57ccf5f6f62b87e32127f70dae384abd"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h2 id="significance-tests-1">Significance Tests</h2>
 <p>To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).</p>
@@ -2839,13 +3081,13 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its_tab_alpha_div</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its18_hill_hier <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="st">&quot;Sample_ID&quot;</span>, <span class="st">&quot;TEMP&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its18_hill_hier[<span class="fu">order</span>(its18_hill_hier<span class="sc">$</span>TEMP), ]</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>its18_hill_hier<span class="sc">$</span>TEMP <span class="ot">=</span> <span class="fu">paste</span>(its18_hill_hier<span class="sc">$</span>TEMP, <span class="st">&#39;C&#39;</span>, <span class="at">sep=</span><span class="st">&#39;&#39;</span>)</span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its18_hill_hier <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_hill_hier, <span class="st">&quot;files/alpha/rdata/its18_hill_hier.rds&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its_tab_alpha_div</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its18_hill_hier <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="st">&quot;Sample_ID&quot;</span>, <span class="st">&quot;TEMP&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its18_hill_hier[<span class="fu">order</span>(its18_hill_hier<span class="sc">$</span>TEMP), ]</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>its18_hill_hier<span class="sc">$</span>TEMP <span class="ot">=</span> <span class="fu">paste</span>(its18_hill_hier<span class="sc">$</span>TEMP, <span class="st">&#39;C&#39;</span>, <span class="at">sep=</span><span class="st">&#39;&#39;</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>its18_hill_hier <span class="ot">&lt;-</span> its18_hill_hier <span class="sc">%&gt;%</span> tibble<span class="sc">::</span><span class="fu">remove_rownames</span>()</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(its18_hill_hier, <span class="st">&quot;files/alpha/rdata/its18_hill_hier.rds&quot;</span>)</span></code></pre></div>
 </details>
 </div>
 <p>Again, we start by testing significance of ASV diversity for the data sets against each of the three metrics using the <code>div_test</code> function.</p>
@@ -2858,19 +3100,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>     <span class="cf">for</span> (j <span class="cf">in</span> qvalue) {</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>         tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>         tmp_test <span class="ot">&lt;-</span> <span class="fu">div_test</span>(tmp_get, <span class="at">qvalue =</span> j,</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">hierarchy =</span> its18_hill_hier,</span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>         tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_q&quot;</span>, j, <span class="st">&quot;_adt&quot;</span>))</span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">print</span>(tmp_name)</span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">assign</span>(tmp_name, tmp_test)</span>
-<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>         <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a> }</span>
-<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>qvalue <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_alpha_ds) {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>     <span class="cf">for</span> (j <span class="cf">in</span> qvalue) {</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>         tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_tu&quot;</span>)))</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>         tmp_test <span class="ot">&lt;-</span> <span class="fu">div_test</span>(tmp_get, <span class="at">qvalue =</span> j,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">hierarchy =</span> its18_hill_hier,</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>         tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_q&quot;</span>, j, <span class="st">&quot;_adt&quot;</span>))</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">print</span>(tmp_name)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>         <span class="fu">assign</span>(tmp_name, tmp_test)</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>         <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a> }</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
@@ -2890,8 +3132,8 @@ Show code
 </a>
 </div>
 <div class="layout-chunk" data-layout="l-page">
-<div id="htmlwidget-bb3486349adfa5d821dc" class="reactable html-widget" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-bb3486349adfa5d821dc">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"metric":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"q-value":["0","1","2","0","1","2","0","1","2","0","1","2"],"normality p-value":[0.1284,0.8456,0.1837,0.1148,0.9344,0.3491,0.1343,0.9721,0.9549,0.1616,0.9194,0.9609],"homogeneity p-value":[0.5161,0.4454,0.1258,0.9381,0.3632,0.1594,0.4543,0.4363,0.4768,0.6674,0.5554,0.2362],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"],"posthoc method":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"posthoc p-value":[0.0061449553764622,0.221216281343134,0.181872267062003,0.00236345013953324,0.139482445831165,0.183238990772846,7.36265579596885e-06,0.346441934422685,0.341788345935967,0.00108705030410124,0.186893114842365,0.204850383725631]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"header":"Dataset","minWidth":80,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"metric","name":"metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"header":"metric","minWidth":140,"align":"left","footerStyle":{"fontWeight":"bold"}},{"accessor":"q-value","name":"q-value","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["0","1","2","0","1","2","0","1","2","0","1","2"],"header":"q-value","minWidth":70,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"normality p-value","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.1284","0.8456","0.1837","0.1148","0.9344","0.3491","0.1343","0.9721","0.9549","0.1616","0.9194","0.9609"],"header":"p-value (normality)","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"homogeneity p-value","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.5161","0.4454","0.1258","0.9381","0.3632","0.1594","0.4543","0.4363","0.4768","0.6674","0.5554","0.2362"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc method","name":"posthoc method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"header":"posthoc method","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc p-value","name":"posthoc p-value","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["6.14e-03","2.21e-01","1.82e-01","2.36e-03","1.39e-01","1.83e-01","7.36e-06","3.46e-01","3.42e-01","1.09e-03","1.87e-01","2.05e-01"],"header":"posthoc p-value","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"theme":{"style":{"fontSize":"0.7em"}},"dataKey":"b89c88ac2ab5dbd8a9dd2214e1c204d5"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-de4d7ad236b03a9308f5" class="reactable html-widget" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-de4d7ad236b03a9308f5">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"dataset":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"metric":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"q-value":["0","1","2","0","1","2","0","1","2","0","1","2"],"normality p-value":[0.1284,0.8456,0.1837,0.1148,0.9344,0.3491,0.1343,0.9721,0.9549,0.1616,0.9194,0.9609],"homogeneity p-value":[0.5161,0.4454,0.1258,0.9381,0.3632,0.1594,0.4543,0.4363,0.4768,0.6674,0.5554,0.2362],"method":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"],"posthoc method":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"posthoc p-value":[0.0061449553764622,0.221216281343134,0.181872267062003,0.00236345013953324,0.139482445831165,0.183238990772846,7.36265579596885e-06,0.346441934422685,0.341788345935967,0.00108705030410124,0.186893114842365,0.204850383725631]},"columns":[{"accessor":"dataset","name":"Dataset","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["FULL","FULL","FULL","FILT","FILT","FILT","PIME","PIME","PIME","PERfect","PERfect","PERfect"],"header":"Dataset","minWidth":100,"align":"left","footerStyle":{"fontWeight":"bold"},"sticky":"left","style":{"borderRight":"1px solid #eee"},"headerStyle":{"borderRight":"1px solid #eee"}},{"accessor":"metric","name":"metric","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson","Observed","Shannon exponential","Inverse Simpson"],"header":"metric","minWidth":140,"align":"left","footerStyle":{"fontWeight":"bold"}},{"accessor":"q-value","name":"q-value","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["0","1","2","0","1","2","0","1","2","0","1","2"],"header":"q-value","minWidth":70,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"normality p-value","name":"p-value (normality)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.1284","0.8456","0.1837","0.1148","0.9344","0.3491","0.1343","0.9721","0.9549","0.1616","0.9194","0.9609"],"header":"p-value (normality)","minWidth":100,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"homogeneity p-value","name":"p-value (homogeneity)","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["0.5161","0.4454","0.1258","0.9381","0.3632","0.1594","0.4543","0.4363","0.4768","0.6674","0.5554","0.2362"],"header":"p-value (homogeneity)","minWidth":130,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"method","name":"method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA","ANOVA"],"header":"method","minWidth":120,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc method","name":"posthoc method","type":"character","sortable":true,"resizable":true,"filterable":false,"cell":["Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test","Tukey post-hoc test"],"header":"posthoc method","minWidth":80,"align":"center","footerStyle":{"fontWeight":"bold"}},{"accessor":"posthoc p-value","name":"posthoc p-value","type":"numeric","sortable":true,"resizable":true,"filterable":false,"cell":["6.14e-03","2.21e-01","1.82e-01","2.36e-03","1.39e-01","1.83e-01","7.36e-06","3.46e-01","3.42e-01","1.09e-03","1.87e-01","2.05e-01"],"header":"posthoc p-value","minWidth":80,"align":"center","footerStyle":{"fontWeight":"bold"},"style":[{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#B22271","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"},{"color":"#2271B2","fontWeight":"bold"}]}],"defaultPageSize":12,"showPageSizeOptions":true,"pageSizeOptions":[5,10,12],"paginationType":"numbers","showPagination":false,"showPageInfo":true,"minRows":1,"highlight":true,"bordered":true,"striped":true,"compact":true,"nowrap":true,"theme":{"style":{"fontSize":"0.7em"}},"dataKey":"2d57270ad06466148b20e356d69dc825"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 <h2 id="posthoc-analyses-1">PostHoc Analyses</h2>
 <p>First let’s check the results of each posthoc analysis.</p>
@@ -3014,19 +3256,19 @@ Show code
 <summary>
 Show code
 </summary>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_plot_jjs.R&quot;</span>)</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>(<span class="at">pattern=</span><span class="st">&quot;_adt_plot&quot;</span>))</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_adt&quot;</span>)) {</span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_plot&quot;</span>))</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">div_test_plot_jjs</span>(tmp_get, <span class="at">chart =</span> <span class="st">&quot;box&quot;</span>,</span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">colour =</span> swel_col, <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">ggpar</span>(tmp_df, <span class="at">legend =</span> <span class="st">&quot;none&quot;</span>)</span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
-<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
-<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>its18_ps_work_q0_adt_plot</span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;hack_code/div_test_plot_jjs.R&quot;</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>(<span class="at">pattern=</span><span class="st">&quot;_adt_plot&quot;</span>))</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">objects</span>(<span class="at">pattern=</span><span class="st">&quot;_adt&quot;</span>)) {</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>     tmp_name <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_chr</span>(i, <span class="sc">~</span> <span class="fu">paste0</span>(., <span class="st">&quot;_plot&quot;</span>))</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>     tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">div_test_plot_jjs</span>(tmp_get, <span class="at">chart =</span> <span class="st">&quot;box&quot;</span>,</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">colour =</span> swel_col, <span class="at">posthoc =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>     tmp_df <span class="ot">&lt;-</span> <span class="fu">ggpar</span>(tmp_df, <span class="at">legend =</span> <span class="st">&quot;none&quot;</span>)</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>     <span class="fu">print</span>(tmp_name)</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>     <span class="fu">assign</span>(tmp_name, tmp_df)</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>     <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>))</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>its18_ps_work_q0_adt_plot</span></code></pre></div>
 </details>
 </div>
 <div class="layout-chunk" data-layout="l-body">
