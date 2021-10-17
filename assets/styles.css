@@ -1,5 +1,5 @@
 /* Whole document: */
-@import url('https://fonts.googleapis.com/css?family=PT+Sans|PT+Serif|Lato:300|Roboto:300|Nunito+Sans:300|Inconsolata|Source+Sans+Pro|Work+Sans:200,300,400,500');
+@import url('https://fonts.googleapis.com/css?family=PT+Sans|PT+Serif|Lato:300|Inconsolata|Source+Sans+Pro|Work+Sans:200,300,400,500|Karla:400,400i,700,700i');
 /********************************/
 /* controls general properties of site*/
 /********************************/
@@ -8,7 +8,6 @@ body {
   color: #414141;
 /*  line-height: 1.7;
   font-size: 17px; */
-  font-family: 'Open Sans', 'Source Sans Pro', 'PT Sans';
   background-color: #FEFEFE;
 }
 
@@ -20,24 +19,19 @@ font-weight: 300;
 
 d-article h1 {
   font-size: 1.8em;
-  font-family: 'Open Sans', 'Source Sans Pro', 'PT Sans';
+  font-family: 'Work Sans', 'Source Sans Pro', 'PT Sans';
   font-weight: 300;
 }
 
 d-article h2 {
   font-size: 1.65em;
-  font-family: 'Open Sans', 'Source Sans Pro', 'PT Sans';
+  font-family: 'Work Sans', 'Source Sans Pro', 'PT Sans';
   font-weight: 500;
 }
 
 d-article h3 {
-  font-family: 'Open Sans', 'Source Sans Pro', 'PT Sans';
   margin-top: 1em;
-}
-
-d-article p {
-  font-size: 18px;
-  font-family: 'Open Sans', 'Source Sans Pro', 'PT Sans';
+  font-family: 'Work Sans', 'Source Sans Pro', 'PT Sans';
 }
 
 d-byline .authors-affiliations {
@@ -135,6 +129,16 @@ p code {
   color: #BF2727;
 }
 
+li code {
+  background-color: #E8E8E8;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-family: 'Monaco', 'PT Mono', monospace;
+  overflow-x: scroll !important;
+  margin-bottom: 20px;
+  color: #BF2727;
+}
+
 d-article aside code {
   background-color: #E8E8E8;
   border-radius: 3px;
@@ -148,6 +152,14 @@ d-article aside code {
 
 .nav-dropdown-content .nav-dropdown-header {
   text-transform: none;
+  color: #686868;
+}
+.nav-dropdown-content a {
+  font-family: 'Work Sans'
+}
+.nav-dropdown .nav-dropbtn {
+  color: #FEFEFE;
+  font-weight: 400;
 }
 
 .distill-site-header .logo img {
@@ -227,4 +239,24 @@ details[open] summary::after {
   float: right;
   font-family: "Font Awesome 5 Free";
   content: "\f146";
+}
+
+/********************************/
+/* controls downloadthis  */
+/********************************/
+
+button.btn.btn-default {
+  font-size: 0.8em;
+  font-family: "PT Sans";
+  border-color: #B22271;
+  border-width: medium;
+  margin-bottom: 15px;
+}
+
+/********************************/
+/* controls reactable  */
+/********************************/
+
+div.rt-text-content {
+  font-size: 1.2em;
 }

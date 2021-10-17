@@ -6,12 +6,12 @@ description: |
   sweltr
 output_dir: "public_build"
 creative_commons: CC BY
-exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build", "graphics", "TESTING"]
+exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build"]
 navbar:
   icon: icon.png
   title: ""
   source_url: false
-  search: false
+  search: true
   left:
 #    - text: "Home"
     - icon: fa-home
@@ -28,35 +28,29 @@ navbar:
           href: dada2.html
         - text: "2. Data Set Prep"
           href: data-prep.html
-        - text: "3. OTU Clustering"
-          href: otu.html
-        - text: "---------"
-        - text: "Filtering"
-        - text: "4a. PIME Filtering"
-          href: pime.html
-        - text: "4b. PERFect Filtering"
-          href: perfect.html
+#        - text: "---------"
+#        - text: "Filtering"
+        - text: "3. Filtering"
+          href: filtering.html
     - text: "B. Diversity Workflows"
       menu:
-        - text: "5. Taxonomic"
+        - text: "4. Taxonomic"
           href: taxa.html
-        - text: "6. Alpha Diversity"
+        - text: "5. Alpha Diversity"
           href: alpha.html
-        - text: "7. Beta Diversity"
+        - text: "6. Beta Diversity"
           href: beta.html
-        - text: "8. DA ASVs & OTUs"
+        - text: "7. DA ASVs & Taxa"
           href: da.html
-        - text: "9. Metadata"
+        - text: "8. Metadata"
           href: metadata.html
-#    - text: "SOM"
-#      icon:
-#      href: supplemental-material.html
 #    - icon: fa-code fa-lg
 #      href: raw_code.txt
-    - text: "Data Products"
-      #icon: fa-database
-      href: data-availability.html
   right:
+    - text: "Data Products"
+      href: data-availability.html
+    - text: "SOM"
+      href: som.html
     - icon: fa-github fa-lg
       href: https://github.com/sweltr/high-temp/
 output:
