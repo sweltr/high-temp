@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 .Rapp.history
+.DS_Store
 
 public/
 files/
