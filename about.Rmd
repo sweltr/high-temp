@@ -1,0 +1,138 @@
+---
+title: "Notes About this site"
+description: |
+  Notes on how I built the site & hosted on GH-Pages.
+output:
+  distill::distill_article:
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+> Page under construction. This page will contain detailed instructions on how this site was created.
+
+
+## GitHub Pages Site Deployment
+
+### Initial Setup
+
+This is how I built a `gh-pages` site for the high-temp SWELTR study. Check out [A guide to using Github Pages](https://www.thinkful.com/learn/a-guide-to-using-github-pages/) for more information.
+
+1) Create `sweltr` organization on github.
+2) Create `high-temp` repo for source code. Make sure repo public. **MUST initialize repo with a README**. This creates a master branch.
+3) Create a github.io repo for `sweltr.github.io`. Make sure repo public. **MUST initialize repo with a README**.
+4) Clone the source code repo.
+
+```
+git clone https://github.com/sweltr/high-temp.git
+cd high-temp/
+```
+
+5) At this point the directory should be empty except for the README file and `.git` directory. 
+6) Create a `.gitignore` file. 
+
+```
+echo public/ >> .gitignore # Add items as needed.
+```
+
+7) Now run  
+
+```
+git status
+git add --all
+git status
+git commit -a -m "initial commit"
+git push origin main
+```
+
+8) Run the following commands to create `gh-pages` branch. Make sure there is no `public` directory yet.
+
+```
+git checkout --orphan gh-pages
+git reset --hard
+git commit --allow-empty -m "Initializing gh-pages branch"
+git push origin gh-pages
+git checkout main
+rm -rf public
+git worktree add -B gh-pages public origin/gh-pages
+```
+
+9) Now there should be a `public` directory. Run the following to make sure there is a `.git` directory.
+
+```
+ls -al public/
+```
+
+### Site Build
+
+10) Time to build the site. First, in the `_site.tml` file make sure the following are set:
+
+```
+base_url: https://sweltr.github.io/
+repository_url: https://github.com/sweltr/high-temp/
+output_dir: "public_build"
+exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build"]
+```
+
+When we render the site, R Markdown will overwrite everything in the output directory, which removes the `.git` directory. Not cool. To avoid this, we use an intermediate directory, `public_build`,  to generate the site. Also, **be sure** to exclude directories and files you do not want as part of the rendered site, including `public`, `public_build`, and any other diretories that are not needed to build the site.
+
+11) To build the site run:
+
+```
+rmarkdown::render_site()
+```
+
+To build individual pages run:
+
+```
+rmarkdown::render_site("about.Rmd")
+```
+
+12) Once the site is built in `public_build`, run the following to copy all the files to `public`
+
+```
+cp -r public_build/* public/
+```
+
+13) Sweet. Get the website files on GitHub.
+
+```
+cd public
+git status
+git add --all
+git status
+git commit -m "Publishing to gh-pages initial commit"
+git push origin gh-pages
+```
+
+14) And now the build files to the repo. Make sure you are in the repo directory (i.e., not `public`) and add the following to the `.gitignore` file :
+
+```
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+files/
+include/
+assets/
+page_build/
+public_build/
+```
+
+
+15) Then commit and push the files. 
+
+```
+cd ../
+git status
+git add --all
+git status
+git commit -m "Publishing to gh-pages initial commit"
+git push origin main
+```
+
+
+
+
