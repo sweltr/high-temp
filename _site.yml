@@ -6,12 +6,12 @@ description: |
   sweltr
 output_dir: "public_build"
 creative_commons: CC BY
-exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build"]
+exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build", "archive_code"]
 navbar:
   icon: icon.png
   title: ""
   source_url: false
-  search: true
+  search: false
   left:
 #    - text: "Home"
     - icon: fa-home
@@ -57,7 +57,7 @@ navbar:
     - icon: fa-github fa-lg
       href: https://github.com/sweltr/high-temp/
     - icon: fa-question
-      href: about.html      
+      href: about.html
 output:
     distill::distill_article:
       highlight_downlit: false

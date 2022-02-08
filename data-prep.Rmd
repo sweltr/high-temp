@@ -1185,4 +1185,4 @@ You can find the source code for this page by [clicking this link](https://githu
 
 ## Data Availability {.appendix}
 
-Raw fastq files available on figshare at XXXXXXXX. Trimmed fastq files (primers removed) available through the ENA under project accession number [XXXXXXXX](). Output files from this workflow available on figshare at [XXXXXXXX.]().
+Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.14690739](https://doi.org/10.25573/data.14690739).

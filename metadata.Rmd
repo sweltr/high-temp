@@ -4344,3 +4344,7 @@ remove(list = ls())
 
 You can find the source code for this page by [clicking this link](https://github.com/sweltr/high-temp/blob/master/metadata.Rmd).
 
+## Data Availability {.appendix}
+
+Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16828294](https://doi.org/10.25573/data.16828294).
+

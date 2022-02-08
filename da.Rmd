@@ -4289,4 +4289,8 @@ save.image("page_build/mmarker_wf.rdata")
 
 ##  Source Code {.appendix}
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/da.Rmd). Please note, that in order to process the data *and*  build the website, we needed to run the workflow and get the results. Then hard code the results and turn off the individual commands. So the raw file for this page is a bit messy---you have been warned.
+The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/da.Rmd). 
+
+## Data Availability {.appendix}
+
+Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16828249](https://doi.org/10.25573/data.16828249).
