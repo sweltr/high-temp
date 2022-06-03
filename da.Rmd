@@ -27,7 +27,7 @@ set.seed(119)
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
 pacman::p_load(tidyverse, metacoder, hilldiv, patchwork, ampvis2, 
-               agricolae, labdsv, naniar, codefolder, ape,
+               agricolae, labdsv, naniar, ape,
                pairwiseAdonis, microbiome, seqRFLP, DT, microbiomeMarker,
                microbiomeMarker, reactable, downloadthis, captioner,
                install = FALSE, update = FALSE)
@@ -44,10 +44,6 @@ knitr::opts_current$get(c(
 </details>
 
 <br/>
-
-```{r, echo=FALSE, eval=TRUE}
-xaringanExtra::use_panelset()
-```
 
 ```{r, include=FALSE, eval=TRUE}
 ## Load to build page only #2
@@ -73,9 +69,24 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
 source("assets/captions/captions_da.R")
 ```
 
+```{r echo=FALSE, eval=TRUE}
+source(file.path("assets", "functions.R"))
+# This is needed to add a COPY CODE button to code chunks
+clipboard_button()
+# This is needed to use PANELS
+xaringanExtra::use_panelset()
+```
+
 # Synopsis
 
-This workflow contains ASV differential abundance analysis for the high temperature data sets. In order to run the workflow, you ...
+This workflow contains ASV differential abundance analysis for the high temperature data sets. In order to run the workflow, you either need to first run the [Data Preparation workflow](data-prep.html) and the [Filtering workflow](filtering.html) or or download the files linked below. See the [Data Availability](data-availability.html) page for complete details.
+
+## Workflow Input
+
+Files needed to run this workflow can be downloaded from figshare. 
+
+<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
 
 In this workflow, we use the `labdsv` package [@roberts2016package] to run Dufrene-Legendre Indicator Species Analysis and the  [microbiomeMarker package](https://github.com/yiluheihei/microbiomeMarker) [@cao2020package] to run linear discriminant analysis (LDA) effect size (LEfSe) [@segata2011metagenomic].
 
@@ -85,9 +96,9 @@ In this workflow, we use the `labdsv` package [@roberts2016package] to run Dufre
 ## Initial Load for  ANALYSIS #1
 remove(list = ls())
 ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
-ssu18_ps_filt <- readRDS("files/perfect/rdata/ssu18_ps_filt.rds")
-ssu18_ps_perfect <- readRDS("files/perfect/rdata/ssu18_ps_perfect.rds")
-ssu18_ps_pime <- readRDS("files/pime/rdata/ssu18_ps_pime.rds")
+ssu18_ps_filt <- readRDS("files/filtering/arbitrary/rdata/ssu18_ps_filt.rds")
+ssu18_ps_perfect <- readRDS("files/filtering/perfect/rdata/ssu18_ps_perfect.rds")
+ssu18_ps_pime <- readRDS("files/filtering/pime/rdata/ssu18_ps_pime.rds")
 ```
 
 
@@ -1653,16 +1664,15 @@ knitr::include_graphics("include/da/ssu_taxa_marker.png")
 save.image("page_build/mmarker_wf.rdata")
 ```
 
-
 # ITS
 
 ```{r, include=FALSE}
 ## Initial Load for  ANALYSIS #1
 remove(list = ls())
 its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
-its18_ps_filt <- readRDS("files/perfect/rdata/its18_ps_filt.rds")
-its18_ps_perfect <- readRDS("files/perfect/rdata/its18_ps_perfect.rds")
-its18_ps_pime <- readRDS("files/pime/rdata/its18_ps_pime.rds")
+its18_ps_filt <- readRDS("files/filtering/arbitrary/rdata/its18_ps_filt.rds")
+its18_ps_perfect <- readRDS("files/filtering/perfect/rdata/its18_ps_perfect.rds")
+its18_ps_pime <- readRDS("files/filtering/pime/rdata/its18_ps_pime.rds")
 ```
 
 
@@ -4286,6 +4296,23 @@ knitr::include_graphics("figures/16s-da-asvs/before.png")
 save.image("page_build/mmarker_wf.rdata")
 ```
 
+```{r, include=FALSE, eval=TRUE}
+remove(list = ls())
+```
+
+# Workflow Output 
+
+Data products generated in this workflow can be downloaded from figshare.
+
+<iframe src="https://widgets.figshare.com/articles/16828249/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
+
+</br>
+
+<a href="metadata.html" class="btnnav button_round" style="float: right;">Next workflow:
+<br> 8. Metadata Analysis</a>
+<a href="beta.html" class="btnnav button_round" style="float: left;">Previous workflow:
+<br> 6. Beta Diversity & Dispersion Estimates</a>
+
 
 ##  Source Code {.appendix}
 
@@ -4293,4 +4320,10 @@ The source code for this page can be accessed on GitHub by [clicking this link](
 
 ## Data Availability {.appendix}
 
-Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16828249](https://doi.org/10.25573/data.16828249).
+Data generated in this workflow and the Rdata needed to run the workflow can be accessed on figshare at [10.25573/data.16828249](https://doi.org/10.25573/data.16828249).
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```

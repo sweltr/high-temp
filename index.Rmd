@@ -50,6 +50,17 @@ site: distill::distill_website
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
+```{r, xaringanExtra-clipboard, echo=FALSE, eval=TRUE}
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"></i>",
+    success_text = "<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
+```
+
 # Site Overview
 
 Welcome to the website of the **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR hig temperature experiment. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
@@ -79,6 +90,12 @@ There are **8** workflows in total. Each workflow contains code for processing t
 8. [Metadata](metadata.html). Multivariate Analysis Overview of environmental metadata and community composition. Includes metadata Normality Tests, Normalization, Autocorrelation Tests, Dissimilarity Correlation Tests, Best Subset of Variables, Distance-based Redundancy, and Capscale analysis.
 
 Though the workflows are annotated, they are not necessarily meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into.
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```
 
 ##  Source Code {.appendix}
 

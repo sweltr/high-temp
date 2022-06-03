@@ -17,13 +17,28 @@ ITS sample accession numbers are [ERS6485285-ERS6485299](https://www.ebi.ac.uk/e
 
 ## Pipeline Data
 
-Data for each individual pipeline are available through the Smithsonian figshare under a single collection at [doi:10.25573/data.c.5025362](https://doi.org/10.25573/data.c.5025362). In addition, data from each pipeline are available for download from figshare using the links at the bottom of each page (where applicable).
+Data for each individual pipeline are available through the Smithsonian figshare under a single collection at [doi:10.25573/data.c.5667571.v2](https://doi.org/10.25573/data.c.5667571.v2). In addition, data from each pipeline are available for download from figshare using the links at the bottom of each page (where applicable).
 
-```{r, echo=FALSE, eval=FALSE}
-## Accessing the R Code only
+Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14686665.v1
 
-#The  R code is available by clicking [here](files/data-availability/r-code). There you can find code for each step of the 16S rRNA pipeline. Please note that this  R code is pulled from the `.Rmd` files. The code has not been tested independent of the R Markdown workflows so *Use at Your Own Risk* please. In other words, the code works when run in the site build, but the complete pipeline has not been tested using just this code. I used `knitr::purl()` to pull  the code from the R Markdown file. I did this for you just in case you wanted the code and not hear me drone on about colors, zoomable figures, or Keanu Reeves. Commands that are commented out are things I tried that I could never get to work. Any line that starts like this: `## ----` is the code chuck name.
-```
+Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14686755.v1
+
+Scott, Jarrod (2022): (high-temp) No 1. DADA2 Workflow (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14687184.v1
+
+Scott, Jarrod (2022): (high-temp) No 2. Data Preparation (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14690739.v1
+
+Scott, Jarrod (2022): (high-temp) No 3. Filtering: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14701440.v1
+
+Scott, Jarrod (2022): (high-temp) No 4. Taxonomic: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16826737.v1
+
+Scott, Jarrod (2022): (high-temp) No 5. Aplha diversity (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16826779.v1
+
+Scott, Jarrod (2022): (high-temp) No 6. Beta diversity (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16828063.v1
+
+Scott, Jarrod (2022): (high-temp) No 7. Differentially Abundant ASVs & Taxa (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16828249.v1
+
+Scott, Jarrod (2022): (high-temp) No 8. Metadata Analysis (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16828294.v1
+
 
 ## Submitting Sequence Data
 
@@ -33,7 +48,7 @@ To submit to the ENA you need two data tables (plus your sequence data). One fil
 
 You can download our submission data tables here:
 
-* [Sample submission form](include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv)
+* [Sample submission form](include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv)  
 * [FASTq submission form](include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv)
 
 Note, these forms are study specific, so please use these as guides only.

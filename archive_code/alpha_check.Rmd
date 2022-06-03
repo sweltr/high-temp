@@ -26,7 +26,7 @@ library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
 pacman::p_load(tidyverse, DT, ampvis2, hilldiv, 
                microbiome, phytools, phangorn, 
-               pairwiseAdonis, naniar, 
+               pairwiseAdonis, codefolder, naniar, 
                labdsv, patchwork, agricolae, ggpubr,
                reactable, downloadthis, captioner,
                install = FALSE, update = FALSE)
@@ -43,6 +43,10 @@ knitr::opts_current$get(c(
 ))
 ```
 
+```{r, echo=FALSE, eval=TRUE}
+xaringanExtra::use_panelset()
+```
+
 </details>
 
 ```{r, include=FALSE, eval=TRUE}
@@ -50,6 +54,7 @@ knitr::opts_current$get(c(
 remove(list = ls())
 load("page_build/alpha_wf.rdata")
 ```
+
 
 ```{r, echo = FALSE, eval=TRUE, results = 'hide'}
 # Create the caption(s) with captioner
@@ -63,33 +68,30 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
-source(file.path("assets", "functions.R"))
-source("assets/captions/captions_alpha.R")
+```{r, xaringanExtra-clipboard, echo=FALSE, eval=TRUE}
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"></i>",
+    success_text = "<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
 ```
 
-```{r echo=FALSE, eval=TRUE}
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
+```{r, echo = FALSE, eval = TRUE}
+source("assets/captions/captions_alpha.R")
 ```
 
 # Synopsis
 
-This workflow contains diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow](dada2.html) **and** the [Data Preparation workflow](data-prep.html) **or** download the files linked below. See the [Data Availability](data-availability.html) page for complete details.
-
-## Workflow Input
-
-Files needed to run this workflow can be downloaded from figshare. 
-
-<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
-<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+This workflow contains diversity assessments for the 2018 high temperature data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow for 2018 High Temp samples](dada2.html) **and** the [Data Preparation workflow](data-prep.html) **or** begin with the output files from the Data Preparation workflow. See the [Data Availability](data-availability.html) page for complete details.
 
 # 16s rRNA
 
 ```{r, include=FALSE}
 ## Initial Load for  ANALYSIS #1
+remove(list = ls())
 set.seed(119)
 ## ASV FULL AND PIME AND PERfect
 ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
@@ -97,6 +99,7 @@ ssu18_ps_filt <- readRDS("files/filtering/arbitrary/rdata/ssu18_ps_filt.rds")
 ssu18_ps_perfect <- readRDS("files/filtering/perfect/rdata/ssu18_ps_perfect.rds")
 ssu18_ps_pime <- readRDS("files/filtering/pime/rdata/ssu18_ps_pime.rds")
 ```
+
 
 ```{r, echo=FALSE}
 swel_col <- c("#2271B2", "#71B222", "#B22271")
@@ -126,6 +129,7 @@ where `x` is the sample by ASV table, `i` is the q-value corresponding to the me
 
 ```{r, echo=FALSE}
 ## this is for subsettig samples..
+
 rm(ssu18_asv_pime_sum)
 ssu18_alpha_ds <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
 rm(list = ls(pattern = "_0"))
@@ -153,6 +157,7 @@ for (i in ssu18_alpha_ds) {
   rm(list = ls(pattern = "tmp_"))
 
 }
+
 tmp_objects <- data.frame(c("FULL data set (0C)", 
                             "FULL data set (3C)", 
                             "FULL data set (8C)", 
@@ -1241,14 +1246,30 @@ where `x` is the sample by ASV table, `i` is the q-value corresponding to the me
 
 We first transform all the data to relative abundance values, and compute new trees.
 
+```{r}
+set_to_plot <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
+tax_group <- c("Ascomycota", "Basidiomycota", 
+               "Glomeromycota")
+for (i in set_to_plot) {
+  for (j in tax_group) {
+  tmp_get <- get(i)
+  tmp_sub <- subset_taxa(tmp_get, Phylum == j)
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_", j))
+  assign(tmp_name, tmp_sub)
+  rm(list = ls(pattern = "tmp_"))
+  }
+}
+objects()
+```
+
 ```{r, code_folding=TRUE}
-its18_alpha_ds <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
+its18_alpha_ds <- c("its18_ps_work","its18_ps_work_Ascomycota", "its18_ps_work_Basidiomycota", "its18_ps_work_Glomeromycota")
 for (i in its18_alpha_ds) {
   tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
   tmp_ps@phy_tree <- NULL
-  tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
-                      tip.label = taxa_names(tmp_ps))
-  tmp_ps_norm <- merge_phyloseq(tmp_ps, sample_data, tmp_tree)
+  #tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
+  #                    tip.label = taxa_names(tmp_ps))
+  tmp_ps_norm <- merge_phyloseq(tmp_ps, sample_data)#, tmp_tree)
   tmp_asv <- data.frame(t(otu_table(tmp_ps_norm)))
   tmp_ps_name <- purrr::map_chr(i, ~ paste0(., "_norm"))
   assign(tmp_ps_name, tmp_ps_norm)
@@ -1318,6 +1339,141 @@ for (i in its18_alpha_ds) {
      rm(list = ls(pattern = "tmp_"))
 }
 objects()
+its18_ps_work_Ascomycota_hill
+its18_ps_work_Basidiomycota_hill
+its18_ps_work_Glomeromycota_hill
+```
+
+```{r, code_folding=TRUE}
+for (i in its18_alpha_ds) {
+    tmp_get <- get(i)
+    tmp_otu_table <- data.frame(t(otu_table(tmp_get)))
+    tmp_sample_info <- data.frame(sample_data(tmp_get))
+    tmp_taxonomy_table <- data.frame(tax_table(tmp_get))
+    #tmp_phylo_tree <- phy_tree(tmp_get)
+    tmp_taxonomy_table %<>% tidy_taxonomy
+    tmp_dataset <- microtable$new(sample_table = tmp_sample_info, 
+                                  otu_table = tmp_otu_table, 
+                                  tax_table = tmp_taxonomy_table)
+    tmp_dataset$tidy_dataset()
+    print(tmp_dataset)
+    #tmp_dataset$tax_table %<>% base::subset(Kingdom == "k__Archaea" | Kingdom == "k__Bacteria")
+    print(tmp_dataset)
+    #tmp_dataset$filter_pollution(taxa = c("mitochondria", "chloroplast"))
+    #print(tmp_dataset)
+    #tmp_dataset$tidy_dataset()
+    #print(tmp_dataset)
+    tmp_name <- purrr::map_chr(i, ~paste0(., "_me")) 
+    assign(tmp_name, tmp_dataset)
+    rm(list = ls(pattern = "tmp_"))
+}  
+objects()
+
+```
+
+```{r}
+its18_ps_work_me$sample_table$GROUP <- stringr::str_c(
+  its18_ps_work_me$sample_table$TREAT, "", its18_ps_work_me$sample_table$TEMP)
+temp_order <- c("C0", "W3", "W8")
+its18_ps_work_me$sample_table$GROUP %<>% factor(., levels = c("C0", "W3", "W8"))
+its18_ps_work_me$cal_alphadiv(PD = FALSE)
+t8 <- trans_alpha$new(dataset = its18_ps_work_me, group = "GROUP")
+t8$cal_diff(method = "anova")
+t8$alpha_data$GROUP %<>% factor(., levels = temp_order)
+
+t8$plot_alpha(add_letter = T, measure = "Observed", use_boxplot = TRUE)
+t8$plot_alpha(add_letter = T, measure = "Chao1", use_boxplot = TRUE)
+t8$plot_alpha(add_letter = T, measure = "ACE", use_boxplot = TRUE)
+t8$plot_alpha(add_letter = T, measure = "Shannon", use_boxplot = TRUE)
+t8$plot_alpha(add_letter = T, measure = "Simpson", use_boxplot = TRUE)
+t8$plot_alpha(add_letter = T, measure = "InvSimpson", use_boxplot = TRUE)
+t8$plot_alpha(add_letter = T, measure = "Fisher", use_boxplot = TRUE)
+```
+
+```{r}
+its18_ps_work_Ascomycota_me$sample_table$GROUP <- stringr::str_c(
+  its18_ps_work_Ascomycota_me$sample_table$TREAT, "", its18_ps_work_Ascomycota_me$sample_table$TEMP)
+temp_order <- c("C0", "W3", "W8")
+its18_ps_work_Ascomycota_me$sample_table$GROUP %<>% factor(., levels = c("C0", "W3", "W8"))
+its18_ps_work_Ascomycota_me$cal_alphadiv(PD = FALSE)
+t10 <- trans_alpha$new(dataset = its18_ps_work_Ascomycota_me, group = "GROUP")
+t10$cal_diff(method = "anova")
+t10$alpha_data
+
+t10$plot_alpha(add_letter = T, measure = "Observed", use_boxplot = TRUE)
+t10$plot_alpha(add_letter = T, measure = "Chao1", use_boxplot = TRUE)
+t10$plot_alpha(add_letter = T, measure = "ACE", use_boxplot = TRUE)
+t10$plot_alpha(add_letter = T, measure = "Shannon", use_boxplot = TRUE)
+t10$plot_alpha(add_letter = T, measure = "Simpson", use_boxplot = TRUE)
+t10$plot_alpha(add_letter = T, measure = "InvSimpson", use_boxplot = TRUE)
+t10$plot_alpha(add_letter = T, measure = "Fisher", use_boxplot = TRUE)
+```
+
+```{r}
+
+its18_ps_work_Basidiomycota_me$sample_table$GROUP <- stringr::str_c(
+  its18_ps_work_Basidiomycota_me$sample_table$TREAT, "", its18_ps_work_Basidiomycota_me$sample_table$TEMP)
+temp_order <- c("C0", "W3", "W8")
+its18_ps_work_Basidiomycota_me$sample_table$GROUP %<>% factor(., levels = c("C0", "W3", "W8"))
+its18_ps_work_Basidiomycota_me$cal_alphadiv(PD = FALSE)
+
+t13 <- trans_alpha$new(dataset = its18_ps_work_Basidiomycota_me, group = "GROUP")
+t13$cal_diff(method = "anova")
+t13$alpha_data
+
+t13$plot_alpha(add_letter = T, measure = "Observed", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "Chao1", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "ACE", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "Shannon", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "Simpson", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "InvSimpson", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "ACE", use_boxplot = TRUE)
+t13$plot_alpha(add_letter = T, measure = "Fisher", use_boxplot = TRUE)
+```
+
+```{r}
+its18_ps_work_Glomeromycota_me$sample_table$GROUP <- stringr::str_c(
+  its18_ps_work_Glomeromycota_me$sample_table$TREAT, "", its18_ps_work_Glomeromycota_me$sample_table$TEMP)
+temp_order <- c("C0", "W3", "W8")
+its18_ps_work_Glomeromycota_me$sample_table$GROUP %<>% factor(., levels = c("C0", "W3", "W8"))
+
+its18_ps_work_Glomeromycota_me$cal_alphadiv(PD = FALSE)
+t22 <- trans_alpha$new(dataset = its18_ps_work_Glomeromycota_me, group = "GROUP")
+t22$cal_diff(method = "anova")
+#t22$alpha_data
+
+t22$plot_alpha(add_letter = T, measure = "Observed", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "Chao1", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "ACE", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "Shannon", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "Simpson", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "InvSimpson", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "Fisher", use_boxplot = TRUE)
+t22$plot_alpha(add_letter = T, measure = "Coverage", use_boxplot = TRUE)
+```
+
+
+
+```{r, echo=FALSE}
+######################### FULL ASV
+its18_work_hill_samp <- its18_ps_work_hill %>% dplyr::rename("Observed" = 2,
+                                                             "Shannon_exp" = 3,
+                                                             "InvSimpson" = 4)
+its18_work_hill_samp <- dplyr::left_join(data.frame(sample_data(its18_ps_work)), its18_work_hill_samp)
+its18_work_hill_samp <- its18_work_hill_samp[order(its18_work_hill_samp$PLOT, its18_work_hill_samp$TEMP),]
+
+######################### Filt ASV
+its18_filt_hill_samp <- its18_ps_filt_hill %>% dplyr::rename("Observed_fi" = 2,
+                                                             "Shannon_exp_fi" = 3,
+                                                             "InvSimpson_fi" = 4)
+######################### PERfect ASV
+its18_perfect_hill_samp <- its18_ps_perfect_hill %>% dplyr::rename("Observed_pe" = 2,
+                                                             "Shannon_exp_pe" = 3,
+                                                             "InvSimpson_pe" = 4)
+######################### PIME ASV
+its18_pime_hill_samp <- its18_ps_pime_hill %>% dplyr::rename("Observed_pi" = 2,
+                                                             "Shannon_exp_pi" = 3,
+                                                             "InvSimpson_pi" = 4)
 ```
 ## Hill Numbers Summary
 
@@ -2052,18 +2208,18 @@ for (i in samp_ps) {
 remove(list = ls())
 ```
 
-# Workflow Output 
-
-Data products generated in this workflow can be downloaded from figshare.
-
-<iframe src="https://widgets.figshare.com/articles/16826779/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
-
 </br>
 
 <a href="beta.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 6. Beta Diversity & Dispersion Estimates</a>
 <a href="taxa.html" class="btnnav button_round" style="float: left;">Previous workflow:
 <br> 4. Taxonomic Diversity</a>
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```
 
 ##  Source Code {.appendix}
 
@@ -2072,9 +2228,3 @@ The source code for this page can be accessed on GitHub by [clicking this link](
 ## Data Availability {.appendix}
 
 Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16826779](https://doi.org/10.25573/data.16826779).
-
-## Last updated on {.appendix}
-
-```{r,echo=FALSE, eval=TRUE}
-Sys.time()
-```
