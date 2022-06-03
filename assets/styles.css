@@ -150,27 +150,34 @@ d-article aside code {
 /********************************/
 
 .nav-dropdown-content .nav-dropdown-header {
-  text-transform: none;
+  text-transform: uppercase;
   color: #686868;
 }
+
 .nav-dropdown-content a {
   font-family: 'Work Sans'
 }
 .nav-dropdown .nav-dropbtn {
-/*  color: #FEFEFE; */
+  color: #FEFEFE;
   font-weight: 400;
 }
 
 .distill-site-header .logo img {
   margin-top: 10px;
   max-height: 30px;
-  margin-bottom: 10px;
+  margin-bottom: auto;
 }
 
 .distill-site-nav {
+    color: #FEFEFE;
     background-color: #113858;
-    font-size: 16px;
-    font-weight: 300;
+    font-size: 0.95em;
+    font-weight: 400;
+    min-width: 165px;
+    position: absolute;
+    font-family: 'Karla';
+    letter-spacing: .1em;
+    text-transform: uppercase;
 }
 
 img {
@@ -250,6 +257,13 @@ button.btn.btn-default {
   margin-bottom: 15px;
 }
 
+button.btn.btn-success {
+  font-size: 1em;
+  font-family: "PT Sans";
+  border-color: #d55e00;
+  border-width: medium;
+  margin-bottom: 15px;
+}
 /********************************/
 /* controls reactable  */
 /********************************/
@@ -257,3 +271,19 @@ button.btn.btn-default {
 div.rt-text-content {
   font-size: 1.2em;
 }
+
+/********************************/
+/* next and previous buttons at the end of the article */
+/********************************/
+
+.btnnav {
+  border: none;
+  background-color: #113858;
+  color: #f2f2f2;
+  padding: 14px 28px;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.button_round {border-radius: 12px;}

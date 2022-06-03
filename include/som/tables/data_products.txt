@@ -1,0 +1,8 @@
+url	archive	content
+https://doi.org/10.25573/data.c.5667571.v2	Figshare	collection of data and data products.
+https://zenodo.org/badge/latestdoi/XXXXXXXX	Zenodo	reproducible workflows in R Markdown format.
+https://doi.org/10.25573/data.14686665	Figshare	Raw 16S rRNA data for each sample (before removing primers).
+https://doi.org/10.25573/data.14686755	Figshare	Raw ITS data for each sample (before removing primers).
+https://www.ebi.ac.uk/ena/browser/view/PRJEB45074	ENA	 study accession number PRJEB45074 (ERP129199) for all sequencing data (primers removed).
+https://www.ebi.ac.uk/ena/browser/view/ERS6485270-ERS6485284	ENA	 16S rRNA sample accession numbers (ERS6485270-ERS6485284, primers removed).
+https://www.ebi.ac.uk/ena/browser/view/ERS6485285-ERS6485299	ENA	 ITS sample accession numbers (ERS6485285-ERS6485299, primers removed).
