@@ -22,7 +22,7 @@ set.seed(119)
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
 pacman::p_load(tidyverse, DT, microbiome, taxa, formatR,
-               captioner, reactable, downloadthis,
+               captioner, reactable, downloadthis, fontawesome,
                metacoder, ampvis2, ape, statnet.common, 
                install = FALSE, update = FALSE)
 
@@ -38,6 +38,14 @@ knitr::opts_current$get(c(
 
 </details>
 
+# Workflow Input
+
+> You will either need to run the [DADA2 workflow](dada2.html) or download the files linked below. See  the [Data Availability](data-availability.html) page for complete details.
+
+Files needed to run this workflow can be downloaded from figshare. These are the output files from the [DADA2 workflow](dada2.html) page.
+
+<iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+
 These workflows share many common variable names so you must split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
 
 # 16s rRNA Data
@@ -46,7 +54,6 @@ These workflows share many common variable names so you must split the workflow 
 ## ONLY FOR PAGE BUILD
 remove(list = ls())
 load("page_build/data_prep_ssu18_wf.rdata")
-objects()
 ```
 
 ```{r, echo = FALSE, eval = TRUE, results = 'hide'}
@@ -56,6 +63,14 @@ caption_fig <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b
 # Create a function for referring to the tables in text
 ref <- function(x) str_extract(x, "[^|]*") %>% 
   trimws(which = "right", whitespace = "[ ]")
+```
+
+```{r echo=FALSE, eval=TRUE}
+source(file.path("assets", "functions.R"))
+# This is needed to add a COPY CODE button to code chunks
+clipboard_button()
+# This is needed to use PANELS
+xaringanExtra::use_panelset()
 ```
 
 ```{r, echo = FALSE, eval = TRUE}
@@ -378,7 +393,7 @@ ps_work_o <- ps_filt
 
 The code eliminated an additional **`r ntaxa(ps_no_euk) - ntaxa(ps_filt)` Kingdom level NA ASVs** from the phyloseq object.
 
-## Rename *NA* taxonomic ranks
+## Rename NA taxonomic ranks
 
 Phyloseq has an odd way of dealing with taxonomic ranks that have no value---in other words,  **NA** in the tax table. The first thing we are going to do before moving forward is to change all of the *NA*s to have a value of the next highest classified rank. For example, `ASV26` is not classified at the Genus level but is at Family level (Xanthobacteraceae). So we change the Genus name to *Family_Xanthobacteraceae*. The code for comes from these two posts on the phyloseq GitHub, both by [MSMortensen](https://github.com/MSMortensen): issue [#850](https://github.com/joey711/phyloseq/issues/850#issuecomment-394771087) and issue [#990](https://github.com/joey711/phyloseq/issues/990#issuecomment-424618425).
 
@@ -580,7 +595,6 @@ The phyloseq object *after* changing NA ranks.
 ```{r, eval=TRUE}
 ps_work
 head(get_taxa_unique(ps_work, "Family"), 16)
-objects()
 ```
 
 ## Final Steps
@@ -613,16 +627,24 @@ saveRDS(ps_work_o, "files/data-prep/rdata/ssu18_ps_work_o.rds")
 ## ONLY FOR PAGE BUILD
 remove(list = ls())
 load("page_build/data_prep_its18_wf.rdata")
-objects()
 ```
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r, echo=FALSE, eval=TRUE, results='hide'}
 # Create the caption(s) with captioner
 caption_tab <- captioner(prefix = "(ITS) Table", suffix = " |", style = "b")
 caption_fig <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
 # Create a function for referring to the tables in text
 ref <- function(x) str_extract(x, "[^|]*") %>% 
   trimws(which = "right", whitespace = "[ ]")
+```
+
+
+```{r echo=FALSE, eval=TRUE}
+source(file.path("assets", "functions.R"))
+# This is needed to add a COPY CODE button to code chunks
+clipboard_button()
+# This is needed to use PANELS
+#xaringanExtra::use_panelset()
 ```
 
 ```{r, echo = FALSE, eval = TRUE}
@@ -654,7 +676,6 @@ Table headers are as follows:
 | `Remain`                  | percent of reads remaining from `input` to `nonchim`                                     |
 | `FastqID`                 | base name of the fastq file                                                              |
 
-
 ```{r, echo=FALSE}
 tmp_tab1 <- read.table(
   "files/dada2/tables/its18_sample_seq_info.txt", header = TRUE, sep = "\t")
@@ -679,7 +700,6 @@ colnames(seq_table) <- c("Sample_ID", "root name", "Plot", "Treatment",
                          "final reads", "no. ASVs", "per. reads remain")
 rm(list = ls(pattern = "tmp_"))
 ```
-
 
 <small>`r caption_tab("seq_summary_its")`</small>
 
@@ -717,12 +737,12 @@ reactable(seq_table,
   theme = reactableTheme(style = list(fontSize = "0.8em")))
 
 cutoff <- 1000
-remove_sam <- seq_table[seq_table$nonchim <= cutoff, ]
+remove_sam <- seq_table[seq_table$`final reads` <= cutoff, ]
 ```
 
 
-
 The following samples have fewer than **`r cutoff`** reads at the end of the workflow:
+
 **`r remove_sam$Sample_ID`**.
 
 We can also plot the final read count by the temperature where the sample was collected.
@@ -944,7 +964,7 @@ ps_filt_no_nc <- prune_taxa(taxa_sums(ps_filt_no_low) > 0, ps_filt_no_low)
 ps_filt_no_nc
 ```
 
-## Rename *NA* taxonomic ranks
+## Rename NA taxonomic ranks
 
 Phyloseq has an odd way of dealing with taxonomic ranks that have no value---in other words,  *NA* in the tax table. The first thing we are going to do before moving forward is to change all of the *NA*s to have a value of the next highest classified rank. For example, `ASV4` is not classified at the Genus level but is at Family level (Nitrososphaeraceae). So we change the Genus name to *Family_Nitrososphaeraceae*. The code for comes from these two posts on the phyloseq GitHub, both by [MSMortensen](https://github.com/MSMortensen): issue [#850](https://github.com/joey711/phyloseq/issues/850#issuecomment-394771087) and issue [#990](https://github.com/joey711/phyloseq/issues/990#issuecomment-424618425).
 
@@ -1176,7 +1196,20 @@ saveRDS(ps_work_o, "files/data-prep/rdata/its18_ps_work_o.rds")
 remove(list = ls())
 ```
 
+# Workflow Output 
+
+Data products generated in this workflow can be downloaded from figshare.
+
+<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+
 That's all for this part!
+
+</br>
+
+<a href="filtering.html" class="btnnav button_round" style="float: right;">Next workflow:
+<br> 3. Filtering</a>
+<a href="dada2.html" class="btnnav button_round" style="float: left;">Previous workflow:
+<br> 1. DADA2 Workflow</a>
 
 
 ##  Source Code {.appendix}
@@ -1185,4 +1218,10 @@ You can find the source code for this page by [clicking this link](https://githu
 
 ## Data Availability {.appendix}
 
-Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.14690739](https://doi.org/10.25573/data.14690739).
+Data generated in this workflow and the `.Rdata` need to run the workflow can be accessed on figshare at [10.25573/data.14690739](https://doi.org/10.25573/data.14690739).
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```

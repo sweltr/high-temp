@@ -1,5 +1,5 @@
 name: "web"
-title: "sweltr"
+title: ""
 base_url: https://sweltr.github.io/
 repository_url: https://github.com/sweltr/high-temp/
 description: |
@@ -8,14 +8,14 @@ output_dir: "public_build"
 creative_commons: CC BY
 exclude: ["public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build", "archive_code"]
 navbar:
-  icon: icon.png
-  title: ""
-  source_url: false
-  search: false
-  left:
+  logo:
+    image: assets/icon.png
+    href: index.html
+  #title: "SWELTR"
+#  source_url: false
+#  search: false
+#  left:
 #    - text: "Home"
-    - icon: fa-home
-      href: index.html
 #    - text: "Introduction"
 #      icon: fa-info
 #      href: temp.html
@@ -23,6 +23,8 @@ navbar:
 #      icon: fa-flask
 #      href: temp.html
   right:
+    - icon: fa-home
+      href: index.html
     - text: "A. Processing"
       menu:
         - text: "Workflows"
@@ -50,7 +52,7 @@ navbar:
 #    - icon: fa-code fa-lg
 #      href: raw_code.txt
 #  right:
-    - text: "Data Products"
+    - text: "Data"
       href: data-availability.html
     - text: "SOM"
       href: som.html

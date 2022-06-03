@@ -36,6 +36,7 @@ knitr::opts_current$get(c(
   "autodep"
 ))
 remove(list = ls())
+source(file.path("assets", "functions.R"))
 ```
 
 </details>
@@ -49,21 +50,34 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
+```{r echo=FALSE, eval=TRUE}
+# This is needed to add a COPY CODE button to code chunks
+clipboard_button()
+# This is needed to use PANELS
+xaringanExtra::use_panelset()
+```
+
 ```{r, echo = FALSE, eval = TRUE}
 source("assets/captions/captions_dada2.R")
 ```
 
 # Prerequisites
 
-In order to run this workflow, you either need the *raw* data, available on the [figshare project site](), or the *trimmed* data, available from the European Nucleotide Archive (ENA) under project accession number [PRJEB45074](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). See the [Data Availability](data-availability.html) page for more details.
-
-This workflow contains the code we used to process the 16S rRNA and ITS data sets using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2]. Workflow construction is based on the [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) and the primer identification section of the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html).
+In order to run this workflow, you either need the *raw* data, available on the figshare project site (see below), or the *trimmed* data, available from the European Nucleotide Archive (ENA) under project accession number [PRJEB45074](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). See the [Data Availability](data-availability.html) page for more details.
 
 <aside>
 Because the workflows share many variable names, you must either split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
 </aside>
 
+This workflow contains the code we used to process the 16S rRNA and ITS data sets using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2]. Workflow construction is based on the [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) and the primer identification section of the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html).
+
 # 16s rRNA Data
+
+## Workflow Input
+
+All files needed to run this workflow can be downloaded from figshare. 
+
+<iframe src="https://widgets.figshare.com/articles/14686665/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
 
 > NOTE: The reverse reads for 16S rRNA data set are unusable (see below), therefore this workflow deals with forward reads *only*.
 
@@ -1118,7 +1132,6 @@ caption_fig <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
 ref <- function(x) str_extract(x, "[^|]*") %>% 
   trimws(which = "right", whitespace = "[ ]")
 ```
-</details>
 
 ```{r, echo = FALSE, eval = TRUE, results = 'hide'}
 ## Table captions
@@ -1140,13 +1153,20 @@ caption_fig("error_R_its", "Reverse reads: Observed frequency of each transition
 caption_fig("read_length_its", "Distribution of read length by total ASVs before removing extreme length variants.")
 #<small>`r caption_fig("read_length_its")`</small>
 ```
+
+## Workflow Input
+
+All files needed to run this workflow can be downloaded from figshare. 
+
+<iframe src="https://widgets.figshare.com/articles/14686755/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+
 ## Overview
 
 ### Sequence Files & Samples
 
 We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
 
-````{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
 seq_table <- read.table("files/dada2/tables/its18_sample_seq_info.txt",
                         header = TRUE, sep = "\t")
 ```
@@ -2147,6 +2167,7 @@ This workflow was run on the [Smithsonian High Performance Cluster (SI/HPC)](htt
 
 <details markdown="1">
 <summary>Show/hide  R Session Info</summary>
+
 ```
 sessionInfo()
 R version 4.0.0 (2020-04-24)
@@ -2285,12 +2306,20 @@ devtools::session_info()
 
 <br/>
 
+# Workflow Output 
+
+Data products generated in this workflow can be downloaded from figshare.
+
+<iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
 
 The end!
 
 ```{r include=FALSE, eval=TRUE}
 remove(list = ls())
 ```
+
+<a href="data-prep.html" class="btnnav button_round" style="float: left;">Next workflow:
+<br> 2. Data Set Preparation</a>
 
 ##  Source Code {.appendix}
 
@@ -2299,3 +2328,9 @@ The source code for this page can be accessed on GitHub by [clicking this link](
 ## Data Availability {.appendix}
 
 Raw fastq files available on figshare at [10.25573/data.14686665](https://doi.org/10.25573/data.14686665) for the 16S rRNA data and [10.25573/data.14686755](https://doi.org/10.25573/data.14686755) for the ITS data. Trimmed fastq files (primers removed) available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). Data generated in this workflow can be accessed on figshare at [10.25573/data.14687184](https://doi.org/10.25573/data.14687184).
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```

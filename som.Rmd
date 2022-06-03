@@ -2,23 +2,22 @@
 title: "Electronic Supplementary Material"
 description: |
   Extended supplementary material for the publication.
-bibliography: assets/cite.bib 
+bibliography: assets/cite_som.bib 
 output:
     distill::distill_article:
       css: assets/styles.css
       toc: true
-      toc_depth: 3
+      toc_depth: 2
 ---
 
 ```{r setup, message = FALSE, warning = FALSE, results='hide', echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 set.seed(0199)
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
 require(gdata)
-pacman::p_load(DT, ggplot2, dplyr, microbiome, tidyverse, 
-               data.table, plyr, stringr, labdsv, reshape, 
-               metacoder, naniar,   
+pacman::p_load(captioner, tidyverse, reactable, downloadthis,
+               kableExtra, kfigr,
                install = FALSE, update = FALSE)
 options(scipen=999)
 knitr::opts_current$get(c(
@@ -30,18 +29,1720 @@ knitr::opts_current$get(c(
 ))
 ```
 
-
 ```{r, include=FALSE, eval=TRUE}
-## Load to build page only #2
 remove(list = ls())
 ```
 
-> Content coming  soon!
+```{r, xaringanExtra-clipboard, echo=FALSE, eval=TRUE}
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"></i>",
+    success_text = "<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
+```
 
-This page will contain the Supplementary Information for the manuscript once the paper has been accepted for publication. It will basically be the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly. 
+```{r set_wd, include=FALSE}
+knitr::opts_knit$set(root.dir = getwd())
+options(knitr.kable.NA = '')
+#knitr::opts_current$get('label')
+# This will setwd to wherever the .Rmd file is opened.
+#\hfill\break
+options(knitr.table.format = "html")
+```
 
-Have a nice day. 
+```{r eval=TRUE, echo=FALSE}
+# This is gross but here is how I solved the problem
+# In captioner script:
+# 1. L97 changed tag <- "**" to tag <- "\\textbf{"
+# 2. L108 removed final "tag"
+source("assets/captioner_jjs.R")
+
+caption_tab <- captioner(prefix = "Supplementary Table", suffix = " |")
+caption_fig <- captioner(prefix = "Supplementary Figure", suffix = " |")
+caption_ds <- captioner(prefix = "Supplementary Dataset", suffix = " |")
+
+## For inline referencing 
+ref <- function(x) str_extract(x, "[^|]*") %>% 
+  trimws(which = "right", whitespace = "[ ]")  %>% 
+  str_replace_all("[[:punct:]]", "") %>% 
+  str_replace_all("textbf", "")
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+linesep <- function(x, y = character()){
+  if(!length(x))
+    return(y)
+  linesep(x[-length(x)], c(rep('', x[length(x)]-1), '\\addlinespace', y))  
+}
+```
+
+```{r include=FALSE}
+## Table captions
+caption_tab("tab_data_products", "Publicly available data and data products. ENA refers to the European Nucleotide Archive")
+caption_tab("tab_samp_dets", "Sample Details.")
+caption_tab("tab_primers", "Primer sequences for 16S rRNA & ITS gene amplification.")
+
+caption_tab("tab_track_ssu", "Tracking read changes through DADA2 workflow (16S rRNA).")
+caption_tab("tab_track_its", "Tracking read changes through DADA2 workflow (ITS).")
+
+caption_tab("tab_filter_ssu", "Results of different filtering approaches (16S rRNA).")
+caption_tab("tab_filter_its", "Results of different filtering approaches (ITS).")
+
+caption_tab("tab_alpha_div_ssu", "Hill numbers (16S rRNA) for samples in the unfiltered & filtered data sets.")
+caption_tab("tab_norm_test_ssu", "Summary of significant tests (16S rRNA) for unfiltered & filtered datas sets.")
+caption_tab("tab_alpha_div_its", "Hill numbers (ITS) for samples in the unfiltered & filtered data sets.")
+caption_tab("tab_norm_test_its", "Summary of significant tests (ITS) for the unfiltered & filtered data sets.")
+
+caption_tab("tab_beta_disp_ssu", "Results of beta dispersion & permutation test for homogeneity of multivariate dispersions (16S rRNA).")
+caption_tab("tab_beta_disp_its", "Results of beta dispersion & permutation test for homogeneity of multivariate dispersions (ITS).")
+
+caption_tab("tab_beta_sig", "Summary of beta diversity significant tests for the unfiltered & filtered data sets.")
+
+caption_tab("tab_mantel", "Mantel tests for 16S rRNA & ITS data compared to each of the three metadata groups. Significant differences denoted by p-values < 0.05.")
+```
+
+```{r include=FALSE}
+## Dataset captions
+caption_ds("tab_supp_ds_1", "Output from the **16S rRNA** DADA2 workflow containing information for each ASVs. ")
+caption_ds("tab_supp_ds_2", "Output from the **ITS** DADA2 workflow containing information for each ASVs.")
+caption_ds("tab_supp_ds_3", "Complete metadata information collected in this study.")
+caption_ds("tab_supp_ds_4", "Differentially abundant (DA) ASVs from the 16S rRNA data identified using ISA.")
+caption_ds("tab_supp_ds_5", "Differentially abundant (DA) ASVs from the 16S rRNA data identified using LEfSe. ")
+caption_ds("tab_supp_ds_6", "Differentially abundant (DA) ASVs from the ITS data identified using ISA.")
+caption_ds("tab_supp_ds_7", "Differentially abundant (DA) ASVs from the ITS data identified using LEfSe.")
+```
+
+```{r include=FALSE}
+## Figure captions
+caption_fig("fig_taxa_ssu", "Top bacterial/archaeal phyla (unfiltered data). (a) Collapsed by temperature treatment. (b) Samples faceted by temperature treatment. ")
+caption_fig("fig_taxa_its", "Top fungal orders (unfiltered data). (a) Collapsed by temperature treatment. (b) Samples faceted by temperature treatment. ")
+
+caption_fig("alpha_div_plots_ssu", "Alpha diversity (16S rRNA) of the unfiltered & filtered datas sets. Significant differences denoted by asterisks (* p ≤ 0.05, ** p ≤ 0.01, *** p ≤ 0.001, **** p ≤ 0.0001).")
+
+caption_fig("alpha_div_plots_its", "Alpha diversity (ITS) of the unfiltered & filtered datas sets. Significant differences denoted by asterisks (* p ≤ 0.05, ** p ≤ 0.01, *** p ≤ 0.001, **** p ≤ 0.0001). ")
+
+caption_fig("fig_auto_cor_ssu", "Autocorrelation plots (16S rRNA) against: (left) environmental & edaphic properties; (middle) microbial functional responses; & (right) temperature adaptation.")
+caption_fig("fig_auto_cor_its", "Autocorrelation plots (ITS) against: (left) environmental & edaphic properties; (middle) microbial functional responses; & (right) temperature adaptation.")
+
+## APPENDIX 1
+caption_fig("fig_taxa_acido", "Acidobacteriota family plots.")
+caption_fig("fig_taxa_actino", "Actinobacteriota family plots.")
+caption_fig("fig_taxa_alpha", "Alphaproteobacteria family plots.")
+caption_fig("fig_taxa_gamma", "Gammaproteobacteria family plots.")
+caption_fig("fig_taxa_bacter", "Bacteroidota family plots.")
+caption_fig("fig_taxa_firm", "Firmicutes family plots.")
+caption_fig("fig_taxa_myxo", "Myxococcota family plots.")
+caption_fig("fig_taxa_veruco", "Verrucomicrobiota family plots")
+#(`r ref(caption_tab("fig_taxa_ssu"))`)
+```
+
+```{r, eval=TRUE, echo=FALSE}
+paths <- c("include/som/figures/taxa_plots_main_ssu.png", #1
+           "include/som/figures/taxa_plots_main_its.png", #2
+           "include/som/figures/ssu_supp_alpha_div.png", #3
+           "include/som/figures/its_supp_alpha_div.png", #4
+
+           "include/som/figures/ssu_auto_cor.png", #5
+           "include/som/figures/its_auto_cor.png", #6
+           
+           "include/som/figures/taxa_plots_class_Acido.png", #7
+           "include/som/figures/taxa_plots_class_Actino.png", #8
+           "include/som/figures/taxa_plots_class_Alpha.png", #9
+           "include/som/figures/taxa_plots_class_Gamma.png", #10
+           "include/som/figures/taxa_plots_class_Bacter.png", #11
+           "include/som/figures/taxa_plots_class_Firm.png", #12
+           "include/som/figures/taxa_plots_class_Myxo.png", #13
+           "include/som/figures/taxa_plots_class_Verruco.png" #14
+)
+```
+
+# Overview
+
+This page contains the Supplementary Information for the manuscript ***Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission***. It is basically the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly.
+
+# Content Description
+
+## Supplmentary Tables
+
+`r figr("supp_tab_1", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Publicly available data and data products.  
+`r figr("supp_tab_2", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Sample Details.  
+`r figr("supp_tab_3", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Primer sequences for 16S rRNA & ITS gene amplification.  
+`r figr("supp_tab_4", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Tracking read changes through DADA2 workflow (16S rRNA).  
+`r figr("supp_tab_5", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Tracking read changes through DADA2 workflow (ITS).  
+`r figr("supp_tab_6", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Results of different filtering approaches (16S rRNA).  
+`r figr("supp_tab_7", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Results of different filtering approaches (ITS).  
+`r figr("supp_tab_8", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Hill numbers (16S rRNA) for samples in the unfiltered & filtered data sets.  
+`r figr("supp_tab_9", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Summary of significant tests (16S rRNA) for unfiltered & filtered datas sets.  
+`r figr("supp_tab_10", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Hill numbers (ITS) for samples in the unfiltered & filtered data sets.  
+`r figr("supp_tab_11", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Summary of significant tests (ITS) for the unfiltered & filtered data sets.  
+`r figr("supp_tab_12", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Results of beta dispersion & permutation test for homogeneity of multivariate dispersions (16S rRNA).  
+`r figr("supp_tab_13", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Results of beta dispersion & permutation test for homogeneity of multivariate dispersions (ITS).  
+`r figr("supp_tab_14", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Summary of beta diversity significant tests for the unfiltered & filtered data sets.  
+`r figr("supp_tab_15", prefix = TRUE, link = TRUE, type="Supplmentary Table")` | Mantel tests for 16S rRNA & ITS data compared to each of the three metadata groups.   
+
+
+## Supplmentary Figures
+
+`r figr("supp_fig_1", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Top bacterial/archaeal phyla (unfiltered data).  
+`r figr("supp_fig_2", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Top fungal orders (unfiltered data).   
+`r figr("supp_fig_3", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alpha diversity (16S rRNA) of the unfiltered & filtered datas sets. 
+`r figr("supp_fig_4", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alpha diversity (ITS) of the unfiltered & filtered datas sets. 
+`r figr("supp_fig_5", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Autocorrelation plots (16S rRNA).  
+`r figr("supp_fig_6", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Autocorrelation plots (ITS).  
+`r figr("supp_fig_7", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Acidobacteriota family plots.  
+`r figr("supp_fig_8", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Actinobacteriota family plots.  
+`r figr("supp_fig_9", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alphaproteobacteria family plots.  
+`r figr("supp_fig_10", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Gammaproteobacteria family plots.  
+`r figr("supp_fig_11", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Bacteroidota family plots.  
+`r figr("supp_fig_12", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Firmicutes family plots.  
+`r figr("supp_fig_13", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Myxococcota family plots.  
+`r figr("supp_fig_14", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Verrucomicrobiota family plots  
+
+
+## Supplmentary Datasets
+
+`r figr("supp_ds_1", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Output from the **16S rRNA** DADA2 workflow containing information for each ASVs.  
+`r figr("supp_ds_2", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Output from the **ITS** DADA2 workflow containing information for each ASVs.   
+`r figr("supp_ds_3", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Complete metadata information collected in this study.  
+`r figr("supp_ds_4", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Differentially abundant (DA) ASVs from the 16S rRNA data identified using ISA.  
+`r figr("supp_ds_5", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Differentially abundant (DA) ASVs from the 16S rRNA data identified using LEfSe.  
+`r figr("supp_ds_6", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Differentially abundant (DA) ASVs from the ITS data identified using ISA.  
+`r figr("supp_ds_7", prefix = TRUE, link = TRUE, type="Supplmentary Dataset")` | Differentially abundant (DA) ASVs from the ITS data identified using LEfSe.  
+
+
+# Data & Code Availability
+
+We provide additional data products and code through online repositories (**`r ref(caption_tab("tab_data_products"))`**). For further details, please see the [Data Availability](https://sweltr.github.io/high-temp/data-availability.html) page on the project website.
+
+```{r supp_tab_1, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_data_products")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/data_products.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "data_products",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r echo=FALSE, layout="l-body", eval=TRUE}
+seq_table$url <- paste0('<a href="', seq_table$url, '">', seq_table$url, '</a>')
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    url = colDef(name = "URL", html = TRUE,
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 160),
+    archive = colDef(name = "Archive", align = "left", minWidth = 35),
+    content = colDef(name = "Content", minWidth = 150, resizable = FALSE, align = "left")
+    ), 
+  searchable = FALSE, defaultPageSize = 12, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.7em")))
+rm(seq_table)
+```
+
+# Supplementary Methods
+
+## Sample naming
+
+Samples were named by combining the plot number (P01--P10) with the treatment (C = control, W = warming), the temperature (0 = no warming, 3 = +3°C warming, and 8 = +8°C warming), and the plot pairing designation (A—E). For example, **P07_W3D** is the sample from plot #7 that was warmed by +3°C. This sample is part of group **D** which contains P07_W8D (warmed by +8°C) and P08_C0D (the control sample for this group) (**`r ref(caption_tab("tab_samp_dets"))`**).
+
+```{r supp_tab_2, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_samp_dets")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/sample_details.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "sample_details",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Sample_ID = colDef(name = "Sample ID",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 40),
+    Plot = colDef(name = "Plot", align = "left"),
+    `Depth_(cm)` = colDef(name = "Depth (cm)", align = "left"),
+    Treatment = colDef(name = "Treatment", align = "left"),
+    Pair = colDef(name = "Pair", align = "left")
+    ), 
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+## Processing microbial community data
+
+DNA was extracted using the DNeasy Powersoil kit (Qiagen) and bacterial and fungal communities were amplified using a two-stage PCR protocol where the locus specific primers used for PCR1 included the Illumina sequencing primer sequence on their 5’ ends. For bacteria, we amplified the V4 hypervariable region of the 16S rRNA gene using the 515F–806R [@caporaso2011global] primer pair (**`r ref(caption_tab("tab_primers"))`**). For fungi, we amplified the first internal transcribed spacer (ITS1) region of the rRNA operon, using the primers ITS1F [@gardes1993its] and ITS2 [@white1990amplification] (**`r ref(caption_tab("tab_primers"))`**). 
+
+```{r supp_tab_3, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_primers")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/primer_table.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "primer_table",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Data_set = colDef(name = "Dataset",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee", fontWeight = "bold", fontSize = "1.1em"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 25),
+    Primer_name = colDef(name = "Primer name", align = "center"),
+    Primer_sequence = colDef(name = "Primer sequence", align = "left", minWidth = 40)
+    ), 
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+We used Platinum 2X Mastermix (Thermo) in PCR reactions with a final volume of 12.5µl with 25 cycles using a 50°C annealing temperature for both loci. PCR2 used 2µl of PCR1 as template and added on remaining Illumina adaptors and index sequences. PCR2 products were cleaned and normalized using PCR Normalization plates (CharmBiotech, USA) and the pooled libraries concentrated using AMPure beads (Beckman Coulter, USA). Libraries were sequenced on an Illumina MiSeq with 250bp paired end reads.
+
+Reads in the 16S rRNA and ITS data sets were trimmed of forward and reverse primers using cutadapt [@martin2011cutadapt] (v1.18) following an initial filtering step that removed reads with ambiguous bases. Primer sequences with more than 12% error rate (--error-rate = 0.12) were discarded. Reads were then processed using DADA2 [@callahan2016dada2] (v1.16.0) within the R environment [@team2013r] (v4.1.0). Reads were dropped from the data set if they had three or more expected errors (maxEE = 2), at least one base with very low quality (truncQ = 2), or at least one position with an unspecified nucleotide (maxN = 0). Based on visual inspection of quality plots, only the forward reads from the 16S rRNA data were retained, while both forward and reverse reads were retained in the ITS data set. Remaining reads were dereplicated before inferring amplicon sequence variants (ASVs). We used ASVs over traditional OTUs because ASVs provide single nucleotide resolution, thus providing more detailed resolution when examining treatment effects. Paired-end reads (ITS only) were merged and read pairs that did not match exactly across at least 12 base pairs (minOverlap = 12) were discarded. For the 16S rRNA data we retained amplicons between 230 and 235 base pairs and for the ITS data we retained amplicons between 100 and 450 base pairs. Reads were then screened for chimeras (method = consensus). Taxonomy for the 16S rRNA data set was assigned to each ASV using the naive Bayesian classifier [@wang2007naive] against the Silva reference database [@quast2012silva] (Silva_nr_v138_train_set version 138). For taxonomic classification of the ITS data set, we used the naive Bayesian classifier [@wang2007naive] against the UNITE [@nilsson2019unite] database, specifically the UNITE general FASTA release for Fungi (v. 04.02.2020) [@abarenkov2020unite]. **Supplementary Dataset1** and **Supplementary Dataset2** contain the ASV table, taxonomic assignments, and unique sequences for the 16S rRNA and ITS data sets, respectively. The complete DADA2 workflow is available here: https://sweltr.github.io/high-temp/dada2.html.
+
+Prior to community analysis of the 16S rRNA data set, ASVs classified as chloroplasts, mitochondria, or Eukaryota, or ASVs that remained unclassified (i.e., NA) at the kingdom level, were removed from the data set using the phyloseq package [@mcmurdie2013phyloseq] (v1.36.0) in the R environment [@team2013r]. No such curation was performed on the ITS data set since all ASVs could be classified to kingdom level (Fungi). The complete data set preparation workflow is available here: https://sweltr.github.io/high-temp/data-prep.html.
+
+## Filtering
+
+We applied three complementary methods of prevalence filtering to both the 16S rRNA and ITS data sets. The complete filtering workflow is available here: https://sweltr.github.io/high-temp/filtering.html.
+
+**i**) Sample-wise filtering with arbitrary functions. Here we used the genefilter_sample function from the phyloseq package [@mcmurdie2013phyloseq] (v1.36.0) where ASVs represented by fewer than 5 reads and/or present in less that 20% of samples, were removed. 
+
+**ii**) PERFect (PERmutation Filtering test for microbiome data) [@smirnova2019perfect] (v0.2.4) filtering. Here we used the function PERFect_sim with the alpha parameter set to 0.05 for the 16S rRNA data and 0.1 for the ITS data. 
+
+**iii**) PIME (Prevalence Interval for Microbiome Evaluation) [@roesch2020pime] (v0.1.0) filtering. Here we first rarefied all samples to even depths (per the developer's recommendation) and then split the data sets by predictor variable (temperature treatment) using the pime.split.by.variable function. Next, we calculated the prevalence intervals with the function pime.prevalence and then used the function pime.best.prevalence to calculate the best prevalence. The best prevalence interval was selected when the out-of-bag (OOB) error rate first reached zero or close to zero. The most prevalent ASVs (at the best prevalence interval) were retained from each split. Splits were then merged to obtain the final PIME filtered data set. 
+
+## Alpha diversity estimates
+
+To account for presence of rare sequence variants caused by sequencing errors (or other technical artifacts), we used Hill numbers [@alberdi2019guide] for estimates of alpha diversity. Hill numbers allow the weight put on rare versus abundant sequence variants to be scaled while providing intuitive comparisons of diversity levels using *effective number of ASVs* as a measuring unit. This approach allows for balancing the over representation of rare ASVs that might be inflated due to sequencing errors. To calculate Hill numbers, we used the R package hilldiv [@alberdi2019hilldiv]. We calculated three metrics that put less or more weight on common ASVs: **(i)** Observed richness, where q-value = 0; **(ii)** Shannon exponential, which weighs ASVs by their frequency, where q-value = 1; and **(iii)** Simpson multiplicative inverse, which over weighs abundant ASVs, where q-value = 2.  
+
+We present all three metrics of alpha diversity, while acknowledging that each metric of alpha diversity is based on (measured) relative abundance and can be subject to bias due to variation in extraction efficiency and sequencing depth, especially when detecting rare taxa (or ASVs) [@balint2016millions]. However, we also recognize that each metric provides complementary information, by varying in their relative sensitivity towards rare and common species [@roswell2021conceptual]. We therefore interpret alpha diversity metrics in terms of changes in diversity due to changes in rarer ASVs (observed richness) and due to changes in more proportionally abundant ASVs (Shannon and inverse Simpson).
+
+Next, we assessed whether the alpha diversity estimates were normally distributed using both the Shapiro-Wilk Normality test [@shapiro1965analysis] and the Bartlett Test of Homogeneity of Variances [@bartlett1937properties]. If the p-values from both tests were not significant (p > 0.05), we accepted the null hypothesis that the results were normally distributed. If one or both of the the p-values were significant (p < 0.05), we rejected the null hypothesis. For parametric data we tested for significance across treatments using ANOVA followed by Tukey post-hoc test. For non-parametric data we tested for significance across treatments using Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg correction. All tests were performed using the vegan package [@oksanen2013community] in R [@team2013r]. The complete alpha diversity workflow is available here: https://sweltr.github.io/high-temp/alpha.html.
+
+## Beta diversity estimates
+
+To test for significance between temperature treatments, we performed the following steps for the 16S rRNA and ITS data sets. First, we transformed the sample counts to relative abundance. We then generated distance matrices using the phyloseq [@mcmurdie2013phyloseq] function `phyloseq::distance`. For the 16S rRNA data, we used unweighted and weighted UniFrac [@chen2012associating]. For the ITS data, we used Jensen-Shannon Divergence [@fuglede2004jensen] and Bray-Curtis dissimilarity [@bray1957ordination]. Next, we calculated beta dispersion using the `betadisper` function from the `vegan` package [@oksanen2013community]. Then we used the function `permutest` to run a Permutation test for homogeneity of multivariate dispersions [@legendre2011testing]. If beta dispersion tests were not significant, we ran a PERMANOVA [@legendre1999distance] using `adonis` (PERMANOVA assumes equal dispersion), otherwise we used Analysis of Similarity [@clarke1993non] (`anosim`), both available in the `vegan` package [@oksanen2013community]. Ordination plots were generated for each distance matrix using Principal Coordinate Analysis [@gower1966some] (PCoA). The complete beta diversity workflow is available here: https://sweltr.github.io/high-temp/beta.html.
+
+## Diffentially abundant ASVs
+
+Diffentially abundant ASVs across temperature treatments (PIME filtered data sets) were identified using (**i**) the `labdsv` package [@roberts2016package] (v.2.0-1)---to run Dufrene-Legendre Indicator Species Analysis (ISA)---and (**ii**) the microbiomeMarker package [@cao2020package] (v.0.0.1.9000) to run linear discriminant analysis (LDA) effect size (LEfSe) [@segata2011metagenomic]. ISA calculates the indicator value (fidelity and relative abundance) of ASVs in treatment groups. For the 16S rRNA and ITS data, we set the p-value cutoff to 0.5. For all other parameters the default values were used. For the LEfSe analysis we used pre-sample normalization of the sum of the values to 1e^+06^ (`norm = "CPM"`), set the LDA score cutoff to 2 (`lda_cutoff = 2`), set the p-value cutoff of Wilcoxon test to 0.05 (`wilcoxon_cutoff = 0.05`), and the p-value cutoff of Kruskal-Wallis test to 0.05 (`kw_cutoff = 0.05`). The complete diffentially abundant workflow is available here: https://sweltr.github.io/high-temp/da.html.
+
+## Multivariate analysis
+
+Here we compare the environmental metadata (**Supplementary Dataset3**) with both the PIME filtered 16S rRNA and the ITS community data. The complete multivariate workflow is available here: https://sweltr.github.io/high-temp/metadata.html. Each workflow contained the same major steps:
+
+1) **Metadata normality tests**: We used Shapiro-Wilk Normality Test [@shapiro1965analysis] to test whether each metadata parameter was normally distributed.
+2) **Normalize parameters**: Use the R package `bestNormalize` [@peterson2019ordered; @peterson2021finding] and default parameters to find and execute the best normalizing transformation for non-parametric metadata parameters identified in step #1. The function tested the following normalizing transformations: arcsinh, Box-Cox, Yeo-Johnson, Ordered Quantile (ORQ) normalization, log transformation,  square-root, and exponential. Once the non-parametric parameters were transformed, we reran the normality tests. 
+3) **Split metadata parameters into groups**: Next we split the metadata parameters into three groups: **a**) environmental and edaphic properties; **b**) microbial functional responses; and **c**) temperature adaptation properties. 
+
+    i) **Environmental and edaphic properties**: AST, H~2~O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH~4~, NO~3~, PO~4~, DOC, DON, DOCN.
+
+    ii) **Microbial functional responses**: micC, micN, micP, micCN, micCP, micNP, AG~ase~, BG~ase~, BP~ase~, CE~ase~, P~ase~, N~ase~, S~ase~, XY~ase~,  LP~ase~, PX~ase~, CO~2~, enzCN, enzCP, enzNP.
+
+    iii) **Temperature adaptation**: AG~Q10~, BG~Q10~, BP~Q10~, CE~Q10~, P~Q10~, N~Q10~, S~Q10~, XY~Q10~, LP~Q10~, PX~Q10~, CUE~cn~, CUE~cp~, NUE, PUE, T~min~, SI.
+
+The following parameters were collected but not used in the analysis: minPO~4~, minNH~4~, minNO~3~, minTIN.
+
+4) **Autocorrelation tests**: Then we tested all possible pair-wise comparisons of the normalized metadata (from step #2) for each group (step #3) to identify potential autocorrelated parameters.
+5) **Remove autocorrelated parameters from each group**. Based on the results of step #4, we removed autocorrelated parameters.
+6) **Dissimilarity correlation tests**: Here we used Mantel Tests to determine if any metadata groups were significantly correlated with community data. We generated Bray-Curtis [@bray1957ordination] distance matrices for the community data and Euclidean distance matrices for each metadata group. Then we performed Mantel tests [@mantel1967detection; @legendre2012numerical] for all comparisons using the function `mantel` from the vegan [@oksanen2013community] package.
+7) **Best subset of variables**: Then we determined which metadata parameters (from each group) were the most strongly correlated with the community data. For this we used the `bioenv` function from the vegan [@oksanen2013community] package where `method = "spearman"`, `index = "bray"`, and `metric = "euclidean"`.
+8) **Distance-based Redundancy Analysis (dbRDA)**: Finally, we performed ordination analysis of samples plus metadata vector overlays using `capscale`, also from the vegan package. For each of the three metadata subsets, we perform the following steps:
+
+    i) Run `rankindex` [@faith1987compositional] in the vegan package to compare metadata and community dissimilarity indices for gradient detection. This aids in the selection of the best dissimilarity metric to use. Here we tested the following metrics: Euclidean, Manhattan, Gower, Bray–Curtis, and Kulczynski.
+    ii) Run `capscale` in the vegan package for distance-based redundancy analysis.
+    iii) Run `envfit` to fit environmental parameters onto the ordination. This function basically calculates correlation scores between the metadata parameters and the ordination axes.
+    iv) Select metadata parameters significant for `bioenv` (see above) and/or `envfit` analyses.
+    v) Plot the ordination and vector overlays.
+
+# Supplementary Results
+
+## Tracking reads through DADA2 workflow
+
+### 16S rRNA data
+
+The processed and curated 16S rRNA data set contained 937,761 high-quality reads, with a range of 25,151--86,600 reads per sample (mean 62,443). Modelling and error correcting amplicon errors inferred 20,332 ASVs, 19% of which were doubleton ASVs. After removing reads classified as mitochondria, chloroplast, or Eukaryota, the data set contained 20,173 ASVs and 936,640 reads—--with a range of 25,088–-86,600 reads (mean 62,443) and 813–-3065 (mean 2063) ASVs per sample (**`r ref(caption_tab("tab_track_ssu"))`**). 
+
+```{r supp_tab_4, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_track_ssu")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/ssu_read_changes.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "ssu_read_changes",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# Footnotes will not work if there is underscore in row names. Need to escape underscore
+# with file _ -> \_
+supp_table_footnote <- seq_table
+names(supp_table_footnote)[2] <- paste0(names(supp_table_footnote)[2], 
+                                footnote_marker_number(1))
+names(supp_table_footnote)[3] <- paste0(names(supp_table_footnote)[3], 
+                                footnote_marker_number(2))
+names(supp_table_footnote)[4] <- paste0(names(supp_table_footnote)[4], 
+                                footnote_marker_number(3))
+names(supp_table_footnote)[5] <- paste0(names(supp_table_footnote)[5], 
+                                footnote_marker_number(4))
+names(supp_table_footnote)[6] <- paste0(names(supp_table_footnote)[6], 
+                                footnote_marker_number(5))
+names(supp_table_footnote)[7] <- paste0(names(supp_table_footnote)[7], 
+                                footnote_marker_number(6))
+names(supp_table_footnote)[8] <- paste0(names(supp_table_footnote)[8], 
+                                footnote_marker_number(7))
+names(supp_table_footnote)[9] <- paste0(names(supp_table_footnote)[9], 
+                                footnote_marker_number(8))
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(supp_table_footnote,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE
+  )
+rm(supp_table_footnote)
+```
+
+<small>
+*Column descriptions.*
+**^1^raw**: number of initial reads; 
+**^2^pre filt**: after removing reads with ambiguous bases; 
+**^3^cut**:  after removing primers; 
+**^4^filter**:  after filtering; 
+**^5^denoiseF**: forward reads after denoising; 
+**^6^nonchim**:  after removing chimeras; 
+**^7^final**: final read totals; 
+**^8^asvs**: total ASVs. 
+</small>
+
+### ITS data
+
+The processed and curated ITS data set contained 491,143 high-quality reads, with a range of 80--64,636 reads per sample (mean 32,743). Modelling and error correcting amplicon errors inferred 3357 ASVs, 2.1% of which were doubleton ASVs. After removing 2 samples with low read counts (< 500 reads), the data set contained 3357 ASVs and 490,767 reads—--with a range of 9172–-64,636 reads (mean 37,751) and 335--1017 (mean 757) ASVs per sample (**`r ref(caption_tab("tab_track_its"))`**). 
+
+```{r supp_tab_5, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_track_its")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/its_read_changes.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "its_read_changes",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# Footnotes will not work if there is underscore in row names. Need to escape underscore
+# with file _ -> \_
+supp_table_footnote <- seq_table
+names(supp_table_footnote)[2] <- paste0(names(supp_table_footnote)[2], 
+                                footnote_marker_number(1))
+names(supp_table_footnote)[3] <- paste0(names(supp_table_footnote)[3], 
+                                footnote_marker_number(2))
+names(supp_table_footnote)[4] <- paste0(names(supp_table_footnote)[4], 
+                                footnote_marker_number(3))
+names(supp_table_footnote)[5] <- paste0(names(supp_table_footnote)[5], 
+                                footnote_marker_number(4))
+names(supp_table_footnote)[6] <- paste0(names(supp_table_footnote)[6], 
+                                footnote_marker_number(5))
+names(supp_table_footnote)[7] <- paste0(names(supp_table_footnote)[7], 
+                                footnote_marker_number(6))
+names(supp_table_footnote)[8] <- paste0(names(supp_table_footnote)[8], 
+                                footnote_marker_number(7))
+names(supp_table_footnote)[9] <- paste0(names(supp_table_footnote)[9], 
+                                footnote_marker_number(8))
+names(supp_table_footnote)[10] <- paste0(names(supp_table_footnote)[10], 
+                                footnote_marker_number(9))
+names(supp_table_footnote)[11] <- paste0(names(supp_table_footnote)[11], 
+                                footnote_marker_number(10))
+supp_table_footnote$Sample[7] <- paste0(supp_table_footnote$Sample[7], 
+                                footnote_marker_symbol(1))
+supp_table_footnote$Sample[14] <- paste0(supp_table_footnote$Sample[14], 
+                                footnote_marker_symbol(1))
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(supp_table_footnote,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE,
+  rowStyle = function(index) {
+    if (supp_table_footnote[index, "nonchim<sup>8</sup>"] < 2000) {
+      list(color = "#F8071D")
+    }
+  }
+)
+rm(supp_table_footnote)
+```
+
+<small>
+*Column descriptions.* 
+**^1^raw**: number of initial reads; 
+**^2^pre filt**: after removing reads with ambiguous bases; 
+**^3^cut**:  after removing primers; 
+**^4^filter**:  after filtering; 
+**^5^denoiseF**: forward reads after denoising; 
+**^6^denoiseR**: reverse reads after denoising; 
+**^7^merge**: after merging paired-end reads 
+**^8^nonchim**:  after removing chimeras; 
+**^9^final**: final read totals; 
+**^10^asvs**: total ASVs. ^\*^These samples were removed from final analysis.
+</small>
+
+## Filtering 
+
+### 16S rRNA data
+
+The curated 16S rRNA data set contained 936,640 reads and 20,173 ASVs. Applying arbitrary filtering---removing ASVs represented by fewer than 5 reads and/or present in less than 20% of samples---reduced the number of reads by 22% and the number of ASVs by 90%. Similarly, PERFect filtering reduced the number of reads by 22% and the number of ASVs by 92% (**`r ref(caption_tab("tab_filter_ssu"))`**). 
+
+Rarefying the FULL data set to even read depths (25,088 reads/sample) prior to PIME filtering removed 2741 ASVs, reducing the number of reads by 60% and the number of ASVs by 14%. Baseline noise detection indicated the out-of-bag (OOB) error rate was 0.67. Splitting the rarefied data by predictor variable (i.e., temperature treatment) resulted in a total of 7883 ASVs for the Control group, 7173 ASVs for the +3°C group, and 6027 ASVs for the +8°C group. The Best Prevalence interval, calculated using the function pime.best.prevalence, was Prevalence = 50%, the first interval where the OOB error rate dropped to 0%. At this interval (compared to the FULL data set), the number of reads was reduced by 75% and the number of ASVs by 95% (**`r ref(caption_tab("tab_filter_ssu"))`**).
+
+```{r supp_tab_6, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_filter_ssu")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/ssu_filter_summmary.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "ssu_filter_summmary",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table, groupBy = "Description", paginateSubRows = TRUE,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 0),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Description = colDef(name = "Description",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 40),
+    `subset by treatment` = colDef(name = "subset by treatment", align = "left"),
+    `no. samples` = colDef(name = "no. samples", align = "center", aggregate = "sum"),
+    `total reads` = colDef(name = "total reads", align = "center", aggregate = "sum"),
+    `total asvs` = colDef(name = "total asvs", align = "center", aggregate = "sum")
+    ), 
+  searchable = FALSE, defaultPageSize = 16, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+### ITS data
+
+The curated ITS data set contained 490,767 reads and 3355 ASVs. Applying arbitrary filtering---removing ASVs represented by fewer than 5 reads and/or present in less that 20% of samples---reduced the number of reads by 21% and the number of ASVs by 76%. PERFect filtering reduced the number of reads by 26% and the number of ASVs by 91% (**`r ref(caption_tab("tab_filter_its"))`**). 
+
+Rarefying the FULL data set to even read depths (9172 reads/sample) prior to PIME filtering removed 298 ASVs, reducing the number of reads by 76% and the number of ASVs by 9%. Baseline noise detection indicated the out-of-bag (OOB) error rate was 0.39. Splitting the rarefied data by predictor variable (i.e., temperature treatment) yielded a total of 1932 ASVs for the Control group, 1682 ASVs for the +3°C group, and 1306 ASVs for the +8°C group. The Best Prevalence interval, calculated using the function `pime.best.prevalence`, was Prevalence = 55%, the first interval where the OOB error rate dropped to 0%. At this interval (compared to the FULL data set), the number of reads was reduced by 86% and the number of ASVs by 87% (**`r ref(caption_tab("tab_filter_its"))`**).
+
+```{r supp_tab_7, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_filter_its")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/its_filter_summmary.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "its_filter_summmary",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(seq_table, groupBy = "Description", paginateSubRows = TRUE,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 0),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Description = colDef(name = "Description",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 40),
+    `subset by treatment` = colDef(name = "subset by treatment", align = "left"),
+    `no. samples` = colDef(name = "no. samples", align = "center", aggregate = "sum"),
+    `total reads` = colDef(name = "total reads", align = "center", aggregate = "sum"),
+    `total asvs` = colDef(name = "total asvs", align = "center", aggregate = "sum")
+    ), 
+  searchable = FALSE, defaultPageSize = 16, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+## Taxonomic diversity of microbial communities
+
+Bacterial diversity was largely comprised of Proteobacteria (Alpha, Gamma), Acidobacteriota, Actinobacteriota, Bacteroidota, Firmicutes, Myxococcota, Verrucomicrobiota, Chloroflexi, and Planctomycetota. Methylomirabilota and Crenarchaeota were the dominanmt phyla of Archaeal diversity (**`r ref(caption_fig("fig_taxa_ssu"))`**). For a breakdown of dominant bacterial phyla by family, see \hyperref[appendix-2]{\color{blue}Appendix 2}. Fungal diversity was largely comprised of Ascomycota, Basidiomycota, and Glomeromycota (**`r ref(caption_fig("fig_taxa_its"))`**). The complete taxonomic workflow is available here: https://sweltr.github.io/high-temp/taxa.html.
+
+```{r supp_fig_1, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[1], caption = caption_fig("fig_taxa_ssu"))
+```
+
+
+```{r supp_fig_2, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[2], caption = caption_fig("fig_taxa_its"))
+```
+
+## Alpha diversity of microbial communities
+
+Shapiro-Wilk Normality and Bartlett tests indicated all data was normally distributed except for Shannon exponential estimates of the 16S rRNA PIME filtered data. Differences in alpha diversity assessed using analysis of variance (ANOVA) followed by Tukey HSD post hoc tests (normally distributed data) or Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg correction (non-normally distributed data). 
+
+### 16S rRNA data
+
+**`r ref(caption_tab("tab_alpha_div_ssu"))`**  contains the results of alpha diversity estimates for the unfiltered data set plus the arbitrary, PERFect, and PIME filtered data sets. In **`r ref(caption_tab("tab_norm_test_ssu"))`** we report the results of the Shapiro-Wilk Normality and Bartlett tests for each Hill number as well as the results of post-hoc analysis. Alpha diversity plots comparing the different filtering methods for each Hill number can be found in **`r ref(caption_fig("alpha_div_plots_ssu"))`**.
+
+```{r supp_tab_8, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_alpha_div_ssu")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/ssu_alpha_div_by_filt.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "ssu_alpha_div_by_filt",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+    columns = list(
+    sample_id = colDef(name = "Sample_ID", filterable = TRUE, 
+                       sticky = "left", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       align = "left",
+                       minWidth = 150),
+    Observed = colDef(name = "FULL"),
+    Observed_fi = colDef(name = "Arbitrary"),
+    Observed_pe = colDef(name = "PERfect"),
+    Observed_pi = colDef(name = "PIME", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee")),
+    Shannon_exp = colDef(name = "FULL"),
+    Shannon_exp_fi = colDef(name = "Arbitrary"),
+    Shannon_exp_pe = colDef(name = "PERfect"),
+    Shannon_exp_pi = colDef(name = "PIME", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee")),
+    InvSimpson = colDef(name = "FULL"),
+    InvSimpson_fi = colDef(name = "Arbitrary"),
+    InvSimpson_pe = colDef(name = "PERfect"),
+    InvSimpson_pi = colDef(name = "PIME")
+  ),
+  columnGroups = list(
+    colGroup(name = "Observed richness", 
+             columns = c("Observed", "Observed_fi", "Observed_pe", "Observed_pi"),
+                       headerStyle = list(borderRight = "5px solid #eee", fontSize = "1.1em")),
+    colGroup(name = "Shannon exponential", 
+             columns = c("Shannon_exp", "Shannon_exp_fi", "Shannon_exp_pe", "Shannon_exp_pi"),
+                       headerStyle = list(fontSize = "1.1em")),
+    colGroup(name = "Simpson multiplicative inverse", 
+             columns = c("InvSimpson", "InvSimpson_fi", "InvSimpson_pe", "InvSimpson_pi"),
+                       headerStyle = list(fontSize = "1.1em"))
+  ),
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 0),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 100
+    ), 
+  searchable = TRUE, defaultPageSize = 5, showPagination = TRUE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+<small>
+**FULL** = unfiltered data set; **FILT** = arbitrary filtering where nreads > 5 and prevalence > 20%; **PERFect** = PERFect filtering; **PIME** = PIME filtering
+</small>
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# Footnotes will not work if there is underscore in row names. Need to escape underscore
+# with file _ -> \_
+seq_table <- read.table("include/som/tables/ssu_norm_test.txt", sep = "\t", header = TRUE)
+#seq_table <-  seq_table %>% dplyr::mutate(across(.cols = c(7), round, digits = 4)) 
+
+supp_table_footnote <- seq_table
+supp_table_footnote$metric <- gsub("[_]", " ", supp_table_footnote$metric)
+names(supp_table_footnote)[1] <- paste0(names(supp_table_footnote)[1], 
+                                footnote_marker_number(1))
+names(supp_table_footnote)[2] <- paste0(names(supp_table_footnote)[2], 
+                                footnote_marker_number(2))
+names(supp_table_footnote)[3] <- paste0(names(supp_table_footnote)[3], 
+                                footnote_marker_number(3))
+names(supp_table_footnote)[4] <- paste0(names(supp_table_footnote)[4], 
+                                footnote_marker_number(4))
+names(supp_table_footnote)[5] <- paste0(names(supp_table_footnote)[5], 
+                                footnote_marker_number(5))
+names(supp_table_footnote)[6] <- paste0(names(supp_table_footnote)[6], 
+                                footnote_marker_number(6))
+names(supp_table_footnote)[7] <- paste0(names(supp_table_footnote)[7], 
+                                footnote_marker_number(7))
+```
+
+```{r supp_tab_9, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_norm_test_ssu")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "ssu_norm_test",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(supp_table_footnote,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.6em")), 
+  showPagination = FALSE, 
+  striped = TRUE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 12, 
+  #pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, 
+  columns = list(
+    `metric<sup>1</sup>` = colDef(
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 100),
+    `posthoc_pval<sup>7</sup>` = colDef( 
+                                style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#777" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")
+    }, cell = function(value) format(value, digits = 3, scientific = TRUE)
+    )
+  )
+)  
+rm(supp_table_footnote)
+```
+
+<small>
+*Column descriptions.*
+**^1^metric**: Hill number;
+**^2^data set**: FULL = unfiltered data set; FILT = arbitrary filtering where nreads > 5 and prevalence > 20%; PERFect = PERFect filtering; PIME = PIME filtering; 
+**^3^pval_shap**: p-value of Shapiro-Wilk Normality test; 
+**^4^pval_bart**: p-value of Bartlett Test of Homogeneity of Variances; 
+**^5^method**: Selected significance test; 
+**^6^posthoc method**: Selected posthoc test; 
+**^7^posthoc pval**: Posthoc p-value
+</small>
+
+```{r supp_fig_3, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[3], caption = caption_fig("alpha_div_plots_ssu"))
+```
+
+### ITS data
+
+**`r ref(caption_tab("tab_alpha_div_its"))`**  contains the results of alpha diversity estimates for the unfiltered data set plus the arbitrary, PERFect, and PIME filtered data sets. In **`r ref(caption_tab("tab_norm_test_its"))`** we report the results of the Shapiro-Wilk Normality and Bartlett tests for each Hill number as well as the results of post-hoc analysis. Alpha diversity plots comparing the different filtering methods for each Hill number can be found in **`r ref(caption_fig("alpha_div_plots_its"))`**.
+
+```{r supp_tab_10, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_alpha_div_its")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/its_alpha_div_by_filt.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "its_alpha_div_by_filt",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+    columns = list(
+    sample_id = colDef(name = "Sample_ID", filterable = TRUE, 
+                       sticky = "left", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee"), 
+                       align = "left",
+                       minWidth = 150),
+    Observed = colDef(name = "FULL"),
+    Observed_fi = colDef(name = "Arbitrary"),
+    Observed_pe = colDef(name = "PERfect"),
+    Observed_pi = colDef(name = "PIME", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee")),
+    Shannon_exp = colDef(name = "FULL"),
+    Shannon_exp_fi = colDef(name = "Arbitrary"),
+    Shannon_exp_pe = colDef(name = "PERfect"),
+    Shannon_exp_pi = colDef(name = "PIME", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee")),
+    InvSimpson = colDef(name = "FULL"),
+    InvSimpson_fi = colDef(name = "Arbitrary"),
+    InvSimpson_pe = colDef(name = "PERfect"),
+    InvSimpson_pi = colDef(name = "PIME")
+  ),
+  columnGroups = list(
+    colGroup(name = "Observed richness", 
+             columns = c("Observed", "Observed_fi", "Observed_pe", "Observed_pi"),
+                       headerStyle = list(borderRight = "5px solid #eee", fontSize = "1.1em")),
+    colGroup(name = "Shannon exponential", 
+             columns = c("Shannon_exp", "Shannon_exp_fi", "Shannon_exp_pe", "Shannon_exp_pi"),
+                       headerStyle = list(fontSize = "1.1em")),
+    colGroup(name = "Simpson multiplicative inverse", 
+             columns = c("InvSimpson", "InvSimpson_fi", "InvSimpson_pe", "InvSimpson_pi"),
+                       headerStyle = list(fontSize = "1.1em"))
+  ),
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 0),
+    align = "center", filterable = FALSE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 100
+    ), 
+  searchable = TRUE, defaultPageSize = 5, showPagination = TRUE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+<small>
+**FULL** = unfiltered data set; **FILT** = arbitrary filtering where nreads > 5 and prevalence > 20%; **PERFect** = PERFect filtering; **PIME** = PIME filtering
+</small>
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# Footnotes will not work if there is underscore in row names. Need to escape underscore
+# with file _ -> \_
+seq_table <- read.table("include/som/tables/its_norm_test.txt", sep = "\t", header = TRUE)
+#seq_table <-  seq_table %>% dplyr::mutate(across(.cols = c(7), round, digits = 4)) 
+
+supp_table_footnote <- seq_table
+supp_table_footnote$metric <- gsub("[_]", " ", supp_table_footnote$metric)
+names(supp_table_footnote)[1] <- paste0(names(supp_table_footnote)[1], 
+                                footnote_marker_number(1))
+names(supp_table_footnote)[2] <- paste0(names(supp_table_footnote)[2], 
+                                footnote_marker_number(2))
+names(supp_table_footnote)[3] <- paste0(names(supp_table_footnote)[3], 
+                                footnote_marker_number(3))
+names(supp_table_footnote)[4] <- paste0(names(supp_table_footnote)[4], 
+                                footnote_marker_number(4))
+names(supp_table_footnote)[5] <- paste0(names(supp_table_footnote)[5], 
+                                footnote_marker_number(5))
+names(supp_table_footnote)[6] <- paste0(names(supp_table_footnote)[6], 
+                                footnote_marker_number(6))
+names(supp_table_footnote)[7] <- paste0(names(supp_table_footnote)[7], 
+                                footnote_marker_number(7))
+```
+
+```{r supp_tab_11, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_norm_test_its")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+seq_table %>%
+  download_this(
+    output_name = "its_norm_test",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(supp_table_footnote,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.6em")), 
+  showPagination = FALSE, 
+  striped = TRUE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 12, 
+  #pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, 
+  columns = list(
+    `metric<sup>1</sup>` = colDef(
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 100),
+    `posthoc_pval<sup>7</sup>` = colDef( 
+                                style = function(value) {
+                                         if (value > 0.05) {
+                                           color <- "#777" #green
+                                         } else if (value < 0.05) {
+                                           color <- "#B22271" #RED "#", "#"
+                                         } else {
+                                           color <- "#777"
+                                         }
+                                         list(color = color, fontWeight = "bold")
+    }, cell = function(value) format(value, digits = 3, scientific = TRUE)
+    )
+  )
+)  
+rm(supp_table_footnote)
+```
+
+<small>
+*Column descriptions.*
+**^1^metric**: Hill number;
+**^2^data set**: FULL = unfiltered data set; FILT = arbitrary filtering where nreads > 5 and prevalence > 20%; PERFect = PERFect filtering; PIME = PIME filtering; 
+**^3^pval_shap**: p-value of Shapiro-Wilk Normality test; 
+**^4^pval_bart**: p-value of Bartlett Test of Homogeneity of Variances; 
+**^5^method**: Selected significance test; 
+**^6^posthoc method**: Selected posthoc test; 
+**^7^posthoc pval**: Posthoc p-value
+</small>
+
+```{r supp_fig_4, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[4], caption = caption_fig("alpha_div_plots_its"))
+```
+
+## Beta diversity of microbial communities
+
+To test for significance between treatment groups, we calculated the beta dispersion (using the `betadisper` function, vegan package) for each 16S rRNA distance matrix (unweighted and weighted UniFrac) and each ITS distance matrix (Jensen-Shannon and Bray-Curtis). We then used the function `permutest` to run a Permutation Test for Homogeneity of multivariate dispersions against the results of each beta dispersion test (**`r ref(caption_tab("tab_beta_disp_ssu"))`**, **`r ref(caption_tab("tab_beta_disp_its"))`**). If the results were not significant (i.e., p-value > 0.05) we ran a PERMANOVA using `adonis` (PERMANOVA assumes equal dispersion), otherwise we used Analysis of Similarity (ANOSIM). **`r ref(caption_tab("tab_beta_sig"))`** contains the results of the significance tests. 
+
+```{r supp_tab_12, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_beta_disp_ssu")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/ssu_beta_dispersion.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "ssu_beta_dispersion",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, eval=TRUE, layout="l-body"}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Description = colDef(name = "Description",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee", fontWeight = "bold", fontSize = "1.1em"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 25),
+    `distance metric` = colDef(name = "distance metric", align = "left"),
+    p_value = colDef(name = "p-value", align = "center"),
+    test = colDef(name = "selected test", align = "center", minWidth = 40)
+    ), 
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+```{r supp_tab_13, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_beta_disp_its")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/its_beta_dispersion.txt", delim = "\t", na = " ")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "its_beta_dispersion",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, eval=TRUE, layout="l-body"}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Description = colDef(name = "Description",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee", fontWeight = "bold", fontSize = "1.1em"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 25),
+    `distance metric` = colDef(name = "distance metric", align = "left"),
+    p_value = colDef(name = "p-value", align = "center"),
+    test = colDef(name = "selected test", align = "center", minWidth = 40)
+    ), 
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+```{r supp_tab_14, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_beta_sig")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/beta_sig_tests.txt", delim = "\t", na = " ", col_types = "cccccc")
+#supp_table$`FULL data set` <- as.character(supp_table$`FULL data set`)
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "beta_sig_tests",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, eval=TRUE, layout="l-body"}
+reactable(seq_table,
+  defaultColDef = colDef(
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 4),
+    align = "center", filterable = FALSE, sortable = FALSE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold"), minWidth = 25, headerVAlign = "center"
+    ), 
+  columns = list(
+    Data_set = colDef(name = "Dataset",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee", fontWeight = "bold", fontSize = "1.1em"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 25),
+    `Distance metric` = colDef(name = "distance metric", align = "left"),
+    `FULL data set` = colDef(name = "FULL", align = "center"),
+    `Arbitrary filter` = colDef(name = "Arbitrary", align = "center"),
+    `PERFect filter` = colDef(name = "PERFect", align = "center"),
+    `PIME filter` = colDef(name = "PIME", align = "center")
+    ), 
+  searchable = FALSE, defaultPageSize = 15, showPagination = FALSE,
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = TRUE, 
+  wrap = TRUE, showSortable = FALSE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
+```
+
+## Differentially abundant ASVs
+
+Indicator Species Analysis (ISA) of the 16S rRNA data set identified 251 differentially abundant (DA) ASVs. Of those, 154 ASVs were enriched in the Control samples, 82 in the +3°C treatment, and 15 in the +8°C treatment (**Supplementary Dataset4**). Linear discriminant analysis (LDA) effect size (LEfSe) identified 676 DA ASVs with an LDA score > 2.0 and a p-value < 0.05. Of those, 355 ASVs were enriched in the Control samples, 227 in the +3°C treatment, and 94 in the +8°C treatment (**Supplementary Dataset5**).
+
+
+ISA of the ITS data set identified 203 DA ASVs. Of those, 54 ASVs were enriched in the Control samples, 95 in the +3°C treatment, and 54 in the +8°C treatment (**Supplementary Dataset6**). LEfSe identified 228 DA ASVs with an LDA score > 2.0 and a p-value < 0.05. Of those, 52 ASVs were enriched in the Control samples, 107 in the +3°C treatment, and 69 in the +8°C treatment (**Supplementary Dataset7**).
+
+## Multivariate analysis
+
+### Normality tests & parameter normalization    
+
+We used Shapiro-Wilk Normality Test [@shapiro1965analysis] to determine which of the 61 metadata parameters were or were not normally distributed. For the 16S rRNA data we needed to transform 25 metadata parameters (p-value < 0.05) and for the ITS data, 21 metadata parameters needed transformation (p-value < 0.05). Please see the project website for the specific parameters that were transformed and the method of transformation used in each case (https://sweltr.github.io/high-temp/metadata.html). For both community data sets, `bestNormalize` was unable to find a suitable transformation for `Al` and `Fe.` This is likely because there was very little variation in these parameters and/or there were too few significant digits.
+
+### Removing autocorrelated parameters
+
+Based on autocorrelation tests between the metadata and community data (**`r ref(caption_fig("fig_auto_cor_ssu"))`, `r ref(caption_fig("fig_auto_cor_its"))`**), we removed the following parameters: 
+
+Environmental and edaphic properties: TEB, DON, Na, Al, Ca.  
+Microbial functional responses: micN, micNP, enzCN, enzCP, BP~ase~, CE~ase~, LP~ase~, N~ase~, P~ase~.  
+Temperature adaptation: NUE, PUE, SI.
+    
+```{r supp_fig_5, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+    
+In addition, we removed P~Q10~ (temperature adaptation) from the ITS analysis based on the autocorrelation tests.
+
+```{r, out.width = "100%", echo=FALSE, eval=FALSE, fig.cap=caption_fig("fig_auto_cor_ssu")}
+tmp_fig1 <- magick::image_read("include/som/figures/ssu_auto_cor_edaphic.png")
+tmp_fig2 <- magick::image_read("include/som/figures/ssu_auto_cor_functional.png")
+tmp_fig3 <- magick::image_read("include/som/figures/ssu_auto_cor_temperature.png")
+supp_fig <- magick::image_append(c(tmp_fig1, tmp_fig2, tmp_fig3))
+magick::image_write(supp_fig, "include/som/figures/ssu_auto_cor.png")
+
+tmp_fig1 <- magick::image_read("include/som/figures/its_auto_cor_edaphic.png")
+tmp_fig2 <- magick::image_read("include/som/figures/its_auto_cor_functional.png")
+tmp_fig3 <- magick::image_read("include/som/figures/its_auto_cor_temperature.png")
+supp_fig <- magick::image_append(c(tmp_fig1, tmp_fig2, tmp_fig3))
+magick::image_write(supp_fig, "include/som/figures/its_auto_cor.png")
+```
+
+```{r, out.width = "100%", echo = FALSE, eval=TRUE}
+pixture::pixfigure(paths[5], caption = caption_fig("fig_auto_cor_ssu"))
+```
+
+```{r supp_fig_6, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, out.width = "100%", echo = FALSE, eval=TRUE}
+pixture::pixfigure(paths[6], caption = caption_fig("fig_auto_cor_its"))
+```
+
+### Dissimilarity correlation tests
+
+We used Mantel Tests to determine if any metadata groups were significantly correlated with 16S rRNA or ITS community data (**`r ref(caption_tab("tab_mantel"))`**).
+
+```{r supp_tab_15, echo=FALSE, eval=FALSE, anchor="Supplmentary Table"}
+```
+
+<small>`r caption_tab("tab_mantel")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/tables/mantel_tests.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "mantel_tests",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-body", eval=TRUE}
+reactable(supp_table,
+  defaultColDef = colDef(html = TRUE, align = "center", cell = function(value) format(value, nsmall = 3)), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = FALSE, 
+  striped = TRUE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = FALSE, 
+  columns = list(
+    Data_set = colDef(name = "Dataset",
+                       sticky = "left", 
+                       style = list(borderRight = "1px solid #eee", fontWeight = "bold", fontSize = "1.1em"),
+                       headerStyle = list(borderRight = "1px solid #eee"), 
+                       align = "left",
+                       minWidth = 50),
+    edaphic_properties = colDef(name = "edaphic properties", align = "center"),
+    soil_functional_response = colDef(name = "soil functional response", align = "center"),
+    temperature_adaptation = colDef(name = "temperature adaptation", align = "center")
+    )
+  )
+rm(supp_table_footnote)
+```
+
+### Best subset of variables
+
+The `bioenv` function found the following metadata parameters (normalized with autocorrelated data removed) significantly correlated with community data (results of Mantel tests shown in parentheses).
+
+<u>Environmental and edaphic properties</u>
+
+**16S rRNA**: AST (*r* = 1.0, *p* = 0.001).  
+**ITS**: AST (*r* = 1.0, *p* = 0.001).  
+
+<u>Microbial functional responses</u>
+
+**16S rRNA**: AG~ase~ (*r* = 0.559, *p* = 0.001), enzNP (*r* = 0.462, *p* = 0.006), S~ase~ (*r* = 0.614, *p* = 0.001), PX~ase~ (*r* = 0.612, *p* = 0.001), XY~ase~ (*r* = 0.456, *p* = 0.002).  
+**ITS**: enzNP (*r* = 0.553, *p* = 0.001), PX~ase~ (*r* = 0.685, *p* = 0.001), XY~ase~ (*r* = 0.505, *p* = 0.002).  
+
+<u>Temperature adaptation</u>
+
+**16S rRNA**: CUE~cp~ (*r* = 0.325, *p* = 0.013), LP~Q10~ (*r* = 0.377, *p* = 0.005), P~Q10~ (*r* = 0.518, *p* = 0.001), S~Q10~ (*r* = 0.440, *p* = 0.001), and T~min~ (*r* = 0.404, *p* = 0.005).  
+**ITS**: XY~Q10~ (*r* = 0.726, *p* = 0.001), T~min~ (*r* = 0.616, *p* = 0.001).  
+
+### Distance-based Redundancy Analysis (dbRDA)
+
+In all cases (i.e., both community data sets against each of the three metadata subsets), `rankindex` [@faith1987compositional]  indicated that Bray-Curtis was best dissimilarity metric to use. Based on these results, we set `dist = "bray"` for each dbRDA analysis using `capscale`. Due to issue pertaining to degrees of freedom, we needed to remove some metadata parameters from specific groups. From the 16S rRNA analysis, we removed  Mg and Mn (environmental and edaphic properties). From the ITS analysis, we removed  Mg, Mn, Na, Al, Fe, and K (environmental and edaphic properties) and S~Q10~ (temperature adaptation). Next, we used the vegan function `envfit` to fit environmental parameters onto the ordination. This function calculates correlation scores between metadata parameters and ordination axes. `envfit` found the following parameters were significantly correlated with community data (Goodness of fit statistic/squared correlation coefficient and empirical p-values for each variable shown in parentheses).
+
+<u>Environmental and edaphic properties</u>
+
+**16S rRNA**: AST (*r^2^* =0.829, *p*  = 0.001), H~2~O (*r^2^* =0.519, *p*  = 0.010), DOC (*r^2^* =0.446, *p*  = 0.024).  
+**ITS**: AST (*r^2^* =0.485, *p*  = 0.037), DOC (*r^2^* =0.535, *p*  = 0.028).  
+
+<u>Microbial functional responses</u>
+
+**16S rRNA**: AG~ase~ (*r^2^* = 0.444, *p*  = 0.026), BG~ase~ (*r^2^* = 0.560, *p*  = 0.007), S~ase~ (*r^2^* = 0.737, *p*  = 0.002), XY~ase~ (*r^2^* = 0.519, *p*  = 0.009), PX~ase~ (*r^2^* = 0.764, *p*  = 0.001), CO~2~ (*r^2^* = 0.504, *p*  = 0.013), enzNP (*r^2^* = 0.624, *p*  = 0.004).  
+**ITS**: micP (*r^2^* = 0.693, *p*  = 0.002), micCP (*r^2^* = 0.583, *p*  = 0.016), AG~ase~ (*r^2^* = 0.506, *p*  = 0.037), PX~ase~ (*r^2^* = 0.500, *p*  = 0.035), enzNP (*r^2^* = 0.547, *p*  = 0.014).  
+
+<u>Temperature adaptation</u>
+
+**16S rRNA**: S~Q10~ (*r^2^* = 0.496, *p*  = 0.015), XY~Q10~ (*r^2^* = 0.373, *p*  = 0.049), LP~Q10~ (*r^2^* = 0.413, *p*  = 0.041), T~min~ (*r^2^* = 0.446, *p*  = 0.030).  
+**ITS**: XY~Q10~ (*r^2^* = 0.617, *p*  = 0.010), CUE~cp~ (*r^2^* = 0.479, *p*  = 0.035), T~min~ (*r^2^* = 0.475, *p*  = 0.028).  
+
+# Appendices 
+
+## Appendix 1: Supplementary Datasets
+
+For this study, **Supplementary Datasets** are text files that were too large to include in the Supplementary Material. The individual files can be downloaded from the journal's website. Below are descriptions for each Supplementary Data item.
+
+### Supplementary Dataset1 
+
+**Description:** Output from the **16S rRNA** DADA2 workflow before manual curation. Table is a tab delimited text file containing information for 20,332 ASVs. The first column is the unique ASV ID, followed by the read counts for each sample, ASV taxonomic lineage (Kingdom to Genus), and finally the unique ASV sequence.
+
+```{r supp_ds_1, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+
+```{r, eval=TRUE, echo=FALSE}
+download_link(
+  link = "https://github.com/sweltr/high-temp/raw/main/include/som/supplementary_datasets/Supplementary_Dataset1.txt.zip",
+  button_label = "Download the zipped file here",
+  button_type = "success",
+  has_icon = TRUE,
+  icon = "fa fa-save",
+  self_contained = FALSE
+)
+```
+
+### Supplementary Dataset2
+
+**Description:** Output from the **ITS** DADA2 workflow before manual curation. Table is a tab delimited text file containing information for 3357 ASVs. The first column is the unique ASV ID, followed by the read counts for each sample, ASV taxonomic lineage (Kingdom to Genus), and finally the unique ASV sequence.
+
+```{r supp_ds_2, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+download_link(
+  link = "https://github.com/sweltr/high-temp/raw/main/include/som/supplementary_datasets/Supplementary_Dataset2.txt.zip",
+  button_label = "Download the zipped file here",
+  button_type = "success",
+  has_icon = TRUE,
+  icon = "fa fa-save",
+  self_contained = FALSE
+)
+```
+
+### Supplementary Dataset3
+
+```{r supp_ds_3, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+**Description:** Complete **metadata** information collected in this study. Tab delimited text file containing data for 61 metadata parameters (before normalization) associated with each sample. The first column is the sample ID, followed plot number (1--10), treatment (control or warm), temperature (0°C, +3°C, +8°C), plot pair ID (A--E), and collection season (W = rainy season). Subsequent columns contain values for all metadata parameters.
+
+<small>`r caption_ds("tab_supp_ds_3")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/supplementary_datasets/Supplementary_Dataset3.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "Supplementary_Dataset3",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE
+  )
+rm(seq_table)
+```
+
+### Supplementary Dataset4 
+
+**Description:** Differentially abundant (DA) ASVs from the **16S rRNA** data identified using Indicator Species Analysis (ISA) against the PIME filtered data set. Tab delimited text file of all 251 DA ASVs between temperature treatments.
+
+```{r supp_ds_4, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+<small>`r caption_ds("tab_supp_ds_4")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/supplementary_datasets/Supplementary_Dataset4.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "Supplementary_Dataset4",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE,
+  wrap = FALSE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE
+  )
+rm(seq_table)
+```
+
+Description of table headers:
+
+* **ASV_ID** ASV name.
+* **group** Sample group ASV is enriched in. 
+* **indval** Indicator value from Dufrene-Legendre Indicator Species Analysis. 
+* **pval** p-value from Dufrene-Legendre Indicator Species Analysis.
+* **freq** Total number of samples where ASV was detected.
+* **freq_C0** Total number of Control samples where ASV was detected.
+* **freq_W3** Total number of +3°C samples where ASV was detected.
+* **freq_W8** Total number of +8°C samples where ASV was detected.
+* **reads_total** Total reads in data set. 
+* **reads_C0** Total reads in Control samples. 
+* **reads_W3** Total reads in +3°C samples. 
+* **reads_W8** Total reads in +8°C samples. 
+
+The remaining columns contain lineage information for each ASV followed by its' unique sequence. 
+
+### Supplementary Dataset5 
+
+**Description:** Differentially abundant (DA) ASVs from the **16S rRNA** data identified using  linear discriminant analysis (LDA) effect size (LEfSe) against the PIME filtered data set. Tab delimited text file of all 676 DA ASVs between temperature treatments.
+
+```{r supp_ds_5, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+<small>`r caption_ds("tab_supp_ds_5")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/supplementary_datasets/Supplementary_Dataset5.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "Supplementary_Dataset5",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE,
+  wrap = FALSE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE
+  )
+rm(seq_table)
+```
+
+Description of table headers:
+
+* **ASV_ID** ASV name.
+* **group** Sample group ASV is enriched in. 
+* **lda** Linear discriminant analysis (LDA) scores.
+* **pval** p-value from LEfSe analysis.
+* **freq** Total number of samples where ASV was detected.
+* **freq_C0** Total number of Control samples where ASV was detected.
+* **freq_W3** Total number of +3°C samples where ASV was detected.
+* **freq_W8** Total number of +8°C samples where ASV was detected.
+* **reads_total** Total reads in data set. 
+* **reads_C0** Total reads in Control samples. 
+* **reads_W3** Total reads in +3°C samples. 
+* **reads_W8** Total reads in +8°C samples. 
+
+The remaining columns contain lineage information for each ASV followed by its' unique sequence. 
+
+### Supplementary Dataset6
+
+**Description:** Differentially abundant (DA) ASVs from the **ITS** data identified using Indicator Species Analysis (ISA) against the PIME filtered data set. Tab delimited text file of all 203 DA ASVs between temperature treatments.
+
+```{r supp_ds_6, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+<small>`r caption_ds("tab_supp_ds_6")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/supplementary_datasets/Supplementary_Dataset6.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "Supplementary_Dataset6",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE,
+  wrap = FALSE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE
+  )
+rm(seq_table)
+```
+
+Description of table headers:
+
+* **ASV_ID** ASV name.
+* **group** Sample group ASV is enriched in. 
+* **indval** Indicator value from Dufrene-Legendre Indicator Species Analysis. 
+* **pval** p-value from Dufrene-Legendre Indicator Species Analysis.
+* **freq** Total number of samples where ASV was detected.
+* **freq_C0** Total number of Control samples where ASV was detected.
+* **freq_W3** Total number of +3°C samples where ASV was detected.
+* **freq_W8** Total number of +8°C samples where ASV was detected.
+* **reads_total** Total reads in data set. 
+* **reads_C0** Total reads in Control samples. 
+* **reads_W3** Total reads in +3°C samples. 
+* **reads_W8** Total reads in +8°C samples. 
+
+The remaining columns contain lineage information for each ASV followed by its' unique sequence. 
+
+### Supplementary Dataset7 
+
+**Description:** Differentially abundant (DA) ASVs from the **ITS** data identified using  linear discriminant analysis (LDA) effect size (LEfSe) against the PIME filtered data set. Tab delimited text file of all 228 DA ASVs between temperature treatments.
+
+```{r supp_ds_7, echo=FALSE, eval=FALSE, anchor="Supplmentary Dataset"}
+```
+
+<small>`r caption_ds("tab_supp_ds_7")`</small>
+
+```{r, echo=FALSE, eval=TRUE}
+supp_table <- read_delim("include/som/supplementary_datasets/Supplementary_Dataset7.txt", delim = "\t")
+seq_table <- supp_table
+seq_table %>%
+  download_this(
+    output_name = "Supplementary_Dataset7",
+    output_extension = ".csv",
+    button_label = "Download data as csv file",
+    button_type = "default",
+    csv2 = FALSE,
+    has_icon = TRUE,
+    icon = "fa fa-save")
+```
+
+```{r, echo=FALSE, layout="l-page", eval=TRUE}
+reactable(seq_table,
+  defaultColDef = colDef(html = TRUE, align = "center"), 
+  theme = reactableTheme(style = list(fontSize = "0.7em")), 
+  showPagination = TRUE, 
+  striped = TRUE,
+  wrap = FALSE, 
+  compact = TRUE, 
+  highlight = TRUE, 
+  bordered = TRUE, 
+  defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE
+  )
+rm(seq_table)
+```
+
+Description of table headers:
+
+* **ASV_ID** ASV name.
+* **group** Sample group ASV is enriched in. 
+* **lda** Linear discriminant analysis (LDA) scores.
+* **pval** p-value from LEfSe analysis.
+* **freq** Total number of samples where ASV was detected.
+* **freq_C0** Total number of Control samples where ASV was detected.
+* **freq_W3** Total number of +3°C samples where ASV was detected.
+* **freq_W8** Total number of +8°C samples where ASV was detected.
+* **reads_total** Total reads in data set. 
+* **reads_C0** Total reads in Control samples. 
+* **reads_W3** Total reads in +3°C samples. 
+* **reads_W8** Total reads in +8°C samples. 
+
+The remaining columns contain lineage information for each ASV followed by its' unique sequence. 
+
+## Appendix 2: Family-level bacterial charts 
+
+Top twelve (12) families of abundant bacterial phyla. Remaining taxa are grouped in *Other*. In cases where ASVs could not be classified to family level, abundance data was calculated for the next highest taxonomic rank, denoted by the prefix **rank abbreviation** plus **underscore** (e.g., **c_** is Class). As above, relative abundance of taxa based on the full, unfiltered data set. Left plots show taxa collapsed by temperature treatment while right plots show individual samples faceted by temperature treatment. Taxa are ordered first by rank and then alphabetically. The same color palette displayed in the same order was used for each plot. 
+
+```{r supp_fig_7, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[7], caption = caption_fig("fig_taxa_acido"))
+```
+
+```{r supp_fig_8, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[8], caption = caption_fig("fig_taxa_actino"))
+```
+
+```{r supp_fig_9, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[9], caption = caption_fig("fig_taxa_alpha"))
+```
+
+```{r supp_fig_10, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[10], caption = caption_fig("fig_taxa_gamma"))
+```
+
+```{r supp_fig_11, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[11], caption = caption_fig("fig_taxa_bacter"))
+```
+
+```{r supp_fig_12, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[12], caption = caption_fig("fig_taxa_firm"))
+```
+
+```{r supp_fig_13, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[13], caption = caption_fig("fig_taxa_myxo"))
+```
+
+```{r supp_fig_14, echo=FALSE, eval=FALSE, anchor="Supplmentary Figure"}
+```
+
+```{r, eval=TRUE, echo=FALSE}
+pixture::pixfigure(paths[14], caption = caption_fig("fig_taxa_veruco"))
+```
 
 ## Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/web/blob/master/som.Rmd).
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```

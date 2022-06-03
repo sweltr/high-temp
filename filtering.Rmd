@@ -18,6 +18,7 @@ output:
 <summary><strong>Click here</strong> for setup information.</summary>
 
 ```{r setup, message=FALSE, results = 'hide'}
+remove(list = ls())
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
 
@@ -40,14 +41,13 @@ knitr::opts_current$get(c(
   "dependson",
   "autodep"
 ))
-
+source(file.path("assets", "functions.R"))
 ```
 
 </details>
 
 ```{r, include=FALSE, eval=TRUE}
 ## Load to build page
-remove(list = ls())
 load("page_build/filtering_wf.rdata")
 ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
 its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
@@ -66,11 +66,24 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
 ```
 </details>
 
+```{r echo=FALSE, eval=TRUE}
+# This is needed to add a COPY CODE button to code chunks
+clipboard_button()
+# This is needed to use PANELS
+xaringanExtra::use_panelset()
+```
+
 ```{r, echo = FALSE, eval = TRUE}
 source("assets/captions/captions_filtering.R")
 ```
 
 In [Part A](#a.-arbitrary-filtering), we apply arbitrary filtering to the 16S rRNA and ITS data sets. In [Part B](#b.-perfect-filtering) we use PERFect [(PERmutation Filtering test for microbiome data)](https://github.com/katiasmirn/PERFect) [@smirnova2019perfect] to filter the data sets. And in [Part C](#c.-pime-filtering) of this workflow, we use PIME [(Prevalence Interval for Microbiome Evaluation)](https://github.com/microEcology/pime) [@roesch2020pime] to filter the FULL 16S rRNA and ITS data sets. 
+
+## Workflow Input
+
+Files needed to run this workflow can be downloaded from figshare. 
+
+<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="301" allowfullscreen frameborder="0"></iframe>
 
 # Filtering Results
 
@@ -889,8 +902,6 @@ dim(ssu18_ps_work_perfect_sim$filtX)
 dim(ssu18_ps_work_ord_perfect_sim$filtX)
 dim(its18_ps_work_perfect_sim$filtX)
 dim(its18_ps_work_ord_perfect_sim$filtX)
-
-
 ###########
 tmp_obj <- ssu18_ps_work_ord_perfect_sim
 tmp_ps <- ssu18_ps_work
@@ -2587,10 +2598,29 @@ save.image("page_build/filtering_wf.rdata")
 remove(list = ls())
 ```
 
+# Workflow Output 
+
+Data products generated in this workflow can be downloaded from figshare.
+
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+
+</br>
+
+<a href="taxa.html" class="btnnav button_round" style="float: right;">Next workflow:
+<br> 4. Taxonomic Diversity</a>
+<a href="data-prep.html" class="btnnav button_round" style="float: left;">Previous workflow:
+<br> 2. Data Set Preparation</a>
+
 ##  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/filtering.Rmd).
 
 ## Data Availability {.appendix}
 
-Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.14701440](https://doi.org/10.25573/data.14701440).
+Data generated in this workflow and the `Rdata` file need to run the workflow can be accessed on figshare at [10.25573/data.14701440](https://doi.org/10.25573/data.14701440).
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```

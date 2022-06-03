@@ -27,11 +27,11 @@ set.seed(119)
 
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
-pacman::p_load(tidyverse, metacoder, hilldiv, patchwork, codefolder,
-               agricolae, labdsv, naniar, codefolder, pairwiseAdonis, 
+pacman::p_load(tidyverse, metacoder, hilldiv, patchwork,
+               agricolae, labdsv, naniar, pairwiseAdonis, 
                microbiome, seqRFLP, DT, microeco, file2meco, cowplot,
                GUniFrac, ggalluvial, ggdendro, tidytree, igraph, reactable,
-               pheatmap, SpiecEasi, Tax4Fun, WGCNA, microbiomeMarker,
+               pheatmap, microbiomeMarker,
                captioner, downloadthis,
                install = FALSE, update = FALSE)
 options(scipen=999)
@@ -64,13 +64,23 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
 source("assets/captions/captions_taxa.R")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r echo=FALSE, eval=TRUE}
+source(file.path("assets", "functions.R"))
+# This is needed to add a COPY CODE button to code chunks
+clipboard_button()
+# This is needed to use PANELS
 xaringanExtra::use_panelset()
 ```
 
 # Synopsis
 
-This workflow contains taxonomic diversity assessments for the 16S rRNA and ITS data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow](dada2.html), then the [Data Preparation workflow](data-prep.html), and finally the  [Filtering workflow](filtering.html). 
+This workflow contains taxonomic diversity assessments for the 16S rRNA and ITS data sets. In order to run the workflow, you either need to first run the  [DADA2 Workflow](dada2.html), then the [Data Preparation workflow](data-prep.html), and finally the [Filtering workflow](filtering.html) or download the files linked below. 
+
+## Workflow Input
+
+All files needed to run this workflow can be downloaded from figshare. 
+
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
 
 In this workflow, we use the [microeco](https://github.com/ChiLiubio/microeco) to look at the taxonomic distribution of microbial communities.
 
@@ -120,7 +130,7 @@ for (i in ssu18_data_sets) {
 
 2) Replace Phylum Proteobacteria with the Class name.
 
-````{r, code_folding=TRUE}
+```{r, code_folding=TRUE}
 for (j in ssu18_data_sets) {
   tmp_name <- purrr::map_chr(j, ~paste0(., "_proteo_clean"))
   tmp_get <- get(j)
@@ -925,7 +935,7 @@ for (i in ssu18_data_sets) {
 
 2) Replace Phylum Proteobacteria with the Class name.
 
-````{r}
+```{r}
 for (j in ssu18_data_sets) {
   tmp_name <- purrr::map_chr(j, ~paste0(., "_proteo_clean"))
   tmp_get <- get(j)
@@ -1334,6 +1344,23 @@ ssu18_ps_work_Verrucomicrobiota_final_plot
 save.image("page_build/taxa_wf.rdata")
 ```
 
+```{r, include=FALSE, eval=TRUE}
+remove(list = ls())
+```
+
+# Workflow Output 
+
+Data products generated in this workflow can be downloaded from figshare.
+
+<iframe src="https://widgets.figshare.com/articles/16826737/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+
+</br>
+
+<a href="alpha.html" class="btnnav button_round" style="float: right;">Next workflow:
+<br> 5. Alpha Diversity Estimates</a>
+<a href="filtering.html" class="btnnav button_round" style="float: left;">Previous workflow:
+<br> 3. Filtering</a>
+
 ##  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/taxa.Rmd).
@@ -1341,3 +1368,9 @@ The source code for this page can be accessed on GitHub by [clicking this link](
 ## Data Availability {.appendix}
 
 Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16826737](https://doi.org/10.25573/data.16826737).
+
+## Last updated on {.appendix}
+
+```{r,echo=FALSE, eval=TRUE}
+Sys.time()
+```
