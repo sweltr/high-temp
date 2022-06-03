@@ -1,0 +1,9 @@
+Description	distance metric	p_value	test
+FULL data set	unweighted UniFrac	0.013	ANOSIM
+	weighted UniFrac	0.004	ANOSIM
+Arbitrary filter	unweighted UniFrac	0.002	ANOSIM
+	weighted UniFrac	0.004	ANOSIM
+PERFect filter	unweighted UniFrac	0.001	ANOSIM
+	weighted UniFrac	0.003	ANOSIM
+PIME filter	unweighted UniFrac	0.474	ADONIS
+	weighted UniFrac	0.012	ANOSIM

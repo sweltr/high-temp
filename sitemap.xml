@@ -2,50 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" version="1.0">
   <url>
     <loc>https://sweltr.github.io/about.html</loc>
-    <lastmod>2021-10-17T06:57:13-05:00</lastmod>
+    <lastmod>2022-06-02T11:56:59-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/alpha.html</loc>
-    <lastmod>2021-10-17T07:01:04-05:00</lastmod>
+    <lastmod>2022-05-07T09:37:36-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/beta.html</loc>
-    <lastmod>2021-10-16T18:15:52-05:00</lastmod>
+    <lastmod>2022-05-07T09:36:07-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/da.html</loc>
-    <lastmod>2021-10-16T19:32:14-05:00</lastmod>
+    <lastmod>2022-05-07T09:36:20-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/dada2.html</loc>
-    <lastmod>2021-10-16T10:50:59-05:00</lastmod>
+    <lastmod>2022-05-06T08:38:52-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/data-availability.html</loc>
-    <lastmod>2021-10-16T19:42:53-05:00</lastmod>
+    <lastmod>2022-06-02T11:45:40-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/data-prep.html</loc>
-    <lastmod>2021-10-15T19:57:47-05:00</lastmod>
+    <lastmod>2022-05-07T09:36:59-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/filtering.html</loc>
-    <lastmod>2021-10-15T19:57:18-05:00</lastmod>
+    <lastmod>2022-05-07T09:35:19-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/</loc>
-    <lastmod>2021-10-16T19:37:28-05:00</lastmod>
+    <lastmod>2022-02-13T08:42:04-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/metadata.html</loc>
-    <lastmod>2021-10-16T10:55:54-05:00</lastmod>
+    <lastmod>2022-06-02T08:31:52-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/som.html</loc>
-    <lastmod>2021-10-15T20:06:26-05:00</lastmod>
+    <lastmod>2022-06-03T15:05:59-05:00</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/taxa.html</loc>
-    <lastmod>2021-10-15T19:30:11-05:00</lastmod>
+    <lastmod>2022-05-07T09:35:54-05:00</lastmod>
   </url>
 </urlset>

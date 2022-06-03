@@ -1,0 +1,13 @@
+metric	data_set	pval_shap	pval_bart	method	posthoc_method	posthoc_pval
+Observed	FULL	0.128	0.516	ANOVA	Tukey post-hoc test	6.14E-03
+Observed	FILT	0.115	0.938	ANOVA	Tukey post-hoc test	2.36E-03
+Observed	PERFect	0.162	0.667	ANOVA	Tukey post-hoc test	1.09E-03
+Observed	PIME	0.134	0.454	ANOVA	Tukey post-hoc test	7.36E-06
+Shannon exponential	FULL	0.846	0.445	ANOVA	Tukey post-hoc test	2.21E-01
+Shannon exponential	FILT	0.934	0.363	ANOVA	Tukey post-hoc test	1.39E-01
+Shannon exponential	PERFect	0.919	0.555	ANOVA	Tukey post-hoc test	1.87E-01
+Shannon exponential	PIME	0.972	0.436	ANOVA	Tukey post-hoc test	3.46E-01
+Inverse Simpson	FULL	0.184	0.126	ANOVA	Tukey post-hoc test	1.82E-01
+Inverse Simpson	FILT	0.349	0.159	ANOVA	Tukey post-hoc test	1.83E-01
+Inverse Simpson	PERFect	0.961	0.236	ANOVA	Tukey post-hoc test	2.05E-01
+Inverse Simpson	PIME	0.955	0.477	ANOVA	Tukey post-hoc test	3.42E-01

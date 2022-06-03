@@ -19,32 +19,33 @@
  <!--/radix_placeholder_import_source-->
 
 
-  <!--radix_placeholder_meta_tags-->
-  <title>sweltr: Data Availability</title>
 
-  <meta property="description" itemprop="description" content="In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well."/>
+  <!--radix_placeholder_meta_tags-->
+  <title>: Data Availability</title>
+
+  <meta property="description" itemprop="description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo."/>
 
   <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="sweltr: Data Availability"/>
+  <meta property="og:title" content=": Data Availability"/>
   <meta property="og:type" content="article"/>
-  <meta property="og:description" content="In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well."/>
+  <meta property="og:description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo."/>
   <meta property="og:locale" content="en_US"/>
-  <meta property="og:site_name" content="sweltr"/>
+  <meta property="og:site_name" content=""/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="sweltr: Data Availability"/>
-  <meta property="twitter:description" content="In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well."/>
+  <meta property="twitter:title" content=": Data Availability"/>
+  <meta property="twitter:description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo."/>
 
   <!--/radix_placeholder_meta_tags-->
   
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography"]}},"value":[{"type":"character","attributes":{},"value":["Data Availability"]},{"type":"character","attributes":{},"value":["In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography"]}},"value":[{"type":"character","attributes":{},"value":["Data Availability"]},{"type":"character","attributes":{},"value":["On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -1798,7 +1799,10 @@
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
-        var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
+        var refs = $(this).attr('data-cites').split(" ");
+        var refHtml = refs.map(function(ref) {
+          return "<p>" + $('#ref-' + ref).html() + "</p>";
+        }).join("\n");
         window.tippy(this, {
           allowHTML: true,
           content: refHtml,
@@ -1969,7 +1973,13 @@
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+  <script src="site_libs/clipboard-2.0.6/clipboard.min.js"></script>
+  <link href="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
+  <script src="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
+  <script>window.xaringanExtraClipboard(null, {"button":"<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"><\/i>","success":"<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"><\/i>","error":"<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"><\/i>"})</script>
+  <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+  <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2132,27 +2142,34 @@
   /********************************/
 
   .nav-dropdown-content .nav-dropdown-header {
-    text-transform: none;
+    text-transform: uppercase;
     color: #686868;
   }
+
   .nav-dropdown-content a {
     font-family: 'Work Sans'
   }
   .nav-dropdown .nav-dropbtn {
-  /*  color: #FEFEFE; */
+    color: #FEFEFE;
     font-weight: 400;
   }
 
   .distill-site-header .logo img {
     margin-top: 10px;
     max-height: 30px;
-    margin-bottom: 10px;
+    margin-bottom: auto;
   }
 
   .distill-site-nav {
+      color: #FEFEFE;
       background-color: #113858;
-      font-size: 16px;
-      font-weight: 300;
+      font-size: 0.95em;
+      font-weight: 400;
+      min-width: 165px;
+      position: absolute;
+      font-family: 'Karla';
+      letter-spacing: .1em;
+      text-transform: uppercase;
   }
 
   img {
@@ -2240,6 +2257,22 @@
     font-size: 1.2em;
   }
 
+  /********************************/
+  /* next and previous buttons at the end of the article */
+  /********************************/
+
+  .btnnav {
+    border: none;
+    background-color: #113858;
+    color: #f2f2f2;
+    padding: 14px 28px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .button_round {border-radius: 12px;}
+
   </style>
   <!--/radix_placeholder_site_in_header-->
 
@@ -2252,7 +2285,7 @@
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Data Availability","description":"In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well.","authors":[]}
+{"title":"Data Availability","description":"On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2260,13 +2293,15 @@
 <header class="header header--fixed" role="banner">
 <nav class="distill-site-nav distill-site-header">
 <div class="nav-left">
+<a class="logo" href="index.html">
+<img src="assets/icon.png" alt="Logo"/>
+</a>
 <a href="index.html" class="title"></a>
+</div>
+<div class="nav-right">
 <a href="index.html">
 <i class="fa fa-home" aria-hidden="true"></i>
 </a>
-<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
-</div>
-<div class="nav-right">
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
 A. Processing
@@ -2297,7 +2332,7 @@ B. Diversity
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<a href="data-availability.html">Data Products</a>
+<a href="data-availability.html">Data</a>
 <a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
@@ -2317,7 +2352,10 @@ B. Diversity
 <h1>Data Availability</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
-<p><p>In this section you can find information on obtaining raw sequencing data, data products, and processing scripts. Of course, all the code is also embedded in the workflows on the website as well.</p></p>
+<p><p>On this page, you can find information on obtaining sequence data,
+data products, and processing scripts. Code is embedded in indivudual
+workflows on the website or can be accessed through the project GitHub
+repo.</p></p>
 </div>
 
 
@@ -2326,16 +2364,190 @@ B. Diversity
 <nav class="l-text toc figcaption" id="TOC">
 <h3>Contents</h3>
 <ul>
+<li><a href="#archived-sequence-data">Archived Sequence Data</a></li>
+<li><a href="#pipeline-data">Pipeline Data</a></li>
+<li><a href="#submitting-sequence-data">Submitting Sequence
+Data</a></li>
 <li><a href="#source-code">Source Code</a></li>
+<li><a href="#last-updated-on">Last updated on</a></li>
 </ul>
 </nav>
 </div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<h2 id="archived-sequence-data">Archived Sequence Data</h2>
+<p>Raw <strong>16S rRNA</strong> data for each sample (before removing
+primers) is available on figshare at <a
+href="https://doi.org/10.25573/data.14686665">doi:10.25573/data.14686665</a>.
+Raw <strong>ITS</strong> data for each sample (before removing primers)
+is available on figshare at <a
+href="https://doi.org/10.25573/data.14686755">doi:10.25573/data.14686755</a>.</p>
+<p>All trimmed sequence data (primers removed) is deposited at the
+European Nucleotide Archive (ENA) under the study accession number <a
+href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074
+(ERP129199)</a>. The trimmed <strong>16S rRNA</strong> data (primers
+removed) are deposited under sample accession numbers <a
+href="https://www.ebi.ac.uk/ena/browser/view/ERS6485270-ERS6485284">ERS6485270-ERS6485284</a>.
+The trimmed <strong>ITS</strong> data (primers removed) are deposited
+under sample accession numbers <a
+href="https://www.ebi.ac.uk/ena/browser/view/ERS6485285-ERS6485299">ERS6485285-ERS6485299</a>.</p>
+<h2 id="pipeline-data">Pipeline Data</h2>
+<p>Data for each individual pipeline are available through the
+Smithsonian figshare under a single collection at <a
+href="https://doi.org/10.25573/data.c.5667571.v2">doi:10.25573/data.c.5667571.v2</a>.
+In addition, data from each pipeline are available for download from
+figshare using the links at the bottom of each workflow page (where
+applicable).</p>
+<details>
+<summary>
+<strong>Show</strong> descriptions and DOI’s for each workflow
+</summary>
+<p></br></p>
+<p>Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data
+files for the high-temp SWELTR study. Smithsonian Tropical Research
+Institute. Dataset. <a href="https://doi.org/10.25573/data.14686665.v1"
+class="uri">https://doi.org/10.25573/data.14686665.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files
+for the high-temp SWELTR study. Smithsonian Tropical Research Institute.
+Dataset. <a href="https://doi.org/10.25573/data.14686755.v1"
+class="uri">https://doi.org/10.25573/data.14686755.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 1. DADA2 Workflow (16S rRNA/ITS)
+Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.14687184.v1"
+class="uri">https://doi.org/10.25573/data.14687184.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 2. Data Preparation (16S
+rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.14690739.v1"
+class="uri">https://doi.org/10.25573/data.14690739.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 3. Filtering: (16S rRNA/ITS)
+Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.14701440.v1"
+class="uri">https://doi.org/10.25573/data.14701440.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 4. Taxonomic: (16S rRNA/ITS)
+Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.16826737.v1"
+class="uri">https://doi.org/10.25573/data.16826737.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 5. Aplha diversity (16S
+rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.16826779.v1"
+class="uri">https://doi.org/10.25573/data.16826779.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 6. Beta diversity (16S rRNA/ITS)
+Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.16828063.v1"
+class="uri">https://doi.org/10.25573/data.16828063.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 7. Differentially Abundant ASVs
+&amp; Taxa (16S rRNA/ITS) Output. Smithsonian Tropical Research
+Institute. Dataset. <a href="https://doi.org/10.25573/data.16828249.v1"
+class="uri">https://doi.org/10.25573/data.16828249.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 8. Metadata Analysis (16S
+rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a
+href="https://doi.org/10.25573/data.16828294.v1"
+class="uri">https://doi.org/10.25573/data.16828294.v1</a></p>
+</details>
+<h2 id="submitting-sequence-data">Submitting Sequence Data</h2>
+<p>We submitted out data to the <a
+href="https://www.ebi.ac.uk/ena">European Nucleotide Archive (ENA)</a>.
+The ENA does not like RAW data and prefers to have primers removed. So
+we submitted the trimmed Fastq files to the ENA. You can find these data
+under the study accession number <strong>PRJEB45074
+(ERP129199)</strong>. The RAW files on our figshare site (see
+above).</p>
+<p>To submit to the ENA you need two data tables (plus your sequence
+data). One file describes the samples and the other file describes the
+sequencing data.</p>
+<p>You can download our submission data tables here:</p>
+<ul>
+<li><a
+href="include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv">Sample
+submission form</a></li>
+<li><a
+href="include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv">FASTq
+submission form</a></li>
+</ul>
+<p>Note, these forms are study specific, so please use these as guides
+only.</p>
+<h3 id="instructions-for-submitting-to-the-ena">Instructions for
+Submitting to the ENA</h3>
+<p>Even though I have done this dozens of times, the process of
+submitting sequence data to read archives still baffles me.</p>
 <blockquote>
-<p>Content coming soon!</p>
+<p>Note: I submit data with primers, barcodes, etc
+<strong>removed</strong></p>
 </blockquote>
-<p>This page will contain information on how to access a variety of data and data products once the manuscript has been accepted for publication. Please check back.</p>
+<h4 id="register-project-upload-sample-data">Register Project &amp;
+Upload Sample Data</h4>
+<ol type="1">
+<li>go to <a href="https://www.ebi.ac.uk/ena/submit"
+class="uri">https://www.ebi.ac.uk/ena/submit</a> and select
+<strong>Submit to ENA Interactively</strong>.</li>
+<li>Login or Register.</li>
+<li>Go to <strong>New Submission</strong> tab and, if this is a new
+project, select <strong>Register study (project)</strong>.</li>
+<li>Hit Next</li>
+<li>Enter details and hit <strong>Submit</strong>.</li>
+<li>Next, <a href="https://www.ebi.ac.uk/ena/submit/checklists">Select
+Checklist</a>. This will be specific to the type of samples you have and
+basically will create a template so you can add your sample metadata.
+For this study I chose <strong>GSC MIxS soil</strong>, checklist
+accession number <a
+href="https://www.ebi.ac.uk/ena/data/view/ERC000022">ERC000022</a></li>
+<li>Next</li>
+<li>Now go through and select/deselect fields as needed. Note, some
+fields are mandatory.</li>
+<li>Once finished, hit <strong>Next</strong> to fill in any details that
+apply to <em>All</em> samples and the download the template.
+Alternatively, you can download the template and fill in the data by
+hand.</li>
+<li>Upload the sample sheet.</li>
+<li>Once everything looks good and uploaded, click the <strong>New
+Submission</strong> tab.</li>
+</ol>
+<h4 id="upload-sequence-data">Upload Sequence Data</h4>
+<ol start="12" type="1">
+<li>Hit <strong>Skip</strong> and then select <strong>Two Fastq files
+(Paired)</strong>, Download the template and fill in the details.</li>
+<li>Next, make sure all the trimmed fastq files are gzipped
+<strong>.gz</strong> (these are what you submit).</li>
+<li>Navigate to the directory with the trimmed, compressed fastq files
+and run:</li>
+</ol>
+<pre><code>md5sum *.gz</code></pre>
+<ol start="16" type="1">
+<li>Add the checksums and file names to the fastq submission form. You
+can read more about <a
+href="https://ena-docs.readthedocs.io/en/latest/submit/fileprep/preparation.html">Preparing
+A File For Upload here</a>.</li>
+</ol>
+<p><strong>STOP</strong></p>
+<p>Before uploading the sheet, you first must upload the fastq files.
+Documentation for Uploading Files To ENA can be found <a
+href="https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html">here</a>.</p>
+<ol start="17" type="1">
+<li>In the same directory, run:</li>
+</ol>
+<pre><code>lftp webin2.ebi.ac.uk -u Webin-XXXXX</code></pre>
+<p>where <code>Webin-XXXXX</code> is your user name. Enter your
+password</p>
+<p>at the prompt run:</p>
+<pre><code>mput *.gz
+# when finished
+bye</code></pre>
+<p>The files should begin uploading. Depending on internet speed and/or
+file sizes/numbers, this could take a while.</p>
+<ol start="18" type="1">
+<li>Once the upload is finished, upload and submit the fastq submission
+form. If the <code>sample alias</code> field dows not autofill you may
+need to upload the sample form again.</li>
+</ol>
 <h2 class="appendix" id="source-code">Source Code</h2>
-<p>The source code for this page can be accessed on GitHub by <a href="https://github.com/sweltr/high-temp/blob/master/data-availability.Rmd">clicking this link</a>.</p>
+<p>The source code for this page can be accessed on GitHub by <a
+href="https://github.com/sweltr/high-temp/blob/master/data-availability.Rmd">clicking
+this link</a>.</p>
+<h2 class="appendix" id="last-updated-on">Last updated on</h2>
+<div class="layout-chunk" data-layout="l-body">
+<pre><code>[1] &quot;2022-06-02 13:52:04 EST&quot;</code></pre>
+</div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
@@ -2358,8 +2570,10 @@ B. Diversity
 <!--/radix_placeholder_appendices-->
 <!--radix_placeholder_navigation_after_body-->
 <div class="distill-site-nav distill-site-footer">
-<p>© Copyright 2021 The SWELTR Project.</p>
-<p>Site constructed using <a href="https://rstudio.github.io/distill/">Distill for R Markdown</a>.</p>
+<p>© Copyright 2022 metacrobe and The SWELTR Project.</p>
+<p>Site constructed using <a
+href="https://rstudio.github.io/distill/">Distill for R
+Markdown</a>.</p>
 </div>
 <!--/radix_placeholder_navigation_after_body-->
 

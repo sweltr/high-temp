@@ -1,0 +1,13 @@
+metric	data_set	pval_shap	pval_bart	test
+Observed_richness	FULL	0.268	0.599	ANOVA
+Observed_richness	FILT	0.367	0.585	ANOVA
+Observed_richness	PERFect	0.191	0.437	ANOVA
+Observed_richness	PIME	0.055	0.755	ANOVA
+Shannon_exponential	FULL	0.994	0.490	ANOVA
+Shannon_exponential	FILT	0.230	0.107	ANOVA
+Shannon_exponential	PERFect	0.331	0.159	ANOVA
+Shannon_exponential	PIME	0.037	0.880	Kruskal-Wallis
+Simpson_multiplicative_inverse	FULL	0.584	0.155	ANOVA
+Simpson_multiplicative_inverse	FILT	0.673	0.413	ANOVA
+Simpson_multiplicative_inverse	PERFect	0.747	0.348	ANOVA
+Simpson_multiplicative_inverse	PIME	0.370	0.371	ANOVA

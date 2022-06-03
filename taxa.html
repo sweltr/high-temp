@@ -80,8 +80,9 @@ code span.vs { color: #008080; } /* VerbatimString */
 code span.wa { color: #008000; font-weight: bold; } /* Warning */
 </style>
 
+
   <!--radix_placeholder_meta_tags-->
-  <title>sweltr: 4. Taxonomic Diversity</title>
+  <title>: 4. Taxonomic Diversity</title>
 
   <meta property="description" itemprop="description" content="Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets."/>
 
@@ -89,15 +90,15 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="sweltr: 4. Taxonomic Diversity"/>
+  <meta property="og:title" content=": 4. Taxonomic Diversity"/>
   <meta property="og:type" content="article"/>
   <meta property="og:description" content="Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets."/>
   <meta property="og:locale" content="en_US"/>
-  <meta property="og:site_name" content="sweltr"/>
+  <meta property="og:site_name" content=""/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="sweltr: 4. Taxonomic Diversity"/>
+  <meta property="twitter:title" content=": 4. Taxonomic Diversity"/>
   <meta property="twitter:description" content="Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets."/>
 
   <!--/radix_placeholder_meta_tags-->
@@ -1859,7 +1860,10 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
-        var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
+        var refs = $(this).attr('data-cites').split(" ");
+        var refHtml = refs.map(function(ref) {
+          return "<p>" + $('#ref-' + ref).html() + "</p>";
+        }).join("\n");
         window.tippy(this, {
           allowHTML: true,
           content: refHtml,
@@ -2030,7 +2034,13 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+  <script src="site_libs/clipboard-2.0.6/clipboard.min.js"></script>
+  <link href="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
+  <script src="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
+  <script>window.xaringanExtraClipboard(null, {"button":"<i class=\"fa fa-clone fa-2x\" style=\"color: #004276\"><\/i>","success":"<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"><\/i>","error":"<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"><\/i>"})</script>
+  <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+  <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
   <link href="site_libs/panelset-0.2.6/panelset.css" rel="stylesheet" />
   <script src="site_libs/panelset-0.2.6/panelset.js"></script>
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
@@ -2195,27 +2205,34 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
   /********************************/
 
   .nav-dropdown-content .nav-dropdown-header {
-    text-transform: none;
+    text-transform: uppercase;
     color: #686868;
   }
+
   .nav-dropdown-content a {
     font-family: 'Work Sans'
   }
   .nav-dropdown .nav-dropbtn {
-  /*  color: #FEFEFE; */
+    color: #FEFEFE;
     font-weight: 400;
   }
 
   .distill-site-header .logo img {
     margin-top: 10px;
     max-height: 30px;
-    margin-bottom: 10px;
+    margin-bottom: auto;
   }
 
   .distill-site-nav {
+      color: #FEFEFE;
       background-color: #113858;
-      font-size: 16px;
-      font-weight: 300;
+      font-size: 0.95em;
+      font-weight: 400;
+      min-width: 165px;
+      position: absolute;
+      font-family: 'Karla';
+      letter-spacing: .1em;
+      text-transform: uppercase;
   }
 
   img {
@@ -2303,6 +2320,22 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
     font-size: 1.2em;
   }
 
+  /********************************/
+  /* next and previous buttons at the end of the article */
+  /********************************/
+
+  .btnnav {
+    border: none;
+    background-color: #113858;
+    color: #f2f2f2;
+    padding: 14px 28px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .button_round {border-radius: 12px;}
+
   </style>
   <!--/radix_placeholder_site_in_header-->
 
@@ -2323,13 +2356,15 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <header class="header header--fixed" role="banner">
 <nav class="distill-site-nav distill-site-header">
 <div class="nav-left">
+<a class="logo" href="index.html">
+<img src="assets/icon.png" alt="Logo"/>
+</a>
 <a href="index.html" class="title"></a>
+</div>
+<div class="nav-right">
 <a href="index.html">
 <i class="fa fa-home" aria-hidden="true"></i>
 </a>
-<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
-</div>
-<div class="nav-right">
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
 A. Processing
@@ -2360,7 +2395,7 @@ B. Diversity
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<a href="data-availability.html">Data Products</a>
+<a href="data-availability.html">Data</a>
 <a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
@@ -2380,7 +2415,8 @@ B. Diversity
 <h1>4. Taxonomic Diversity</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
-<p><p>Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.</p></p>
+<p><p>Reproducible workflow for assessing dominant taxonomic groups in
+the 16S rRNA and ITS data sets.</p></p>
 </div>
 
 
@@ -2389,15 +2425,22 @@ B. Diversity
 <nav class="l-text toc figcaption" id="TOC">
 <h3>Contents</h3>
 <ul>
-<li><a href="#synopsis">Synopsis</a></li>
+<li><a href="#synopsis">Synopsis</a>
+<ul>
+<li><a href="#workflow-input">Workflow Input</a></li>
+</ul></li>
 <li><a href="#taxonomic-assessment">Taxonomic Assessment</a>
 <ul>
 <li><a href="#s-rrna">16s rRNA</a></li>
 <li><a href="#its">ITS</a></li>
 </ul></li>
-<li><a href="#major-bacterial-taxa-by-family">Major Bacterial taxa by Family</a>
+<li><a href="#major-bacterial-taxa-by-family">Major Bacterial taxa by
+Family</a></li>
+<li><a href="#workflow-output">Workflow Output</a>
 <ul>
 <li><a href="#source-code">Source Code</a></li>
+<li><a href="#data-availability">Data Availability</a></li>
+<li><a href="#last-updated-on">Last updated on</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -2415,11 +2458,11 @@ B. Diversity
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(phyloseq); <span class="fu">packageVersion</span>(<span class="st">&quot;phyloseq&quot;</span>)</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Biostrings); <span class="fu">packageVersion</span>(<span class="st">&quot;Biostrings&quot;</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, metacoder, hilldiv, patchwork, codefolder,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>               agricolae, labdsv, naniar, codefolder, pairwiseAdonis, </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, metacoder, hilldiv, patchwork,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>               agricolae, labdsv, naniar, pairwiseAdonis, </span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               microbiome, seqRFLP, DT, microeco, file2meco, cowplot,</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>               GUniFrac, ggalluvial, ggdendro, tidytree, igraph, reactable,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>               pheatmap, SpiecEasi, Tax4Fun, WGCNA, microbiomeMarker,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>               pheatmap, microbiomeMarker,</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>               captioner, downloadthis,</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">install =</span> <span class="cn">FALSE</span>, <span class="at">update =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">999</span>)</span>
@@ -2445,8 +2488,20 @@ B. Diversity
 
 </div>
 <h1 id="synopsis">Synopsis</h1>
-<p>This workflow contains taxonomic diversity assessments for the 16S rRNA and ITS data sets. In order to run the workflow, you either need to first run the <a href="dada2.html">DADA2 Workflow</a>, then the <a href="data-prep.html">Data Preparation workflow</a>, and finally the <a href="filtering.html">Filtering workflow</a>.</p>
-<p>In this workflow, we use the <a href="https://github.com/ChiLiubio/microeco">microeco</a> to look at the taxonomic distribution of microbial communities.</p>
+<p>This workflow contains taxonomic diversity assessments for the 16S
+rRNA and ITS data sets. In order to run the workflow, you either need to
+first run the <a href="dada2.html">DADA2 Workflow</a>, then the <a
+href="data-prep.html">Data Preparation workflow</a>, and finally the <a
+href="filtering.html">Filtering workflow</a> or download the files
+linked below.</p>
+<h2 id="workflow-input">Workflow Input</h2>
+<p>All files needed to run this workflow can be downloaded from
+figshare.</p>
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0">
+</iframe>
+<p>In this workflow, we use the <a
+href="https://github.com/ChiLiubio/microeco">microeco</a> to look at the
+taxonomic distribution of microbial communities.</p>
 <h1 id="taxonomic-assessment">Taxonomic Assessment</h1>
 <h2 id="s-rrna">16s rRNA</h2>
 <div class="layout-chunk" data-layout="l-body">
@@ -2455,8 +2510,12 @@ B. Diversity
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<p>Here we compare the taxonomic breakdown of the Full (unfiltered), Arbitrary filtered, PERfect filtered, and PIME filtered data sets, split by temperature treatment.</p>
-<p>Before we plot the data, we want to separate out the Proteobacteria classes so we can plot these along with other phyla. To accomplish this we perform the following steps:</p>
+<p>Here we compare the taxonomic breakdown of the Full (unfiltered),
+Arbitrary filtered, PERfect filtered, and PIME filtered data sets, split
+by temperature treatment.</p>
+<p>Before we plot the data, we want to separate out the Proteobacteria
+classes so we can plot these along with other phyla. To accomplish this
+we perform the following steps:</p>
 <ol type="1">
 <li>Get all Class-level Proteobacteria names</li>
 </ol>
@@ -2527,7 +2586,10 @@ Show code
 </details>
 </div>
 <ol start="3" type="1">
-<li>In order to use <code>microeco</code>, we need to add the rank designation as a prefix to each taxa. For example, <code>Actinobacteriota</code> is changed to <code>p__Actinobacteriota</code>.</li>
+<li>In order to use <code>microeco</code>, we need to add the rank
+designation as a prefix to each taxa. For example,
+<code>Actinobacteriota</code> is changed to
+<code>p__Actinobacteriota</code>.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2569,7 +2631,15 @@ Show code
 </details>
 </div>
 <ol start="4" type="1">
-<li>Next, we need to covert each <code>phyloseq object</code> to a <code>microtable class</code>. The microtable class is the basic data structure for the <code>microeco</code> package and designed to store basic information from all the downstream analyses (e.g, alpha diversity, beta diversity, etc.). We use the <a href="https://github.com/ChiLiubio/file2meco">file2meco</a> to read the phyloseq object and convert into a microtable object. We can add <code>_me</code> as a suffix to each object to distiguish it from its’ phyloseq counterpart.</li>
+<li>Next, we need to covert each <code>phyloseq object</code> to a
+<code>microtable class</code>. The microtable class is the basic data
+structure for the <code>microeco</code> package and designed to store
+basic information from all the downstream analyses (e.g, alpha
+diversity, beta diversity, etc.). We use the <a
+href="https://github.com/ChiLiubio/file2meco">file2meco</a> to read the
+phyloseq object and convert into a microtable object. We can add
+<code>_me</code> as a suffix to each object to distiguish it from its’
+phyloseq counterpart.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2602,7 +2672,8 @@ Show code
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </details>
 </div>
-<p>Here is an example of what a new microeco object looks like when you call it.</p>
+<p>Here is an example of what a new microeco object looks like when you
+call it.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ssu18_ps_work_me</span></code></pre></div>
 <pre><code>microtable class:
@@ -2616,7 +2687,18 @@ Taxa abundance: calculated for Kingdom,Phylum,Class,Order,Family,Genus </code></
 
 </div>
 <ol start="5" type="1">
-<li>Now, we calculate the taxa abundance at each taxonomic rank using <code>cal_abund()</code>. This function return a list called <code>taxa_abund</code> containing several data frame of the abundance information at each taxonomic rank. The list is stored in the microtable object automatically. It’s worth noting that the <code>cal_abund()</code> function can be used to solve some complex cases, such as supporting both the relative and absolute abundance calculation and selecting the partial taxonomic columns. More information can be found in the description of the <a href="https://github.com/ChiLiubio/file2meco">file2meco package</a>. In the same loop we also create a <code>trans_abund</code> class, which is used to transform taxonomic abundance data for plotting.</li>
+<li>Now, we calculate the taxa abundance at each taxonomic rank using
+<code>cal_abund()</code>. This function return a list called
+<code>taxa_abund</code> containing several data frame of the abundance
+information at each taxonomic rank. The list is stored in the microtable
+object automatically. It’s worth noting that the
+<code>cal_abund()</code> function can be used to solve some complex
+cases, such as supporting both the relative and absolute abundance
+calculation and selecting the partial taxonomic columns. More
+information can be found in the description of the <a
+href="https://github.com/ChiLiubio/file2meco">file2meco package</a>. In
+the same loop we also create a <code>trans_abund</code> class, which is
+used to transform taxonomic abundance data for plotting.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2642,12 +2724,18 @@ Show code
 </div>
 <pre><code>The result is stored in object$taxa_abund ...</code></pre>
 <ol start="6" type="1">
-<li>I prefer to specify the order of taxa in these kinds of plots. We can look the top <code>ntaxa</code> (defined above) by accessing the <code>use_taxanames</code> character vector of each microtable object.</li>
+<li>I prefer to specify the order of taxa in these kinds of plots. We
+can look the top <code>ntaxa</code> (defined above) by accessing the
+<code>use_taxanames</code> character vector of each microtable
+object.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<p>Hum. Similar but not the same. This means we need to define the order for each separately. Once we do that, we will override the <code>use_taxanames</code> character vectors with the reordered vectors.</p>
+<p>Hum. Similar but not the same. This means we need to define the order
+for each separately. Once we do that, we will override the
+<code>use_taxanames</code> character vectors with the reordered
+vectors.</p>
 <div class="layout-chunk" data-layout="l-body">
 <details>
 <summary>
@@ -2672,7 +2760,9 @@ Show code
 </details>
 </div>
 <ol start="7" type="1">
-<li>And one more little step before plotting. Here we <strong>a</strong>) specify a custom color palette and <strong>b</strong>) specify the sample order.</li>
+<li>And one more little step before plotting. Here we
+<strong>a</strong>) specify a custom color palette and
+<strong>b</strong>) specify the sample order.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2688,7 +2778,8 @@ Show code
 </details>
 </div>
 <ol start="8" type="1">
-<li>Now we can generate plots (in a loop) for each faceted data set.</li>
+<li>Now we can generate plots (in a loop) for each faceted data
+set.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2745,7 +2836,8 @@ Show code
 <span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </details>
 </div>
-<p>And now plots for the groupmeans sets. We can use the same taxa order since that should not have changed.</p>
+<p>And now plots for the groupmeans sets. We can use the same taxa order
+since that should not have changed.</p>
 <div class="layout-chunk" data-layout="l-body">
 <details>
 <summary>
@@ -2795,7 +2887,8 @@ Show code
 </details>
 </div>
 <ol start="10" type="1">
-<li>Finally we use the <code>patchwork</code> package to combine the two plots and customize the look.</li>
+<li>Finally we use the <code>patchwork</code> package to combine the two
+plots and customize the look.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <details>
@@ -2839,11 +2932,16 @@ Show code
 </div>
 <p><br/></p>
 <blockquote>
-<p>It is important to note that while most of the dominant taxa are the same across the FULL, Arbitrary, PIME, and PERfect data sets, there a few key difference:</p>
+<p>It is important to note that while most of the dominant taxa are the
+same across the FULL, Arbitrary, PIME, and PERfect data sets, there a
+few key difference:</p>
 </blockquote>
 <ol type="1">
-<li><p>Planctomycetota was not among the dominant taxa in the PIME data set. Nitrospirota was substituted.</p></li>
-<li><p>Chloroflexi was not among the dominant taxa in either the Arbitrary, PERfect, or PIME data sets. RCP2-54 was substituted in both cases.</p></li>
+<li><p>Planctomycetota was not among the dominant taxa in the PIME data
+set. Nitrospirota was substituted.</p></li>
+<li><p>Chloroflexi was not among the dominant taxa in either the
+Arbitrary, PERfect, or PIME data sets. RCP2-54 was substituted in both
+cases.</p></li>
 </ol>
 <div class="l-body-outset">
 <div class="panelset">
@@ -2852,28 +2950,36 @@ Show code
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_work_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 1 | Dominant taxonomic groups from the FULL (unfiltered) 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 1 | Dominant taxonomic groups from
+the FULL (unfiltered) 16S rRNA data set. A) Grouped by temperature and
+B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="arbitrary-filtered" class="panel">
 <h4>Arbitrary filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_filt_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 2 | Dominant taxonomic groups from the Arbitrary filtered 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 2 | Dominant taxonomic groups from
+the Arbitrary filtered 16S rRNA data set. A) Grouped by temperature and
+B) all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="perfect-filtered" class="panel">
 <h4>PERFECT filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_perfect_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 3 | Dominant taxonomic groups from the PERfect filtered 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 3 | Dominant taxonomic groups from
+the PERfect filtered 16S rRNA data set. A) Grouped by temperature and B)
+all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="pime-filtered" class="panel">
 <h4>PIME filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/ssu18_ps_pime_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 4 | Dominant taxonomic groups from the PIME filtered 16S rRNA data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 4 | Dominant taxonomic groups from
+the PIME filtered 16S rRNA data set. A) Grouped by temperature and B)
+all samples faceted by temperature treatment.</strong></small></p>
 </section>
 </div>
 </div>
@@ -2884,7 +2990,10 @@ Show code
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<p>Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment for the ITS data. The workflow is basically the same as the 16S rRNA data. Click the box below to see the entire workflow.</p>
+<p>Here we compare the taxonomic breakdown of the FULL (unfiltered),
+PIME filtered, and PERfect filtered data sets, split by temperature
+treatment for the ITS data. The workflow is basically the same as the
+16S rRNA data. Click the box below to see the entire workflow.</p>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
@@ -2893,13 +3002,17 @@ Show code
 <strong>Detailed workflow</strong> for ITS taxonomic analysis.
 </summary>
 <ol type="1">
-<li>Choose the <strong>number</strong> of taxa to display and the taxonomic <strong>level</strong>. Aggregate the rest into “Other.”</li>
+<li>Choose the <strong>number</strong> of taxa to display and the
+taxonomic <strong>level</strong>. Aggregate the rest into “Other”.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>top_hits <span class="ot">&lt;-</span> <span class="dv">14</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>top_level <span class="ot">&lt;-</span> <span class="st">&quot;Order&quot;</span></span></code></pre></div>
 </div>
-<p>As above, in order to use <code>microeco</code>, we need to add the rank designation as a prefix to each taxa. For example, <code>Basidiomycota</code> is changed to <code>p__Basidiomycota</code>.</p>
+<p>As above, in order to use <code>microeco</code>, we need to add the
+rank designation as a prefix to each taxa. For example,
+<code>Basidiomycota</code> is changed to
+<code>p__Basidiomycota</code>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  tmp_get <span class="ot">&lt;-</span> <span class="fu">get</span>(i)</span>
@@ -2949,7 +3062,8 @@ Show code
 <span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>}  </span>
 <span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="fu">objects</span>()</span></code></pre></div>
 </div>
-<p>Here is an example of what a new microeco object looks like when you call it.</p>
+<p>Here is an example of what a new microeco object looks like when you
+call it.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>its18_ps_work_me</span></code></pre></div>
 <pre><code>microtable class:
@@ -2962,7 +3076,18 @@ Taxa abundance: calculated for Kingdom,Phylum,Class,Order,Family,Genus </code></
 
 </div>
 <ol start="5" type="1">
-<li>Now, we calculate the taxa abundance at each taxonomic rank using <code>cal_abund()</code>. This function return a list called <code>taxa_abund</code> containing several data frame of the abundance information at each taxonomic rank. The list is stored in the microtable object automatically. It’s worth noting that the <code>cal_abund()</code> function can be used to solve some complex cases, such as supporting both the relative and absolute abundance calculation and selecting the partial taxonomic columns. More information can be found in the description of the <a href="https://github.com/ChiLiubio/file2meco">file2meco package</a>. In the same loop we also create a <code>trans_abund</code> class, which is used to transform taxonomic abundance data for plotting.</li>
+<li>Now, we calculate the taxa abundance at each taxonomic rank using
+<code>cal_abund()</code>. This function return a list called
+<code>taxa_abund</code> containing several data frame of the abundance
+information at each taxonomic rank. The list is stored in the microtable
+object automatically. It’s worth noting that the
+<code>cal_abund()</code> function can be used to solve some complex
+cases, such as supporting both the relative and absolute abundance
+calculation and selecting the partial taxonomic columns. More
+information can be found in the description of the <a
+href="https://github.com/ChiLiubio/file2meco">file2meco package</a>. In
+the same loop we also create a <code>trans_abund</code> class, which is
+used to transform taxonomic abundance data for plotting.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
@@ -2982,12 +3107,18 @@ Taxa abundance: calculated for Kingdom,Phylum,Class,Order,Family,Genus </code></
 </div>
 <pre><code>The result is stored in object$taxa_abund ...</code></pre>
 <ol start="6" type="1">
-<li>I prefer to specify the order of taxa in these kinds of plots. We can look the top <code>ntaxa</code> (defined above) by accessing the <code>use_taxanames</code> character vector of each microtable object.</li>
+<li>I prefer to specify the order of taxa in these kinds of plots. We
+can look the top <code>ntaxa</code> (defined above) by accessing the
+<code>use_taxanames</code> character vector of each microtable
+object.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<p>Hum. Similar but not the same. This means we need to define the order for each separately. Once we do that, we will override the <code>use_taxanames</code> character vectors with the reordered vectors.</p>
+<p>Hum. Similar but not the same. This means we need to define the order
+for each separately. Once we do that, we will override the
+<code>use_taxanames</code> character vectors with the reordered
+vectors.</p>
 <div class="layout-chunk" data-layout="l-body">
 <details>
 <summary>
@@ -3018,7 +3149,9 @@ Show code
 </details>
 </div>
 <ol start="7" type="1">
-<li>And one more little step before plotting. Here we <strong>a</strong>) specify a custom color palette and <strong>b</strong>) specify the sample order.</li>
+<li>And one more little step before plotting. Here we
+<strong>a</strong>) specify a custom color palette and
+<strong>b</strong>) specify the sample order.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>its18_colvec.tax <span class="ot">&lt;-</span> <span class="fu">rev</span>(<span class="fu">c</span>(<span class="st">&quot;#323232&quot;</span>, <span class="st">&quot;#004949&quot;</span>, <span class="st">&quot;#924900&quot;</span>, <span class="st">&quot;#490092&quot;</span>, </span>
@@ -3030,7 +3163,8 @@ Show code
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;P01_D00_010_W8A&quot;</span>, <span class="st">&quot;P03_D00_010_W8B&quot;</span>, <span class="st">&quot;P05_D00_010_W8C&quot;</span>, <span class="st">&quot;P07_D00_010_W8D&quot;</span>)</span></code></pre></div>
 </div>
 <ol start="8" type="1">
-<li>Now we can generate plots (in a loop) for each faceted data set.</li>
+<li>Now we can generate plots (in a loop) for each faceted data
+set.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
@@ -3077,7 +3211,8 @@ Show code
 <span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>(<span class="at">pattern =</span> <span class="st">&quot;tmp_&quot;</span>)) </span>
 <span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
-<p>And now plots for the groupmeans sets. We can use the same taxa order since that should not have changed.</p>
+<p>And now plots for the groupmeans sets. We can use the same taxa order
+since that should not have changed.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>set_to_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;its18_ps_work_group_plot&quot;</span>, <span class="st">&quot;its18_ps_filt_group_plot&quot;</span>, <span class="st">&quot;its18_ps_perfect_group_plot&quot;</span>, <span class="st">&quot;its18_ps_pime_group_plot&quot;</span>)</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> its18_data_sets) {</span>
@@ -3117,7 +3252,8 @@ Show code
 <span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <ol start="10" type="1">
-<li>Finally we use the <code>patchwork</code> package to combine the two plots and customize the look.</li>
+<li>Finally we use the <code>patchwork</code> package to combine the two
+plots and customize the look.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="do">## single index that acts as an index for referencing elements (variables) in a list</span></span>
@@ -3157,11 +3293,16 @@ Show code
 </details>
 <p><br/></p>
 <blockquote>
-<p>It is important to note that while most of the dominant taxa are the same across the FULL, Arbitrary, PIME, and PERfect data sets, there a few key difference:</p>
+<p>It is important to note that while most of the dominant taxa are the
+same across the FULL, Arbitrary, PIME, and PERfect data sets, there a
+few key difference:</p>
 </blockquote>
 <ol type="1">
-<li><p>c_Agaricomycetes &amp; Helotiales were not among the dominant taxa in the Arbitrary or PIME filtered data sets. Polyporales &amp; Mortierellales were substituted, respectively.</p></li>
-<li><p>Xylariales was not among the dominant taxa in either the PIME or PERfect data sets. Pezizales was substituted in both cases.</p></li>
+<li><p>c_Agaricomycetes &amp; Helotiales were not among the dominant
+taxa in the Arbitrary or PIME filtered data sets. Polyporales &amp;
+Mortierellales were substituted, respectively.</p></li>
+<li><p>Xylariales was not among the dominant taxa in either the PIME or
+PERfect data sets. Pezizales was substituted in both cases.</p></li>
 </ol>
 <div class="l-body-outset">
 <div class="panelset">
@@ -3170,35 +3311,51 @@ Show code
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_work_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 5 | Dominant taxonomic groups from the FULL (unfiltered) ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 5 | Dominant taxonomic groups from
+the FULL (unfiltered) ITS data set. A) Grouped by temperature and B) all
+samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="arbitrary-filtered-1" class="panel">
 <h4>Arbitrary filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_filt_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 6 | Dominant taxonomic groups from the Arbitrary filtered ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 6 | Dominant taxonomic groups from
+the Arbitrary filtered ITS data set. A) Grouped by temperature and B)
+all samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="perfect-filtered-1" class="panel">
 <h4>PERFECT filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_perfect_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 7 | Dominant taxonomic groups from the PERfect filtered ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 7 | Dominant taxonomic groups from
+the PERfect filtered ITS data set. A) Grouped by temperature and B) all
+samples faceted by temperature treatment.</strong></small></p>
 </section>
 <section id="pime-filtered-1" class="panel">
 <h4>PIME filtered</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="include/taxa/its18_ps_pime_tax_div_bar_plots.png" width="1240" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 8 | Dominant taxonomic groups from the PIME filtered ITS data set. A) Grouped by temperature and B) all samples faceted by temperature treatment.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 8 | Dominant taxonomic groups from
+the PIME filtered ITS data set. A) Grouped by temperature and B) all
+samples faceted by temperature treatment.</strong></small></p>
 </section>
 </div>
 </div>
-<h1 id="major-bacterial-taxa-by-family">Major Bacterial taxa by Family</h1>
-<p>We also look at the relative abundance of groups within dominant Phyla. <strong>Please note</strong> these analyses are for the FULL data set only, before any type of filtering. For this analysis, we use the phyloseq object created in the Data Preparation wokflow section <a href="data-prep.html#rename-na-taxonomic-ranks">Rename NA taxonomic ranks</a> where unclassified ranks were renamed by the next highest rank. See step #1 below for an example of the taxa table structure.</p>
+<h1 id="major-bacterial-taxa-by-family">Major Bacterial taxa by
+Family</h1>
+<p>We also look at the relative abundance of groups within dominant
+Phyla. <strong>Please note</strong> these analyses are for the FULL data
+set only, before any type of filtering. For this analysis, we use the
+phyloseq object created in the Data Preparation wokflow section <a
+href="data-prep.html#rename-na-taxonomic-ranks">Rename NA taxonomic
+ranks</a> where unclassified ranks were renamed by the next highest
+rank. See step #1 below for an example of the taxa table structure.</p>
 <aside>
-This code <strong><em>only</em></strong> works for multiple taxa from a <em>single</em> phyloseq object.
+This code <strong><em>only</em></strong> works for multiple taxa from a
+<em>single</em> phyloseq object.
 </aside>
 <details>
 <summary>
@@ -3300,7 +3457,8 @@ ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pr
 
 </div>
 <ol start="3" type="1">
-<li>Choose the <strong>number</strong> of taxa to display and the taxonomic <strong>level</strong>. Aggregate the rest into “Other.”</li>
+<li>Choose the <strong>number</strong> of taxa to display and the
+taxonomic <strong>level</strong>. Aggregate the rest into “Other”.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>top_hits <span class="ot">&lt;-</span> <span class="dv">12</span></span>
@@ -3402,7 +3560,8 @@ ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pr
 <span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <ol start="5" type="1">
-<li>Plot the data for a single phyloseq object. Here you use an aggregated tax file.</li>
+<li>Plot the data for a single phyloseq object. Here you use an
+aggregated tax file.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 
@@ -3432,7 +3591,12 @@ ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pr
 <span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <ol start="6" type="1">
-<li>Plot the data for multiple taxa. Here again you use an aggregated tax file. This code can be used to generate plots for multiple data frames by adding the base phyloseq names to the <code>ssu18_split_df</code> variable. This code will also facet the plots by a metadata variable. If you do not want to facet remove the line beginning with <code>facet_grid</code>.</li>
+<li>Plot the data for multiple taxa. Here again you use an aggregated
+tax file. This code can be used to generate plots for multiple data
+frames by adding the base phyloseq names to the
+<code>ssu18_split_df</code> variable. This code will also facet the
+plots by a metadata variable. If you do not want to facet remove the
+line beginning with <code>facet_grid</code>.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
@@ -3478,7 +3642,8 @@ ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pr
 <span id="cb43-41"><a href="#cb43-41" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <ol start="7" type="1">
-<li>Finally we use the <code>patchwork</code> package to combine the two plots and customize the look.</li>
+<li>Finally we use the <code>patchwork</code> package to combine the two
+plots and customize the look.</li>
 </ol>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> tax_group) {</span>
@@ -3533,64 +3698,92 @@ ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pr
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/ggg-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 9 | Alphaproteobacteria family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 9 | Alphaproteobacteria family
+plots.</strong></small></p>
 </section>
 <section id="gammaproteobacteria" class="panel">
 <h4>Gammaproteobacteria</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-68-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 10 | Gammaproteobacteria family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 10 | Gammaproteobacteria family
+plots.</strong></small></p>
 </section>
 <section id="acidobacteriota" class="panel">
 <h4>Acidobacteriota</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-69-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 11 | Acidobacteriota family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 11 | Acidobacteriota family
+plots.</strong></small></p>
 </section>
 <section id="actinobacteriota" class="panel">
 <h4>Actinobacteriota</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-70-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 12 | Actinobacteriota family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 12 | Actinobacteriota family
+plots.</strong></small></p>
 </section>
 <section id="bacteroidota" class="panel">
 <h4>Bacteroidota</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-71-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 13 | Bacteroidota family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 13 | Bacteroidota family
+plots.</strong></small></p>
 </section>
 <section id="firmicutes" class="panel">
 <h4>Firmicutes</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-72-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 14 | Firmicutes family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 14 | Firmicutes family
+plots.</strong></small></p>
 </section>
 <section id="myxococcota" class="panel">
 <h4>Myxococcota</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-73-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 15 | Myxococcota family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 15 | Myxococcota family
+plots.</strong></small></p>
 </section>
 <section id="verrucomicrobiota" class="panel">
 <h4>Verrucomicrobiota</h4>
 <div class="layout-chunk" data-layout="l-body-outset">
 <p><img src="taxa_files/figure-html5/unnamed-chunk-74-1.png" width="624" /></p>
 </div>
-<p><small><strong>(16S rRNA) Figure 16 | Verrucomicrobiota family plots.</strong></small></p>
+<p><small><strong>(16S rRNA) Figure 16 | Verrucomicrobiota family
+plots.</strong></small></p>
 </section>
 </div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
+<h1 id="workflow-output">Workflow Output</h1>
+<p>Data products generated in this workflow can be downloaded from
+figshare.</p>
+<iframe src="https://widgets.figshare.com/articles/16826737/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0">
+</iframe>
+<p></br></p>
+<p><a href="alpha.html" class="btnnav button_round" style="float: right;">Next
+workflow: <br> 5. Alpha Diversity Estimates</a>
+<a href="filtering.html" class="btnnav button_round" style="float: left;">Previous
+workflow: <br> 3. Filtering</a></p>
 <h2 class="appendix" id="source-code">Source Code</h2>
-<p>The source code for this page can be accessed on GitHub by <a href="https://github.com/sweltr/high-temp/blob/master/taxa.Rmd">clicking this link</a>.</p>
+<p>The source code for this page can be accessed on GitHub by <a
+href="https://github.com/sweltr/high-temp/blob/master/taxa.Rmd">clicking
+this link</a>.</p>
+<h2 class="appendix" id="data-availability">Data Availability</h2>
+<p>Data generated in this workflow and the Rdata need to run the
+workflow can be accessed on figshare at <a
+href="https://doi.org/10.25573/data.16826737">10.25573/data.16826737</a>.</p>
+<h2 class="appendix" id="last-updated-on">Last updated on</h2>
+<div class="layout-chunk" data-layout="l-body">
+<pre><code>[1] &quot;2022-06-02 13:49:47 EST&quot;</code></pre>
+</div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
@@ -3613,8 +3806,10 @@ ASV18180         Gemmatales         Gemmataceae         f_Gemmataceae</code></pr
 <!--/radix_placeholder_appendices-->
 <!--radix_placeholder_navigation_after_body-->
 <div class="distill-site-nav distill-site-footer">
-<p>© Copyright 2021 The SWELTR Project.</p>
-<p>Site constructed using <a href="https://rstudio.github.io/distill/">Distill for R Markdown</a>.</p>
+<p>© Copyright 2022 metacrobe and The SWELTR Project.</p>
+<p>Site constructed using <a
+href="https://rstudio.github.io/distill/">Distill for R
+Markdown</a>.</p>
 </div>
 <!--/radix_placeholder_navigation_after_body-->
 

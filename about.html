@@ -18,32 +18,94 @@
  <!--radix_placeholder_import_source-->
  <!--/radix_placeholder_import_source-->
 
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+</style>
+
 
   <!--radix_placeholder_meta_tags-->
-  <title>sweltr: Notes About this site</title>
+  <title>: Website Contruction</title>
 
-  <meta property="description" itemprop="description" content="Notes on how I built the site &amp; hosted on GH-Pages."/>
+  <meta property="description" itemprop="description" content="Notes on how this site was  created using Distill &amp; hosted with GitHub Pages."/>
 
   <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
 
 
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="sweltr: Notes About this site"/>
+  <meta property="og:title" content=": Website Contruction"/>
   <meta property="og:type" content="article"/>
-  <meta property="og:description" content="Notes on how I built the site &amp; hosted on GH-Pages."/>
+  <meta property="og:description" content="Notes on how this site was  created using Distill &amp; hosted with GitHub Pages."/>
   <meta property="og:locale" content="en_US"/>
-  <meta property="og:site_name" content="sweltr"/>
+  <meta property="og:site_name" content=""/>
 
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="sweltr: Notes About this site"/>
-  <meta property="twitter:description" content="Notes on how I built the site &amp; hosted on GH-Pages."/>
+  <meta property="twitter:title" content=": Website Contruction"/>
+  <meta property="twitter:description" content="Notes on how this site was  created using Distill &amp; hosted with GitHub Pages."/>
 
   <!--/radix_placeholder_meta_tags-->
   <!--radix_placeholder_rmarkdown_metadata-->
 
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","output"]}},"value":[{"type":"character","attributes":{},"value":["Notes About this site"]},{"type":"character","attributes":{},"value":["Notes on how I built the site & hosted on GH-Pages.\n"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["toc"]}},"value":[{"type":"logical","attributes":{},"value":[false]}]}]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","output"]}},"value":[{"type":"character","attributes":{},"value":["Website Contruction"]},{"type":"character","attributes":{},"value":["Notes on how this site was  created using Distill & hosted with GitHub Pages.\n"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["css","toc","toc_depth"]}},"value":[{"type":"character","attributes":{},"value":["assets/styles.css","assets/styles_about.css"]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -1797,7 +1859,10 @@
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
-        var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
+        var refs = $(this).attr('data-cites').split(" ");
+        var refHtml = refs.map(function(ref) {
+          return "<p>" + $('#ref-' + ref).html() + "</p>";
+        }).join("\n");
         window.tippy(this, {
           allowHTML: true,
           content: refHtml,
@@ -1968,7 +2033,13 @@
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+  <script src="site_libs/clipboard-2.0.6/clipboard.min.js"></script>
+  <link href="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
+  <script src="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
+  <script>window.xaringanExtraClipboard(null, {"button":"<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"><\/i>","success":"<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"><\/i>","error":"<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"><\/i>"})</script>
+  <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+  <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2131,27 +2202,34 @@
   /********************************/
 
   .nav-dropdown-content .nav-dropdown-header {
-    text-transform: none;
+    text-transform: uppercase;
     color: #686868;
   }
+
   .nav-dropdown-content a {
     font-family: 'Work Sans'
   }
   .nav-dropdown .nav-dropbtn {
-  /*  color: #FEFEFE; */
+    color: #FEFEFE;
     font-weight: 400;
   }
 
   .distill-site-header .logo img {
     margin-top: 10px;
     max-height: 30px;
-    margin-bottom: 10px;
+    margin-bottom: auto;
   }
 
   .distill-site-nav {
+      color: #FEFEFE;
       background-color: #113858;
-      font-size: 16px;
-      font-weight: 300;
+      font-size: 0.95em;
+      font-weight: 400;
+      min-width: 165px;
+      position: absolute;
+      font-family: 'Karla';
+      letter-spacing: .1em;
+      text-transform: uppercase;
   }
 
   img {
@@ -2239,10 +2317,27 @@
     font-size: 1.2em;
   }
 
+  /********************************/
+  /* next and previous buttons at the end of the article */
+  /********************************/
+
+  .btnnav {
+    border: none;
+    background-color: #113858;
+    color: #f2f2f2;
+    padding: 14px 28px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .button_round {border-radius: 12px;}
+
   </style>
   <!--/radix_placeholder_site_in_header-->
 
   <link rel="stylesheet" href="assets/styles.css" type="text/css"/>
+  <link rel="stylesheet" href="assets/styles_about.css" type="text/css"/>
 
 </head>
 
@@ -2251,7 +2346,7 @@
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Notes About this site","description":"Notes on how I built the site & hosted on GH-Pages.","authors":[]}
+{"title":"Website Contruction","description":"Notes on how this site was  created using Distill & hosted with GitHub Pages.","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2259,13 +2354,15 @@
 <header class="header header--fixed" role="banner">
 <nav class="distill-site-nav distill-site-header">
 <div class="nav-left">
+<a class="logo" href="index.html">
+<img src="assets/icon.png" alt="Logo"/>
+</a>
 <a href="index.html" class="title"></a>
+</div>
+<div class="nav-right">
 <a href="index.html">
 <i class="fa fa-home" aria-hidden="true"></i>
 </a>
-<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
-</div>
-<div class="nav-right">
 <div class="nav-dropdown">
 <button class="nav-dropbtn">
 A. Processing
@@ -2296,7 +2393,7 @@ B. Diversity
 <a href="metadata.html">8. Metadata</a>
 </div>
 </div>
-<a href="data-availability.html">Data Products</a>
+<a href="data-availability.html">Data</a>
 <a href="som.html">SOM</a>
 <a href="https://github.com/sweltr/high-temp/">
 <i class="fa fa-github fa-lg" aria-hidden="true"></i>
@@ -2313,104 +2410,802 @@ B. Diversity
 <!--/radix_placeholder_site_before_body-->
 
 <div class="d-title">
-<h1>Notes About this site</h1>
+<h1>Website Contruction</h1>
 <!--radix_placeholder_categories-->
 <!--/radix_placeholder_categories-->
-<p><p>Notes on how I built the site &amp; hosted on GH-Pages.</p></p>
+<p><p>Notes on how this site was created using Distill &amp; hosted with
+GitHub Pages.</p></p>
 </div>
 
 
 <div class="d-article">
+<div class="d-contents d-contents-float">
+<nav class="l-text toc figcaption" id="TOC">
+<h3>Contents</h3>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#key-steps">Key Steps</a></li>
+<li><a href="#github-setup">1. GitHub Setup</a>
+<ul>
+<li><a href="#create-organization-on-github">Create organization on
+GitHub</a></li>
+<li><a href="#create-repos-for-the-site">Create repos for the
+site</a></li>
+<li><a href="#review">Review</a></li>
+</ul></li>
+<li><a href="#local-setup">2. Local Setup</a>
+<ul>
+<li><a href="#clone-the-code-repo">Clone the Code Repo</a></li>
+<li><a href="#create-a-gh-pages-branch">Create a gh-pages
+branch</a></li>
+<li><a href="#review-1">Review</a></li>
+</ul></li>
+<li><a href="#site-build">3. Site Build</a>
+<ul>
+<li><a href="#review-2">Review</a></li>
+</ul></li>
+<li><a href="#integration">Integration</a></li>
+<li><a href="#adding-content">Adding content</a></li>
+<li><a href="#source-code">Source Code</a></li>
+<li><a href="#last-updated-on">Last updated on</a></li>
+</ul>
+</nav>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<p>This is how I created this website for the SWELTR temperature
+manipulation experiment using <strong>a</strong>) <a
+href="https://rstudio.github.io/distill/">Distill</a> to build the site
+and <strong>b</strong>) GitHub Pages to host the site.</p>
 <blockquote>
-<p>Page under construction. This page will contain detailed instructions on how this site was created.</p>
+<p>This tutorial assumes you have <strong>a</strong>) <a
+href="https://github.com/git-guides/install-git#:~:text=To%20install%20Git%2C%20run%20the,installation%20by%20typing%3A%20git%20version%20.">git
+installed</a>, <strong>b</strong>) a <a
+href="https://github.com/join">GitHub account</a>, <strong>c)</strong>
+<a href="https://www.rstudio.com/products/rstudio/download/">RStudio
+installed</a>, and <strong>d</strong>) <a
+href="https://rstudio.github.io/distill/">Distill</a> for R
+installed.</p>
 </blockquote>
-<h2 id="github-pages-site-deployment">GitHub Pages Site Deployment</h2>
-<h3 id="initial-setup">Initial Setup</h3>
-<p>This is how I built a <code>gh-pages</code> site for the high-temp SWELTR study. Check out <a href="https://www.thinkful.com/learn/a-guide-to-using-github-pages/">A guide to using Github Pages</a> for more information.</p>
+<p>You will need to jump back and forth between the RStudio IDE and a
+terminal. You can use the terminal in RStudio if you wish, it is up to
+you.</p>
+<p>I will try to point out which code you run in the RStudio console and
+which you run in a terminal. I will use different code block colors to
+help you differentiate between the two.</p>
+<p>When you see a code block that looks like this, the command(s) must
+be executed in the RStudio console.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#R code blocks will look like this.</span></span></code></pre></div>
+</div>
+<p>When you see a code block that looks like this, the command(s) must
+be executed in a terminal.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Terminal code will look like this.</span></span></code></pre></div>
+<h2 id="overview">Overview</h2>
+<p>There are two main options for a GitHub Pages website.</p>
+<ul>
+<li>A <strong>user or organization site</strong>.<br />
+</li>
+<li>A <strong>project site</strong>.</li>
+</ul>
+<p>The difference between the two is that a user or organization site is
+a single site, like ht<span>tps://</span>microbes.github.io/, and
+individual pages on this site are indexed like so:</p>
+<p>ht<span>tps://</span>microbes.github.io/about.html.</p>
+<p>A project site on the other hand is like a collection of sites within
+a main site. A project site would have the same root URL (e.g.,
+ht<span>tps://</span>microbes.github.io/) but each project would have
+it’s own unique extension, like these examples:</p>
+<p>ht<span>tps://</span>microbes.github.io/deep-sea/ <strong>or</strong>
+ht<span>tps://</span>microbes.github.io/forest-soils/.</p>
+<p>Individual pages within a project site would be indexed like this:
+ht<span>tps://</span>microbes.github.io/deep-sea/about.html</p>
+<p>As mentioned above, the instructions here are for a GitHub Pages
+<strong>project site</strong>.</p>
+<p>For more information see the <a
+href="https://pages.github.com/">GitHub Pages</a> documentation. You can
+also check out <a
+href="https://www.thinkful.com/learn/a-guide-to-using-github-pages/">A
+guide to using Github Pages</a>.</p>
+<h2 id="key-steps">Key Steps</h2>
+<p>Here is an overview of what we will be doing in this tutorial:</p>
 <ol type="1">
-<li>Create <code>sweltr</code> organization on github.</li>
-<li>Create <code>high-temp</code> repo for source code. Make sure repo public. <strong>MUST initialize repo with a README</strong>. This creates a master branch.</li>
-<li>Create a github.io repo for <code>sweltr.github.io</code>. Make sure repo public. <strong>MUST initialize repo with a README</strong>.</li>
-<li>Clone the source code repo.</li>
+<li>Create organization on GitHub.</li>
+<li>Create two GitHub repos for the site, one to host the organization
+URL and another to host the raw code <strong><em>plus</em></strong> the
+<code>gh-pages</code> branch.</li>
+<li>Clone the code repo to your computer.</li>
+<li>Create a <code>gh-pages</code> branch.</li>
+<li>Build the initial site with Distill for R.</li>
+<li>Customize the default <code>_site.yml</code> file.</li>
+<li>Rebuild the site.</li>
+<li>Push changes to GitHub.</li>
 </ol>
-<pre><code>git clone https://github.com/sweltr/high-temp.git
-cd high-temp/</code></pre>
-<ol start="5" type="1">
-<li>At this point the directory should be empty except for the README file and <code>.git</code> directory.</li>
-<li>Create a <code>.gitignore</code> file.</li>
-</ol>
-<pre><code>echo public/ &gt;&gt; .gitignore # Add items as needed.</code></pre>
-<ol start="7" type="1">
-<li>Now run</li>
-</ol>
-<pre><code>git status
-git add --all
-git status
-git commit -a -m &quot;initial commit&quot;
-git push origin main</code></pre>
-<ol start="8" type="1">
-<li>Run the following commands to create <code>gh-pages</code> branch. Make sure there is no <code>public</code> directory yet.</li>
-</ol>
-<pre><code>git checkout --orphan gh-pages
-git reset --hard
-git commit --allow-empty -m &quot;Initializing gh-pages branch&quot;
-git push origin gh-pages
-git checkout main
-rm -rf public
-git worktree add -B gh-pages public origin/gh-pages</code></pre>
-<ol start="9" type="1">
-<li>Now there should be a <code>public</code> directory. Run the following to make sure there is a <code>.git</code> directory.</li>
-</ol>
-<pre><code>ls -al public/</code></pre>
-<h3 id="site-build">Site Build</h3>
-<ol start="10" type="1">
-<li>Time to build the site. First, in the <code>_site.tml</code> file make sure the following are set:</li>
-</ol>
+<h2 id="github-setup">1. GitHub Setup</h2>
+<h3 id="create-organization-on-github">Create organization on
+GitHub</h3>
+<blockquote>
+<p>If you already have an organization <a
+href="about.html#create-repos-for-the-site">skip to the next
+step</a>.</p>
+</blockquote>
+<p><strong>a</strong>) In the upper right-hand corner of your GitHub
+page click on your avatar and select
+<code>Your organizations</code>.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step1.png" width="1436" /></p>
+</div>
+<hr />
+<p><strong>b</strong>) On the page that opens, hit
+<code>New organization</code>.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step2.png" width="1238" /></p>
+</div>
+<hr />
+<p><strong>c</strong>) Next, give your organization a name, provide an
+email address, and indicate whether this is for a personal or
+institutional account. Then hit <code>Next</code>.</p>
+<blockquote>
+<p>The name of the organization does not need to be the same as the
+website you create later.</p>
+</blockquote>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step3.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p><strong>d</strong>) Here you can add members. For now, just hit
+<code>Complete setup</code>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step4.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<h3 id="create-repos-for-the-site">Create repos for the site</h3>
+<p>In this section, we need to create two repositories for the site:
+<strong>i</strong>) one to host the organization URL (i.e.,
+ht<span>tps://</span>sweltr.github.io/) and <strong>ii</strong>) another
+to host the raw code (e.g. <code>.Rmd</code> files)
+<strong><em>plus</em></strong> the <code>gh-pages</code> branch. More on
+that in a minute. I am including instructions for things you
+<em>MUST</em> do in order to get the rest of the tutorial to work
+properly.</p>
+<p><strong>a</strong>) Hit the
+<code>Create a new repository button</code>.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step5.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p><strong>b</strong>) First, we create the <em>github.io repo</em> to
+host the main site.</p>
+<p>There are a few things to do here:</p>
+<ul>
+<li>Name the repo, Here we call it <code>sweltr.github.io</code>. it
+doesn’t matter what you call this but it <strong>must</strong> be unique
+and have the <code>.github.io</code> extension.</li>
+<li>Make sure repo is <strong>public</strong>.</li>
+<li><strong>You must</strong> Initialize this repository with a
+<strong>README File</strong>.</li>
+<li>Hit the <code>Create repository</code> button. This creates the
+<code>main</code> branch of the repo.</li>
+</ul>
+<blockquote>
+<p>Note: you can host a site on GitHub without the
+<code>github.io</code> extension but that is a more advanced skill and
+beyond the scope of this tutorial.</p>
+</blockquote>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step6.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p><strong>c</strong>) Next, we create the <em>build repo</em> to host
+the project source code. These steps are similar to those described
+above.</p>
+<ul>
+<li>Name the repo, here we call it <code>high-temp</code>. This will be
+the <strong>extension of the project site</strong>. So this project’s
+URL will be ht<span>tps://</span>sweltr.github.io/high-temp/.</li>
+<li>Make sure the repo is <strong>public</strong>.</li>
+<li><strong>You must</strong> Initialize this repository with a
+<strong>README File</strong>.</li>
+<li>Hit the <code>Create repository</code> button. This creates the
+<code>main</code> branch of the repo.</li>
+</ul>
+<blockquote>
+<p>Note: you can make these repos private, however that is a bit more
+advanced and beyond the scope of the tutorial provided here :)</p>
+</blockquote>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step7.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<h3 id="review">Review</h3>
+<p>Here is what we have so far:</p>
+<p>An organization at <a
+href="https://github.com/sweltr/">https://github.com/sweltr/</a> that
+contains 2 repos, one for the GitHub Pages root URL, <a
+href="https://github.com/sweltr/sweltr.github.io">https://github.com/sweltr/sweltr.github.io</a>
+and another for the source code, <a
+href="https://github.com/sweltr/high-temp">https://github.com/sweltr/high-temp</a>.
+At this point both repos should only contain <code>README</code>
+files.</p>
+<p>We also have two URLs, one for the <em>organiztion</em> site
+(ht<span>tps://</span>sweltr.github.io/) and another for the
+<em>project</em> site
+(ht<span>tps://</span>sweltr.github.io/high-temp/).</p>
+<hr />
+<h2 id="local-setup">2. Local Setup</h2>
+<p>Now that we have the main pieces in place of GitHub, it is time to
+setup everything on our local machine.</p>
+<h3 id="clone-the-code-repo">Clone the Code Repo</h3>
+<p>Let’s take a look at the <code>high-temp</code> <a
+href="https://github.com/sweltr/high-temp">repo page</a>. There are two
+important things to point out. First, in the upper left corner is a box
+that says <code>main</code>. This is the primary branch for the repo and
+contains the source code for the site build (e.g., the <code>.Rmd</code>
+files). This will become important in a moment when we create a branch
+called <code>gh-pages</code> that will link the build files (e.g.,
+<code>.html</code> files) to the organization URL. More on that in a
+minute.</p>
+<p>First, we need to clone the <code>high-temp</code> repo from GitHub
+to our local machine. There are several ways to do this, but I will show
+you how I do it. Navigate to the <a
+href="https://github.com/sweltr/high-temp">repo page</a>. At the time of
+creation, it looked like this:</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step8.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>See the green button that says <code>Code</code>. Click on that
+button and copy the URL.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step9.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Open a terminal window and navigate to a place where you want the
+repo to live on your computer. We will use the command
+<code>git clone</code> with the URL you just copied. Run the clone
+command and then <code>cd</code> into the directory.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/sweltr/high-temp.git</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> high-temp/</span></code></pre></div>
+<p>Now have a look at the contents of the directory using the
+<code>ls</code> command. We want to append the command with the
+<code>-al</code> flag. The <code>l</code> option provides extended
+details about each file/directory and the <code>a</code> option lists
+<em>hidden</em> files—files/directories that begin with a period and are
+hidden by default.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-al</span></span></code></pre></div>
+<p>So we have the <code>README.md</code> file that was generated when we
+created the repo and a hidden directory called <code>.git</code>. The
+<code>.git</code> directory is <strong>super, super</strong> important
+because this is how the remote repo (on GitHub) and the local repo (on
+your computer) keep track of changes.</p>
+<pre><code>total 8
+drwxr-xr-x@  4 scottjj  923590601  128 Oct 22 08:25 .
+drwxr-xr-x@  5 scottjj  923590601  160 Oct 22 08:25 ..
+drwxr-xr-x@ 12 scottjj  923590601  384 Oct 22 08:25 .git
+-rw-r--r--@  1 scottjj  923590601   11 Oct 22 08:25 README.md</code></pre>
+<h3 id="create-a-gh-pages-branch">Create a gh-pages branch</h3>
+<p>Great. We have the <code>high-temp</code> repo cloned on our local
+machine. For historical reason, a GitHub Pages site needs to be built to
+a directory called <code>public/</code>. But we do not need to upload
+the <code>public/</code> build directory to the <code>main</code> branch
+on our repo. So, we are going to create a <code>.gitignore</code> file
+and add <code>public/</code> to that file. The <code>.gitignore</code>
+tells <code>git</code> to ignore whatever is listed in that file when it
+pushes local changes to the remote repository. As you build your site,
+you will need to add additional items to the <code>.gitignore</code>
+file.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> public/ <span class="op">&gt;&gt;</span> .gitignore <span class="co"># Add items as needed.</span></span></code></pre></div>
+<p>If you run <code>ls -al</code> again you should see the
+<code>.gitignore</code> file is now listed in the directory. If you type
+<code>nano .gitignore</code> you can see the contents of the file.</p>
+<p>OK, now let’s push the changes we made to the local branch
+(<code>origin</code>) to the remote branch (<code>main</code>). First,
+run:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span></code></pre></div>
+<p>Hopefully you see the <code>.gitignore</code> file listed in red
+along with some other details. This means there are untracked files in
+your repo. Go ahead and run:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">--all</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span></code></pre></div>
+<p>Now you should see the same files in green. This means the files are
+staged and ready to commit. Now run:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-a</span> <span class="at">-m</span> <span class="st">&quot;initial commit&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span></code></pre></div>
+<p>If everything worked OK, your files have been pushed to the GitHub
+repo. Have a look at the code repo on GitHub to confirm your changes
+have been pushed.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step9_1.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Now, it is important that there is no <code>public/</code> directory
+yet. Just to make sure there is no <code>public/</code> directory, we
+can run the remove command in our terminal.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> public </span></code></pre></div>
+<p>Now we go through the steps to create the the <code>gh-pages</code>
+branch.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">--orphan</span> gh-pages</span></code></pre></div>
+<pre><code>Switched to a new branch &#39;gh-pages&#39;</code></pre>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> reset <span class="at">--hard</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">--allow-empty</span> <span class="at">-m</span> <span class="st">&quot;Initializing gh-pages branch&quot;</span></span></code></pre></div>
+<pre><code>[gh-pages (root-commit) fd6028a] Initializing gh-pages branch</code></pre>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin gh-pages</span></code></pre></div>
+<pre><code>Enumerating objects: 2, done.
+Counting objects: 100% (2/2), done.
+Writing objects: 100% (2/2), 180 bytes | 180.00 KiB/s, done.
+Total 2 (delta 0), reused 0 (delta 0), pack-reused 0
+remote:
+remote: Create a pull request for &#39;gh-pages&#39; on GitHub by visiting:
+remote:      https://github.com/sweltr/high-temp/pull/new/gh-pages
+remote:
+To https://github.com/sweltr/high-temp.git
+ * [new branch]      gh-pages -&gt; gh-pages</code></pre>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout main</span></code></pre></div>
+<pre><code>Enumerating objects: 2, done.
+Counting objects: 100% (2/2), done.
+Writing objects: 100% (2/2), 180 bytes | 180.00 KiB/s, done.
+Total 2 (delta 0), reused 0 (delta 0), pack-reused 0
+remote:
+remote: Create a pull request for &#39;gh-pages&#39; on GitHub by visiting:
+remote:      https://github.com/sweltr/high-temp/pull/new/gh-pages
+remote:
+To https://github.com/sweltr/high-temp.git
+ * [new branch]      gh-pages -&gt; gh-pages
+(base) high-temp: scottjj$ git checkout main
+Switched to branch &#39;main&#39;
+Your branch is up to date with &#39;origin/main&#39;.</code></pre>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> worktree add <span class="at">-B</span> gh-pages public origin/gh-pages</span></code></pre></div>
+<pre><code>Preparing worktree (resetting branch &#39;gh-pages&#39;; was at fd6028a)
+Branch &#39;gh-pages&#39; set up to track remote branch &#39;gh-pages&#39; from &#39;origin&#39;.
+HEAD is now at fd6028a Initializing gh-pages branch</code></pre>
+<p>Now run the following to see what is in the repo directory.</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-al</span></span></code></pre></div>
+<pre><code>drwxr-xr-x@  6 scottjj  923590601  192 Oct 22 08:41 .
+drwxr-xr-x@  5 scottjj  923590601  160 Oct 22 08:25 ..
+drwxr-xr-x@ 14 scottjj  923590601  448 Oct 22 08:41 .git
+-rw-r--r--@  1 scottjj  923590601    8 Oct 22 08:40 .gitignore
+-rw-r--r--@  1 scottjj  923590601   11 Oct 22 08:40 README.md
+drwxr-xr-x@  3 scottjj  923590601   96 Oct 22 08:41 public</code></pre>
+<p>There should now be a <code>public/</code> directory. Run the
+following to make sure this is a <code>.git</code> directory.</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-al</span> public/</span></code></pre></div>
+<pre><code>total 8
+drwxr-xr-x@ 3 scottjj  923590601   96 Oct 22 08:41 .
+drwxr-xr-x@ 6 scottjj  923590601  192 Oct 22 08:41 ..
+-rw-r--r--@ 1 scottjj  923590601  104 Oct 22 08:41 .git</code></pre>
+<h3 id="review-1">Review</h3>
+<p>At this point all the pieces are in place to build your site and host
+it on GitHub. In addition to the repos you have on GitHub, you should
+have a local directory of the code repo, in our case it is called
+<code>high-temp</code>. In this directory there should be a
+<code>README.md</code> file, a <code>.gitignore</code> file, a
+<code>.git</code> directory, and the <code>public/</code> directory.</p>
+<h2 id="site-build">3. Site Build</h2>
+<p>Time to build the site. As mentioned in the intro, we will use <a
+href="https://rstudio.github.io/distill/">Distill</a> to create the
+website. To keep things simple, we will generate the initial site in a
+temporary directory and copy the files to the git formatted directory at
+the end.</p>
+<p>Open RStudio and hit <code>File &gt;&gt; New Project</code>. In the
+pop-up window hit <code>New Project</code>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step10.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Then in the <strong><em>New Project Wizard</em></strong> select the
+<code>New Directory</code> option.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step11.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Under Project Type, scroll down until you see
+<code>Distill Website</code> and select that option.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step12.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Give the Directory a name and hit <code>Create Project</code>.
+Consider this an intermediate step in the process. We need to create a
+project directory to generate the initial site. Eventually we will copy
+all of these file to the directory of the repo we cloned earlier. You
+can call this something like <code>web</code> if you wish, it doesn’t
+really matter since this is only a temporary directory.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step13.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Now, if everything worked OK, you should see three files open in your
+RStudio IDE.</p>
+<p>– <code>index.Rmd</code>. This is the <em>landing</em> page of your
+site. This file is the first thing people see when they navigate to your
+site.<br />
+– <code>about.Rmd</code>. This is really just a sample page for your
+site. You can use it or not, it is up to you.<br />
+– <code>_site.yml</code>. This is a <a
+href="https://en.wikipedia.org/wiki/YAML">YAML</a> file and is used to
+configure your site. <strong>DO NOT</strong> erase this file.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step14.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>In fact, we need to edit the <code>_site.yml</code> file to configure
+it for our site. As you move further into building your site, you will
+need to make many modifications to this file. For now however, we will
+just focus on the minimum changes you need to make to get your site
+online. Go ahead and click on that file. This is what the default file
+looks like.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step15.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>First, below the <code>title</code> line (beginning on line 2) add
+the following lines.</p>
 <pre><code>base_url: https://sweltr.github.io/
-repository_url: https://github.com/sweltr/high-temp/
-output_dir: &quot;public_build&quot;
-exclude: [&quot;public&quot;, &quot;README.html&quot;, &quot;README.md&quot;, &quot;hack_code&quot;, &quot;page_build&quot;, &quot;files&quot;, &quot;public_build&quot;]</code></pre>
-<p>When we render the site, R Markdown will overwrite everything in the output directory, which removes the <code>.git</code> directory. Not cool. To avoid this, we use an intermediate directory, <code>public_build</code>, to generate the site. Also, <strong>be sure</strong> to exclude directories and files you do not want as part of the rendered site, including <code>public</code>, <code>public_build</code>, and any other diretories that are not needed to build the site.</p>
-<ol start="11" type="1">
-<li>To build the site run:</li>
-</ol>
-<pre><code>rmarkdown::render_site()</code></pre>
-<p>To build individual pages run:</p>
-<pre><code>rmarkdown::render_site(&quot;about.Rmd&quot;)</code></pre>
-<ol start="12" type="1">
-<li>Once the site is built in <code>public_build</code>, run the following to copy all the files to <code>public</code></li>
-</ol>
-<pre><code>cp -r public_build/* public/</code></pre>
-<ol start="13" type="1">
-<li>Sweet. Get the website files on GitHub.</li>
-</ol>
-<pre><code>cd public
-git status
-git add --all
-git status
-git commit -m &quot;Publishing to gh-pages initial commit&quot;
-git push origin gh-pages</code></pre>
-<ol start="14" type="1">
-<li>And now the build files to the repo. Make sure you are in the repo directory (i.e., not <code>public</code>) and add the following to the <code>.gitignore</code> file :</li>
-</ol>
+repository_url: https://github.com/sweltr/high-temp/</code></pre>
+<p>The <code>base_url</code> is the <code>.github.io</code> URL we
+created way back when we created the <a
+href="#create-repos-for-the-site">site repo</a>. The
+<code>repository_url</code> is the repo we created to host the project
+source code.</p>
+<p>When you build or <em>render</em> your site, RStudio will dump all
+the site files (e.g., <code>.html</code> files) in the
+<code>output_dir</code>. The default output directory is
+<code>_site</code>, which RStudio generated when you first created the
+site. Take a look in your directory and you should see this sub
+directory. I see no reason why you cannot leave the build directory as
+is but I prefer to call mine <code>public_build/</code>. Go ahead and
+edit that line of the <code>_site.yml</code> file.</p>
+<pre><code>output_dir: &quot;public_build&quot;</code></pre>
+<p>Great. One last thing to do. When you render your site, RStudio will
+try to add everything in the main directory to the output directory, in
+this case <code>public_build/</code>. There are many cases where this is
+not desirable. For example, let’s say we have you have a directory
+called <code>sequence_data</code> that contains a bunch of
+<code>fastq</code> files. We do not need these files to build the site
+(and we probably do not want these on GitHub) so we need to tell RStudio
+to ignore these files when it builds the site. For that, we add the line
+<code>exclude</code> below the <code>output_dir</code> line. Anything
+listed here will be ignored by RStudio when it builds the site. As you
+get deeper into building your site, you will likely have many
+files/directories that you want excluded.</p>
+<blockquote>
+<p>Don’t get confused here. The <code>exclude</code> line in the
+<code>_site.yml</code> file is different than the
+<code>.gitignore</code> file discussed earlier. They do completely
+different things. If this is unclear, go back and review the section on
+the <code>.gitignore</code> file.</p>
+</blockquote>
+<p>For now, we will focus on the necessary things to include on the
+<code>exclude</code> line. Multiple items must be listed within square
+brackets, be in double quotes, and separated by commas. Go ahead and add
+this line.</p>
+<pre><code>exclude: [&quot;public_build&quot;, &quot;public&quot;, &quot;README.html&quot;, &quot;README.md&quot;]</code></pre>
+<p>OK, a little explanation. The first thing we need to exclude in the
+actual build directory <code>public_build/</code> (or <code>_site</code>
+if you kept the default). If we do not include this, RStudio will get
+stuck in a loop where it continues to add <code>public_build/</code> to
+the <code>public_build/</code> directory. Next, remember that to host a
+gh-pages site, the build files (e.g., the <code>.html</code> files)
+<strong>must</strong> be in a directory called <code>public/</code>. We
+created this directory when we created the <code>gh-pages</code>
+branch.</p>
+<blockquote>
+<p>So why don’t we just make the buld directory <code>public/</code>
+instead of <code>public_build/</code> or <code>_site/</code>?</p>
+</blockquote>
+<p>Good question. The reason is that <code>public/</code> is a special
+directory that contains git related files (hidden by default). When we
+render a site, RStudio will first overwrite the output directory,
+thereby deleting the <code>.git</code> files, and then recreate the
+output directory add the new build files. This is not cool. To avoid
+this, we use an intermediate output directory,
+<code>public_build/</code> (or whatever you call it), to generate the
+site. Than we can copy all the files from the output directory to the
+<code>public/</code> directory without losing the <code>git</code> info.
+This is a little cumbersome but I have not yet found a workaround. This
+is <a href="https://github.com/rstudio/rmarkdown/issues/1658">still an
+issue</a> as of this writing.</p>
+<p>If you changed the name of the default build directory, go ahead and
+remove the default directory now. In your terminal type:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-r</span> _site</span></code></pre></div>
+<p>Now, save all of your changes to the <code>_site.yml</code> file and
+in the RStudio Console run the following:</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>rmarkdown<span class="sc">::</span><span class="fu">render_site</span>()</span></code></pre></div>
+</div>
+<p>You should see a new directory called <code>public_build/</code>.
+Open that folder and double-click on <code>index.html</code>. The
+homepage of your new site should open in your default browser.</p>
+<h3 id="review-2">Review</h3>
+<p>Sweet. Let’s review what we have so far. From the <a
+href="#github-setup">1. GitHub Setup</a> we created two repos, one to
+host the <code>.github.io</code> organization and another to host the
+raw code (e.g. .Rmd files) plus the gh-pages branch. In <a
+href="#local-setup">2. Local Setup</a> we cloned the code repo and
+create a gh-pages branch in a directory called <code>public/</code>. In
+<a href="#site-build">3. Site Build</a> we generated an initial site
+within a dummy directory, modified the <code>_site.yml</code> file, and
+re-rendered the site to an output directory called
+<code>public_build/</code></p>
+<h2 id="integration">Integration</h2>
+<p>Time to push our changes to GitHub. The first step is to copy all of
+the files in your dummy site directory to the directory of the cloned
+repo (<code>high-temp</code>).</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step16.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>First, in your terminal, navigate to the cloned repo directory. Use
+the <code>pwd</code> command to confirm your location.</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span></code></pre></div>
+<pre><code>/Users/scottjj/Dropbox (Smithsonian)/GITHUB_PROJECTS/AGUA_SALUD/high-temp</code></pre>
+<p>Assuming your directory structure setup is similar to the image
+above, next run the following to copy all of the files.</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="at">-r</span> ../dummy/<span class="pp">*</span> .</span></code></pre></div>
+<p>Now take a look at the contents of the current working directory.</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-al</span></span></code></pre></div>
+<p>It should look something like this:</p>
+<pre><code>drwxr-xr-x  14 scottjj  923590601   448 Oct 22 09:18 .
+drwxr-xr-x@  7 scottjj  923590601   224 Oct 22 09:15 ..
+-rw-r--r--@  1 scottjj  923590601  6148 Oct 22 09:18 .DS_Store
+-rw-r--r--   1 scottjj  923590601    50 Oct 22 09:18 .Rhistory
+drwxr-xr-x   4 scottjj  923590601   128 Oct 22 09:18 .Rproj.user
+drwxr-xr-x@ 14 scottjj  923590601   448 Oct 22 08:41 .git
+-rw-r--r--@  1 scottjj  923590601     8 Oct 22 08:40 .gitignore
+-rw-r--r--@  1 scottjj  923590601    11 Oct 22 08:40 README.md
+-rw-r--r--   1 scottjj  923590601   383 Oct 22 09:18 _site.yml
+-rw-r--r--   1 scottjj  923590601   162 Oct 22 09:18 about.Rmd
+-rw-r--r--   1 scottjj  923590601   296 Oct 22 09:18 index.Rmd
+drwxr-xr-x@  3 scottjj  923590601    96 Oct 22 08:41 public
+drwxr-xr-x   7 scottjj  923590601   224 Oct 22 09:18 public_build
+-rw-r--r--   1 scottjj  923590601   225 Oct 22 09:18 web.Rproj</code></pre>
+<p>At this point we need to do a few final housekeeping tasks. First,
+let’s add a few additional files to the <code>.gitignore</code>
+file.</p>
+<p>Run this command in your terminal. You should only see the
+<code>public/</code> directory listed.</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> .gitignore</span></code></pre></div>
+<p>Add the following lines, save the file, and exit
+<code>nano</code>.</p>
 <pre><code>.Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-files/
-include/
-assets/
-page_build/
+.Rapp.history
+.DS_Store
+web.Rproj
+
 public_build/</code></pre>
-<ol start="15" type="1">
-<li>Then commit and push the files.</li>
+<p>Now, copy all of the files from <code>public_build/</code> to
+<code>public/</code>.</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="at">-r</span> public_build/<span class="pp">*</span> public/</span></code></pre></div>
+<p>Then move into the <code>public/</code> directory and run
+<code>git status</code>.</p>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> public</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span></code></pre></div>
+<p>All the untracked or changed files should be in red.</p>
+<pre><code>On branch gh-pages
+Your branch is up to date with &#39;origin/gh-pages&#39;.
+
+Untracked files:
+  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+    about.html
+    index.html
+    search.json
+    site_libs/
+    sitemap.xml
+
+nothing added to commit but untracked files present (use &quot;git add&quot; to track)</code></pre>
+<p>Now add the files to be committed and check the status again.</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">--all</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span></code></pre></div>
+<p>All the untracked or changed files should now be green.</p>
+<pre><code>On branch gh-pages
+Your branch is up to date with &#39;origin/gh-pages&#39;.
+
+Changes to be committed:
+  (use &quot;git restore --staged &lt;file&gt;...&quot; to unstage)
+    new file:   about.html
+    new file:   index.html
+    new file:   search.json
+    new file:   site_libs/anchor-4.2.2/anchor.min.js
+    new file:   site_libs/autocomplete-0.37.1/autocomplete.min.js
+    new file:   site_libs/bowser-1.9.3/bowser.min.js
+    new file:   site_libs/distill-2.2.21/template.v2.js
+    new file:   site_libs/font-awesome-5.1.0/css/all.css
+    new file:   site_libs/font-awesome-5.1.0/css/v4-shims.css
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.eot
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.svg
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.ttf
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.woff
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.woff2
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.eot
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.svg
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.ttf
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.woff
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.woff2
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.eot
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.svg
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.ttf
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.woff
+    new file:   site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.woff2
+    new file:   site_libs/fuse-6.4.1/fuse.min.js
+    new file:   site_libs/header-attrs-2.11/header-attrs.js
+    new file:   site_libs/headroom-0.9.4/headroom.min.js
+    new file:   site_libs/jquery-3.6.0/jquery-3.6.0.js
+    new file:   site_libs/jquery-3.6.0/jquery-3.6.0.min.js
+    new file:   site_libs/jquery-3.6.0/jquery-3.6.0.min.map
+    new file:   site_libs/popper-2.6.0/popper.min.js
+    new file:   site_libs/tippy-6.2.7/tippy-bundle.umd.min.js
+    new file:   site_libs/tippy-6.2.7/tippy-light-border.css
+    new file:   site_libs/tippy-6.2.7/tippy.css
+    new file:   site_libs/tippy-6.2.7/tippy.umd.min.js
+    new file:   site_libs/webcomponents-2.0.0/webcomponents.js
+    new file:   sitemap.xml</code></pre>
+<p>Commit the files.</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Publishing to gh-pages initial commit&quot;</span></span></code></pre></div>
+<pre><code>[gh-pages f30f1ff] Publishing to gh-pages initial commit
+ 37 files changed, 22182 insertions(+)
+ create mode 100644 about.html
+ create mode 100644 index.html
+ create mode 100644 search.json
+ create mode 100644 site_libs/anchor-4.2.2/anchor.min.js
+ create mode 100644 site_libs/autocomplete-0.37.1/autocomplete.min.js
+ create mode 100644 site_libs/bowser-1.9.3/bowser.min.js
+ create mode 100644 site_libs/distill-2.2.21/template.v2.js
+ create mode 100644 site_libs/font-awesome-5.1.0/css/all.css
+ create mode 100644 site_libs/font-awesome-5.1.0/css/v4-shims.css
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.eot
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.svg
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.ttf
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.woff
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-brands-400.woff2
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.eot
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.svg
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.ttf
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.woff
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-regular-400.woff2
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.eot
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.svg
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.ttf
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.woff
+ create mode 100644 site_libs/font-awesome-5.1.0/webfonts/fa-solid-900.woff2
+ create mode 100644 site_libs/fuse-6.4.1/fuse.min.js
+ create mode 100644 site_libs/header-attrs-2.11/header-attrs.js
+ create mode 100644 site_libs/headroom-0.9.4/headroom.min.js
+ create mode 100644 site_libs/jquery-3.6.0/jquery-3.6.0.js
+ create mode 100644 site_libs/jquery-3.6.0/jquery-3.6.0.min.js
+ create mode 100644 site_libs/jquery-3.6.0/jquery-3.6.0.min.map
+ create mode 100644 site_libs/popper-2.6.0/popper.min.js
+ create mode 100644 site_libs/tippy-6.2.7/tippy-bundle.umd.min.js
+ create mode 100644 site_libs/tippy-6.2.7/tippy-light-border.css
+ create mode 100644 site_libs/tippy-6.2.7/tippy.css
+ create mode 100644 site_libs/tippy-6.2.7/tippy.umd.min.js
+ create mode 100644 site_libs/webcomponents-2.0.0/webcomponents.js
+ create mode 100644 sitemap.xml</code></pre>
+<p>And finally push the files to the gh-pages branch.</p>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin gh-pages</span></code></pre></div>
+<pre><code>Enumerating objects: 55, done.
+Counting objects: 100% (55/55), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (45/45), done.
+Writing objects: 100% (54/54), 1.37 MiB | 348.00 KiB/s, done.
+Total 54 (delta 1), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (1/1), done.
+To https://github.com/sweltr/high-temp.git
+   fd6028a..f30f1ff  gh-pages -&gt; gh-pages</code></pre>
+<p>Do the same for the build files. Make sure you back out of the public
+directory with the <code>cd ../</code> command. This time you are
+pushing to the <code>main</code> branch, not the <code>gh-pages</code>
+branch.</p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">--all</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Publishing to gh-pages initial commit&quot;</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span></code></pre></div>
+<p>Now head over to your GitHub code repo and look at the two branches
+to make sure everything looks good. In this case, <a
+href="https://github.com/sweltr/high-temp"
+class="uri">https://github.com/sweltr/high-temp</a>. You should see the
+<code>main</code> branch of this repo—this contains all of the
+<code>.Rmd</code> files.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step17.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Find the button in the upper left that says <code>main</code>. Click
+on that and select <code>gh-pages</code>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="include/about/step18.png" width="75%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>The <code>gh-pages</code> branch contains all of the
+<code>.html</code> files.</p>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="include/about/step19.png" width="100%" style="display: block; margin: auto;" /></p>
+</div>
+<hr />
+<p>Wait a few minutes and navigate to your project webpage. In our case,
+<a href="https://sweltr.github.io/high-temp/"
+class="uri">https://sweltr.github.io/high-temp/</a>.</p>
+<p>You site should be LIVE!!!</p>
+<h2 id="adding-content">Adding content</h2>
+<p>Most of the steps up to this point <strong>should only need to be
+done once</strong>. Now it is time to add content to your site,
+customize the look, etc. From this point forward, whenever you make
+changes that you want to make public, you need to do the following:</p>
+<ol type="1">
+<li>Render the site.</li>
 </ol>
-<pre><code>cd ../
-git status
-git add --all
-git status
-git commit -m &quot;Publishing to gh-pages initial commit&quot;
-git push origin main</code></pre>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>rmarkdown<span class="sc">::</span><span class="fu">render_site</span>()</span></code></pre></div>
+</div>
+<p>Or to build individual pages run:</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>rmarkdown<span class="sc">::</span><span class="fu">render_site</span>(<span class="st">&quot;new_page.Rmd&quot;</span>)</span></code></pre></div>
+</div>
+<ol start="2" type="1">
+<li>Copy files from <code>public_build/</code> to
+<code>public/</code></li>
+</ol>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="at">-r</span> public_build/<span class="pp">*</span> public/</span></code></pre></div>
+<ol start="3" type="1">
+<li>Commit and push the changes to the <code>gh-pages</code>
+branch.</li>
+</ol>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> public/</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">--all</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;added new page&quot;</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin gh-pages</span></code></pre></div>
+<ol start="4" type="1">
+<li>Commit and push the changes to the <code>main</code> branch.</li>
+</ol>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add <span class="at">--all</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> status</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;added new page&quot;</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin main</span></code></pre></div>
+<h2 class="appendix" id="source-code">Source Code</h2>
+<p>The source code for this page can be accessed on GitHub by <a
+href="https://github.com/sweltr/high-temp/blob/master/about.Rmd">clicking
+this link</a>.</p>
+<h2 class="appendix" id="last-updated-on">Last updated on</h2>
+<div class="layout-chunk" data-layout="l-body">
+<pre><code>[1] &quot;2022-06-02 13:16:37 EST&quot;</code></pre>
+</div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
@@ -2431,8 +3226,10 @@ git push origin main</code></pre>
 <!--/radix_placeholder_appendices-->
 <!--radix_placeholder_navigation_after_body-->
 <div class="distill-site-nav distill-site-footer">
-<p>© Copyright 2021 The SWELTR Project.</p>
-<p>Site constructed using <a href="https://rstudio.github.io/distill/">Distill for R Markdown</a>.</p>
+<p>© Copyright 2022 metacrobe and The SWELTR Project.</p>
+<p>Site constructed using <a
+href="https://rstudio.github.io/distill/">Distill for R
+Markdown</a>.</p>
 </div>
 <!--/radix_placeholder_navigation_after_body-->
 
