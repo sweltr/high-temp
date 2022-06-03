@@ -1,0 +1,7 @@
+Data_set	Distance metric	FULL data set	Arbitrary filter	PERFect filter	PIME filter
+16S rRNA					
+	unweighted UniFrac	0.003	0.003	0.003	0.001
+	weighted UniFrac	0.001	0.001	0.001	0.001
+ITS					
+	Jensen-Shannon divergence	0.036	0.030	0.063	0.002
+	Bray-Curtis dissimilarity	0.047	0.028	0.079	0.003

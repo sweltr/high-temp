@@ -1,0 +1,13 @@
+Description	subset by treatment	no. samples	total reads	total asvs
+FULL data set	Control	5	321068	9026
+FULL data set	+3°C	5	327911	8154
+FULL data set	+8°C	5	287661	6735
+Arbitrary filter	Control	5	247405	1592
+Arbitrary filter	+3°C	5	266549	1682
+Arbitrary filter	+8°C	5	216019	1399
+PERFect filter	Control	5	243480	1254
+PERFect filter	+3°C	5	262133	1339
+PERFect filter	+8°C	5	225895	1336
+PIME filter	Control	5	80595	752
+PIME filter	+3°C	5	84976	692
+PIME filter	+8°C	5	66961	355
