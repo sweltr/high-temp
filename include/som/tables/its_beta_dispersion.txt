@@ -1,0 +1,9 @@
+Description	distance metric	p_value	test
+FULL data set	Jensen-Shannon	0.745	ADONIS
+	Bray-Curtis	0.696	ADONIS
+Arbitrary filter	Jensen-Shannon	0.920	ADONIS
+	Bray-Curtis	0.864	ADONIS
+PERFect filter	Jensen-Shannon	0.865	ADONIS
+	Bray-Curtis	0.819	ADONIS
+PIME filter	Jensen-Shannon	0.704	ADONIS
+	Bray-Curtis	0.756	ADONIS
