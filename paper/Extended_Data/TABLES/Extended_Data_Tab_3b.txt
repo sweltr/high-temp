@@ -1,0 +1,5 @@
+b) Effect of warming levels on soil CO$_{2}$ efflux				
+	Parameter	SE	DF	P-value
+Warming (+3°C)	3.692	1.271	326	0.00392 **
+Warming (+8°C)	11.249	11.249	326	6.36e-16 ***
+Intercept (time)	4.736	0.899	326	2.47e-07 ***

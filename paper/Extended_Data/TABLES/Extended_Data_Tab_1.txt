@@ -1,0 +1,37 @@
+a) Environmental drivers of richness					
+\textbf{Bacteria}					AIC = 133
+Fixed effects	Estimate	SE	d.f.	t value	P value
++3°C warming	-43.2	36.5	11	-1.2	0.26
++8°C warming	-350.9	56.4	11	-6.2	<0.001 ***
+Soil moisture	-216	370.3	11	-0.6	0.57
+Random effect (space: plot pair)	663.3	142	11	4.67	<0.001 ***
+\textbf{Fungi}					AIC = 86
+Fixed effects	Estimate	SE	d.f.	t value	P value
++3°C warming	-37.8	10.4	6	-3.6	0.0105 *
++8°C warming	-66.2	23	9	-2.9	0.0187 *
+Soil moisture	75.9	146.1	9	0.5	0.6163
+Random effect (space: plot pair)	122.6	55.5	9	2.2	0.0559
+b) Microbial functional correlates of richness					
+\textbf{Bacteria}					AIC = 171
+Fixed effects	Estimate	SE	d.f.	t value	P value
+CO$_{2}$ efflux	-10.3	2.1	12	-4.9	<0.001 ***
+micC	-0.6	0.1	12	-5.0	<0.001 ***
+Random effect (space: plot pair)	714	42	12	17	<0.001 ***
+\textbf{Fungi}					AIC = 112
+Fixed effects	Estimate	SE	d.f.	t value	P value
+CO$_{2}$ efflux	-1.8	0.3	7	-5.7	<0.001 ***
+micC	-0.2	0.02	7	-8.9	<0.001 ***
+Random effect (space: plot pair)	178	7.6	10	23	<0.001 ***
+c) Microbial temperature adaptation correlates of richness					
+\textbf{Bacteria}					AIC = 22
+Fixed effects	Estimate	SE	d.f.	t value	P value
+CUE$_{\mathrm{cn}}$	2.5    	0.91	8	6.0	0.55
+T$_{\mathrm{min}}$ of growth	-0.2	0.08	12	-2.2	0.05 *
+Random effect (space: plot pair)	5.5	0.9	8	6.0	<0.001 ***
+\textbf{Fungi}					AIC = 5
+Fixed effects	Estimate	SE	d.f.	t value	P value
+CUE$_{\mathrm{cp}}$	1.1	1.8	8	5.8	0.55
+BG$_{\mathrm{Q10}}$	2.3	1.2	8	1.9	0.09
+XY$_{\mathrm{Q10}}$	-7.6	2.1	8	-3.6	<0.01**
+T$_{\mathrm{min}}$ of growth	-0.1	0.05	8	-2.3	<0.05 *
+Random effect (space: plot pair)	10.1	1.7	8	5.8	<0.001 ***

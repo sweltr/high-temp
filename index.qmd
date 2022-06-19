@@ -144,7 +144,11 @@ saveWidget(wc, "tmp.html", selfcontained = FALSE)
 webshot("tmp.html", "wordcloud.pdf", delay = 10, vwidth = 1180, vheight = 580)
 ```
 
-```{r, echo=FALSE, warning=FALSE, fig.height=1.5, layout='l-page'}
+```{r}
+#| echo: false
+#| eval: false
+#| warning: false
+#| fig-height: 1.5
 knitr::include_graphics("figures/index/wordcloud.png")
 ```
 
