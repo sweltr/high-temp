@@ -1,2583 +1,716 @@
 <!DOCTYPE html>
-
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
-
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
-  <meta name="generator" content="distill" />
-
-  <style type="text/css">
-  /* Hide doc at startup (prevent jankiness while JS renders/transforms) */
-  body {
-    visibility: hidden;
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-0.9.514">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.">
+<title>- Data Availability</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
   }
-  </style>
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
 
- <!--radix_placeholder_import_source-->
- <!--/radix_placeholder_import_source-->
-
-
-
-  <!--radix_placeholder_meta_tags-->
-  <title>: Data Availability</title>
-
-  <meta property="description" itemprop="description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo."/>
-
-  <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
-
-
-  <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content=": Data Availability"/>
-  <meta property="og:type" content="article"/>
-  <meta property="og:description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo."/>
-  <meta property="og:locale" content="en_US"/>
-  <meta property="og:site_name" content=""/>
-
-  <!--  https://dev.twitter.com/cards/types/summary -->
-  <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content=": Data Availability"/>
-  <meta property="twitter:description" content="On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo."/>
-
-  <!--/radix_placeholder_meta_tags-->
-  
-  <!--radix_placeholder_rmarkdown_metadata-->
-
-  <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","bibliography"]}},"value":[{"type":"character","attributes":{},"value":["Data Availability"]},{"type":"character","attributes":{},"value":["On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.\n"]},{"type":"character","attributes":{},"value":["assets/cite.bib"]}]}
-  </script>
-  <!--/radix_placeholder_rmarkdown_metadata-->
-  <!--radix_placeholder_navigation_in_header-->
-  <meta name="distill:offset" content=""/>
-
-  <script type="application/javascript">
-
-    window.headroom_prevent_pin = false;
-
-    window.document.addEventListener("DOMContentLoaded", function (event) {
-
-      // initialize headroom for banner
-      var header = $('header').get(0);
-      var headerHeight = header.offsetHeight;
-      var headroom = new Headroom(header, {
-        tolerance: 5,
-        onPin : function() {
-          if (window.headroom_prevent_pin) {
-            window.headroom_prevent_pin = false;
-            headroom.unpin();
-          }
-        }
-      });
-      headroom.init();
-      if(window.location.hash)
-        headroom.unpin();
-      $(header).addClass('headroom--transition');
-
-      // offset scroll location for banner on hash change
-      // (see: https://github.com/WickyNilliams/headroom.js/issues/38)
-      window.addEventListener("hashchange", function(event) {
-        window.scrollTo(0, window.pageYOffset - (headerHeight + 25));
-      });
-
-      // responsive menu
-      $('.distill-site-header').each(function(i, val) {
-        var topnav = $(this);
-        var toggle = topnav.find('.nav-toggle');
-        toggle.on('click', function() {
-          topnav.toggleClass('responsive');
-        });
-      });
-
-      // nav dropdowns
-      $('.nav-dropbtn').click(function(e) {
-        $(this).next('.nav-dropdown-content').toggleClass('nav-dropdown-active');
-        $(this).parent().siblings('.nav-dropdown')
-           .children('.nav-dropdown-content').removeClass('nav-dropdown-active');
-      });
-      $("body").click(function(e){
-        $('.nav-dropdown-content').removeClass('nav-dropdown-active');
-      });
-      $(".nav-dropdown").click(function(e){
-        e.stopPropagation();
-      });
-    });
-  </script>
-
-  <style type="text/css">
-
-  /* Theme (user-documented overrideables for nav appearance) */
-
-  .distill-site-nav {
-    color: rgba(255, 255, 255, 0.8);
-    background-color: #0F2E3D;
-    font-size: 15px;
-    font-weight: 300;
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./som.html" rel="next">
+<link href="./metadata.html" rel="prev">
+<link href="./assets/favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet"><script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
   }
-
-  .distill-site-nav a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .distill-site-nav a:hover {
-    color: white;
-  }
-
-  @media print {
-    .distill-site-nav {
-      display: none;
+}</script><style>
+    .quarto-title-block .quarto-title-banner {
+      background: #FFFFFF;
     }
-  }
-
-  .distill-site-header {
-
-  }
-
-  .distill-site-footer {
-
-  }
-
-
-  /* Site Header */
-
-  .distill-site-header {
-    width: 100%;
-    box-sizing: border-box;
-    z-index: 3;
-  }
-
-  .distill-site-header .nav-left {
-    display: inline-block;
-    margin-left: 8px;
-  }
-
-  @media screen and (max-width: 768px) {
-    .distill-site-header .nav-left {
-      margin-left: 0;
-    }
-  }
-
-
-  .distill-site-header .nav-right {
-    float: right;
-    margin-right: 8px;
-  }
-
-  .distill-site-header a,
-  .distill-site-header .title {
-    display: inline-block;
-    text-align: center;
-    padding: 14px 10px 14px 10px;
-  }
-
-  .distill-site-header .title {
-    font-size: 18px;
-    min-width: 150px;
-  }
-
-  .distill-site-header .logo {
-    padding: 0;
-  }
-
-  .distill-site-header .logo img {
-    display: none;
-    max-height: 20px;
-    width: auto;
-    margin-bottom: -4px;
-  }
-
-  .distill-site-header .nav-image img {
-    max-height: 18px;
-    width: auto;
-    display: inline-block;
-    margin-bottom: -3px;
-  }
-
-
-
-  @media screen and (min-width: 1000px) {
-    .distill-site-header .logo img {
-      display: inline-block;
-    }
-    .distill-site-header .nav-left {
-      margin-left: 20px;
-    }
-    .distill-site-header .nav-right {
-      margin-right: 20px;
-    }
-    .distill-site-header .title {
-      padding-left: 12px;
-    }
-  }
-
-
-  .distill-site-header .nav-toggle {
-    display: none;
-  }
-
-  .nav-dropdown {
-    display: inline-block;
-    position: relative;
-  }
-
-  .nav-dropdown .nav-dropbtn {
-    border: none;
-    outline: none;
-    color: rgba(255, 255, 255, 0.8);
-    padding: 16px 10px;
-    background-color: transparent;
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-    margin: 0;
-    margin-top: 1px;
-    z-index: 2;
-  }
-
-  .nav-dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: white;
-    min-width: 200px;
-    border: 1px solid rgba(0,0,0,0.15);
-    border-radius: 4px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
-    z-index: 1;
-    margin-top: 2px;
-    white-space: nowrap;
-    padding-top: 4px;
-    padding-bottom: 4px;
-  }
-
-  .nav-dropdown-content hr {
-    margin-top: 4px;
-    margin-bottom: 4px;
-    border: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  .nav-dropdown-active {
-    display: block;
-  }
-
-  .nav-dropdown-content a, .nav-dropdown-content .nav-dropdown-header {
-    color: black;
-    padding: 6px 24px;
-    text-decoration: none;
-    display: block;
-    text-align: left;
-  }
-
-  .nav-dropdown-content .nav-dropdown-header {
-    display: block;
-    padding: 5px 24px;
-    padding-bottom: 0;
-    text-transform: uppercase;
-    font-size: 14px;
-    color: #999999;
-    white-space: nowrap;
-  }
-
-  .nav-dropdown:hover .nav-dropbtn {
-    color: white;
-  }
-
-  .nav-dropdown-content a:hover {
-    background-color: #ddd;
-    color: black;
-  }
-
-  .nav-right .nav-dropdown-content {
-    margin-left: -45%;
-    right: 0;
-  }
-
-  @media screen and (max-width: 768px) {
-    .distill-site-header a, .distill-site-header .nav-dropdown  {display: none;}
-    .distill-site-header a.nav-toggle {
-      float: right;
-      display: block;
-    }
-    .distill-site-header .title {
-      margin-left: 0;
-    }
-    .distill-site-header .nav-right {
-      margin-right: 0;
-    }
-    .distill-site-header {
-      overflow: hidden;
-    }
-    .nav-right .nav-dropdown-content {
-      margin-left: 0;
-    }
-  }
-
-
-  @media screen and (max-width: 768px) {
-    .distill-site-header.responsive {position: relative; min-height: 500px; }
-    .distill-site-header.responsive a.nav-toggle {
-      position: absolute;
-      right: 0;
-      top: 0;
-    }
-    .distill-site-header.responsive a,
-    .distill-site-header.responsive .nav-dropdown {
-      display: block;
-      text-align: left;
-    }
-    .distill-site-header.responsive .nav-left,
-    .distill-site-header.responsive .nav-right {
-      width: 100%;
-    }
-    .distill-site-header.responsive .nav-dropdown {float: none;}
-    .distill-site-header.responsive .nav-dropdown-content {position: relative;}
-    .distill-site-header.responsive .nav-dropdown .nav-dropbtn {
-      display: block;
-      width: 100%;
-      text-align: left;
-    }
-  }
-
-  /* Site Footer */
-
-  .distill-site-footer {
-    width: 100%;
-    overflow: hidden;
-    box-sizing: border-box;
-    z-index: 3;
-    margin-top: 30px;
-    padding-top: 30px;
-    padding-bottom: 30px;
-    text-align: center;
-  }
-
-  /* Headroom */
-
-  d-title {
-    padding-top: 6rem;
-  }
-
-  @media print {
-    d-title {
-      padding-top: 4rem;
-    }
-  }
-
-  .headroom {
-    z-index: 1000;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-  }
-
-  .headroom--transition {
-    transition: all .4s ease-in-out;
-  }
-
-  .headroom--unpinned {
-    top: -100px;
-  }
-
-  .headroom--pinned {
-    top: 0;
-  }
-
-  /* adjust viewport for navbar height */
-  /* helps vertically center bootstrap (non-distill) content */
-  .min-vh-100 {
-    min-height: calc(100vh - 100px) !important;
-  }
-
-  </style>
-
-  <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
-  <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet"/>
-  <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet"/>
-  <script src="site_libs/headroom-0.9.4/headroom.min.js"></script>
-  <script src="site_libs/autocomplete-0.37.1/autocomplete.min.js"></script>
-  <script src="site_libs/fuse-6.4.1/fuse.min.js"></script>
-
-  <script type="application/javascript">
-
-  function getMeta(metaName) {
-    var metas = document.getElementsByTagName('meta');
-    for (let i = 0; i < metas.length; i++) {
-      if (metas[i].getAttribute('name') === metaName) {
-        return metas[i].getAttribute('content');
-      }
-    }
-    return '';
-  }
-
-  function offsetURL(url) {
-    var offset = getMeta('distill:offset');
-    return offset ? offset + '/' + url : url;
-  }
-
-  function createFuseIndex() {
-
-    // create fuse index
-    var options = {
-      keys: [
-        { name: 'title', weight: 20 },
-        { name: 'categories', weight: 15 },
-        { name: 'description', weight: 10 },
-        { name: 'contents', weight: 5 },
-      ],
-      ignoreLocation: true,
-      threshold: 0
-    };
-    var fuse = new window.Fuse([], options);
-
-    // fetch the main search.json
-    return fetch(offsetURL('search.json'))
-      .then(function(response) {
-        if (response.status == 200) {
-          return response.json().then(function(json) {
-            // index main articles
-            json.articles.forEach(function(article) {
-              fuse.add(article);
-            });
-            // download collections and index their articles
-            return Promise.all(json.collections.map(function(collection) {
-              return fetch(offsetURL(collection)).then(function(response) {
-                if (response.status === 200) {
-                  return response.json().then(function(articles) {
-                    articles.forEach(function(article) {
-                      fuse.add(article);
-                    });
-                  })
-                } else {
-                  return Promise.reject(
-                    new Error('Unexpected status from search index request: ' +
-                              response.status)
-                  );
-                }
-              });
-            })).then(function() {
-              return fuse;
-            });
-          });
-
-        } else {
-          return Promise.reject(
-            new Error('Unexpected status from search index request: ' +
-                        response.status)
-          );
-        }
-      });
-  }
-
-  window.document.addEventListener("DOMContentLoaded", function (event) {
-
-    // get search element (bail if we don't have one)
-    var searchEl = window.document.getElementById('distill-search');
-    if (!searchEl)
-      return;
-
-    createFuseIndex()
-      .then(function(fuse) {
-
-        // make search box visible
-        searchEl.classList.remove('hidden');
-
-        // initialize autocomplete
-        var options = {
-          autoselect: true,
-          hint: false,
-          minLength: 2,
-        };
-        window.autocomplete(searchEl, options, [{
-          source: function(query, callback) {
-            const searchOptions = {
-              isCaseSensitive: false,
-              shouldSort: true,
-              minMatchCharLength: 2,
-              limit: 10,
-            };
-            var results = fuse.search(query, searchOptions);
-            callback(results
-              .map(function(result) { return result.item; })
-            );
-          },
-          templates: {
-            suggestion: function(suggestion) {
-              var img = suggestion.preview && Object.keys(suggestion.preview).length > 0
-                ? `<img src="${offsetURL(suggestion.preview)}"</img>`
-                : '';
-              var html = `
-                <div class="search-item">
-                  <h3>${suggestion.title}</h3>
-                  <div class="search-item-description">
-                    ${suggestion.description || ''}
-                  </div>
-                  <div class="search-item-preview">
-                    ${img}
-                  </div>
-                </div>
-              `;
-              return html;
-            }
-          }
-        }]).on('autocomplete:selected', function(event, suggestion) {
-          window.location.href = offsetURL(suggestion.path);
-        });
-        // remove inline display style on autocompleter (we want to
-        // manage responsive display via css)
-        $('.algolia-autocomplete').css("display", "");
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
-
-  });
-
-  </script>
-
-  <style type="text/css">
-
-  .nav-search {
-    font-size: x-small;
-  }
-
-  /* Algolioa Autocomplete */
-
-  .algolia-autocomplete {
-    display: inline-block;
-    margin-left: 10px;
-    vertical-align: sub;
-    background-color: white;
-    color: black;
-    padding: 6px;
-    padding-top: 8px;
-    padding-bottom: 0;
-    border-radius: 6px;
-    border: 1px #0F2E3D solid;
-    width: 180px;
-  }
-
-
-  @media screen and (max-width: 768px) {
-    .distill-site-nav .algolia-autocomplete {
-      display: none;
-      visibility: hidden;
-    }
-    .distill-site-nav.responsive .algolia-autocomplete {
-      display: inline-block;
-      visibility: visible;
-    }
-    .distill-site-nav.responsive .algolia-autocomplete .aa-dropdown-menu {
-      margin-left: 0;
-      width: 400px;
-      max-height: 400px;
-    }
-  }
-
-  .algolia-autocomplete .aa-input, .algolia-autocomplete .aa-hint {
-    width: 90%;
-    outline: none;
-    border: none;
-  }
-
-  .algolia-autocomplete .aa-hint {
-    color: #999;
-  }
-  .algolia-autocomplete .aa-dropdown-menu {
-    width: 550px;
-    max-height: 70vh;
-    overflow-x: visible;
-    overflow-y: scroll;
-    padding: 5px;
-    margin-top: 3px;
-    margin-left: -150px;
-    background-color: #fff;
-    border-radius: 5px;
-    border: 1px solid #999;
-    border-top: none;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion {
-    cursor: pointer;
-    padding: 5px 4px;
-    border-bottom: 1px solid #eee;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion:last-of-type {
-    border-bottom: none;
-    margin-bottom: 2px;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item {
-    overflow: hidden;
-    font-size: 0.8em;
-    line-height: 1.4em;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item h3 {
-    font-size: 1rem;
-    margin-block-start: 0;
-    margin-block-end: 5px;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-description {
-    display: inline-block;
-    overflow: hidden;
-    height: 2.8em;
-    width: 80%;
-    margin-right: 4%;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview {
-    display: inline-block;
-    width: 15%;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img {
-    height: 3em;
-    width: auto;
-    display: none;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img[src] {
-    display: initial;
-  }
-
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion.aa-cursor {
-    background-color: #eee;
-  }
-  .algolia-autocomplete .aa-dropdown-menu .aa-suggestion em {
-    font-weight: bold;
-    font-style: normal;
-  }
-
-  </style>
-
-
-  <!--/radix_placeholder_navigation_in_header-->
-  <!--radix_placeholder_distill-->
-
-  <style type="text/css">
-
-  body {
-    background-color: white;
-  }
-
-  .pandoc-table {
-    width: 100%;
-  }
-
-  .pandoc-table>caption {
-    margin-bottom: 10px;
-  }
-
-  .pandoc-table th:not([align]) {
-    text-align: left;
-  }
-
-  .pagedtable-footer {
-    font-size: 15px;
-  }
-
-  d-byline .byline {
-    grid-template-columns: 2fr 2fr;
-  }
-
-  d-byline .byline h3 {
-    margin-block-start: 1.5em;
-  }
-
-  d-byline .byline .authors-affiliations h3 {
-    margin-block-start: 0.5em;
-  }
-
-  .authors-affiliations .orcid-id {
-    width: 16px;
-    height:16px;
-    margin-left: 4px;
-    margin-right: 4px;
-    vertical-align: middle;
-    padding-bottom: 2px;
-  }
-
-  d-title .dt-tags {
-    margin-top: 1em;
-    grid-column: text;
-  }
-
-  .dt-tags .dt-tag {
-    text-decoration: none;
-    display: inline-block;
-    color: rgba(0,0,0,0.6);
-    padding: 0em 0.4em;
-    margin-right: 0.5em;
-    margin-bottom: 0.4em;
-    font-size: 70%;
-    border: 1px solid rgba(0,0,0,0.2);
-    border-radius: 3px;
-    text-transform: uppercase;
-    font-weight: 500;
-  }
-
-  d-article table.gt_table td,
-  d-article table.gt_table th {
-    border-bottom: none;
-  }
-
-  .html-widget {
-    margin-bottom: 2.0em;
-  }
-
-  .l-screen-inset {
-    padding-right: 16px;
-  }
-
-  .l-screen .caption {
-    margin-left: 10px;
-  }
-
-  .shaded {
-    background: rgb(247, 247, 247);
-    padding-top: 20px;
-    padding-bottom: 20px;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  .shaded .html-widget {
-    margin-bottom: 0;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  .shaded .shaded-content {
-    background: white;
-  }
-
-  .text-output {
-    margin-top: 0;
-    line-height: 1.5em;
-  }
-
-  .hidden {
-    display: none !important;
-  }
-
-  d-article {
-    padding-top: 2.5rem;
-    padding-bottom: 30px;
-  }
-
-  d-appendix {
-    padding-top: 30px;
-  }
-
-  d-article>p>img {
-    width: 100%;
-  }
-
-  d-article h2 {
-    margin: 1rem 0 1.5rem 0;
-  }
-
-  d-article h3 {
-    margin-top: 1.5rem;
-  }
-
-  d-article iframe {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    margin-bottom: 2.0em;
-    width: 100%;
-  }
-
-  /* Tweak code blocks */
-
-  d-article div.sourceCode code,
-  d-article pre code {
-    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-  }
-
-  d-article pre,
-  d-article div.sourceCode,
-  d-article div.sourceCode pre {
-    overflow: auto;
-  }
-
-  d-article div.sourceCode {
-    background-color: white;
-  }
-
-  d-article div.sourceCode pre {
-    padding-left: 10px;
-    font-size: 12px;
-    border-left: 2px solid rgba(0,0,0,0.1);
-  }
-
-  d-article pre {
-    font-size: 12px;
-    color: black;
-    background: none;
-    margin-top: 0;
-    text-align: left;
-    white-space: pre;
-    word-spacing: normal;
-    word-break: normal;
-    word-wrap: normal;
-    line-height: 1.5;
-
-    -moz-tab-size: 4;
-    -o-tab-size: 4;
-    tab-size: 4;
-
-    -webkit-hyphens: none;
-    -moz-hyphens: none;
-    -ms-hyphens: none;
-    hyphens: none;
-  }
-
-  d-article pre a {
-    border-bottom: none;
-  }
-
-  d-article pre a:hover {
-    border-bottom: none;
-    text-decoration: underline;
-  }
-
-  d-article details {
-    grid-column: text;
-    margin-bottom: 0.8em;
-  }
-
-  @media(min-width: 768px) {
-
-  d-article pre,
-  d-article div.sourceCode,
-  d-article div.sourceCode pre {
-    overflow: visible !important;
-  }
-
-  d-article div.sourceCode pre {
-    padding-left: 18px;
-    font-size: 14px;
-  }
-
-  d-article pre {
-    font-size: 14px;
-  }
-
-  }
-
-  figure img.external {
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
-    padding: 18px;
-    box-sizing: border-box;
-  }
-
-  /* CSS for d-contents */
-
-  .d-contents {
-    grid-column: text;
-    color: rgba(0,0,0,0.8);
-    font-size: 0.9em;
-    padding-bottom: 1em;
-    margin-bottom: 1em;
-    padding-bottom: 0.5em;
-    margin-bottom: 1em;
-    padding-left: 0.25em;
-    justify-self: start;
-  }
-
-  @media(min-width: 1000px) {
-    .d-contents.d-contents-float {
-      height: 0;
-      grid-column-start: 1;
-      grid-column-end: 4;
-      justify-self: center;
-      padding-right: 3em;
-      padding-left: 2em;
-    }
-  }
-
-  .d-contents nav h3 {
-    font-size: 18px;
-    margin-top: 0;
-    margin-bottom: 1em;
-  }
-
-  .d-contents li {
-    list-style-type: none
-  }
-
-  .d-contents nav > ul {
-    padding-left: 0;
-  }
-
-  .d-contents ul {
-    padding-left: 1em
-  }
-
-  .d-contents nav ul li {
-    margin-top: 0.6em;
-    margin-bottom: 0.2em;
-  }
-
-  .d-contents nav a {
-    font-size: 13px;
-    border-bottom: none;
-    text-decoration: none
-    color: rgba(0, 0, 0, 0.8);
-  }
-
-  .d-contents nav a:hover {
-    text-decoration: underline solid rgba(0, 0, 0, 0.6)
-  }
-
-  .d-contents nav > ul > li > a {
-    font-weight: 600;
-  }
-
-  .d-contents nav > ul > li > ul {
-    font-weight: inherit;
-  }
-
-  .d-contents nav > ul > li > ul > li {
-    margin-top: 0.2em;
-  }
-
-
-  .d-contents nav ul {
-    margin-top: 0;
-    margin-bottom: 0.25em;
-  }
-
-  .d-article-with-toc h2:nth-child(2) {
-    margin-top: 0;
-  }
-
-
-  /* Figure */
-
-  .figure {
-    position: relative;
-    margin-bottom: 2.5em;
-    margin-top: 1.5em;
-  }
-
-  .figure img {
-    width: 100%;
-  }
-
-  .figure .caption {
-    color: rgba(0, 0, 0, 0.6);
-    font-size: 12px;
-    line-height: 1.5em;
-  }
-
-  .figure img.external {
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
-    padding: 18px;
-    box-sizing: border-box;
-  }
-
-  .figure .caption a {
-    color: rgba(0, 0, 0, 0.6);
-  }
-
-  .figure .caption b,
-  .figure .caption strong, {
-    font-weight: 600;
-    color: rgba(0, 0, 0, 1.0);
-  }
-
-  /* Citations */
-
-  d-article .citation {
-    color: inherit;
-    cursor: inherit;
-  }
-
-  div.hanging-indent{
-    margin-left: 1em; text-indent: -1em;
-  }
-
-  /* Citation hover box */
-
-  .tippy-box[data-theme~=light-border] {
-    background-color: rgba(250, 250, 250, 0.95);
-  }
-
-  .tippy-content > p {
-    margin-bottom: 0;
-    padding: 2px;
-  }
-
-
-  /* Tweak 1000px media break to show more text */
-
-  @media(min-width: 1000px) {
-    .base-grid,
-    distill-header,
-    d-title,
-    d-abstract,
-    d-article,
-    d-appendix,
-    distill-appendix,
-    d-byline,
-    d-footnote-list,
-    d-citation-list,
-    distill-footer {
-      grid-template-columns: [screen-start] 1fr [page-start kicker-start] 80px [middle-start] 50px [text-start kicker-end] 65px 65px 65px 65px 65px 65px 65px 65px [text-end gutter-start] 65px [middle-end] 65px [page-end gutter-end] 1fr [screen-end];
-      grid-column-gap: 16px;
-    }
-
-    .grid {
-      grid-column-gap: 16px;
-    }
-
-    d-article {
-      font-size: 1.06rem;
-      line-height: 1.7em;
-    }
-    figure .caption, .figure .caption, figure figcaption {
-      font-size: 13px;
-    }
-  }
-
-  @media(min-width: 1180px) {
-    .base-grid,
-    distill-header,
-    d-title,
-    d-abstract,
-    d-article,
-    d-appendix,
-    distill-appendix,
-    d-byline,
-    d-footnote-list,
-    d-citation-list,
-    distill-footer {
-      grid-template-columns: [screen-start] 1fr [page-start kicker-start] 60px [middle-start] 60px [text-start kicker-end] 60px 60px 60px 60px 60px 60px 60px 60px [text-end gutter-start] 60px [middle-end] 60px [page-end gutter-end] 1fr [screen-end];
-      grid-column-gap: 32px;
-    }
-
-    .grid {
-      grid-column-gap: 32px;
-    }
-  }
-
-
-  /* Get the citation styles for the appendix (not auto-injected on render since
-     we do our own rendering of the citation appendix) */
-
-  d-appendix .citation-appendix,
-  .d-appendix .citation-appendix {
-    font-size: 11px;
-    line-height: 15px;
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
-    padding-left: 18px;
-    border: 1px solid rgba(0,0,0,0.1);
-    background: rgba(0, 0, 0, 0.02);
-    padding: 10px 18px;
-    border-radius: 3px;
-    color: rgba(150, 150, 150, 1);
-    overflow: hidden;
-    margin-top: -12px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-
-  /* Include appendix styles here so they can be overridden */
-
-  d-appendix {
-    contain: layout style;
-    font-size: 0.8em;
-    line-height: 1.7em;
-    margin-top: 60px;
-    margin-bottom: 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    color: rgba(0,0,0,0.5);
-    padding-top: 60px;
-    padding-bottom: 48px;
-  }
-
-  d-appendix h3 {
-    grid-column: page-start / text-start;
-    font-size: 15px;
-    font-weight: 500;
-    margin-top: 1em;
-    margin-bottom: 0;
-    color: rgba(0,0,0,0.65);
-  }
-
-  d-appendix h3 + * {
-    margin-top: 1em;
-  }
-
-  d-appendix ol {
-    padding: 0 0 0 15px;
-  }
-
-  @media (min-width: 768px) {
-    d-appendix ol {
-      padding: 0 0 0 30px;
-      margin-left: -30px;
-    }
-  }
-
-  d-appendix li {
-    margin-bottom: 1em;
-  }
-
-  d-appendix a {
-    color: rgba(0, 0, 0, 0.6);
-  }
-
-  d-appendix > * {
-    grid-column: text;
-  }
-
-  d-appendix > d-footnote-list,
-  d-appendix > d-citation-list,
-  d-appendix > distill-appendix {
-    grid-column: screen;
-  }
-
-  /* Include footnote styles here so they can be overridden */
-
-  d-footnote-list {
-    contain: layout style;
-  }
-
-  d-footnote-list > * {
-    grid-column: text;
-  }
-
-  d-footnote-list a.footnote-backlink {
-    color: rgba(0,0,0,0.3);
-    padding-left: 0.5em;
-  }
-
-
-
-  /* Anchor.js */
-
-  .anchorjs-link {
-    /*transition: all .25s linear; */
-    text-decoration: none;
-    border-bottom: none;
-  }
-  *:hover > .anchorjs-link {
-    margin-left: -1.125em !important;
-    text-decoration: none;
-    border-bottom: none;
-  }
-
-  /* Social footer */
-
-  .social_footer {
-    margin-top: 30px;
-    margin-bottom: 0;
-    color: rgba(0,0,0,0.67);
-  }
-
-  .disqus-comments {
-    margin-right: 30px;
-  }
-
-  .disqus-comment-count {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-  }
-
-  #disqus_thread {
-    margin-top: 30px;
-  }
-
-  .article-sharing a {
-    border-bottom: none;
-    margin-right: 8px;
-  }
-
-  .article-sharing a:hover {
-    border-bottom: none;
-  }
-
-  .sidebar-section.subscribe {
-    font-size: 12px;
-    line-height: 1.6em;
-  }
-
-  .subscribe p {
-    margin-bottom: 0.5em;
-  }
-
-
-  .article-footer .subscribe {
-    font-size: 15px;
-    margin-top: 45px;
-  }
-
-
-  .sidebar-section.custom {
-    font-size: 12px;
-    line-height: 1.6em;
-  }
-
-  .custom p {
-    margin-bottom: 0.5em;
-  }
-
-  /* Styles for listing layout (hide title) */
-  .layout-listing d-title, .layout-listing .d-title {
-    display: none;
-  }
-
-  /* Styles for posts lists (not auto-injected) */
-
-
-  .posts-with-sidebar {
-    padding-left: 45px;
-    padding-right: 45px;
-  }
-
-  .posts-list .description h2,
-  .posts-list .description p {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
-  }
-
-  .posts-list .description h2 {
-    font-weight: 700;
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .posts-list h2.post-tag {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-    padding-bottom: 12px;
-  }
-  .posts-list {
-    margin-top: 60px;
-    margin-bottom: 24px;
-  }
-
-  .posts-list .post-preview {
-    text-decoration: none;
-    overflow: hidden;
-    display: block;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 24px 0;
-  }
-
-  .post-preview-last {
-    border-bottom: none !important;
-  }
-
-  .posts-list .posts-list-caption {
-    grid-column: screen;
-    font-weight: 400;
-  }
-
-  .posts-list .post-preview h2 {
-    margin: 0 0 6px 0;
-    line-height: 1.2em;
-    font-style: normal;
-    font-size: 24px;
-  }
-
-  .posts-list .post-preview p {
-    margin: 0 0 12px 0;
-    line-height: 1.4em;
-    font-size: 16px;
-  }
-
-  .posts-list .post-preview .thumbnail {
-    box-sizing: border-box;
-    margin-bottom: 24px;
-    position: relative;
-    max-width: 500px;
-  }
-  .posts-list .post-preview img {
-    width: 100%;
-    display: block;
-  }
-
-  .posts-list .metadata {
-    font-size: 12px;
-    line-height: 1.4em;
-    margin-bottom: 18px;
-  }
-
-  .posts-list .metadata > * {
-    display: inline-block;
-  }
-
-  .posts-list .metadata .publishedDate {
-    margin-right: 2em;
-  }
-
-  .posts-list .metadata .dt-authors {
-    display: block;
-    margin-top: 0.3em;
-    margin-right: 2em;
-  }
-
-  .posts-list .dt-tags {
-    display: block;
-    line-height: 1em;
-  }
-
-  .posts-list .dt-tags .dt-tag {
-    display: inline-block;
-    color: rgba(0,0,0,0.6);
-    padding: 0.3em 0.4em;
-    margin-right: 0.2em;
-    margin-bottom: 0.4em;
-    font-size: 60%;
-    border: 1px solid rgba(0,0,0,0.2);
-    border-radius: 3px;
-    text-transform: uppercase;
-    font-weight: 500;
-  }
-
-  .posts-list img {
-    opacity: 1;
-  }
-
-  .posts-list img[data-src] {
-    opacity: 0;
-  }
-
-  .posts-more {
-    clear: both;
-  }
-
-
-  .posts-sidebar {
-    font-size: 16px;
-  }
-
-  .posts-sidebar h3 {
-    font-size: 16px;
-    margin-top: 0;
-    margin-bottom: 0.5em;
-    font-weight: 400;
-    text-transform: uppercase;
-  }
-
-  .sidebar-section {
-    margin-bottom: 30px;
-  }
-
-  .categories ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .categories li {
-    color: rgba(0, 0, 0, 0.8);
-    margin-bottom: 0;
-  }
-
-  .categories li>a {
-    border-bottom: none;
-  }
-
-  .categories li>a:hover {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.4);
-  }
-
-  .categories .active {
-    font-weight: 600;
-  }
-
-  .categories .category-count {
-    color: rgba(0, 0, 0, 0.4);
-  }
-
-
-  @media(min-width: 768px) {
-    .posts-list .post-preview h2 {
-      font-size: 26px;
-    }
-    .posts-list .post-preview .thumbnail {
-      float: right;
-      width: 30%;
-      margin-bottom: 0;
-    }
-    .posts-list .post-preview .description {
-      float: left;
-      width: 45%;
-    }
-    .posts-list .post-preview .metadata {
-      float: left;
-      width: 20%;
-      margin-top: 8px;
-    }
-    .posts-list .post-preview p {
-      margin: 0 0 12px 0;
-      line-height: 1.5em;
-      font-size: 16px;
-    }
-    .posts-with-sidebar .posts-list {
-      float: left;
-      width: 75%;
-    }
-    .posts-with-sidebar .posts-sidebar {
-      float: right;
-      width: 20%;
-      margin-top: 60px;
-      padding-top: 24px;
-      padding-bottom: 24px;
-    }
-  }
-
-
-  /* Improve display for browsers without grid (IE/Edge <= 15) */
-
-  .downlevel {
-    line-height: 1.6em;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
-    margin: 0;
-  }
-
-  .downlevel .d-title {
-    padding-top: 6rem;
-    padding-bottom: 1.5rem;
-  }
-
-  .downlevel .d-title h1 {
-    font-size: 50px;
-    font-weight: 700;
-    line-height: 1.1em;
-    margin: 0 0 0.5rem;
-  }
-
-  .downlevel .d-title p {
-    font-weight: 300;
-    font-size: 1.2rem;
-    line-height: 1.55em;
-    margin-top: 0;
-  }
-
-  .downlevel .d-byline {
-    padding-top: 0.8em;
-    padding-bottom: 0.8em;
-    font-size: 0.8rem;
-    line-height: 1.8em;
-  }
-
-  .downlevel .section-separator {
-    border: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  .downlevel .d-article {
-    font-size: 1.06rem;
-    line-height: 1.7em;
-    padding-top: 1rem;
-    padding-bottom: 2rem;
-  }
-
-
-  .downlevel .d-appendix {
-    padding-left: 0;
-    padding-right: 0;
-    max-width: none;
-    font-size: 0.8em;
-    line-height: 1.7em;
-    margin-bottom: 0;
-    color: rgba(0,0,0,0.5);
-    padding-top: 40px;
-    padding-bottom: 48px;
-  }
-
-  .downlevel .footnotes ol {
-    padding-left: 13px;
-  }
-
-  .downlevel .base-grid,
-  .downlevel .distill-header,
-  .downlevel .d-title,
-  .downlevel .d-abstract,
-  .downlevel .d-article,
-  .downlevel .d-appendix,
-  .downlevel .distill-appendix,
-  .downlevel .d-byline,
-  .downlevel .d-footnote-list,
-  .downlevel .d-citation-list,
-  .downlevel .distill-footer,
-  .downlevel .appendix-bottom,
-  .downlevel .posts-container {
-    padding-left: 40px;
-    padding-right: 40px;
-  }
-
-  @media(min-width: 768px) {
-    .downlevel .base-grid,
-    .downlevel .distill-header,
-    .downlevel .d-title,
-    .downlevel .d-abstract,
-    .downlevel .d-article,
-    .downlevel .d-appendix,
-    .downlevel .distill-appendix,
-    .downlevel .d-byline,
-    .downlevel .d-footnote-list,
-    .downlevel .d-citation-list,
-    .downlevel .distill-footer,
-    .downlevel .appendix-bottom,
-    .downlevel .posts-container {
-    padding-left: 150px;
-    padding-right: 150px;
-    max-width: 900px;
-  }
-  }
-
-  .downlevel pre code {
-    display: block;
-    border-left: 2px solid rgba(0, 0, 0, .1);
-    padding: 0 0 0 20px;
-    font-size: 14px;
-  }
-
-  .downlevel code, .downlevel pre {
-    color: black;
-    background: none;
-    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-    text-align: left;
-    white-space: pre;
-    word-spacing: normal;
-    word-break: normal;
-    word-wrap: normal;
-    line-height: 1.5;
-
-    -moz-tab-size: 4;
-    -o-tab-size: 4;
-    tab-size: 4;
-
-    -webkit-hyphens: none;
-    -moz-hyphens: none;
-    -ms-hyphens: none;
-    hyphens: none;
-  }
-
-  .downlevel .posts-list .post-preview {
-    color: inherit;
-  }
-
-
-
-  </style>
-
-  <script type="application/javascript">
-
-  function is_downlevel_browser() {
-    if (bowser.isUnsupportedBrowser({ msie: "12", msedge: "16"},
-                                   window.navigator.userAgent)) {
-      return true;
-    } else {
-      return window.load_distill_framework === undefined;
-    }
-  }
-
-  // show body when load is complete
-  function on_load_complete() {
-
-    // add anchors
-    if (window.anchors) {
-      window.anchors.options.placement = 'left';
-      window.anchors.add('d-article > h2, d-article > h3, d-article > h4, d-article > h5');
-    }
-
-
-    // set body to visible
-    document.body.style.visibility = 'visible';
-
-    // force redraw for leaflet widgets
-    if (window.HTMLWidgets) {
-      var maps = window.HTMLWidgets.findAll(".leaflet");
-      $.each(maps, function(i, el) {
-        var map = this.getMap();
-        map.invalidateSize();
-        map.eachLayer(function(layer) {
-          if (layer instanceof L.TileLayer)
-            layer.redraw();
-        });
-      });
-    }
-
-    // trigger 'shown' so htmlwidgets resize
-    $('d-article').trigger('shown');
-  }
-
-  function init_distill() {
-
-    init_common();
-
-    // create front matter
-    var front_matter = $('<d-front-matter></d-front-matter>');
-    $('#distill-front-matter').wrap(front_matter);
-
-    // create d-title
-    $('.d-title').changeElementType('d-title');
-
-    // create d-byline
-    var byline = $('<d-byline></d-byline>');
-    $('.d-byline').replaceWith(byline);
-
-    // create d-article
-    var article = $('<d-article></d-article>');
-    $('.d-article').wrap(article).children().unwrap();
-
-    // move posts container into article
-    $('.posts-container').appendTo($('d-article'));
-
-    // create d-appendix
-    $('.d-appendix').changeElementType('d-appendix');
-
-    // flag indicating that we have appendix items
-    var appendix = $('.appendix-bottom').children('h3').length > 0;
-
-    // replace footnotes with <d-footnote>
-    $('.footnote-ref').each(function(i, val) {
-      appendix = true;
-      var href = $(this).attr('href');
-      var id = href.replace('#', '');
-      var fn = $('#' + id);
-      var fn_p = $('#' + id + '>p');
-      fn_p.find('.footnote-back').remove();
-      var text = fn_p.html();
-      var dtfn = $('<d-footnote></d-footnote>');
-      dtfn.html(text);
-      $(this).replaceWith(dtfn);
-    });
-    // remove footnotes
-    $('.footnotes').remove();
-
-    // move refs into #references-listing
-    $('#references-listing').replaceWith($('#refs'));
-
-    $('h1.appendix, h2.appendix').each(function(i, val) {
-      $(this).changeElementType('h3');
-    });
-    $('h3.appendix').each(function(i, val) {
-      var id = $(this).attr('id');
-      $('.d-contents a[href="#' + id + '"]').parent().remove();
-      appendix = true;
-      $(this).nextUntil($('h1, h2, h3')).addBack().appendTo($('d-appendix'));
-    });
-
-    // show d-appendix if we have appendix content
-    $("d-appendix").css('display', appendix ? 'grid' : 'none');
-
-    // localize layout chunks to just output
-    $('.layout-chunk').each(function(i, val) {
-
-      // capture layout
-      var layout = $(this).attr('data-layout');
-
-      // apply layout to markdown level block elements
-      var elements = $(this).children().not('details, div.sourceCode, pre, script');
-      elements.each(function(i, el) {
-        var layout_div = $('<div class="' + layout + '"></div>');
-        if (layout_div.hasClass('shaded')) {
-          var shaded_content = $('<div class="shaded-content"></div>');
-          $(this).wrap(shaded_content);
-          $(this).parent().wrap(layout_div);
-        } else {
-          $(this).wrap(layout_div);
-        }
-      });
-
-
-      // unwrap the layout-chunk div
-      $(this).children().unwrap();
-    });
-
-    // remove code block used to force  highlighting css
-    $('.distill-force-highlighting-css').parent().remove();
-
-    // remove empty line numbers inserted by pandoc when using a
-    // custom syntax highlighting theme
-    $('code.sourceCode a:empty').remove();
-
-    // load distill framework
-    load_distill_framework();
-
-    // wait for window.distillRunlevel == 4 to do post processing
-    function distill_post_process() {
-
-      if (!window.distillRunlevel || window.distillRunlevel < 4)
-        return;
-
-      // hide author/affiliations entirely if we have no authors
-      var front_matter = JSON.parse($("#distill-front-matter").html());
-      var have_authors = front_matter.authors && front_matter.authors.length > 0;
-      if (!have_authors)
-        $('d-byline').addClass('hidden');
-
-      // article with toc class
-      $('.d-contents').parent().addClass('d-article-with-toc');
-
-      // strip links that point to #
-      $('.authors-affiliations').find('a[href="#"]').removeAttr('href');
-
-      // add orcid ids
-      $('.authors-affiliations').find('.author').each(function(i, el) {
-        var orcid_id = front_matter.authors[i].orcidID;
-        if (orcid_id) {
-          var a = $('<a></a>');
-          a.attr('href', 'https://orcid.org/' + orcid_id);
-          var img = $('<img></img>');
-          img.addClass('orcid-id');
-          img.attr('alt', 'ORCID ID');
-          img.attr('src','data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg==');
-          a.append(img);
-          $(this).append(a);
-        }
-      });
-
-      // hide elements of author/affiliations grid that have no value
-      function hide_byline_column(caption) {
-        $('d-byline').find('h3:contains("' + caption + '")').parent().css('visibility', 'hidden');
-      }
-
-      // affiliations
-      var have_affiliations = false;
-      for (var i = 0; i<front_matter.authors.length; ++i) {
-        var author = front_matter.authors[i];
-        if (author.affiliation !== "&nbsp;") {
-          have_affiliations = true;
-          break;
-        }
-      }
-      if (!have_affiliations)
-        $('d-byline').find('h3:contains("Affiliations")').css('visibility', 'hidden');
-
-      // published date
-      if (!front_matter.publishedDate)
-        hide_byline_column("Published");
-
-      // document object identifier
-      var doi = $('d-byline').find('h3:contains("DOI")');
-      var doi_p = doi.next().empty();
-      if (!front_matter.doi) {
-        // if we have a citation and valid citationText then link to that
-        if ($('#citation').length > 0 && front_matter.citationText) {
-          doi.html('Citation');
-          $('<a href="#citation"></a>')
-            .text(front_matter.citationText)
-            .appendTo(doi_p);
-        } else {
-          hide_byline_column("DOI");
-        }
-      } else {
-        $('<a></a>')
-           .attr('href', "https://doi.org/" + front_matter.doi)
-           .html(front_matter.doi)
-           .appendTo(doi_p);
-      }
-
-       // change plural form of authors/affiliations
-      if (front_matter.authors.length === 1) {
-        var grid = $('.authors-affiliations');
-        grid.children('h3:contains("Authors")').text('Author');
-        grid.children('h3:contains("Affiliations")').text('Affiliation');
-      }
-
-      // remove d-appendix and d-footnote-list local styles
-      $('d-appendix > style:first-child').remove();
-      $('d-footnote-list > style:first-child').remove();
-
-      // move appendix-bottom entries to the bottom
-      $('.appendix-bottom').appendTo('d-appendix').children().unwrap();
-      $('.appendix-bottom').remove();
-
-      // hoverable references
-      $('span.citation[data-cites]').each(function() {
-        var refs = $(this).attr('data-cites').split(" ");
-        var refHtml = refs.map(function(ref) {
-          return "<p>" + $('#ref-' + ref).html() + "</p>";
-        }).join("\n");
-        window.tippy(this, {
-          allowHTML: true,
-          content: refHtml,
-          maxWidth: 500,
-          interactive: true,
-          interactiveBorder: 10,
-          theme: 'light-border',
-          placement: 'bottom-start'
-        });
-      });
-
-      // clear polling timer
-      clearInterval(tid);
-
-      // show body now that everything is ready
-      on_load_complete();
-    }
-
-    var tid = setInterval(distill_post_process, 50);
-    distill_post_process();
-
-  }
-
-  function init_downlevel() {
-
-    init_common();
-
-     // insert hr after d-title
-    $('.d-title').after($('<hr class="section-separator"/>'));
-
-    // check if we have authors
-    var front_matter = JSON.parse($("#distill-front-matter").html());
-    var have_authors = front_matter.authors && front_matter.authors.length > 0;
-
-    // manage byline/border
-    if (!have_authors)
-      $('.d-byline').remove();
-    $('.d-byline').after($('<hr class="section-separator"/>'));
-    $('.d-byline a').remove();
-
-    // remove toc
-    $('.d-contents').remove();
-
-    // move appendix elements
-    $('h1.appendix, h2.appendix').each(function(i, val) {
-      $(this).changeElementType('h3');
-    });
-    $('h3.appendix').each(function(i, val) {
-      $(this).nextUntil($('h1, h2, h3')).addBack().appendTo($('.d-appendix'));
-    });
-
-
-    // inject headers into references and footnotes
-    var refs_header = $('<h3></h3>');
-    refs_header.text('References');
-    $('#refs').prepend(refs_header);
-
-    var footnotes_header = $('<h3></h3');
-    footnotes_header.text('Footnotes');
-    $('.footnotes').children('hr').first().replaceWith(footnotes_header);
-
-    // move appendix-bottom entries to the bottom
-    $('.appendix-bottom').appendTo('.d-appendix').children().unwrap();
-    $('.appendix-bottom').remove();
-
-    // remove appendix if it's empty
-    if ($('.d-appendix').children().length === 0)
-      $('.d-appendix').remove();
-
-    // prepend separator above appendix
-    $('.d-appendix').before($('<hr class="section-separator" style="clear: both"/>'));
-
-    // trim code
-    $('pre>code').each(function(i, val) {
-      $(this).html($.trim($(this).html()));
-    });
-
-    // move posts-container right before article
-    $('.posts-container').insertBefore($('.d-article'));
-
-    $('body').addClass('downlevel');
-
-    on_load_complete();
-  }
-
-
-  function init_common() {
-
-    // jquery plugin to change element types
-    (function($) {
-      $.fn.changeElementType = function(newType) {
-        var attrs = {};
-
-        $.each(this[0].attributes, function(idx, attr) {
-          attrs[attr.nodeName] = attr.nodeValue;
-        });
-
-        this.replaceWith(function() {
-          return $("<" + newType + "/>", attrs).append($(this).contents());
-        });
-      };
-    })(jQuery);
-
-    // prevent underline for linked images
-    $('a > img').parent().css({'border-bottom' : 'none'});
-
-    // mark non-body figures created by knitr chunks as 100% width
-    $('.layout-chunk').each(function(i, val) {
-      var figures = $(this).find('img, .html-widget');
-      if ($(this).attr('data-layout') !== "l-body") {
-        figures.css('width', '100%');
-      } else {
-        figures.css('max-width', '100%');
-        figures.filter("[width]").each(function(i, val) {
-          var fig = $(this);
-          fig.css('width', fig.attr('width') + 'px');
-        });
-
-      }
-    });
-
-    // auto-append index.html to post-preview links in file: protocol
-    // and in rstudio ide preview
-    $('.post-preview').each(function(i, val) {
-      if (window.location.protocol === "file:")
-        $(this).attr('href', $(this).attr('href') + "index.html");
-    });
-
-    // get rid of index.html references in header
-    if (window.location.protocol !== "file:") {
-      $('.distill-site-header a[href]').each(function(i,val) {
-        $(this).attr('href', $(this).attr('href').replace("index.html", "./"));
-      });
-    }
-
-    // add class to pandoc style tables
-    $('tr.header').parent('thead').parent('table').addClass('pandoc-table');
-    $('.kable-table').children('table').addClass('pandoc-table');
-
-    // add figcaption style to table captions
-    $('caption').parent('table').addClass("figcaption");
-
-    // initialize posts list
-    if (window.init_posts_list)
-      window.init_posts_list();
-
-    // implmement disqus comment link
-    $('.disqus-comment-count').click(function() {
-      window.headroom_prevent_pin = true;
-      $('#disqus_thread').toggleClass('hidden');
-      if (!$('#disqus_thread').hasClass('hidden')) {
-        var offset = $(this).offset();
-        $(window).resize();
-        $('html, body').animate({
-          scrollTop: offset.top - 35
-        });
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    if (is_downlevel_browser())
-      init_downlevel();
-    else
-      window.addEventListener('WebComponentsReady', init_distill);
-  });
-
-  </script>
-
-  <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
-  <script src="site_libs/clipboard-2.0.6/clipboard.min.js"></script>
-  <link href="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
-  <script src="site_libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
-  <script>window.xaringanExtraClipboard(null, {"button":"<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"><\/i>","success":"<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"><\/i>","error":"<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"><\/i>"})</script>
-  <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
-  <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
-  <script src="site_libs/popper-2.6.0/popper.min.js"></script>
-  <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
-  <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
-  <script src="site_libs/tippy-6.2.7/tippy.umd.min.js"></script>
-  <script src="site_libs/anchor-4.2.2/anchor.min.js"></script>
-  <script src="site_libs/bowser-1.9.3/bowser.min.js"></script>
-  <script src="site_libs/webcomponents-2.0.0/webcomponents.js"></script>
-  <script src="site_libs/distill-2.2.21/template.v2.js"></script>
-  <!--radix_placeholder_site_in_header-->
-  <style type="text/css">
-  /* Whole document: */
-  @import url('https://fonts.googleapis.com/css?family=PT+Sans|PT+Serif|Lato:300|Inconsolata|Source+Sans+Pro|Work+Sans:200,300,400,500|Karla:400,400i,700,700i');
-  /********************************/
-  /* controls general properties of site*/
-  /********************************/
-
-  body {
-    color: #414141;
-  /*  line-height: 1.7;
-    font-size: 17px; */
-    background-color: #FEFEFE;
-  }
-
-  d-title h1{
-  font-size: 2.1em;
-  font-family: 'Work Sans';
-  font-weight: 300;
-  }
-
-  d-article h1 {
-    font-size: 1.8em;
-    font-family: 'Work Sans', 'Source Sans Pro', 'PT Sans';
-    font-weight: 300;
-  }
-
-  d-article h2 {
-    font-size: 1.65em;
-    font-family: 'Work Sans', 'Source Sans Pro', 'PT Sans';
-    font-weight: 500;
-  }
-
-  d-article h3 {
-    margin-top: 1em;
-    font-family: 'Work Sans', 'Source Sans Pro', 'PT Sans';
-  }
-
-  d-byline .authors-affiliations {
-    grid-column-end: span 3;
-    grid-column-gap: 8px;
-  }
-
-  img.orcid-id {
-    margin: 0;
-  }
-
-  a.name:-webkit-any-link {
-    text-decoration: underline;
-    text-decoration-style: dotted;
-  }
-
-  a.affiliation:-webkit-any-link {
-    text-decoration: underline;
-    text-decoration-style: dotted;
-  }
-
-  blockquote p {
-  	font-size: 1em;
-  	font-family: 'Work Sans';
-    font-style: normal;
-    margin: 0.5em 0 0.5em;
-  }
-
-  d-article li {
-    margin: 0px 0px 4px;
-    font-size: 18px;
-    font-family: 'Open Sans', 'Source Sans Pro', 'PT Sans';
-  }
-
-  /********************************/
-  /* controls CODE*/
-  /********************************/
-
-  /** pre.sourceCode controls code block without lang **/
-
-  /** Controls r code  **/
-
-  pre.sourceCode.r {
-    margin-top: 0px;
-     color: #333333;
-     background-color: #E8E8E8;
-     border-radius: 3px;
-     font-size: 0.80em;
-     font-family: 'Monaco', 'PT Mono', monospace;
-     overflow-x: scroll !important;
-     border-left: 6px solid #2271B2;
-     border-top: 1px solid #B7B7B7;
-     border-right: 1px solid #B7B7B7;
-     border-bottom: 1px solid #B7B7B7;
-     padding: 18px 0px 18px 20px;
-   }
-
-   pre.sourceCode.bash {
-     margin-top: 0px;
-      color: #333333;
-      background-color: #E8E8E8;
-      border-radius: 3px;
-      font-size: 0.80em;
-      font-family: 'Monaco', 'PT Mono', monospace;
-      overflow-x: scroll !important;
-      border-left: 6px solid #B22271;
-      border-top: 1px solid #B7B7B7;
-      border-right: 1px solid #B7B7B7;
-      border-bottom: 1px solid #B7B7B7;
-      padding: 18px 0px 18px 20px;
-    }
-  /** Controls code output **/
-
-  d-article pre {
-     margin-top: 0px;
-      color: #333333;
-      background-color: #FAFAFA;
-      font-size: 0.8em;
-      border: 1px solid #ccc;
-      overflow-x: scroll !important;
-      padding:  10px 10px 10px 18px;
-      border-radius: 5px;
-    }
-
-  /** Controls inline code  **/
-
-  p code {
-    background-color: #E8E8E8;
-    border-radius: 3px;
-    font-size: 0.8em;
-    font-family: 'Monaco', 'PT Mono', monospace;
-    overflow-x: scroll !important;
-    margin-bottom: 20px;
-    color: #BF2727;
-  }
-
-  li code {
-    background-color: #E8E8E8;
-    border-radius: 3px;
-    font-size: 0.8em;
-    font-family: 'Monaco', 'PT Mono', monospace;
-    overflow-x: scroll !important;
-    margin-bottom: 20px;
-    color: #BF2727;
-  }
-
-  d-article aside code {
-    background-color: #E8E8E8;
-    border-radius: 3px;
-    font-family: 'Monaco', 'PT Mono', monospace;
-    color: #BF2727;
-  }
-
-  /********************************/
-  /* controls NAV BAR and HEADERS*/
-  /********************************/
-
-  .nav-dropdown-content .nav-dropdown-header {
-    text-transform: uppercase;
-    color: #686868;
-  }
-
-  .nav-dropdown-content a {
-    font-family: 'Work Sans'
-  }
-  .nav-dropdown .nav-dropbtn {
-    color: #FEFEFE;
-    font-weight: 400;
-  }
-
-  .distill-site-header .logo img {
-    margin-top: 10px;
-    max-height: 30px;
-    margin-bottom: auto;
-  }
-
-  .distill-site-nav {
-      color: #FEFEFE;
-      background-color: #113858;
-      font-size: 0.95em;
-      font-weight: 400;
-      min-width: 165px;
-      position: absolute;
-      font-family: 'Karla';
-      letter-spacing: .1em;
-      text-transform: uppercase;
-  }
-
-  img {
-    margin: 5px;
-  }
-
-  /** LIGHTBOX MARKUP **/
-  .thumbnail {
-    max-width: 100%;
-    position: relative;
-  }
-
-  /** DETAILS fold down**/
-
-  details {
-    background-color: #f6f6f6;
-    cursor: pointer;
-    color: #2d2d2d;
-    margin-bottom:1vh;
-    padding: 1em;
-    border: none;
-    text-align: left;
-    outline: none;
-  }
-
-  .active, details:hover {
-    transition: max-height 0.2s ease-out;
-    outline: none;
-
-    /* background-color: #acc2c2; */
-  }
-
-  details {
-    display: flex;
-    justify-content: space-between;
-    align-content: center;
-    border-radius: 4px;
-    outline: none;
-  }
-
-  details.active {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    outline: none;
-  }
-
-  summary::-webkit-details-marker {
-    display: none;
-    outline: none;
-  }
-
-  summary:focus {
-    outline: none;
-  }
-
-  summary::after {
-    float: right;
-    font-family: "Font Awesome 5 Free";
-    content: "\f0fe";
-  }
-
-  details[open] summary::after {
-    float: right;
-    font-family: "Font Awesome 5 Free";
-    content: "\f146";
-  }
-
-  /********************************/
-  /* controls downloadthis  */
-  /********************************/
-
-  button.btn.btn-default {
-    font-size: 0.8em;
-    font-family: "PT Sans";
-    border-color: #B22271;
-    border-width: medium;
-    margin-bottom: 15px;
-  }
-
-  /********************************/
-  /* controls reactable  */
-  /********************************/
-
-  div.rt-text-content {
-    font-size: 1.2em;
-  }
-
-  /********************************/
-  /* next and previous buttons at the end of the article */
-  /********************************/
-
-  .btnnav {
-    border: none;
-    background-color: #113858;
-    color: #f2f2f2;
-    padding: 14px 28px;
-    font-size: 16px;
-    cursor: pointer;
-    display: inline-block;
-  }
-
-  .button_round {border-radius: 12px;}
-
-  </style>
-  <!--/radix_placeholder_site_in_header-->
-
-  <link rel="stylesheet" href="assets/styles.css" type="text/css"/>
-
+    </style>
+<link rel="stylesheet" href="assets/styles.css">
 </head>
+<body class="nav-sidebar floating nav-fixed">
 
-<body>
-
-<!--radix_placeholder_front_matter-->
-
-<script id="distill-front-matter" type="text/json">
-{"title":"Data Availability","description":"On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.","authors":[]}
-</script>
-
-<!--/radix_placeholder_front_matter-->
-<!--radix_placeholder_navigation_before_body-->
-<header class="header header--fixed" role="banner">
-<nav class="distill-site-nav distill-site-header">
-<div class="nav-left">
-<a class="logo" href="index.html">
-<img src="assets/icon.png" alt="Logo"/>
-</a>
-<a href="index.html" class="title"></a>
-</div>
-<div class="nav-right">
-<a href="index.html">
-<i class="fa fa-home" aria-hidden="true"></i>
-</a>
-<div class="nav-dropdown">
-<button class="nav-dropbtn">
-A. Processing
- 
-<span class="down-arrow">&#x25BE;</span>
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="navbar navbar-expand-lg navbar-dark "><div class="navbar-container container-fluid">
+      <a class="navbar-brand" href="./index.html">
+    <img src="./assets/icon.png" alt=""></a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
 </button>
-<div class="nav-dropdown-content">
-<span class="nav-dropdown-header">Workflows</span>
-<hr/>
-<a href="dada2.html">1. DADA2</a>
-<a href="data-prep.html">2. Data Set Prep</a>
-<a href="filtering.html">3. Filtering</a>
-</div>
-</div>
-<div class="nav-dropdown">
-<button class="nav-dropbtn">
-B. Diversity
- 
-<span class="down-arrow">&#x25BE;</span>
-</button>
-<div class="nav-dropdown-content">
-<span class="nav-dropdown-header">Workflows</span>
-<hr/>
-<a href="taxa.html">4. Taxonomic</a>
-<a href="alpha.html">5. Alpha Diversity</a>
-<a href="beta.html">6. Beta Diversity</a>
-<a href="da.html">7. DA ASVs &amp; Taxa</a>
-<a href="metadata.html">8. Metadata</a>
-</div>
-</div>
-<a href="data-availability.html">Data</a>
-<a href="som.html">SOM</a>
-<a href="https://github.com/sweltr/high-temp/">
-<i class="fa fa-github fa-lg" aria-hidden="true"></i>
-</a>
-<a href="about.html">
-<i class="fa fa-question" aria-hidden="true"></i>
-</a>
-<a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
-</div>
-</nav>
-</header>
-<!--/radix_placeholder_navigation_before_body-->
-<!--radix_placeholder_site_before_body-->
-<!--/radix_placeholder_site_before_body-->
-
-<div class="d-title">
-<h1>Data Availability</h1>
-<!--radix_placeholder_categories-->
-<!--/radix_placeholder_categories-->
-<p><p>On this page, you can find information on obtaining sequence data,
-data products, and processing scripts. Code is embedded in indivudual
-workflows on the website or can be accessed through the project GitHub
-repo.</p></p>
-</div>
-
-
-<div class="d-article">
-<div class="d-contents d-contents-float">
-<nav class="l-text toc figcaption" id="TOC">
-<h3>Contents</h3>
-<ul>
-<li><a href="#archived-sequence-data">Archived Sequence Data</a></li>
-<li><a href="#pipeline-data">Pipeline Data</a></li>
-<li><a href="#submitting-sequence-data">Submitting Sequence
-Data</a></li>
-<li><a href="#source-code">Source Code</a></li>
-<li><a href="#last-updated-on">Last updated on</a></li>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="./index.html"><i class="bi bi-home" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-a.-processing" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Processing</a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-a.-processing">
+<li class="dropdown-header">Workflows</li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="./dada2.html">
+ <span class="dropdown-text">1. DADA2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./data-prep.html">
+ <span class="dropdown-text">2. Data Set Prep</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./filtering.html">
+ <span class="dropdown-text">3. Filtering</span></a>
+  </li>  
+    </ul>
+</li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-b.-diversity" role="button" data-bs-toggle="dropdown" aria-expanded="false">B. Diversity</a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-b.-diversity">
+<li class="dropdown-header">Workflows</li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+    <a class="dropdown-item" href="./taxa.html">
+ <span class="dropdown-text">4. Taxonomic</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./alpha.html">
+ <span class="dropdown-text">5. Alpha Diversity</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./beta.html">
+ <span class="dropdown-text">6. Beta Diversity</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./da.html">
+ <span class="dropdown-text">7. DA ASVs &amp; Taxa</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./metadata.html">
+ <span class="dropdown-text">8. Metadata</span></a>
+  </li>  
+    </ul>
+</li>
 </ul>
-</nav>
-</div>
-<div class="layout-chunk" data-layout="l-body">
+<ul class="navbar-nav navbar-nav-scroll ms-auto">
+<li class="nav-item">
+    <a class="nav-link active" href="./data-availability.html" aria-current="page">DATA</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./som.html">SOM</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/sweltr/high-temp/"><i class="bi bi-github" role="img" aria-label="Agua Salud GitHub">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="./about.html"><i class="bi bi-question" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+<div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav><nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }"><div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Data Availability</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><header id="title-block-header" class="quarto-title-block default page-columns page-full"><div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <div class="quarto-title-block"><div><h1 class="title d-none d-lg-block">Data Availability</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
+                  <div>
+        <div class="description">
+          <p>On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.</p>
+        </div>
+      </div>
+                </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
 
+      
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto"><div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">A. Processing</a>
+      <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dada2.html" class="sidebar-item-text sidebar-link">1. DADA2 Workflow</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./data-prep.html" class="sidebar-item-text sidebar-link">2. Data Set Preparation</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./filtering.html" class="sidebar-item-text sidebar-link">3. Filtering</a>
+  </div>
+</li>
+    </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">B. Diversity</a>
+      <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./taxa.html" class="sidebar-item-text sidebar-link">4. Taxonomic Diversity</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./alpha.html" class="sidebar-item-text sidebar-link">5. Alpha Diversity Estimates</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./beta.html" class="sidebar-item-text sidebar-link">6. Beta Diversity &amp; Dispersion Estimates</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./da.html" class="sidebar-item-text sidebar-link">7. Differentially Abundant ASVs &amp; Taxa</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./metadata.html" class="sidebar-item-text sidebar-link">8. Metadata Analysis</a>
+  </div>
+</li>
+    </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">More</a>
+      <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./data-availability.html" class="sidebar-item-text sidebar-link active">Data Availability</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./som.html" class="sidebar-item-text sidebar-link">Electronic Supplementary Material</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./about.html" class="sidebar-item-text sidebar-link">Website Contruction</a>
+  </div>
+</li>
+    </ul>
+</li>
+    </ul>
 </div>
-<h2 id="archived-sequence-data">Archived Sequence Data</h2>
-<p>Raw <strong>16S rRNA</strong> data for each sample (before removing
-primers) is available on figshare at <a
-href="https://doi.org/10.25573/data.14686665">doi:10.25573/data.14686665</a>.
-Raw <strong>ITS</strong> data for each sample (before removing primers)
-is available on figshare at <a
-href="https://doi.org/10.25573/data.14686755">doi:10.25573/data.14686755</a>.</p>
-<p>All trimmed sequence data (primers removed) is deposited at the
-European Nucleotide Archive (ENA) under the study accession number <a
-href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074
-(ERP129199)</a>. The trimmed <strong>16S rRNA</strong> data (primers
-removed) are deposited under sample accession numbers <a
-href="https://www.ebi.ac.uk/ena/browser/view/ERS6485270-ERS6485284">ERS6485270-ERS6485284</a>.
-The trimmed <strong>ITS</strong> data (primers removed) are deposited
-under sample accession numbers <a
-href="https://www.ebi.ac.uk/ena/browser/view/ERS6485285-ERS6485299">ERS6485285-ERS6485299</a>.</p>
-<h2 id="pipeline-data">Pipeline Data</h2>
-<p>Data for each individual pipeline are available through the
-Smithsonian figshare under a single collection at <a
-href="https://doi.org/10.25573/data.c.5667571.v2">doi:10.25573/data.c.5667571.v2</a>.
-In addition, data from each pipeline are available for download from
-figshare using the links at the bottom of each workflow page (where
-applicable).</p>
-<details>
-<summary>
+</nav><!-- margin-sidebar --><div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc"><h2 id="toc-title">On this page</h2>
+   
+  <ul>
+<li><a href="#archived-sequence-data" id="toc-archived-sequence-data" class="nav-link active" data-scroll-target="#archived-sequence-data">Archived Sequence Data</a></li>
+  <li><a href="#pipeline-data" id="toc-pipeline-data" class="nav-link" data-scroll-target="#pipeline-data">Pipeline Data</a></li>
+  <li><a href="#submitting-sequence-data" id="toc-submitting-sequence-data" class="nav-link" data-scroll-target="#submitting-sequence-data">Submitting Sequence Data</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/sweltr/high-temp/edit/main/data-availability.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/sweltr/high-temp/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content"><section id="archived-sequence-data" class="level2"><h2 class="anchored" data-anchor-id="archived-sequence-data">Archived Sequence Data</h2>
+<p>Raw <strong>16S rRNA</strong> data for each sample (before removing primers) is available on figshare at <a href="https://doi.org/10.25573/data.14686665">doi:10.25573/data.14686665</a>. Raw <strong>ITS</strong> data for each sample (before removing primers) is available on figshare at <a href="https://doi.org/10.25573/data.14686755">doi:10.25573/data.14686755</a>.</p>
+<p>All trimmed sequence data (primers removed) is deposited at the European Nucleotide Archive (ENA) under the study accession number <a href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074 (ERP129199)</a>. The trimmed <strong>16S rRNA</strong> data (primers removed) are deposited under sample accession numbers <a href="https://www.ebi.ac.uk/ena/browser/view/ERS6485270-ERS6485284">ERS6485270-ERS6485284</a>. The trimmed <strong>ITS</strong> data (primers removed) are deposited under sample accession numbers <a href="https://www.ebi.ac.uk/ena/browser/view/ERS6485285-ERS6485299">ERS6485285-ERS6485299</a>.</p>
+</section><section id="pipeline-data" class="level2"><h2 class="anchored" data-anchor-id="pipeline-data">Pipeline Data</h2>
+<p>Data for each individual pipeline are available through the Smithsonian figshare under a single collection at <a href="https://doi.org/10.25573/data.c.5667571.v2">doi:10.25573/data.c.5667571.v2</a>. In addition, data from each pipeline are available for download from figshare using the links at the bottom of each workflow page (where applicable).</p>
+<p></p>
+<div class="callout-note callout callout-style-default no-icon callout-captioned">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
 <strong>Show</strong> descriptions and DOI’s for each workflow
-</summary>
-<p></br></p>
-<p>Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data
-files for the high-temp SWELTR study. Smithsonian Tropical Research
-Institute. Dataset. <a href="https://doi.org/10.25573/data.14686665.v1"
-class="uri">https://doi.org/10.25573/data.14686665.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files
-for the high-temp SWELTR study. Smithsonian Tropical Research Institute.
-Dataset. <a href="https://doi.org/10.25573/data.14686755.v1"
-class="uri">https://doi.org/10.25573/data.14686755.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 1. DADA2 Workflow (16S rRNA/ITS)
-Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.14687184.v1"
-class="uri">https://doi.org/10.25573/data.14687184.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 2. Data Preparation (16S
-rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.14690739.v1"
-class="uri">https://doi.org/10.25573/data.14690739.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 3. Filtering: (16S rRNA/ITS)
-Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.14701440.v1"
-class="uri">https://doi.org/10.25573/data.14701440.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 4. Taxonomic: (16S rRNA/ITS)
-Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.16826737.v1"
-class="uri">https://doi.org/10.25573/data.16826737.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 5. Aplha diversity (16S
-rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.16826779.v1"
-class="uri">https://doi.org/10.25573/data.16826779.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 6. Beta diversity (16S rRNA/ITS)
-Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.16828063.v1"
-class="uri">https://doi.org/10.25573/data.16828063.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 7. Differentially Abundant ASVs
-&amp; Taxa (16S rRNA/ITS) Output. Smithsonian Tropical Research
-Institute. Dataset. <a href="https://doi.org/10.25573/data.16828249.v1"
-class="uri">https://doi.org/10.25573/data.16828249.v1</a></p>
-<p>Scott, Jarrod (2022): (high-temp) No 8. Metadata Analysis (16S
-rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a
-href="https://doi.org/10.25573/data.16828294.v1"
-class="uri">https://doi.org/10.25573/data.16828294.v1</a></p>
-</details>
-<h2 id="submitting-sequence-data">Submitting Sequence Data</h2>
-<p>We submitted out data to the <a
-href="https://www.ebi.ac.uk/ena">European Nucleotide Archive (ENA)</a>.
-The ENA does not like RAW data and prefers to have primers removed. So
-we submitted the trimmed Fastq files to the ENA. You can find these data
-under the study accession number <strong>PRJEB45074
-(ERP129199)</strong>. The RAW files on our figshare site (see
-above).</p>
-<p>To submit to the ENA you need two data tables (plus your sequence
-data). One file describes the samples and the other file describes the
-sequencing data.</p>
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.14686665.v1">https://doi.org/10.25573/data.14686665.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.14686755.v1">https://doi.org/10.25573/data.14686755.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 1. <a href="https://sweltr.github.io/high-temp/dada2.html">DADA2 Workflow (16S rRNA/ITS)</a> Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.14687184.v1">https://doi.org/10.25573/data.14687184.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 2. <a href="https://sweltr.github.io/high-temp/data-prep.html">Data Preparation</a> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.14690739.v1">https://doi.org/10.25573/data.14690739.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 3. <a href="https://sweltr.github.io/high-temp/filtering.html">Filtering</a>: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.14701440.v1">https://doi.org/10.25573/data.14701440.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 4. <a href="https://sweltr.github.io/high-temp/taxa.html">Taxonomic diversity</a>: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.16826737.v1">https://doi.org/10.25573/data.16826737.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 5. <a href="https://sweltr.github.io/high-temp/alpha.html">Aplha diversity</a> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.16826779.v1">https://doi.org/10.25573/data.16826779.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 6. <a href="https://sweltr.github.io/high-temp/beta.html">Beta diversity</a> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.16828063.v1">https://doi.org/10.25573/data.16828063.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 7. <a href="https://sweltr.github.io/high-temp/da.html">Differentially Abundant ASVs &amp; Taxa</a> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.16828249.v1">https://doi.org/10.25573/data.16828249.v1</a></p>
+<p>Scott, Jarrod (2022): (high-temp) No 8. <a href="https://sweltr.github.io/high-temp/metadata.html">Metadata Analysis</a> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <a href="https://doi.org/10.25573/data.16828294.v1">https://doi.org/10.25573/data.16828294.v1</a></p>
+</div>
+</div>
+</div>
+</section><section id="submitting-sequence-data" class="level2"><h2 class="anchored" data-anchor-id="submitting-sequence-data">Submitting Sequence Data</h2>
+<p>We submitted out data to the <a href="https://www.ebi.ac.uk/ena">European Nucleotide Archive (ENA)</a>. The ENA does not like RAW data and prefers to have primers removed. So we submitted the trimmed Fastq files to the ENA. You can find these data under the study accession number <strong>PRJEB45074 (ERP129199)</strong>. The RAW files on our figshare site (see above).</p>
+<p>To submit to the ENA you need two data tables (plus your sequence data). One file describes the samples and the other file describes the sequencing data.</p>
 <p>You can download our submission data tables here:</p>
 <ul>
-<li><a
-href="include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv">Sample
-submission form</a></li>
-<li><a
-href="include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv">FASTq
-submission form</a></li>
+<li><a href="include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv">Sample submission form</a></li>
+<li><a href="include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv">FASTq submission form</a></li>
 </ul>
-<p>Note, these forms are study specific, so please use these as guides
-only.</p>
-<h3 id="instructions-for-submitting-to-the-ena">Instructions for
-Submitting to the ENA</h3>
-<p>Even though I have done this dozens of times, the process of
-submitting sequence data to read archives still baffles me.</p>
-<blockquote>
-<p>Note: I submit data with primers, barcodes, etc
-<strong>removed</strong></p>
+<p>Note, these forms are study specific, so please use these as guides only.</p>
+<section id="instructions-for-submitting-to-the-ena" class="level3"><h3 class="anchored" data-anchor-id="instructions-for-submitting-to-the-ena">Instructions for Submitting to the ENA</h3>
+<p>Even though I have done this dozens of times, the process of submitting sequence data to read archives still baffles me.</p>
+<blockquote class="blockquote">
+<p>Note: I submit data with primers, barcodes, etc <strong>removed</strong></p>
 </blockquote>
-<h4 id="register-project-upload-sample-data">Register Project &amp;
-Upload Sample Data</h4>
+<section id="register-project-upload-sample-data" class="level4"><h4 class="anchored" data-anchor-id="register-project-upload-sample-data">Register Project &amp; Upload Sample Data</h4>
 <ol type="1">
-<li>go to <a href="https://www.ebi.ac.uk/ena/submit"
-class="uri">https://www.ebi.ac.uk/ena/submit</a> and select
-<strong>Submit to ENA Interactively</strong>.</li>
+<li>go to https://www.ebi.ac.uk/ena/submit and select <strong>Submit to ENA Interactively</strong>.</li>
 <li>Login or Register.</li>
-<li>Go to <strong>New Submission</strong> tab and, if this is a new
-project, select <strong>Register study (project)</strong>.</li>
+<li>Go to <strong>New Submission</strong> tab and, if this is a new project, select <strong>Register study (project)</strong>.</li>
 <li>Hit Next</li>
 <li>Enter details and hit <strong>Submit</strong>.</li>
-<li>Next, <a href="https://www.ebi.ac.uk/ena/submit/checklists">Select
-Checklist</a>. This will be specific to the type of samples you have and
-basically will create a template so you can add your sample metadata.
-For this study I chose <strong>GSC MIxS soil</strong>, checklist
-accession number <a
-href="https://www.ebi.ac.uk/ena/data/view/ERC000022">ERC000022</a></li>
+<li>Next, <a href="https://www.ebi.ac.uk/ena/submit/checklists">Select Checklist</a>. This will be specific to the type of samples you have and basically will create a template so you can add your sample metadata. For this study I chose <strong>GSC MIxS soil</strong>, checklist accession number <a href="https://www.ebi.ac.uk/ena/data/view/ERC000022">ERC000022</a>
+</li>
 <li>Next</li>
-<li>Now go through and select/deselect fields as needed. Note, some
-fields are mandatory.</li>
-<li>Once finished, hit <strong>Next</strong> to fill in any details that
-apply to <em>All</em> samples and the download the template.
-Alternatively, you can download the template and fill in the data by
-hand.</li>
+<li>Now go through and select/deselect fields as needed. Note, some fields are mandatory.</li>
+<li>Once finished, hit <strong>Next</strong> to fill in any details that apply to <em>All</em> samples and the download the template. Alternatively, you can download the template and fill in the data by hand.</li>
 <li>Upload the sample sheet.</li>
-<li>Once everything looks good and uploaded, click the <strong>New
-Submission</strong> tab.</li>
-</ol>
-<h4 id="upload-sequence-data">Upload Sequence Data</h4>
+<li>Once everything looks good and uploaded, click the <strong>New Submission</strong> tab.</li>
+</ol></section><section id="upload-sequence-data" class="level4"><h4 class="anchored" data-anchor-id="upload-sequence-data">Upload Sequence Data</h4>
 <ol start="12" type="1">
-<li>Hit <strong>Skip</strong> and then select <strong>Two Fastq files
-(Paired)</strong>, Download the template and fill in the details.</li>
-<li>Next, make sure all the trimmed fastq files are gzipped
-<strong>.gz</strong> (these are what you submit).</li>
-<li>Navigate to the directory with the trimmed, compressed fastq files
-and run:</li>
+<li>Hit <strong>Skip</strong> and then select <strong>Two Fastq files (Paired)</strong>, Download the template and fill in the details.</li>
+<li>Next, make sure all the trimmed fastq files are gzipped <strong>.gz</strong> (these are what you submit).</li>
+<li>Navigate to the directory with the trimmed, compressed fastq files and run:</li>
 </ol>
 <pre><code>md5sum *.gz</code></pre>
 <ol start="16" type="1">
-<li>Add the checksums and file names to the fastq submission form. You
-can read more about <a
-href="https://ena-docs.readthedocs.io/en/latest/submit/fileprep/preparation.html">Preparing
-A File For Upload here</a>.</li>
+<li>Add the checksums and file names to the fastq submission form. You can read more about <a href="https://ena-docs.readthedocs.io/en/latest/submit/fileprep/preparation.html">Preparing A File For Upload here</a>.</li>
 </ol>
 <p><strong>STOP</strong></p>
-<p>Before uploading the sheet, you first must upload the fastq files.
-Documentation for Uploading Files To ENA can be found <a
-href="https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html">here</a>.</p>
+<p>Before uploading the sheet, you first must upload the fastq files. Documentation for Uploading Files To ENA can be found <a href="https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html">here</a>.</p>
 <ol start="17" type="1">
 <li>In the same directory, run:</li>
 </ol>
 <pre><code>lftp webin2.ebi.ac.uk -u Webin-XXXXX</code></pre>
-<p>where <code>Webin-XXXXX</code> is your user name. Enter your
-password</p>
+<p>where <code>Webin-XXXXX</code> is your user name. Enter your password</p>
 <p>at the prompt run:</p>
 <pre><code>mput *.gz
 # when finished
 bye</code></pre>
-<p>The files should begin uploading. Depending on internet speed and/or
-file sizes/numbers, this could take a while.</p>
+<p>The files should begin uploading. Depending on internet speed and/or file sizes/numbers, this could take a while.</p>
 <ol start="18" type="1">
-<li>Once the upload is finished, upload and submit the fastq submission
-form. If the <code>sample alias</code> field dows not autofill you may
-need to upload the sample form again.</li>
+<li>Once the upload is finished, upload and submit the fastq submission form. If the <code>sample alias</code> field dows not autofill you may need to upload the sample form again.</li>
 </ol>
-<h2 class="appendix" id="source-code">Source Code</h2>
-<p>The source code for this page can be accessed on GitHub by <a
-href="https://github.com/sweltr/high-temp/blob/master/data-availability.Rmd">clicking
-this link</a>.</p>
-<h2 class="appendix" id="last-updated-on">Last updated on</h2>
-<div class="layout-chunk" data-layout="l-body">
-<pre><code>[1] &quot;2022-06-02 13:52:04 EST&quot;</code></pre>
-</div>
-<!--radix_placeholder_article_footer-->
-<!--/radix_placeholder_article_footer-->
-</div>
+<div class="cell">
 
-<div class="d-appendix">
+</div>
+</section></section></section><div id="quarto-appendix" class="default"><section id="source-code" class="level3 appendix"><h2 class="quarto-appendix-heading">Source Code</h2><div class="quarto-appendix-contents">
+<p>The source code for this page can be accessed on GitHub <svg aria-hidden="true" role="img" viewbox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg> by <a href="https://github.com/sweltr/high-temp/blob/main/data-availability.qmd">clicking this link</a>.</p>
+</div></section><section id="last-updated-on" class="level3 appendix"><h2 class="quarto-appendix-heading">Last updated on</h2><div class="quarto-appendix-contents">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2022-06-16 18:36:56 EST"</code></pre>
+</div>
 </div>
 
 
-<!--radix_placeholder_site_after_body-->
-<!--/radix_placeholder_site_after_body-->
-<!--radix_placeholder_appendices-->
-<div class="appendix-bottom">
-<h3 id="references">References</h3>
-<div id="references-listing"></div>
-<h3 id="updates-and-corrections">Corrections</h3>
-<p>If you see mistakes or want to suggest changes, please <a href="https://github.com/sweltr/high-temp/issues/new">create an issue</a> on the source repository.</p>
-<h3 id="reuse">Reuse</h3>
-<p>Text and figures are licensed under Creative Commons Attribution <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Source code is available at <a href="https://github.com/sweltr/high-temp/">https://github.com/sweltr/high-temp/</a>, unless otherwise noted. The figures that have been reused from other sources don't fall under this license and can be recognized by a note in their caption: "Figure from ...".</p>
-</div>
-<!--/radix_placeholder_appendices-->
-<!--radix_placeholder_navigation_after_body-->
-<div class="distill-site-nav distill-site-footer">
-<p>© Copyright 2022 metacrobe and The SWELTR Project.</p>
-<p>Site constructed using <a
-href="https://rstudio.github.io/distill/">Distill for R
-Markdown</a>.</p>
-</div>
-<!--/radix_placeholder_navigation_after_body-->
+<!-- -->
+
+</div></section></div></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./metadata.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">8. Metadata Analysis</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./som.html" class="pagination-link">
+        <span class="nav-page-text">Electronic Supplementary Material</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb5" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Data Availability"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> |</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">  On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Archived Sequence Data</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>Raw **16S rRNA** data for each sample (before removing primers) is available on figshare at [doi:10.25573/data.14686665](https://doi.org/10.25573/data.14686665). Raw **ITS** data for each sample (before removing primers) is available on figshare at <span class="co">[</span><span class="ot">doi:10.25573/data.14686755</span><span class="co">](https://doi.org/10.25573/data.14686755)</span>. </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>All trimmed sequence data (primers removed) is deposited at the European Nucleotide Archive (ENA) under the study accession number <span class="co">[</span><span class="ot">PRJEB45074 (ERP129199)</span><span class="co">](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074)</span>. The trimmed **16S rRNA** data (primers removed) are deposited under sample accession numbers [ERS6485270-ERS6485284](https://www.ebi.ac.uk/ena/browser/view/ERS6485270-ERS6485284). The trimmed **ITS** data (primers removed) are deposited under sample accession numbers <span class="co">[</span><span class="ot">ERS6485285-ERS6485299</span><span class="co">](https://www.ebi.ac.uk/ena/browser/view/ERS6485285-ERS6485299)</span>.</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pipeline Data</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>Data for each individual pipeline are available through the Smithsonian figshare under a single collection at <span class="co">[</span><span class="ot">doi:10.25573/data.c.5667571.v2</span><span class="co">](https://doi.org/10.25573/data.c.5667571.v2)</span>. In addition, data from each pipeline are available for download from figshare using the links at the bottom of each workflow page (where applicable).</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;/br&gt;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>:::{.callout-note collapse="true" icon=false}</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## **Show** descriptions and DOI's for each workflow</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.14686665.v1</span><span class="co">](https://doi.org/10.25573/data.14686665.v1)</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.14686755.v1</span><span class="co">](https://doi.org/10.25573/data.14686755.v1)</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 1. <span class="co">[</span><span class="ot">DADA2 Workflow (16S rRNA/ITS)</span><span class="co">](https://sweltr.github.io/high-temp/dada2.html)</span> Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.14687184.v1</span><span class="co">](https://doi.org/10.25573/data.14687184.v1)</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 2. <span class="co">[</span><span class="ot">Data Preparation</span><span class="co">](https://sweltr.github.io/high-temp/data-prep.html)</span> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.14690739.v1</span><span class="co">](https://doi.org/10.25573/data.14690739.v1)</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 3. <span class="co">[</span><span class="ot">Filtering</span><span class="co">](https://sweltr.github.io/high-temp/filtering.html)</span>: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.14701440.v1</span><span class="co">](https://doi.org/10.25573/data.14701440.v1)</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 4. <span class="co">[</span><span class="ot">Taxonomic diversity</span><span class="co">](https://sweltr.github.io/high-temp/taxa.html)</span>: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.16826737.v1</span><span class="co">](https://doi.org/10.25573/data.16826737.v1)</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 5. <span class="co">[</span><span class="ot">Aplha diversity</span><span class="co">](https://sweltr.github.io/high-temp/alpha.html)</span> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.16826779.v1</span><span class="co">](https://doi.org/10.25573/data.16826779.v1)</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 6. <span class="co">[</span><span class="ot">Beta diversity</span><span class="co">](https://sweltr.github.io/high-temp/beta.html)</span> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.16828063.v1</span><span class="co">](https://doi.org/10.25573/data.16828063.v1)</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 7. <span class="co">[</span><span class="ot">Differentially Abundant ASVs &amp; Taxa</span><span class="co">](https://sweltr.github.io/high-temp/da.html)</span> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.16828249.v1</span><span class="co">](https://doi.org/10.25573/data.16828249.v1)</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>Scott, Jarrod (2022): (high-temp) No 8. <span class="co">[</span><span class="ot">Metadata Analysis</span><span class="co">](https://sweltr.github.io/high-temp/metadata.html)</span> (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. <span class="co">[</span><span class="ot">https://doi.org/10.25573/data.16828294.v1</span><span class="co">](https://doi.org/10.25573/data.16828294.v1)</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Submitting Sequence Data</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>We submitted out data to the <span class="co">[</span><span class="ot">European Nucleotide Archive (ENA)</span><span class="co">](https://www.ebi.ac.uk/ena)</span>. The ENA does not like RAW data and prefers to have primers removed. So we submitted the trimmed Fastq files to the ENA. You can find these data under the study accession number **PRJEB45074 (ERP129199)**. The RAW files on our figshare site (see above).</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>To submit to the ENA you need two data tables (plus your sequence data). One file describes the samples and the other file describes the sequencing data.</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>You can download our submission data tables here:</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="co">[</span><span class="ot">Sample submission form</span><span class="co">](include/data-availability/ENA_Sample_SUBMISSION_SWELTR-high-temp.tsv)</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span><span class="co">[</span><span class="ot">FASTq submission form</span><span class="co">](include/data-availability/ENA_PAIRED_FASTQ_SUBMISSION_SWELTR-high-temp.tsv)</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>Note, these forms are study specific, so please use these as guides only.</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="fu">### Instructions for Submitting to the ENA</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>Even though I have done this dozens of times, the process of submitting sequence data to read archives still baffles me. </span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Note: I submit data with primers, barcodes, etc **removed**</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Register Project &amp; Upload Sample Data</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>1) go to https://www.ebi.ac.uk/ena/submit and select **Submit to ENA Interactively**.</span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>2) Login or Register.</span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>3) Go to **New Submission** tab and, if this is a new project, select **Register study (project)**.</span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>4) Hit Next</span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>5) Enter details and hit **Submit**.</span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>6) Next, <span class="co">[</span><span class="ot">Select Checklist</span><span class="co">](https://www.ebi.ac.uk/ena/submit/checklists)</span>. This will be specific to the type of samples you have and basically will create a template so you can add your sample metadata. For this study I chose **GSC MIxS soil**, checklist accession number <span class="co">[</span><span class="ot">ERC000022</span><span class="co">](https://www.ebi.ac.uk/ena/data/view/ERC000022)</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>7) Next</span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>8) Now go through and select/deselect fields as needed. Note, some fields are mandatory.</span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>9) Once finished, hit **Next** to fill in any details that apply to *All* samples and the download the template. Alternatively, you can download the template and fill in the data by hand.</span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>10) Upload the sample sheet. </span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>11) Once everything looks good and uploaded, click the **New Submission** tab.</span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Upload Sequence Data</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>12) Hit **Skip** and then select **Two Fastq files (Paired)**, Download the template and fill in the details.</span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>13) Next, make sure all the trimmed fastq files are gzipped **.gz**  (these are what you submit). </span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>14) Navigate to the directory with  the trimmed, compressed fastq files and run:</span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a><span class="in">md5sum *.gz</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>16) Add the checksums and file names to the fastq submission form. You can read more about <span class="co">[</span><span class="ot">Preparing A File For Upload here</span><span class="co">](https://ena-docs.readthedocs.io/en/latest/submit/fileprep/preparation.html)</span>.</span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>**STOP**</span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>Before uploading the sheet, you first must upload the fastq files. Documentation for Uploading Files To ENA can be found <span class="co">[</span><span class="ot">here</span><span class="co">](https://ena-docs.readthedocs.io/en/latest/submit/fileprep/upload.html)</span>. </span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>17) In the same directory, run:</span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a><span class="in">lftp webin2.ebi.ac.uk -u Webin-XXXXX</span></span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>where <span class="in">`Webin-XXXXX`</span> is your user name. Enter your password</span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>at the prompt run:</span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a><span class="in">mput *.gz</span></span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a><span class="in"># when finished</span></span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a><span class="in">bye</span></span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>The files should begin uploading. Depending on internet speed and/or file sizes/numbers, this could take a while. </span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>18) Once the upload is finished, upload and submit the fastq submission form. If the <span class="in">`sample alias`</span> field dows not autofill you may need to upload the sample form again. </span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a><span class="co">#| message: false </span></span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: hide</span></span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: true</span></span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a><span class="fu">remove</span>(<span class="at">list =</span> <span class="fu">ls</span>())</span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a><span class="do">### COmmon formatting scripts</span></span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a><span class="do">### </span><span class="al">NOTE</span><span class="do">: captioner.R must be read BEFORE captions_XYZ.R</span></span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">file.path</span>(<span class="st">"assets"</span>, <span class="st">"functions.R"</span>))</span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a><span class="fu">###  Source Code {.appendix}</span></span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>The source code for this page can be accessed on GitHub <span class="in">`r fa(name = "github")`</span> by <span class="co">[</span><span class="ot">clicking this link</span><span class="co">]</span>(<span class="in">`r source_code()`</span>). </span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a><span class="fu">### Last updated on {.appendix}</span></span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a><span class="in">```{r,echo=FALSE, eval=TRUE}</span></span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.time</span>()</span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+      <div class="nav-footer-center">© Copyright 2022 <a href="https://metacrobe.github.io/">metacrobe</a> &amp; The SWELTR Project. Site constructed using <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
 
 
-</body>
-
-</html>
+</body></html>
