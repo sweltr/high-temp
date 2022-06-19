@@ -105,7 +105,7 @@ header-includes:
 This document contains Supplementary methods, results, tables, and figures for the manuscript. Large tables are provided as additional **Supplementary Dataset** files. See \hyperref[appendix-1]{\color{blue}Appendix 1} for more details. 
 
 ::: {.callout-note appearance="minimal"}
-The source code for this PDF---including all figures, tables, and data sets---can be found here: [https://github.com/sweltr/high-temp/blob/main/ESM/](https://github.com/sweltr/high-temp/blob/main/ESM/). An HTML version of this file, including all Supplementary Datasets, can be found on the project website  at [https://sweltr.github.io/high-temp/som.html](https://sweltr.github.io/high-temp/som.html).  
+The source code for this PDF---including all figures, tables, and data sets---can be found here: [https://github.com/sweltr/high-temp/tree/main/paper/ESM](https://github.com/sweltr/high-temp/tree/main/paper/ESM). An HTML version of this file, including all Supplementary Datasets, can be found on the project website  at [https://sweltr.github.io/high-temp/som.html](https://sweltr.github.io/high-temp/som.html).  
 :::
 
 # Data & Code Availability
