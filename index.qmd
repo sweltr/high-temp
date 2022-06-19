@@ -1,64 +1,52 @@
 ---
-title: "The S.W.E.L.T.R Microbial Cookbook"
+title: "The S.W.E.L.T.R. Microbial Cookbook"
 description: |
   **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest
 author:
   - name: "Andrew Nottingham"
-#    url: https://github.com/rich-iannone
     affiliation: University of Edinburgh
-    affiliation_url: https://www.ed.ac.uk/
+    affiliation-url: https://www.ed.ac.uk/
   - name: "Jarrod J Scott"
-    orcid_id: 0000-0001-9863-1318
+    orcid: 0000-0001-9863-1318
     url: https://metacrobe.github.io/
     affiliation: Smithsonian Tropical Research Institute
-    affiliation_url: https://stri.si.edu/
+    affiliation-url: https://stri.si.edu/
   - name: "Kristin Saltonstall"
-    orcid_id: 0000-0002-1811-4087
+    orcid: 0000-0002-1811-4087
     url: https://stri.si.edu/scientist/kristin-saltonstall
     affiliation: Smithsonian Tropical Research Institute
-    affiliation_url: https://stri.si.edu/
+    affiliation-url: https://stri.si.edu/
   - name: "Kirk Broders"
-    orcid_id: 0000-0002-8569-6005
+    orcid: 0000-0002-8569-6005
     url: https://www.ars.usda.gov/midwest-area/peoria-il/national-center-for-agricultural-utilization-research/mycotoxin-prevention-and-applied-microbiology-research/people/kirk-broders/
     affiliation: USDA-ARS
-#    affiliation_url: https://stri.si.edu/
   - name: "Maria Montero-Sanchez"
-    orcid_id: 
-    url: 
     affiliation: Smithsonian Tropical Research Institute
-    affiliation_url: https://stri.si.edu/
+    affiliation-url: https://stri.si.edu/
   - name: "Johann Püspök"
-    orcid_id: 
-    url: 
     affiliation: Smithsonian Tropical Research Institute
-    affiliation_url: https://stri.si.edu/
+    affiliation-url: https://stri.si.edu/
   - name: "Erland Bååth"
-    orcid_id: 0000-0002-2616-1342 
-    url: 
+    orcid: 0000-0002-2616-1342 
     affiliation: Lund University
-    affiliation_url: 
   - name: "Patrick Meir"
-    orcid_id: 0000-0002-2362-0398 
+    orcid: 0000-0002-2362-0398 
     url: https://biology.anu.edu.au/research/groups/meir-group-tropical-forest-ecosystems
     affiliation: Australian National University
-    affiliation_url: 
-bibliography: assets/cite.bib
-site: distill::distill_website
+format:
+  html: 
+    code-tools: false    
 ---
 
-```{r setup, include=FALSE}
+```{r}
+#| label: setup
+#| include: false
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
-```
 
-```{r, xaringanExtra-clipboard, echo=FALSE, eval=TRUE}
-htmltools::tagList(
-  xaringanExtra::use_clipboard(
-    button_text = "<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"></i>",
-    success_text = "<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"></i>",
-    error_text = "<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"></i>"
-  ),
-  rmarkdown::html_dependency_font_awesome()
-)
+pacman::p_load(tidyverse, tm, SnowballC, wordcloud, RColorBrewer, 
+               wordcloud2, webshot, htmlwidgets, 
+               leaflet, htmlwidgets,
+               install = FALSE, update = FALSE)
 ```
 
 # Site Overview
@@ -91,16 +79,104 @@ There are **8** workflows in total. Each workflow contains code for processing t
 
 Though the workflows are annotated, they are not necessarily meant to be tutorials since we only provide minimal explanation. There are many great tutorials and explanations out there on amplicon processing that you can dive into.
 
-## Last updated on {.appendix}
+## Manuscript Visualization
+
+Here is a word cloud of the manuscript, just for the fun of it ;) The size of each word in proportional to the number of times it appeared in the manuscript.
+
+
+```{r}
+#| echo: false
+#| eval: false
+
+filePath <- "include/main.txt"
+text <- readLines(filePath)
+docs <- Corpus(VectorSource(text))
+inspect(docs)
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+docs <- tm_map(docs, toSpace, "/")
+docs <- tm_map(docs, toSpace, "@")
+docs <- tm_map(docs, toSpace, "\\|")
+```
+
+```{r}
+#| echo: false
+#| eval: false
+# Convert the text to lower case
+# Load the text as a corpus
+# Convert the text to lower case
+docs <- tm_map(docs, content_transformer(tolower))
+# Remove numbers
+docs <- tm_map(docs, removeNumbers)
+# Remove stopwords for the language 
+docs <- tm_map(docs, removeWords, stopwords("english"))
+docs <- tm_map(docs, removeWords, c("used", "based", "samples", "see",
+                                    "using", "sample", "one", "also",
+                                    "two", "site", "within", "fig"))
+# Remove punctuations
+docs <- tm_map(docs, removePunctuation)
+# Eliminate extra white spaces
+docs <- tm_map(docs, stripWhitespace)
+# Text stemming
+#docs <- tm_map(docs, stemDocument)
+```
+
+```{r}
+#| echo: false
+#| eval: false
+dtm <- TermDocumentMatrix(docs)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m), decreasing = TRUE)
+d <- data.frame(word = names(v), freq = v)
+head(d, 200)
+```
+
+```{r}
+#| echo: false
+#| eval: false
+set.seed(1234)
+d1 <- d %>% filter(freq > 1)
+
+#wordcloud(words = d$word, freq = d$freq, min.freq = 1, scale=c(2,.5),
+#          max.words=200, random.order=FALSE, rot.per=0.35,
+#          colors=brewer.pal(8, "Dark2"))
+wc <- wordcloud2(data = d1, size = 1.0, color = 'random-dark', fontFamily = "serif", gridSize = 0)
+saveWidget(wc, "tmp.html", selfcontained = FALSE)
+webshot("tmp.html", "wordcloud.pdf", delay = 10, vwidth = 1180, vheight = 580)
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=1.5, layout='l-page'}
+knitr::include_graphics("figures/index/wordcloud.png")
+```
+
+### Acknowledgements {.appendix}
+
+This study was supported by three fellowships to ATN---a UK NERC grant NE/T012226, a European Union Marie-Curie Fellowship FP7-2012-329360, and a STRI Tupper Fellowship. Further support came from a UK NERC grant NE/K01627X/1 to PM, an ANU Biology Innovation grant to PM and Simons Foundation grant No. 429440 to W. Wcislo, STRI, and support from the U.S. Department of Agriculture (USDA), Agricultural Research Service to KB. We thank Ben Turner for his contribution to SWELTR, especially during its initial phase of operation. For their support we further thank Oris Acevado, Dayana Agudo, Aleksandra Bielnicka, Gloria Broders, Melissa Cano, David Dominguez, Milton Garcia, Matthew Larsen, Julio Rodriguez, Hubert Szczygiel, Irene Torres, Esther Velasquez, William Wcislo, Klaus Winter and Joe Wright. For the purpose of open access, the author has applied a Creative Commons Attribution (CC BY) licence to any Author Accepted Manuscript version arising from this submission. Many of the computations were conducted on the Smithsonian High-Performance Cluster (SI/HPC), Smithsonian Institution ([doi:10.25572/SIHPC](https://doi.org/10.25572/SIHPC)). 
+
+### Author Contributions {.appendix}
+
+ATN conceived the study. ATN, JJS, MM, JP, EB, KB and KS performed the study. ATN and JJS analysed the data. ATN wrote the paper with input from JJS, EB, KS, KB and PM. Website created by J.J.S. with input and material from ATN and KS.
+
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+#remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
+
+###  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
+
+### Data Availability {.appendix}
+
+All data associated with this project can be accessed through the figshare Collection at []() with the exception of trimmed fastq files (primers removed), which are available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). 
+
+### Last updated on {.appendix}
 
 ```{r,echo=FALSE, eval=TRUE}
 Sys.time()
 ```
-
-##  Source Code {.appendix}
-
-You can find the source code for this page by [clicking this link](https://github.com/sweltr/high-temp/blob/master/index.Rmd).
-
-## Data Availability {.appendix}
-
-All data associated with this project can be accessed through the figshare Collection at []() with the exception of trimmed fastq files (primers removed), which are available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). 

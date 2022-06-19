@@ -2,18 +2,14 @@
 title: "2. Data Set Preparation"
 description: |
   Workflow for preparation  of the **16S rRNA** and **ITS** data sets. These steps are needed before analyzing the data. In this workflow, sample groups are defined, and phyloseq objects are created and curated.
-author:
-#  - name: Jarrod J Scott
-#    url: https://example.com/norajones
-#    affiliation: Spacely Sprockets
-#    affiliation_url: https://example.com/spacelysprokets
-bibliography: assets/cite.bib
 ---
 
 <details markdown="1">
 <summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup, message=FALSE, results = 'hide'}
+```{r}
+#| message: false
+#| results: hide
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
 #library(conflicted)
@@ -44,19 +40,24 @@ knitr::opts_current$get(c(
 
 Files needed to run this workflow can be downloaded from figshare. These are the output files from the [DADA2 workflow](dada2.html) page.
 
-<iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
 These workflows share many common variable names so you must split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
 
 # 16s rRNA Data
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 ## ONLY FOR PAGE BUILD
 remove(list = ls())
 load("page_build/data_prep_ssu18_wf.rdata")
 ```
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
 caption_fig <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
@@ -65,15 +66,9 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r echo=FALSE, eval=TRUE}
-source(file.path("assets", "functions.R"))
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
-```
-
-```{r, echo = FALSE, eval = TRUE}
+```{r}
+#| echo: false
+#| eval: true
 source("assets/captions/captions_data_prep_ssu.R")
 ```
 
@@ -102,7 +97,8 @@ Before we begin, let's create a summary table containing some basic sample metad
 
 <br/>
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_tab1 <- read.table(
   "files/dada2/tables/ssu18_sample_seq_info.txt", header = TRUE, sep = "\t")
 tmp_tab1$root <- gsub("_.*", "", tmp_tab1$Fastq_ID_Forward)
@@ -130,7 +126,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab("seq_summary_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_sample_summary",
@@ -165,7 +163,8 @@ reactable(seq_table,
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 wong_pal <- c("#D55E00", "#56B4E9", "#009E73", "#0072B2",
               "#F0E442", "#CC79A7",  "#E69F00", "#7F7F7F",
               "#000000")
@@ -179,7 +178,8 @@ wong_pal <- c("#D55E00", "#56B4E9", "#009E73", "#0072B2",
 
 3. After we load the data packet, we next need to format sample names and define groups.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 seq_table <- seq_table[order(seq_table$`root name`), ]
 tmp_names <- seq_table$`Sample_ID`
 load("files/dada2/rdata/ssu18_dada2_wf.rdata")
@@ -199,7 +199,8 @@ We have a total of **`r length(unique(sample_name))`** samples, **`r length(uniq
 
 4. And finally we define a sample data frame that holds the different groups we extracted from the sample names.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 #define a sample data frame
 samdf <- data.frame(SamName = sample_name,
                     PLOT = plot,
@@ -210,7 +211,9 @@ samdf <- data.frame(SamName = sample_name,
 rownames(samdf) <- samples.out
 ```
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 example_sam <- "P07_D00_010_W3D"
 qpair <- samdf[example_sam,]$PAIR
 qgroup <- samdf %>% dplyr::filter(PAIR == qpair)
@@ -222,11 +225,12 @@ For example, `r example_sam` is the sample heated at **+`r samdf[example_sam,]$T
 
 **A**. The first step is to rename the amplicon sequence variants (ASVs) so the designations are a bit more user friendly. By default, DADA2 names each ASV by its unique sequence so that data can be directly compared across studies (which is great). But this convention can get cumbersome downstream, so we rename the ASVs using a simpler convention---ASV1, ASV2, ASV3, and so on.
 
-<aside>
+:::{.callout-note}
 A phyloseq object contains ASV table (taxa abundances), sample metadata, and taxonomy table (mapping between ASVs and higher-level taxonomic classifications).
-</aside>
+:::
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 # this create the phyloseq object
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE),
                    sample_data(samdf), tax_table(tax_silva))
@@ -240,13 +244,16 @@ tax_table(ps) <- cbind(tax_table(ps),
 ```
 
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 head(taxa_names(ps))
 ```
 
 So the complete data set contains `r ntaxa(ps)` ASVs. We can use the [microbiome R package](https://github.com/microbiome/microbiome/)  [@lahti2017microbiome] to get some additional summary data from the phyloseq object.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 min_read_ps <- min(readcount(ps))
 max_read_ps <- max(readcount(ps))
 total_reads_ps <- sum(readcount(ps))
@@ -281,7 +288,9 @@ colnames(tax_table(ps)) <- c("Kingdom", "Phylum", "Class", "Order",
 ps
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ps
 ```
 
@@ -300,10 +309,10 @@ write.table(t(otu_table(ps)),
 
 Let's see if we have any potential contaminants. We can use some [inline R code](https://rmarkdown.rstudio.com/lesson-4.html) to see the taxonomy table for any taxa of interest.
 
-<aside>
+:::{.callout-note}
 The code (hidden by default) is written as `` `r
 "Chloroplast" %in% tax_table(ps)` ``.
-</aside>
+:::
 
 - Are Mitochondria present? `r "Mitochondria" %in% tax_table(ps)`
 - Are Chloroplast present? `r "Chloroplast" %in% tax_table(ps)`
@@ -332,7 +341,9 @@ ps_no_mito <- prune_taxa(goodTaxa, ps)
 ps_no_mito
 ```
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ps_no_mito
 ```
 
@@ -352,7 +363,9 @@ ps_no_chloro <- prune_taxa(goodTaxa, ps_no_mito)
 ps_no_chloro
 ```
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ps_no_chloro
 ```
 
@@ -372,7 +385,9 @@ ps_no_euk <- prune_taxa(goodTaxa, ps_no_chloro)
 ps_no_euk
 ```
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ps_no_euk
 ```
 
@@ -401,7 +416,8 @@ Phyloseq has an odd way of dealing with taxonomic ranks that have no value---in 
 
 So you need to run something like this `rm(class, order, phylum, kingdom)` at the end of the code to remove these as variables. For now, I have not come up with a better solution.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 tax.clean <- data.frame(tax_table(ps_filt))
 for (i in 1:6){ tax.clean[,i] <- as.character(tax.clean[,i])}
 tax.clean[is.na(tax.clean)] <- ""
@@ -430,7 +446,8 @@ rm(class, order, phylum, kingdom)
 
 Still the same ranks. That's good. What about the new groups? Let's take a peak at some families.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 head(get_taxa_unique(ps_filt, "Family"), 16)
 ```
 
@@ -467,7 +484,8 @@ ps_work_o <- merge_phyloseq(ps_work_o,
 
 Now that we have removed the NC and sample with zero reads, we can summarize the data set. Let's start with the in our working phyloseq object using the `summarize_phyloseq` from the [microbiome R package](https://github.com/microbiome/microbiome/) [@lahti2017microbiome] as we did above.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 min_read_ps_work <- min(readcount(ps_work))
 max_read_ps_work <- max(readcount(ps_work))
 total_reads_ps_work <- sum(readcount(ps_work))
@@ -501,7 +519,8 @@ sparsity_ps_work <- round(length(which(
 
 We can also generate a summary table of total reads & ASVs for each sample. You can sort the table, download a copy, or filter by search term. Here is the code to generate the data for the table. First, we create data frames that hold total reads and ASVs for each sample.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 total_reads <- sample_sums(ps_work)
 total_reads <- as.data.frame(total_reads, make.names = TRUE)
 total_reads <- total_reads %>% rownames_to_column("Sample_ID")
@@ -514,7 +533,8 @@ total_asvs$Sample_ID <- gsub('\\.', '-', total_asvs$Sample_ID)
 
 And then we merge these two data frames with the sample data frame.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 sam_details <- samdf
 rownames(sam_details) <- NULL
 colnames(sam_details) <- c("Sample_ID", "Plot", "Depth",
@@ -538,7 +558,9 @@ colnames(seq_table2) <- c("sample_id", "PLOT", "DEPTH",
 
 <small>`r caption_tab("seq_summary_final_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table2 %>%
   download_this(
     output_name = "ssu18_sample_summary_final",
@@ -578,21 +600,24 @@ We have a few different options to play with. At this point it is difficult to s
 
 The full phyloseq object *before* removing contaminants.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps
 head(get_taxa_unique(ps, "Family"), 16)
 ```
 
 The phyloseq object *before* changing NA ranks.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_work_o
 head(get_taxa_unique(ps_work_o, "Family"), 16)
 ```
 
 The phyloseq object *after* changing NA ranks.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_work
 head(get_taxa_unique(ps_work, "Family"), 16)
 ```
@@ -610,12 +635,14 @@ write.table(t(otu_table(ps_work)),
             sep = "\t", quote = FALSE, col.names = NA)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 # PAGE BUILD
 save.image("page_build/data_prep_ssu18_wf.rdata")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 saveRDS(ps, "files/data-prep/rdata/ssu18_ps.rds")
 saveRDS(ps_work, "files/data-prep/rdata/ssu18_ps_work.rds")
 saveRDS(ps_work_o, "files/data-prep/rdata/ssu18_ps_work_o.rds")
@@ -623,13 +650,18 @@ saveRDS(ps_work_o, "files/data-prep/rdata/ssu18_ps_work_o.rds")
 
 # ITS Data
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 ## ONLY FOR PAGE BUILD
 remove(list = ls())
 load("page_build/data_prep_its18_wf.rdata")
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab <- captioner(prefix = "(ITS) Table", suffix = " |", style = "b")
 caption_fig <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
@@ -638,16 +670,9 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-
-```{r echo=FALSE, eval=TRUE}
-source(file.path("assets", "functions.R"))
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-#xaringanExtra::use_panelset()
-```
-
-```{r, echo = FALSE, eval = TRUE}
+```{r}
+#| echo: false
+#| eval: true
 source("assets/captions/captions_data_prep_its.R")
 ```
 
@@ -676,7 +701,8 @@ Table headers are as follows:
 | `Remain`                  | percent of reads remaining from `input` to `nonchim`                                     |
 | `FastqID`                 | base name of the fastq file                                                              |
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_tab1 <- read.table(
   "files/dada2/tables/its18_sample_seq_info.txt", header = TRUE, sep = "\t")
 tmp_tab1$root <- gsub("_.*", "", tmp_tab1$Fastq_ID_Forward)
@@ -703,7 +729,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab("seq_summary_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_sample_summary",
@@ -747,7 +775,8 @@ The following samples have fewer than **`r cutoff`** reads at the end of the wor
 
 We can also plot the final read count by the temperature where the sample was collected.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 wong_pal <- c("#D55E00", "#56B4E9", "#009E73", "#0072B2",
               "#F0E442", "#CC79A7",  "#E69F00", "#7F7F7F",
               "#000000")
@@ -761,7 +790,8 @@ wong_pal <- c("#D55E00", "#56B4E9", "#009E73", "#0072B2",
 
 3. After we load the data packet we next need to format sample names and define groups.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 seq_table <- seq_table[order(seq_table$`root name`), ]
 tmp_names <- seq_table$`Sample_ID`
 load("files/dada2/rdata/its18_dada2_wf.rdata")
@@ -780,7 +810,8 @@ We have a total of **`r length(unique(sample_name))`** samples, **`r length(uniq
 
 4. And finally we define a sample data frame that holds the different groups we extracted from the sample names.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 samdf <- data.frame(SamName = sample_name,
                     PLOT = plot,
                     DEPTH = depth,
@@ -790,7 +821,9 @@ samdf <- data.frame(SamName = sample_name,
 rownames(samdf) <- samples.out
 ```
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 example_sam <- "P08_D00_010_C0D"
 qpair <- samdf[example_sam,]$PAIR
 qgroup <- samdf %>% dplyr::filter(PAIR == qpair)
@@ -803,10 +836,6 @@ For example, `r example_sam` is the sample heated at **+`r samdf[example_sam,]$T
 ###  Fix Taxon Names
 
 The UNITE database we used for classification adds a little prefix to every rank call, like `k__` for Kingdom, `o__` for Order, etc. To keep in step with our other analyses, we will remove these tags. Of course, we also make a ps object with the original names just in case. At this point we will also remove the Species rank since it is essentially useless.
-
-<aside>
-*I KNOW there is an easier way to do this*.
-</aside>
 
 ```{r}
 tax_mod_o <- data.frame(tax)
@@ -822,11 +851,12 @@ tax_mod <- sub("g__", "", tax_mod)
 
 **A**. The first step is to rename the amplicon sequence variants (ASVs) so the designations are a bit more user friendly. By default, DADA2 names each ASV by its unique sequence so that data can be directly compared across studies (which is great). But this convention can get cumbersome downstream, so we rename the ASVs using a simpler convention---ASV1, ASV2, ASV3, and so on.
 
-<aside>
+:::{.callout-note}
 A phyloseq object contains ASV table (taxa abundances), sample metadata, and taxonomy table (mapping between ASVs and higher-level taxonomic classifications).
-</aside>
+:::
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 # this create the phyloseq object
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE),
                    sample_data(samdf), tax_table(tax_mod))
@@ -840,7 +870,8 @@ tax_table(ps) <- cbind(tax_table(ps),
 head(taxa_names(ps))
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 # this create the phyloseq object
 ps_o <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE),
                    sample_data(samdf), tax_table(tax_mod_o))
@@ -855,13 +886,16 @@ head(taxa_names(ps_o))
 ```
 
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 head(taxa_names(ps))
 ```
 
 So the complete data set contains `r ntaxa(ps)` ASVs. We can also use the [microbiome R package](https://github.com/microbiome/microbiome/) [@lahti2017microbiome] to get some additional summary data from the phyloseq object.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 min_read_ps <- min(readcount(ps))
 max_read_ps <- max(readcount(ps))
 total_reads_ps <- sum(readcount(ps))
@@ -898,11 +932,14 @@ colnames(tax_table(ps)) <- c("Kingdom", "Phylum", "Class", "Order",
 rank_names(ps)
 ```
 
-```{r echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ps
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 colnames(tax_table(ps_o)) <- c("Kingdom", "Phylum", "Class", "Order",
     "Family", "Genus", "ASV_SEQ", "ASV_ID")
 ps_o
@@ -911,7 +948,8 @@ rank_names(ps_o)
 
 **C**. Export sequence and taxonomy tables for the unadulterated phyloseq object for later use. We will use the prefix `full` to indicate that these are the *raw* outputs.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 write.table(tax_table(ps),
             "files/data-prep/tables/its18_full_tax_table.txt",
             sep="\t", quote = FALSE, col.names=NA)
@@ -921,7 +959,8 @@ write.table(t(otu_table(ps)),
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 write.table(tax_table(ps_o),
             "files/data-prep/tables/its18_full_tax_table_o.txt",
             sep="\t", quote = FALSE, col.names=NA)
@@ -940,11 +979,13 @@ ps_filt <- ps
 
 Next, we can remove samples with really low read counts, say less than 500 reads.
 
-```{r, results = 'markdown'}
+```{r}
+#| results: asis
 ps_filt_no_low <- prune_samples(sample_sums(ps_filt) > 500, ps_filt)
 ```
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_filt_no_low
 ```
 
@@ -960,7 +1001,8 @@ And we lost `r sum(no_reads)` ASV(s). So now we must remove these from the ps ob
 ps_filt_no_nc <- prune_taxa(taxa_sums(ps_filt_no_low) > 0, ps_filt_no_low)
 ```
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_filt_no_nc
 ```
 
@@ -978,7 +1020,8 @@ Before doing that, we will save a copy of the phyloseq object with the original 
 ps_work_o <- ps_filt_no_nc
 ```
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 tax.clean <- data.frame(tax_table(ps_filt_no_nc))
 for (i in 1:6){ tax.clean[,i] <- as.character(tax.clean[,i])}
 tax.clean[is.na(tax.clean)] <- ""
@@ -1007,7 +1050,8 @@ rm(class, order, phylum, kingdom)
 
 Still the same ranks. That's good. What about the new groups? Let's take a peak at some families.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 head(get_taxa_unique(ps_filt_no_nc, "Family"), 16)
 ```
 
@@ -1027,7 +1071,8 @@ ps_work <- ps_filt_no_nc
 
 Now that we have removed the NC and samples with low reads, we can summarize the data in our working phyloseq object. Let's start with the data set as a whole using the `summarize_phyloseq` from the [microbiome R package](https://github.com/microbiome/microbiome/) [@lahti2017microbiome] as we did above.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 min_read_ps_work <- min(readcount(ps_work))
 max_read_ps_work <- max(readcount(ps_work))
 total_reads_ps_work <- sum(readcount(ps_work))
@@ -1064,7 +1109,8 @@ sparsity_ps_work <- round(length(which(abundances(ps_work) == 0))/
 
 We can also generate a summary table of total reads & ASVs for each sample. You can sort the table, download a copy, or filter by search term. Here is the code to generate the data for the table. First, we create data frames that hold total reads and ASVs for each sample.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 total_reads <- sample_sums(ps_work)
 total_reads <- as.data.frame(total_reads, make.names = TRUE)
 total_reads <- total_reads %>% rownames_to_column("Sample_ID")
@@ -1076,7 +1122,8 @@ total_asvs$Sample_ID <- gsub('\\.', '-', total_asvs$Sample_ID)
 
 And then we merge these two data frames with the sample data frame.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 rm(list = ls(pattern = "tmp_"))
 
 sam_details <- samdf
@@ -1102,7 +1149,9 @@ colnames(seq_table2) <- c("sample_id", "PLOT", "DEPTH",
 
 <small>`r caption_tab("seq_summary_final_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table2 %>%
   download_this(
     output_name = "its18_sample_summary_final",
@@ -1142,28 +1191,32 @@ We have a few different options to play with. At this point it is difficult to s
 
 The full phyloseq object *before* removing contaminants.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps
 head(get_taxa_unique(ps, "Family"), 16)
 ```
 
 The phyloseq object *before* removing the prefix of taxon ranks. This still has low coverage samples.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_o
 head(get_taxa_unique(ps_o, "Family"), 16)
 ```
 
 The phyloseq object *before* changing NA ranks.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_work_o
 head(get_taxa_unique(ps_work_o, "Family"), 16)
 ```
 
 The phyloseq object *after* changing NA ranks.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 ps_work
 head(get_taxa_unique(ps_work, "Family"), 16)
 ```
@@ -1172,7 +1225,8 @@ head(get_taxa_unique(ps_work, "Family"), 16)
 
 The last thing tasks to complete are to **a**) save copies of the taxonomy and sequence tables and **b**) save an image of the workflow for the next part of the workflow.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 write.table(tax_table(ps_work),
             "files/data-prep/tables/its18_work_tax_table.txt",
             sep="\t", quote = FALSE, col.names=NA)
@@ -1181,18 +1235,22 @@ write.table(t(otu_table(ps_work)),
             sep="\t", quote = FALSE, col.names=NA)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 # PAGE BUILD
 save.image("page_build/data_prep_its18_wf.rdata")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 saveRDS(ps, "files/data-prep/rdata/its18_ps.rds")
 saveRDS(ps_work, "files/data-prep/rdata/its18_ps_work.rds")
 saveRDS(ps_work_o, "files/data-prep/rdata/its18_ps_work_o.rds")
 ```
 
-```{r include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 remove(list = ls())
 ```
 
@@ -1200,7 +1258,7 @@ remove(list = ls())
 
 Data products generated in this workflow can be downloaded from figshare.
 
-<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
 That's all for this part!
 
@@ -1209,12 +1267,22 @@ That's all for this part!
 <a href="filtering.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 3. Filtering</a>
 <a href="dada2.html" class="btnnav button_round" style="float: left;">Previous workflow:
-<br> 1. DADA2 Workflow</a>
+<br> 1. DADA2 Workflow</a><br><br>
 
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-##  Source Code {.appendix}
+###  Source Code {.appendix}
 
-You can find the source code for this page by [clicking this link](https://github.com/sweltr/high-temp/blob/master/data-prep.Rmd).
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
 ## Data Availability {.appendix}
 
@@ -1222,6 +1290,8 @@ Data generated in this workflow and the `.Rdata` need to run the workflow can be
 
 ## Last updated on {.appendix}
 
-```{r,echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 Sys.time()
 ```

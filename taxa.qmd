@@ -2,17 +2,10 @@
 title: "4. Taxonomic Diversity"
 description: |
   Reproducible workflow for assessing dominant taxonomic groups in the 16S rRNA and ITS data sets.
-author:
-#  - name: Jarrod J Scott
-#    url: https://example.com/norajones
-#    affiliation: Spacely Sprockets
-#    affiliation_nrl: https://example.com/spacelysprokets
-bibliography: assets/cite.bib
-output:
-    distill::distill_article:
-      css: assets/styles.css
-      toc: true
-      toc_depth: 3
+format:
+  html:
+    toc: true
+    toc-depth: 3
 ---
 
 <details markdown="1">
@@ -27,10 +20,10 @@ set.seed(119)
 
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
-pacman::p_load(tidyverse, metacoder, hilldiv, patchwork,
-               agricolae, labdsv, naniar, pairwiseAdonis, 
-               microbiome, seqRFLP, DT, microeco, file2meco, cowplot,
-               GUniFrac, ggalluvial, ggdendro, tidytree, igraph, reactable,
+pacman::p_load(tidyverse, patchwork,
+               agricolae, labdsv, naniar, 
+               microbiome, microeco, file2meco, cowplot,
+               GUniFrac, ggalluvial, ggdendro, igraph, reactable,
                pheatmap, microbiomeMarker,
                captioner, downloadthis,
                install = FALSE, update = FALSE)
@@ -45,13 +38,18 @@ knitr::opts_current$get(c(
 ```
 </details>
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 #TEMP LOAD ONLY REMOVE WHEN WORKFLOW FINISHED
 remove(list = ls())
 load("page_build/taxa_wf.rdata")
 ```
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
 caption_fig <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
@@ -60,16 +58,10 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r, echo = FALSE, eval = TRUE}
+```{r}
+#| echo: false
+#| eval: true
 source("assets/captions/captions_taxa.R")
-```
-
-```{r echo=FALSE, eval=TRUE}
-source(file.path("assets", "functions.R"))
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
 ```
 
 # Synopsis
@@ -80,7 +72,7 @@ This workflow contains taxonomic diversity assessments for the 16S rRNA and ITS 
 
 All files needed to run this workflow can be downloaded from figshare. 
 
-<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
 In this workflow, we use the [microeco](https://github.com/ChiLiubio/microeco) to look at the taxonomic distribution of microbial communities.
 
@@ -88,7 +80,8 @@ In this workflow, we use the [microeco](https://github.com/ChiLiubio/microeco) t
 
 ## 16s rRNA
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## Initial Load for  ANALYSIS #1
 remove(list = ls())
 set.seed(119)
@@ -99,7 +92,8 @@ ssu18_ps_pime <- readRDS("files/filtering/pime/rdata/ssu18_ps_pime.rds")
 objects()
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
@@ -109,7 +103,8 @@ Before we plot the data, we want to separate out the Proteobacteria classes so w
 
 1) Get all Class-level Proteobacteria names
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu18_data_sets <- c("ssu18_ps_work",  "ssu18_ps_filt",
                      "ssu18_ps_perfect", "ssu18_ps_pime")
 
@@ -130,7 +125,8 @@ for (i in ssu18_data_sets) {
 
 2) Replace Phylum Proteobacteria with the Class name.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (j in ssu18_data_sets) {
   tmp_name <- purrr::map_chr(j, ~paste0(., "_proteo_clean"))
   tmp_get <- get(j)
@@ -168,7 +164,8 @@ objects(pattern="_proteo_clean")
 
 3) In order to use `microeco`, we need to add the rank designation as a prefix to each taxa. For example, `Actinobacteriota` is changed to `p__Actinobacteriota`. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu18_data_sets) {
   tmp_get <- get(purrr::map_chr(i, ~paste0(., "_proteo_clean")))
   #tmp_get <- get(i)
@@ -205,7 +202,8 @@ rm(list = ls(pattern = "_proteo_clean"))
 
 4) Next, we need to covert each `phyloseq object` to a `microtable class`.  The microtable class is the basic data structure for the `microeco` package and designed to store basic information from all the downstream analyses (e.g, alpha diversity, beta diversity, etc.). We use the [file2meco](https://github.com/ChiLiubio/file2meco) to read the phyloseq object and convert into a microtable object. We can add `_me` as a suffix to each object to distiguish it from its' phyloseq counterpart. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu18_data_sets) {
     tmp_get <- get(i)
     tmp_otu_table <- data.frame(t(otu_table(tmp_get)))
@@ -234,11 +232,14 @@ objects()
 
 Here is an example of what a new microeco object looks like when you call it.
 
-```{r, eval=TRUE, echo=TRUE}
+```{r}
+#| echo: true
+#| eval: true
 ssu18_ps_work_me
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 saveRDS(ssu18_ps_work_me, "files/taxa/rdata/ssu18_ps_work_me.rds")
 saveRDS(ssu18_ps_filt_me, "files/taxa/rdata/ssu18_ps_filt_me.rds")
 saveRDS(ssu18_ps_perfect_me, "files/taxa/rdata/ssu18_ps_perfect_me.rds")
@@ -247,7 +248,8 @@ saveRDS(ssu18_ps_pime_me, "files/taxa/rdata/ssu18_ps_pime_me.rds")
 
 5) Now, we calculate the taxa abundance at each taxonomic rank using `cal_abund()`. This function return a list called `taxa_abund` containing several data frame of the abundance information at each taxonomic rank. The list is stored in the microtable object automatically. It’s worth noting that the `cal_abund()` function can be used to solve some complex cases, such as supporting both the relative and absolute abundance calculation and selecting the partial taxonomic columns. More information can be found in the description of the [file2meco package](https://github.com/ChiLiubio/file2meco). In the same loop we also create a `trans_abund` class, which is used to transform taxonomic abundance data for plotting.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu18_data_sets) {
   tmp_me <- get(purrr::map_chr(i, ~paste0(., "_me")))
   tmp_me$cal_abund()
@@ -271,7 +273,8 @@ The result is stored in object$taxa_abund ...
 
 6) I prefer to specify the order of taxa in these kinds of plots. We can look the top `ntaxa` (defined above) by accessing the `use_taxanames` character vector of each microtable object.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 print("FULL Data set (ssu18_ps_work_me)", quote = FALSE)
 ssu18_ps_work_me_abund$use_taxanames
 print("--------------------------------------------", quote = FALSE)
@@ -288,7 +291,8 @@ print("--------------------------------------------", quote = FALSE)
 
 Hum. Similar but not the same. This means we need to define the order for each separately. Once we do that, we will override the `use_taxanames` character vectors with the reordered vectors.
 
-```{r code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu18_ps_work_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidobacteriota", 
                            "Actinobacteriota", "Bacteroidota", "Firmicutes", "Myxococcota", 
                            "Verrucomicrobiota", "Chloroflexi", "Planctomycetota", 
@@ -309,7 +313,8 @@ ssu18_ps_pime_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", "Acidob
 
 7) And one more little step before plotting. Here we  **a**) specify a custom color palette and  **b**) specify the sample order. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 top_level <- "Phylum"
 ssu18_colvec.tax <- c("#00463C","#FFD5FD","#00A51C","#C80B2A","#00C7F9","#FFA035",
                       "#ED0DFD","#0063E5","#5FFFDE","#C00B6F","#00A090","#FF95BA")
@@ -320,7 +325,8 @@ ssu18_samp_order <- c("P02_D00_010_C0A", "P04_D00_010_C0B", "P06_D00_010_C0C", "
 
 8) Now we can generate plots (in a loop) for each faceted data set.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu18_data_sets) {
   tmp_abund <- get(purrr::map_chr(i, ~paste0(., "_me_abund")))
   tmp_tax_order <- get(purrr::map_chr(i, ~paste0(., "_tax_ord")))
@@ -342,7 +348,8 @@ for (i in ssu18_data_sets) {
 
 Then add a little formatting to the faceted plots.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 set_to_plot <- c("ssu18_ps_work_facet_plot", "ssu18_ps_filt_facet_plot", "ssu18_ps_perfect_facet_plot", "ssu18_ps_pime_facet_plot")
 for (i in  set_to_plot) {
     tmp_get <- get(i)
@@ -371,7 +378,8 @@ for (i in  set_to_plot) {
 
 And now plots for the groupmeans sets. We can use the same taxa order since that should not have changed.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 set_to_plot <- c("ssu18_ps_work_group_plot", "ssu18_ps_filt_group_plot", "ssu18_ps_perfect_group_plot", "ssu18_ps_pime_group_plot")
 for (i in ssu18_data_sets) {
   tmp_abund <- get(purrr::map_chr(i, ~paste0(., "_me_abund_group")))
@@ -392,7 +400,8 @@ for (i in ssu18_data_sets) {
 
 Let's also add a little formatting to the groupmean plots.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in  set_to_plot) {
      tmp_get <- get(i)
      tmp_get <- tmp_get +
@@ -415,7 +424,8 @@ for (i in  set_to_plot) {
 
 10) Finally we use the `patchwork` package to combine the two plots and customize the look.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ## single index that acts as an index for referencing elements (variables) in a list
 ##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460
 var_list <- list(
@@ -445,7 +455,8 @@ for (j in  1:length(var_list$var1)) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in ssu18_data_sets) {
    tmp_plot_final <- get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
    ggplot2::ggsave(tmp_plot_final, file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.png", sep = ""), 
@@ -456,7 +467,8 @@ for (i in ssu18_data_sets) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/taxa/figures/ssu18_ps_work_tax_div_bar_plots.png include/taxa/ssu18_ps_work_tax_div_bar_plots.png")
 system("cp files/taxa/figures/ssu18_ps_filt_tax_div_bar_plots.png include/taxa/ssu18_ps_filt_tax_div_bar_plots.png")
 system("cp files/taxa/figures/ssu18_ps_perfect_tax_div_bar_plots.png include/taxa/ssu18_ps_perfect_tax_div_bar_plots.png")
@@ -471,53 +483,56 @@ system("cp files/taxa/figures/ssu18_ps_pime_tax_div_bar_plots.png include/taxa/s
 
 2) Chloroflexi was not among the dominant taxa in either the Arbitrary, PERfect, or PIME  data sets. RCP2-54 was substituted in both cases.
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### FULL (unfiltered)
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/ssu18_ps_work_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_full_ssu")`</small>
-:::
-
-::: {.panel}
 
 #### Arbitrary filtered
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/ssu18_ps_filt_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_filt_ssu")`</small>
-:::
 
-
-::: {.panel}
 #### PERFECT filtered
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/ssu18_ps_perfect_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_perfect_ssu")`</small>
-:::
 
-::: {.panel}
 #### PIME filtered
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/ssu18_ps_pime_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_pime_ssu")`</small>
-:::
-
 :::
 :::
 
 ## ITS
 
-```{r, eval=FALSE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: false
 ## Initial Load for  ANALYSIS #1
 remove(list = ls())
 set.seed(119)
@@ -527,13 +542,15 @@ its18_ps_perfect <- readRDS("files/filtering/perfect/rdata/its18_ps_perfect.rds"
 its18_ps_pime <- readRDS("files/filtering/pime/rdata/its18_ps_pime.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
 Here we compare the taxonomic breakdown of the FULL (unfiltered), PIME filtered, and PERfect filtered data sets, split by temperature treatment for the ITS data. The workflow is basically the same as the 16S rRNA data. Click the box below to see the entire workflow.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_data_sets <- c("its18_ps_work",  "its18_ps_filt",
                      "its18_ps_perfect", "its18_ps_pime")
 ```
@@ -603,11 +620,14 @@ objects()
 
 Here is an example of what a new microeco object looks like when you call it.
 
-```{r, eval=TRUE, echo=TRUE}
+```{r}
+#| echo: true
+#| eval: true
 its18_ps_work_me
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 saveRDS(its18_ps_work_me, "files/taxa/rdata/its18_ps_work_me.rds")
 saveRDS(its18_ps_filt_me, "files/taxa/rdata/its18_ps_filt_me.rds")
 saveRDS(its18_ps_perfect_me, "files/taxa/rdata/its18_ps_perfect_me.rds")
@@ -640,7 +660,8 @@ The result is stored in object$taxa_abund ...
 
 6) I prefer to specify the order of taxa in these kinds of plots. We can look the top `ntaxa` (defined above) by accessing the `use_taxanames` character vector of each microtable object.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 print("FULL Data set (its18_ps_work_me)", quote = FALSE)
 its18_ps_work_me_abund$use_taxanames
 print("--------------------------------------------", quote = FALSE)
@@ -657,7 +678,8 @@ print("--------------------------------------------", quote = FALSE)
 
 Hum. Similar but not the same. This means we need to define the order for each separately. Once we do that, we will override the `use_taxanames` character vectors with the reordered vectors.
 
-```{r code_folding=TRUE}
+```{r}
+#| code-fold: true
 its18_ps_work_tax_ord <- rev(c(
   "k_Fungi",  "p_Ascomycota",  "c_Agaricomycetes", "Agaricales",  
   "Archaeorhizomycetales",  "Capnodiales",  "Eurotiales",  "Geastrales",  
@@ -821,7 +843,8 @@ for (j in  1:length(var_list$var1)) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in its18_data_sets) {
    tmp_plot_final <- get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
    ggplot2::ggsave(tmp_plot_final, file = paste0("files/taxa/figures/", i, "_tax_div_bar_plots.png", sep = ""), 
@@ -832,7 +855,8 @@ for (i in its18_data_sets) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/taxa/figures/its18_ps_work_tax_div_bar_plots.png include/taxa/its18_ps_work_tax_div_bar_plots.png")
 system("cp files/taxa/figures/its18_ps_filt_tax_div_bar_plots.png include/taxa/its18_ps_filt_tax_div_bar_plots.png")
 system("cp files/taxa/figures/its18_ps_perfect_tax_div_bar_plots.png include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
@@ -849,47 +873,48 @@ system("cp files/taxa/figures/its18_ps_pime_tax_div_bar_plots.png include/taxa/i
 2) Xylariales was not among the dominant taxa in either the PIME or PERfect data sets. Pezizales was substituted in both cases.
 
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### FULL (unfiltered)
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/its18_ps_work_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_full_its")`</small>
-:::
-
-::: {.panel}
 
 #### Arbitrary filtered
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/its18_ps_filt_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_filt_its")`</small>
-:::
 
-
-::: {.panel}
 #### PERFECT filtered
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/its18_ps_perfect_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_perfect_its")`</small>
-:::
 
-::: {.panel}
 #### PIME filtered
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/taxa/its18_ps_pime_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("major_taxa_pime_its")`</small>
-:::
-
 :::
 :::
 
@@ -897,9 +922,9 @@ knitr::include_graphics("include/taxa/its18_ps_pime_tax_div_bar_plots.png")
 
 We also look at the relative abundance of groups within dominant Phyla. **Please note** these analyses are for the FULL data set only, before any type of filtering. For this analysis, we use the phyloseq object created in the Data Preparation wokflow section [Rename NA taxonomic ranks](data-prep.html#rename-na-taxonomic-ranks) where unclassified ranks were renamed by the next highest rank. See step #1 below for an example of the taxa table structure. 
 
-<aside>
+:::{.callout-note}
 This code ***only*** works for multiple taxa from a *single* phyloseq object.
-</aside>
+:::
 
 <details markdown="1">
 <summary><strong>Detailed workflow</strong> for assessing Bacterial families.</summary>
@@ -911,7 +936,9 @@ ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
 head(data.frame(tax_table(ssu18_ps_work)))[,1:6]
 ```
 
-```{r, echo=FALSE, eval=TRUE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
 head(data.frame(tax_table(ssu18_ps_work)))[,1:6]
 ```
 
@@ -987,7 +1014,8 @@ for (i in set_to_plot) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in tax_group) {
   tmp_get <- get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i)))
   tmp_list <-  get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[5], errorIfNULL = TRUE)
@@ -1111,7 +1139,8 @@ for (i in tax_group) {
 
 5) Plot the data for a single phyloseq object. Here you use an aggregated tax file.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_colvec.tax <- c(
 "#3D3C04",
 "#FF95BA",
@@ -1253,98 +1282,118 @@ for (i in taxa_to_plot) {
 
 <br/>
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### Alphaproteobacteria
 
-```{r ggg, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-top_level <- "Family"
-ssu18_ps_work_Alphaproteobacteria_final_plot
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+
+#top_level <- "Family"
+#ssu18_ps_work_Alphaproteobacteria_final_plot
 #unique(ssu18_ps_work_Alphaproteobacteria_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Alphaproteobacteria_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("alpha_ssu")`</small>
-:::
 
-::: {.panel}
 #### Gammaproteobacteria
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Gammaproteobacteria_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Gammaproteobacteria_final_plot 
 #unique(ssu18_ps_work_Gammaproteobacteria_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Gammaproteobacteria_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("gamma_ssu")`</small>
-:::
 
-::: {.panel}
 #### Acidobacteriota
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Acidobacteriota_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Acidobacteriota_final_plot 
 #unique(ssu18_ps_work_Acidobacteriota_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Acidobacteriota_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("acido_ssu")`</small>
-:::
 
-::: {.panel}
 #### Actinobacteriota
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Actinobacteriota_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Actinobacteriota_final_plot 
 #unique(ssu18_ps_work_Actinobacteriota_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Actinobacteriota_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("actino_ssu")`</small>
-:::
 
-::: {.panel}
 #### Bacteroidota
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Bacteroidota_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Bacteroidota_final_plot 
 #unique(ssu18_ps_work_Bacteroidota_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Bacteroidota_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("bacteroid_ssu")`</small>
-:::
 
-::: {.panel}
 #### Firmicutes
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Firmicutes_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Firmicutes_final_plot 
 #unique(ssu18_ps_work_Firmicutes_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Firmicutes_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("firm_ssu")`</small>
-:::
 
-::: {.panel}
 #### Myxococcota
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Myxococcota_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Myxococcota_final_plot 
 #unique(ssu18_ps_work_Myxococcota_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Myxococcota_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("myxo_ssu")`</small>
-:::
 
-::: {.panel}
 #### Verrucomicrobiota
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
-ssu18_ps_work_Verrucomicrobiota_final_plot 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#ssu18_ps_work_Verrucomicrobiota_final_plot 
 #unique(ssu18_ps_work_Verrucomicrobiota_final_plot$data$Family)
+knitr::include_graphics("include/taxa/Verrucomicrobiota_tax_div_bar_plots.png")
 ```
 <small>`r caption_fig("verruco_ssu")`</small>
-:::
 :::
 ::: 
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("page_build/taxa_wf.rdata")
 ```
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 remove(list = ls())
 ```
 
@@ -1352,25 +1401,38 @@ remove(list = ls())
 
 Data products generated in this workflow can be downloaded from figshare.
 
-<iframe src="https://widgets.figshare.com/articles/16826737/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/16826737/embed?show_title=1" width="100%" height="221" allowfullscreen frameborder="0"></iframe>
 
 </br>
 
 <a href="alpha.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 5. Alpha Diversity Estimates</a>
 <a href="filtering.html" class="btnnav button_round" style="float: left;">Previous workflow:
-<br> 3. Filtering</a>
+<br> 3. Filtering</a><br><br>
 
-##  Source Code {.appendix}
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/taxa.Rmd).
+####  Source Code {.appendix}
 
-## Data Availability {.appendix}
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
+
+#### Data Availability {.appendix}
 
 Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16826737](https://doi.org/10.25573/data.16826737).
 
-## Last updated on {.appendix}
+#### Last updated on {.appendix}
 
-```{r,echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 Sys.time()
 ```

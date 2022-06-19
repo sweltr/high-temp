@@ -12,3 +12,5 @@ public_build/
 graphics/
 TESTING/
 sandbox/
+
+/.quarto/

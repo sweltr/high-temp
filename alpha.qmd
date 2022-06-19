@@ -2,29 +2,25 @@
 title: "5. Alpha Diversity Estimates"
 description: |
   Reproducible workflow to assess alpha diversity across temperature treatments using Hill numbers.
-author:
-#  - name: Jarrod J Scott
-#    url: https://example.com/norajones
-#    affiliation: Spacely Sprockets
-#    affiliation_nrl: https://example.com/spacelysprokets
-bibliography: assets/cite.bib
-output:
-    distill::distill_article:
-      css: assets/styles.css
-      toc: true
-      toc_depth: 3
+format:
+  html:
+    toc: true
+    toc-depth: 3
 ---
 
 <details markdown="1">
 <summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup, message=FALSE, results = 'hide'}
+```{r}
+#| label: setup
+#| message: false
+#| results: hide
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
 #library(conflicted)
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
-pacman::p_load(tidyverse, DT, ampvis2, hilldiv, 
+pacman::p_load(tidyverse, hilldiv, 
                microbiome, phytools, phangorn, 
                pairwiseAdonis, naniar, 
                labdsv, patchwork, agricolae, ggpubr,
@@ -42,16 +38,21 @@ knitr::opts_current$get(c(
   "autodep"
 ))
 ```
-
 </details>
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
+
 ## Load to build page only #2
 remove(list = ls())
 load("page_build/alpha_wf.rdata")
 ```
 
-```{r, echo = FALSE, eval=TRUE, results = 'hide'}
+```{r}
+#| include: false
+#| eval: true
+
 # Create the caption(s) with captioner
 caption_tab_ssu <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
 caption_fig_ssu <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
@@ -63,16 +64,12 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
+
 source(file.path("assets", "functions.R"))
 source("assets/captions/captions_alpha.R")
-```
-
-```{r echo=FALSE, eval=TRUE}
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
 ```
 
 # Synopsis
@@ -83,12 +80,13 @@ This workflow contains diversity assessments for the 2018 high temperature data 
 
 Files needed to run this workflow can be downloaded from figshare. 
 
-<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
-<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="100%" height="251" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
 # 16s rRNA
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 ## Initial Load for  ANALYSIS #1
 set.seed(119)
 ## ASV FULL AND PIME AND PERfect
@@ -98,7 +96,8 @@ ssu18_ps_perfect <- readRDS("files/filtering/perfect/rdata/ssu18_ps_perfect.rds"
 ssu18_ps_pime <- readRDS("files/filtering/pime/rdata/ssu18_ps_pime.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
@@ -124,7 +123,8 @@ hill_div(count = x, qvalue = i, tree = ultrametric_tree)
 
 where `x` is the sample by ASV table, `i` is the q-value corresponding to the metric of interest and `tree` is an ultrametric formatted phylogenetic tree if you choose to look at lineage, rather than ASV, diversity.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## this is for subsettig samples..
 rm(ssu18_asv_pime_sum)
 ssu18_alpha_ds <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
@@ -200,7 +200,8 @@ rm(list = ls(pattern = "tmp_"))
 write.table(ssu18_asv_pime_sum, "ssu_split_by_temp.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_alpha_ds <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
 
 tmp_objects <- data.frame(c("FULL data set", 
@@ -242,14 +243,16 @@ rm(list = ls(pattern = "tmp_"))
 write.table(ssu18_asv_pime_sum, "ssu_filter_summmary.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 mergedGP <- merge_samples(ssu18_ps_perfect_3, "TEMP")
 SD <- merge_samples(sample_data(ssu18_ps_perfect_3), "TEMP")
 mergedGP
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 objects()
 ssu18_ps_work@phy_tree <- NULL
 ssu18_ps_filt@phy_tree <- NULL
@@ -259,7 +262,8 @@ ssu18_ps_perfect@phy_tree <- NULL
 
 We first transform all the data to relative abundance values, and compute new trees.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu18_alpha_ds <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
 for (i in ssu18_alpha_ds) {
   tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
@@ -278,7 +282,9 @@ for (i in ssu18_alpha_ds) {
 
 Next, we run the analysis for all three metrics on the data sets (without a tree).
 
-```{r, results='hide', code_folding=TRUE}
+```{r}
+#| results: hide
+#| code-fold: true
 qvalue <- c(0,1,2)
 for (i in qvalue) {
   for (j in ssu18_alpha_ds) {
@@ -297,7 +303,8 @@ objects(pattern = "_h")
 
 And make summary tables to add back into each `ps` object.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu18_alpha_ds) {
      tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_h0")))
      tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_h1")))
@@ -315,7 +322,8 @@ objects()
 
 And then create the new objects with the diversity data.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu18_alpha_ds) {
      tmp_ps <- get(i)
      tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
@@ -338,7 +346,8 @@ for (i in ssu18_alpha_ds) {
 objects()
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## THIS is legacy code for using trees. Not included in this analysis
 #### With a phylogenetic tree
 
@@ -458,7 +467,8 @@ The suffix `_fi` indicates metrics for the Arbitrary data set.  The suffix `_pe`
 The suffix `_pi` indicates metrics for the PIME data set and the suffix `_pit` indicates the lineage diversity for the PIME data set.
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ######################### FULL ASV
 ssu18_work_hill_samp <- ssu18_ps_work_hill %>% dplyr::rename("Observed" = 2,
                                                              "Shannon_exp" = 3,
@@ -480,7 +490,8 @@ ssu18_pime_hill_samp <- ssu18_ps_pime_hill %>% dplyr::rename("Observed_pi" = 2,
                                                              "InvSimpson_pi" = 4)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ######################### ASV TABLE
 ssu_tab_alpha_div <- dplyr::left_join(ssu18_work_hill_samp, ssu18_filt_hill_samp) %>%
                        dplyr::left_join(., ssu18_perfect_hill_samp) %>%
@@ -497,7 +508,9 @@ ssu_tab_alpha_div <- ssu_tab_alpha_div%>% dplyr::mutate(across(.cols = c(11:ncol
 
 <small>`r caption_tab_ssu("ssu_alpha_div")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu_tab_alpha_div
 seq_table[2:6] <- NULL
 seq_table %>%
@@ -511,7 +524,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
     columns = list(
     Sample_ID = colDef(name = "Sample_ID", 
@@ -578,7 +593,8 @@ The commands are as follows:
 
 First the Shapiro-Wilk Normality test.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu_tab_alpha_div
 ssu18_div_tab <- ssu_tab_alpha_div
 ssu18_shap_tests_asv <- c()
@@ -596,7 +612,8 @@ objects(pattern = "shap_")
 
 And then the Bartlett Test of Homogeneity of Variances.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu18_div_tab_asv <- ssu_tab_alpha_div
 ssu18_bart_tests_asv <- c()
 for (i in colnames(ssu18_div_tab_asv[,7:ncol(ssu18_div_tab_asv)])) {
@@ -612,7 +629,9 @@ objects(pattern = "_bart_")
 
 Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not. So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_norm_res <- data.frame()
 for (i in colnames(ssu18_div_tab_asv[,7:ncol(ssu18_div_tab_asv)])) {
   tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("ssu18_shap_asv_", .)))
@@ -645,7 +664,9 @@ ssu18_norm_res <- ssu18_norm_res %>%
 
 <small>`r caption_tab_ssu("ssu_norm_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_norm_res
 seq_table %>%
   download_this(
@@ -658,7 +679,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -711,7 +734,8 @@ rm(seq_table)
 
 To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu18_hill_hier <- ssu_tab_alpha_div
 ssu18_hill_hier <- ssu18_hill_hier %>% dplyr::select("Sample_ID", "TEMP") %>%
   tibble::remove_rownames()
@@ -732,7 +756,9 @@ div_test(countable = x, qvalue = i, hierarchy = hier,
 
 where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (if you choose to explore lineage diversity), and `posthoc` indicates whether to run post hoc pairwise analyses.
 
-```{r, results='hide', code_folding=TRUE}
+```{r}
+#| results: hide
+#| code-fold: true
 qvalue <- c(0,1,2)
 for (i in ssu18_alpha_ds) {
      for (j in qvalue) {
@@ -749,7 +775,8 @@ for (i in ssu18_alpha_ds) {
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## Legacy code for lineage diversity
 ## And then test significance of lineage diversity for the filtered data sets.
 ssu18_alpha_ds_tree <- c("ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
@@ -771,7 +798,8 @@ for (i in ssu18_alpha_ds_tree) {
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_objects <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
 
 tmp_metric <- data.frame(c("Observed", "Shannon exponential", "Inverse Simpson"))
@@ -825,7 +853,8 @@ for (i in tmp_objects) {
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## Format as follows:
 ## FALSE Kruskal-Wallis Test = its18_pime_q1_adt$test[[3]]
 ## TRUE Tukey post-hoc  = its18_ps_work_q0_adt$test[[1]][[1, 5]]
@@ -858,7 +887,8 @@ ssu18_ps_pime_sig_tab <- dplyr::bind_cols(ssu18_ps_pime_sig_tab, tmp_pvalue) %>%
 rm(list = ls(pattern = "tmp_"))
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_ps_work_sig_tab$dataset <- "FULL"
 ssu18_ps_work_sig_tab$type <- "ASV"
 ssu18_ps_work_sig_tab$lineage <- "No"
@@ -890,7 +920,9 @@ ssu18_sig_tab_all <- rbind(ssu18_ps_work_sig_tab,
 
 <small>`r caption_tab_ssu("ssu_sign_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_sig_tab_all
 seq_table[,2:3] <- NULL
 seq_table <-  seq_table %>% dplyr::mutate(across(.cols = c(4:5), round, digits = 4)) 
@@ -905,7 +937,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -952,107 +986,146 @@ reactable(seq_table,
 
 First let's check the results of each posthoc analysis.
 
-::: l-body
-::: {.panelset}
-::: {.panel}
+::: {.column-body}
+::: {.panel-tabset}
 
 ### Observed (q-value = 0)
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvf0_lab <- "FULL (Observed)"
 ssu18_asvf0_lab
 ssu18_ps_work_q0_adt$posthoc.method
 data.frame(ssu18_ps_work_q0_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvl0_lab <- "FILT (Observed)"
 ssu18_asvl0_lab
 ssu18_ps_filt_q0_adt$posthoc.method
 data.frame(ssu18_ps_filt_q0_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvp0_lab <- "PIME (Observed)"
 ssu18_asvp0_lab
 ssu18_ps_pime_q0_adt$posthoc.method
 data.frame(ssu18_ps_pime_q0_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvr0_lab <- "PERfect (Observed)"
 ssu18_asvr0_lab
 ssu18_ps_perfect_q0_adt$posthoc.method
 data.frame(ssu18_ps_perfect_q0_adt$posthoc)
 ```
-:::
-
-::: {.panel}
 
 ### Shannon exp  (q-value = 1)
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvf1_lab <- "FULL (Shannon exponential)"
 ssu18_asvf1_lab
 ssu18_ps_work_q1_adt$posthoc.method
 data.frame(ssu18_ps_work_q1_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvl1_lab <- "FILT (Shannon exponential)"
 ssu18_asvl1_lab
 ssu18_ps_filt_q1_adt$posthoc.method
 data.frame(ssu18_ps_filt_q1_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvp1_lab <- "PIME (Shannon exponential)"
 ssu18_asvp1_lab
 ssu18_ps_pime_q1_adt$posthoc.method
 data.frame(ssu18_ps_pime_q1_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvr1_lab <- "PERfect (Shannon exponential)"
 ssu18_asvr1_lab
 ssu18_ps_perfect_q1_adt$posthoc.method
 data.frame(ssu18_ps_perfect_q1_adt$posthoc)
 ```
 
-:::
-
-::: {.panel}
-
 ### Inverse Simpson (q-value = 2)
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvf2_lab <- "FULL (Inverse Simpson)"
 ssu18_asvf2_lab
 ssu18_ps_work_q2_adt$posthoc.method
 data.frame(ssu18_ps_work_q2_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvl2_lab <- "FILT (Inverse Simpson)"
 ssu18_asvl2_lab
 ssu18_ps_filt_q2_adt$posthoc.method
 data.frame(ssu18_ps_filt_q2_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvp2_lab <- "PIME (Inverse Simpson)"
 ssu18_asvp2_lab
 ssu18_ps_pime_q2_adt$posthoc.method
 data.frame(ssu18_ps_pime_q2_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 ssu18_asvr2_lab <- "PERfect (Inverse Simpson)"
 ssu18_asvr2_lab
 ssu18_ps_perfect_q2_adt$posthoc.method
 data.frame(ssu18_ps_perfect_q2_adt$posthoc)
 ```
-:::
 :::
 :::
 
@@ -1068,7 +1141,8 @@ div_test_plot(divtest = x, chart = "type", colour = col.pal,
 
 where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin), `colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 source("hack_code/div_test_plot_jjs.R")
 rm(list = ls(pattern="_adt_plot"))
 for (i in objects(pattern="_adt")) {
@@ -1084,7 +1158,9 @@ for (i in objects(pattern="_adt")) {
 ssu18_ps_work_q0_adt_plot
 ```
 
-```{r, echo=FALSE, eval=FALSE}
+```{r}
+#| echo: false
+#| eval: false
 ssu18_ps_work_q0_adt_plot <- ssu18_ps_work_q0_adt_plot +
                              theme(axis.title.x = element_blank()) +
                              ggtitle(ssu18_asvf0_lab) + 
@@ -1172,16 +1248,23 @@ system("cp files/alpha/figures/ssu18_alph_div_plots_asv.png include/alpha/ssu18_
 
 Posthoc adjusted p-values given for each pairwise comparison.
 
-```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| fig-height: 5
+#| column: body-outset
 knitr::include_graphics("include/alpha/ssu18_alph_div_plots_asv.png")
 ```
 <small>`r caption_fig_ssu("ssu_alpha_div_plots")`</small>
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("page_build/alpha_ssu18_alpha_wf.rdata")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 samp_ps <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_pime", "ssu18_ps_perfect")
 for (i in samp_ps) {
   dir.create(paste("files/alpha/figures/ssu/", i, sep = ""), recursive = TRUE)
@@ -1203,7 +1286,8 @@ for (i in samp_ps) {
 
 # ITS
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 ## Initial Load for  ANALYSIS #1
 set.seed(119)
 ## ASV FULL AND PIME AND PERfect
@@ -1213,7 +1297,8 @@ its18_ps_perfect <- readRDS("files/filtering/perfect/rdata/its18_ps_perfect.rds"
 its18_ps_pime <- readRDS("files/filtering/pime/rdata/its18_ps_pime.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
@@ -1241,7 +1326,8 @@ where `x` is the sample by ASV table, `i` is the q-value corresponding to the me
 
 We first transform all the data to relative abundance values, and compute new trees.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 its18_alpha_ds <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
 for (i in its18_alpha_ds) {
   tmp_ps <- transform_sample_counts(get(i), function(otu) otu/sum(otu))
@@ -1260,7 +1346,9 @@ for (i in its18_alpha_ds) {
 
 Next, we run the analysis for all three metrics on the data sets (without a tree).
 
-```{r, results='hide', code_folding=TRUE}
+```{r}
+#| results: hide
+#| code-fold: true
 qvalue <- c(0,1,2)
 for (i in qvalue) {
   for (j in its18_alpha_ds) {
@@ -1279,7 +1367,8 @@ objects(pattern = "_h")
 
 And make summary tables to add back into each `ps` object.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in its18_alpha_ds) {
      tmp_obs <- get(purrr::map_chr(i, ~ paste0(., "_h0")))
      tmp_sha <- get(purrr::map_chr(i, ~ paste0(., "_h1")))
@@ -1297,7 +1386,8 @@ objects()
 
 And then create the new objects with the diversity data.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in its18_alpha_ds) {
      tmp_ps <- get(i)
      tmp_tree <- rtree(ntaxa(tmp_ps), rooted = TRUE,
@@ -1328,7 +1418,8 @@ The suffix `_fi` indicates metrics for the Arbitrary data set.  The suffix `_pe`
 The suffix `_pi` indicates metrics for the PIME data set and the suffix `_pit` indicates the lineage diversity for the PIME data set.
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ######################### FULL ASV
 its18_work_hill_samp <- its18_ps_work_hill %>% dplyr::rename("Observed" = 2,
                                                              "Shannon_exp" = 3,
@@ -1350,7 +1441,8 @@ its18_pime_hill_samp <- its18_ps_pime_hill %>% dplyr::rename("Observed_pi" = 2,
                                                              "InvSimpson_pi" = 4)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ######################### ASV TABLE
 its_tab_alpha_div <- dplyr::left_join(its18_work_hill_samp, its18_filt_hill_samp) %>%
                        dplyr::left_join(., its18_perfect_hill_samp) %>%
@@ -1367,7 +1459,9 @@ its_tab_alpha_div <- its_tab_alpha_div%>% dplyr::mutate(across(.cols = c(11:ncol
 
 <small>`r caption_tab_its("its_alpha_div")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its_tab_alpha_div
 seq_table[2:6] <- NULL
 seq_table %>%
@@ -1381,7 +1475,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
     columns = list(
     Sample_ID = colDef(name = "Sample_ID", 
@@ -1448,7 +1544,8 @@ The commands are as follows:
 
 First the Shapiro-Wilk Normality test.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 its_tab_alpha_div
 its18_div_tab <- its_tab_alpha_div
 its18_shap_tests_asv <- c()
@@ -1466,7 +1563,8 @@ objects(pattern = "shap_")
 
 And then the Bartlett Test of Homogeneity of Variances.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 its18_div_tab_asv <- its_tab_alpha_div
 its18_bart_tests_asv <- c()
 for (i in colnames(its18_div_tab_asv[,7:ncol(its18_div_tab_asv)])) {
@@ -1482,7 +1580,9 @@ objects(pattern = "_bart_")
 
 Here we see which Shapiro-Wilk Normality **and** Bartlett tests were significant and which were not. So wherever the value of both p-values in `> 0.05` we can use an ANOVA, otherwise we use Kruskal-Wallis.
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 its18_norm_res <- data.frame()
 for (i in colnames(its18_div_tab_asv[,7:ncol(its18_div_tab_asv)])) {
   tmp_get_shap <- get(purrr::map_chr(i, ~ paste0("its18_shap_asv_", .)))
@@ -1515,7 +1615,9 @@ its18_norm_res <- its18_norm_res %>%
 
 <small>`r caption_tab_its("its_norm_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_norm_res
 seq_table %>%
   download_this(
@@ -1528,7 +1630,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1581,7 +1685,8 @@ rm(seq_table)
 
 To begin, we need to create a hierarchy variable; a two-column matrix specifying the relationship between samples (first column) and groups (second column).
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 its18_hill_hier <- its_tab_alpha_div
 its18_hill_hier <- its18_hill_hier %>% dplyr::select("Sample_ID", "TEMP") %>%
   tibble::remove_rownames()
@@ -1602,7 +1707,9 @@ div_test(countable = x, qvalue = i, hierarchy = hier,
 
 where `x` is ASV by sample table, `i` is the q-value corresponding to the metric of interest, `hier` is the hierarchy matrix, `tree` is an ultrametric formatted phylogenetic tree (if you choose to explore lineage diversity), and `posthoc` indicates whether to run post hoc pairwise analyses.
 
-```{r, results='hide', code_folding=TRUE}
+```{r}
+#| results: hide
+#| code-fold: true
 qvalue <- c(0,1,2)
 for (i in its18_alpha_ds) {
      for (j in qvalue) {
@@ -1618,7 +1725,8 @@ for (i in its18_alpha_ds) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_objects <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
 
 tmp_metric <- data.frame(c("Observed", "Shannon exponential", "Inverse Simpson"))
@@ -1672,7 +1780,8 @@ for (i in tmp_objects) {
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## Format as follows:
 ## FALSE Kruskal-Wallis Test = its18_pime_q1_adt$test[[3]]
 ## TRUE Tukey post-hoc  = its18_ps_work_q0_adt$test[[1]][[1, 5]]
@@ -1705,7 +1814,8 @@ its18_ps_pime_sig_tab <- dplyr::bind_cols(its18_ps_pime_sig_tab, tmp_pvalue) %>%
 rm(list = ls(pattern = "tmp_"))
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_ps_work_sig_tab$dataset <- "FULL"
 its18_ps_work_sig_tab$type <- "ASV"
 its18_ps_work_sig_tab$lineage <- "No"
@@ -1737,7 +1847,9 @@ its18_sig_tab_all <- rbind(its18_ps_work_sig_tab,
 
 <small>`r caption_tab_its("its_sign_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_sig_tab_all
 seq_table[,2:3] <- NULL
 seq_table <-  seq_table %>% dplyr::mutate(across(.cols = c(4:5), round, digits = 4)) 
@@ -1752,7 +1864,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1799,107 +1913,146 @@ rm(seq_table)
 
 First let's check the results of each posthoc analysis.
 
-::: l-body
-::: {.panelset}
-::: {.panel}
+::: {.column-body}
+::: {.panel-tabset}
 
 ### Observed (q-value = 0)
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvf0_lab <- "FULL (Observed)"
 its18_asvf0_lab
 its18_ps_work_q0_adt$posthoc.method
 data.frame(its18_ps_work_q0_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvl0_lab <- "FILT (Observed)"
 its18_asvl0_lab
 its18_ps_filt_q0_adt$posthoc.method
 data.frame(its18_ps_filt_q0_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvp0_lab <- "PIME (Observed)"
 its18_asvp0_lab
 its18_ps_pime_q0_adt$posthoc.method
 data.frame(its18_ps_pime_q0_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvr0_lab <- "PERfect (Observed)"
 its18_asvr0_lab
 its18_ps_perfect_q0_adt$posthoc.method
 data.frame(its18_ps_perfect_q0_adt$posthoc)
 ```
-:::
-
-::: {.panel}
 
 ### Shannon exp  (q-value = 1)
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvf1_lab <- "FULL (Shannon exponential)"
 its18_asvf1_lab
 its18_ps_work_q1_adt$posthoc.method
 data.frame(its18_ps_work_q1_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvl1_lab <- "FILT (Shannon exponential)"
 its18_asvl1_lab
 its18_ps_filt_q1_adt$posthoc.method
 data.frame(its18_ps_filt_q1_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvp1_lab <- "PIME (Shannon exponential)"
 its18_asvp1_lab
 its18_ps_pime_q1_adt$posthoc.method
 data.frame(its18_ps_pime_q1_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvr1_lab <- "PERfect (Shannon exponential)"
 its18_asvr1_lab
 its18_ps_perfect_q1_adt$posthoc.method
 data.frame(its18_ps_perfect_q1_adt$posthoc)
 ```
 
-:::
-
-::: {.panel}
-
 ### Inverse Simpson (q-value = 2)
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvf2_lab <- "FULL (Inverse Simpson)"
 its18_asvf2_lab
 its18_ps_work_q2_adt$posthoc.method
 data.frame(its18_ps_work_q2_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvl2_lab <- "FILT (Inverse Simpson)"
 its18_asvl2_lab
 its18_ps_filt_q2_adt$posthoc.method
 data.frame(its18_ps_filt_q2_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvp2_lab <- "PIME (Inverse Simpson)"
 its18_asvp2_lab
 its18_ps_pime_q2_adt$posthoc.method
 data.frame(its18_ps_pime_q2_adt$posthoc)
 ```
 
-```{r, echo=FALSE, eval=TRUE, results='hold', comment=''}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hold
+#| comment: '' 
 its18_asvr2_lab <- "PERfect (Inverse Simpson)"
 its18_asvr2_lab
 its18_ps_perfect_q2_adt$posthoc.method
 data.frame(its18_ps_perfect_q2_adt$posthoc)
 ```
-:::
 :::
 :::
 
@@ -1915,7 +2068,8 @@ div_test_plot(divtest = x, chart = "type", colour = col.pal,
 
 where `x` is the results from the `div_test` function, `"type"` is chart type (box, jitter, or violin), `colour` is is a color palette, `posthoc` indicates whether to run posthoc pairwise analyses, and `value` is the maximum p-value to show in pairwise posthoc results. **WARNING** if none of the posthoc results are below the specified threshold, the function will throw an error. Therefore, until this is fixed, all posthoc values are shown.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 source("hack_code/div_test_plot_jjs.R")
 rm(list=ls(pattern="_adt_plot"))
 for (i in objects(pattern="_adt")) {
@@ -1931,7 +2085,9 @@ for (i in objects(pattern="_adt")) {
 its18_ps_work_q0_adt_plot
 ```
 
-```{r, echo=FALSE, eval=FALSE}
+```{r}
+#| echo: false
+#| eval: false
 its18_ps_work_q0_adt_plot <- its18_ps_work_q0_adt_plot +
                              theme(axis.title.x = element_blank()) +
                              ggtitle(its18_asvf0_lab) + 
@@ -2019,16 +2175,23 @@ system("cp files/alpha/figures/its18_alph_div_plots_asv.png include/alpha/its18_
 
 Posthoc adjusted p-values given for each pairwise comparison.
 
-```{r, echo=FALSE, warning=FALSE, fig.height=5, layout='l-page', eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| fig-height: 5
+#| column: body-outset
 knitr::include_graphics("include/alpha/its18_alph_div_plots_asv.png")
 ```
 <small>`r caption_fig_its("its_alpha_div_plots")`</small>
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("page_build/alpha_wf.rdata")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 samp_ps <- c("its18_ps_work", "its18_ps_filt", "its18_ps_pime", "its18_ps_perfect")
 for (i in samp_ps) {
   dir.create(paste("files/alpha/figures/its/", i, sep = ""), recursive = TRUE)
@@ -2048,7 +2211,9 @@ for (i in samp_ps) {
 } 
 ```
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 remove(list = ls())
 ```
 
@@ -2056,18 +2221,29 @@ remove(list = ls())
 
 Data products generated in this workflow can be downloaded from figshare.
 
-<iframe src="https://widgets.figshare.com/articles/16826779/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/16826779/embed?show_title=1" width="100%" height="251" allowfullscreen frameborder="0"></iframe>
 
 </br>
 
 <a href="beta.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 6. Beta Diversity & Dispersion Estimates</a>
 <a href="taxa.html" class="btnnav button_round" style="float: left;">Previous workflow:
-<br> 4. Taxonomic Diversity</a>
+<br> 4. Taxonomic Diversity</a><br><br>
 
-##  Source Code {.appendix}
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/alpha.Rmd).
+####  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
 ## Data Availability {.appendix}
 
@@ -2075,6 +2251,8 @@ Data generated in this workflow and the Rdata need to run the workflow can be ac
 
 ## Last updated on {.appendix}
 
-```{r,echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 Sys.time()
 ```
