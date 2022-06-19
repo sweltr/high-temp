@@ -208,9 +208,9 @@ The source code for the PDF version of this page (publication Electronic Supplem
 ## Supplmentary Figures
 
 `r figr("supp_fig_1", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Top bacterial/archaeal phyla (unfiltered data).  
-`r figr("supp_fig_2", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Top fungal orders (unfiltered data).   
-`r figr("supp_fig_3", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alpha diversity (16S rRNA) of the unfiltered & filtered datas sets. 
-`r figr("supp_fig_4", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alpha diversity (ITS) of the unfiltered & filtered datas sets. 
+`r figr("supp_fig_2", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Top fungal orders (unfiltered data).  
+`r figr("supp_fig_3", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alpha diversity (16S rRNA) of the unfiltered & filtered datas sets.  
+`r figr("supp_fig_4", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Alpha diversity (ITS) of the unfiltered & filtered datas sets.  
 `r figr("supp_fig_5", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Autocorrelation plots (16S rRNA).  
 `r figr("supp_fig_6", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Autocorrelation plots (ITS).  
 `r figr("supp_fig_7", prefix = TRUE, link = TRUE, type="Supplmentary Figure")` | Acidobacteriota family plots.  
