@@ -182,7 +182,7 @@ file.copy("include/som", "public_build/include", recursive = TRUE)
 This page contains the Supplementary Information for the manuscript ***Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission***. It is basically the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly.
 
 ::: {.callout-note}
-The source code for the PDF version of this page (publication Electronic Supplementary Material)---including all figures, tables, and data sets---can be found on the [project GitHub repo](https://github.com/sweltr/high-temp/blob/main/ESM/). 
+The source code for the PDF version of this page (publication Electronic Supplementary Material)---including all figures, tables, and data sets---can be found on the [project GitHub repo](https://github.com/sweltr/high-temp/tree/main/paper/ESM). 
 :::
 
 # Content Description
