@@ -1,0 +1,16 @@
+Metadata set	parameter	r$^{2}$	P-value	r$^{2}$	P-value
+i. Edaphic properties	AST	0.829	0.001	1	0.001
+	H$_{2}$O	0.519	0.006		
+	DOC	0.446	0.037		
+ii. Microbial functional response	AG$_{\mathrm{ase}}$	0.444	0.026	0.559	0.001
+	BG$_{\mathrm{ase}}$	0.560	0.007		
+	S$_{\mathrm{ase}}$	0.737	0.002	0.614	0.001
+	XY$_{\mathrm{ase}}$	0.519	0.009	0.456	0.002
+	PX$_{\mathrm{ase}}$	0.764	0.001	0.612	0.001
+	CO$_{2}$	0.504	0.013		
+	enzNP	0.624	0.004	0.462	0.006
+iii. Temperature adaptive response	S$_{\mathrm{Q10}}$	0.496	0.015	0.439	0.001
+	LP$_{\mathrm{Q10}}$	0.413	0.041	0.377	0.005
+	T$_{\mathrm{min}}$ for growth	0.446	0.030	0.404	0.005
+	CUE$_{\mathrm{cp}}$			0.325	0.013
+	P$_{\mathrm{Q10}}$			0.518	0.001

@@ -1,0 +1,5 @@
+a) Abiotic effects on soil CO$_{2}$ efflux				
+	Parameter	SE	DF	P-value
+Temperature	2.238	0.134	95.168	<2e-16 ***
+Moisture	-3.659	9.193	96.702	0.691
+Intercept (time)	-58.03	5.545	96.728	<2e-16 ***

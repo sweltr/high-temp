@@ -1,7 +1,18 @@
 project:
   type: website
   output-dir: public_build
-  exclude: ["sandbox", "public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build", "archive_code"]
+  render:
+    - "*.qmd"
+    #- "!som.qmd"
+    - "!sandbox/"
+    - "!public/"
+    - "!hack_code/"
+    - "!page_build/"
+    - "!files/"
+    - "!public_build/"
+    - "!archive_code/"
+    - "!README.md"
+    - "!paper/*/*.qmd"
 
 website:
   title: ""
