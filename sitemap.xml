@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" version="1.0">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://sweltr.github.io/about.html</loc>
-    <lastmod>2022-06-02T11:56:59-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/alpha.html</loc>
+    <lastmod>2022-06-16T23:31:11.386Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/alpha.html</loc>
-    <lastmod>2022-05-07T09:37:36-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/data-prep.html</loc>
+    <lastmod>2022-06-16T23:31:37.633Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/beta.html</loc>
-    <lastmod>2022-05-07T09:36:07-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/metadata.html</loc>
+    <lastmod>2022-06-16T23:33:25.078Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/da.html</loc>
-    <lastmod>2022-05-07T09:36:20-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/dada2.html</loc>
+    <lastmod>2022-06-16T23:34:02.753Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/dada2.html</loc>
-    <lastmod>2022-05-06T08:38:52-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/filtering.html</loc>
+    <lastmod>2022-06-16T23:34:54.623Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/data-availability.html</loc>
-    <lastmod>2022-06-02T11:45:40-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/som.html</loc>
+    <lastmod>2022-06-17T00:03:24.055Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/data-prep.html</loc>
-    <lastmod>2022-05-07T09:36:59-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/index.html</loc>
+    <lastmod>2022-06-16T23:35:19.184Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/filtering.html</loc>
-    <lastmod>2022-05-07T09:35:19-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/about.html</loc>
+    <lastmod>2022-06-16T23:35:26.513Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/</loc>
-    <lastmod>2022-02-13T08:42:04-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/taxa.html</loc>
+    <lastmod>2022-06-16T23:36:03.060Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/metadata.html</loc>
-    <lastmod>2022-06-02T08:31:52-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/beta.html</loc>
+    <lastmod>2022-06-16T23:36:54.113Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/som.html</loc>
-    <lastmod>2022-06-03T15:05:59-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/data-availability.html</loc>
+    <lastmod>2022-06-16T23:36:57.721Z</lastmod>
   </url>
   <url>
-    <loc>https://sweltr.github.io/taxa.html</loc>
-    <lastmod>2022-05-07T09:35:54-05:00</lastmod>
+    <loc>https://sweltr.github.io/high-temp/da.html</loc>
+    <lastmod>2022-06-16T23:38:32.033Z</lastmod>
   </url>
 </urlset>
