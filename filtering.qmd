@@ -2,22 +2,18 @@
 title: "3. Filtering"
 description: |
   Reproducible workflow for Arbitrary, PERfect, & PIME filtering of community data.
-author:
-#  - name: Jarrod J Scott
-#    url: https://example.com/norajones
-#    affiliation: Spacely Sprockets
-#    affiliation_nrl: https://example.com/spacelysprokets
-bibliography: assets/cite.bib
-output:
-  distill::distill_article:
+format:
+  html:
     toc: true
-    toc_depth: 3
+    toc-depth: 3
 ---
 
 <details markdown="1">
 <summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup, message=FALSE, results = 'hide'}
+```{r}
+#| message: false 
+#| results: hide
 remove(list = ls())
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
@@ -27,9 +23,9 @@ set.seed(119)
 #pacman::p_depends_reverse(PERFect, local = TRUE)  
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
-pacman::p_load(tidyverse, metacoder, hilldiv, patchwork, ampvis2, 
+pacman::p_load(tidyverse, patchwork, 
                agricolae, labdsv, naniar, PERFect, pime, ape, gdata,
-               pairwiseAdonis, microbiome, seqRFLP, DT, microbiomeMarker, 
+               pairwiseAdonis, microbiome, seqRFLP, microbiomeMarker, 
                reactable, downloadthis, captioner, jamba, 
                install = FALSE, update = FALSE)
 
@@ -46,14 +42,19 @@ source(file.path("assets", "functions.R"))
 
 </details>
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 ## Load to build page
 load("page_build/filtering_wf.rdata")
 ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
 its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
 ```
 
-```{r, echo = FALSE, eval=TRUE, results = 'hide'}
+```{r}
+#| include: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab_ssu <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
 caption_fig_ssu <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
@@ -66,14 +67,9 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
 ```
 </details>
 
-```{r echo=FALSE, eval=TRUE}
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
-```
-
-```{r, echo = FALSE, eval = TRUE}
+```{r}
+#| echo: false
+#| eval: true
 source("assets/captions/captions_filtering.R")
 ```
 
@@ -83,7 +79,7 @@ In [Part A](#a.-arbitrary-filtering), we apply arbitrary filtering to the 16S rR
 
 Files needed to run this workflow can be downloaded from figshare. 
 
-<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="568" height="301" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14690739/embed?show_title=1" width="100%" height="301" allowfullscreen frameborder="0"></iframe>
 
 # Filtering Results
 
@@ -93,8 +89,8 @@ We begin by summarizing the results of each filtering method on the 16S and ITS 
 
 <small>`r caption_tab_ssu("ssu_all_filt_summary")`</small>
 
-
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_filtering_results <- dplyr::left_join(ssu18_sum_arbitrary, ssu18_sum_perfect, 
                                             by = c("Metric", "Full data")) %>% 
                            dplyr::left_join(., ssu18_sum_pime, 
@@ -102,7 +98,9 @@ ssu18_filtering_results <- dplyr::left_join(ssu18_sum_arbitrary, ssu18_sum_perfe
   dplyr::rename("Arbitrary" = 3, "PERfect" = 4, "PIME" = 5)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_filtering_results
 seq_table %>%
   download_this(
@@ -115,7 +113,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -141,9 +141,8 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-
-
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(ssu18_ps_work)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(ssu18_ps_work, split = TRUE, measures = "Observed") %>%
@@ -161,8 +160,8 @@ ssu_work_samp_summary <- tmp_join
 rm(list = ls(pattern = "tmp_"))
 ```
 
-
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_filtering_results <- dplyr::left_join(ssu18_sum_arbitrary, ssu18_sum_perfect, 
                                             by = c("Metric", "Full data")) %>% 
                            dplyr::left_join(., ssu18_sum_pime, 
@@ -171,7 +170,8 @@ ssu18_filtering_results <- dplyr::left_join(ssu18_sum_arbitrary, ssu18_sum_perfe
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu_all_filt_samp_summary <- dplyr::left_join(ssu_work_samp_summary, ssu_filt_samp_summary, 
                              by = c("Sample_ID", "PLOT", "TREAT", "TEMP", "PAIR")) %>% 
             dplyr::left_join(., ssu_perfect_samp_summary, 
@@ -186,7 +186,9 @@ ssu_all_filt_samp_summary[,2:5] <- NULL
 
 <small>`r caption_tab_ssu("ssu_all_filt_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu_all_filt_samp_summary
 seq_table %>%
   download_this(
@@ -199,7 +201,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
     columns = list(
     Sample_ID = colDef(name = "Sample_ID", 
@@ -246,7 +250,8 @@ rm(seq_table)
 
 <small>`r caption_tab_its("its_all_filt_summary")`</small>
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_filtering_results <- dplyr::left_join(its18_sum_arbitrary, its18_sum_perfect, 
                                             by = c("Metric", "Full data")) %>% 
                            dplyr::left_join(., its18_sum_pime, 
@@ -254,7 +259,9 @@ its18_filtering_results <- dplyr::left_join(its18_sum_arbitrary, its18_sum_perfe
   dplyr::rename("Arbitrary" = 3, "PERfect" = 4, "PIME" = 5)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_filtering_results
 seq_table %>%
   download_this(
@@ -267,7 +274,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -293,8 +302,8 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(its18_ps_work)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(its18_ps_work, split = TRUE, measures = "Observed") %>%
@@ -313,7 +322,8 @@ rm(list = ls(pattern = "tmp_"))
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_filtering_results <- dplyr::left_join(its18_sum_arbitrary, its18_sum_perfect, 
                                             by = c("Metric", "Full data")) %>% 
                            dplyr::left_join(., its18_sum_pime, 
@@ -322,7 +332,8 @@ its18_filtering_results <- dplyr::left_join(its18_sum_arbitrary, its18_sum_perfe
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its_all_filt_samp_summary <- dplyr::left_join(its_work_samp_summary, its_filt_samp_summary, 
                              by = c("Sample_ID", "PLOT", "TREAT", "TEMP", "PAIR")) %>% 
             dplyr::left_join(., its_perfect_samp_summary, 
@@ -337,7 +348,9 @@ its_all_filt_samp_summary[,2:5] <- NULL
 
 <small>`r caption_tab_its("its_all_filt_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its_all_filt_samp_summary
 seq_table %>%
   download_this(
@@ -350,7 +363,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-page", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
     columns = list(
     Sample_ID = colDef(name = "Sample_ID", 
@@ -393,13 +408,12 @@ rm(seq_table)
 
 ```
 
-
-
 # A. Arbitrary Filtering
 
 For low-count arbitrary filtering, we set the minimum read count to `5` and the prevalence to 20%. Then we apply another filter to remove ASVs with a low variance (`0.2`).
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 ## Initial Load for ARBITRARY  ANALYSIS #1
 set.seed(119)
 ssu18_ps_work <- readRDS("files/data-prep/rdata/ssu18_ps_work.rds")
@@ -408,7 +422,8 @@ its18_ps_work <- readRDS("files/data-prep/rdata/its18_ps_work.rds")
 
 ## 16S rRNA
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 tmp_low_count <- phyloseq::genefilter_sample(
                                          ssu18_ps_work, 
                                          filterfun_sample(function(x) x >= 5), 
@@ -430,11 +445,14 @@ ssu18_ps_filt
 
 Here is the filtered 16S rRNA phyloseq object. 
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_ps_filt
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## This code is gross. I spent hours trying to find a better
 ## solution but failed :(
 rm(list = ls(pattern = "tmp_"))
@@ -513,7 +531,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu_arbitrary_filt_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_sum_arbitrary
 seq_table %>%
   download_this(
@@ -526,7 +546,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -554,7 +576,8 @@ rm(seq_table)
 
 We can look at how filtering affected total reads and ASVs for each sample.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(ssu18_ps_filt)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(ssu18_ps_filt, split = TRUE, measures = "Observed") %>%
@@ -574,7 +597,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu_filt_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu_filt_samp_summary
 seq_table %>%
   download_this(
@@ -587,7 +612,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -615,7 +642,8 @@ rm(seq_table)
 
 ## ITS
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 tmp_low_count <- phyloseq::genefilter_sample(
                                          its18_ps_work, 
                                          filterfun_sample(function(x) x >= 5), 
@@ -630,11 +658,14 @@ its18_ps_filt
 
 And the filtered ITS phyloseq object. 
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_ps_filt
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## This code is gross. I spent hours trying to find a better
 ## solution but failed :(
 rm(list = ls(pattern = "tmp_"))
@@ -713,7 +744,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its_arbitrary_filt_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_sum_arbitrary
 seq_table %>%
   download_this(
@@ -726,7 +759,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -755,7 +790,8 @@ rm(seq_table)
 
 And again, let's look how filtering affected total reads and ASVs for each sample.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(its18_ps_filt)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(its18_ps_filt, split = TRUE, measures = "Observed") %>%
@@ -775,7 +811,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its_filt_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its_filt_samp_summary
 seq_table %>%
   download_this(
@@ -788,7 +826,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -814,7 +854,8 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 saveRDS(ssu18_ps_filt, "files/filtering/arbitrary/rdata/ssu18_ps_filt.rds")
 saveRDS(its18_ps_filt, "files/filtering/arbitrary/rdata/its18_ps_filt.rds")
 ```
@@ -827,7 +868,8 @@ To run PERFect, we need the ASV tables in data frame format with samples as rows
 
 ## Setup
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 samp_ps_filt <- c("ssu18_ps_work", "its18_ps_work")
 for (i in samp_ps_filt) {
   tmp_get <- get(i)
@@ -870,7 +912,8 @@ ssu_per_pval <- 0.05
 its_per_pval <- 0.10
 ```
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in samp_ps_filt) {
   tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_perfect")))
   tmp_pval <- gsub("18.*", "_per_pval", i)
@@ -896,7 +939,8 @@ for (i in samp_ps_filt) {
 objects(pattern = "_sim")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## FOR TESTING
 dim(ssu18_ps_work_perfect_sim$filtX)
 dim(ssu18_ps_work_ord_perfect_sim$filtX)
@@ -917,7 +961,8 @@ tmp_com <- dplyr::left_join(tmp_pval, tmp_org, by = "ID") %>%
 write.table(tmp_com, "tmp_com.txt", quote = FALSE, sep = "\t", row.names = FALSE)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ps_sim <- c("ssu18_ps_work_perfect_sim", "ssu18_ps_work_ord_perfect_sim", 
             "its18_ps_work_perfect_sim", "its18_ps_work_ord_perfect_sim", )
 for (i in ps_sim) {
@@ -935,7 +980,10 @@ for (i in ps_sim) {
 objects()
 ```
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
 #Save some deets so we do not need to save large objects
 ssu_default_num_asvs <- dim(ssu18_ps_work_perfect_sim$filtX)[2]
 ssu_ord_num_asvs <- dim(ssu18_ps_work_ord_perfect_sim$filtX)[2]
@@ -1001,7 +1049,8 @@ its_select <- "_perfect"
 ```
 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in samp_ps_filt) {
   ## select pval cutoff and method
     tmp_pval <- gsub("18.*", "_per_pval", i)
@@ -1049,7 +1098,9 @@ its18_ps_perfect <- its18_ps_work_perf_filt
 rm(list = ls(pattern = "_perf_filt"))
 ```
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 print("16S rRNA phyloseq object", quote = FALSE)
 ssu18_ps_perfect
 print("ITS phyloseq object", quote = FALSE)
@@ -1062,7 +1113,8 @@ How many reads and ASVs were removed following PERfect filtering?
 
 **16S rRNA**
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## This code is gross. I spent hours trying to find a better
 ## solution but failed :(
 rm(list = ls(pattern = "tmp_"))
@@ -1141,7 +1193,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu_perfect_filt_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_sum_perfect
 seq_table %>%
   download_this(
@@ -1154,7 +1208,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1182,7 +1238,8 @@ rm(seq_table)
 
 **ITS**
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 rm(list = ls(pattern = "tmp_"))
 tmp_samples <- c("its18_ps_work", "its18_ps_perfect")
 tmp_objects <- c(
@@ -1259,7 +1316,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its_perfect_filt_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_sum_perfect
 seq_table %>%
   download_this(
@@ -1272,7 +1331,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1302,7 +1363,8 @@ Here is a summary table of total reads and ASVs on a per sample basis after filt
 
 **16S rRNA**
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(ssu18_ps_perfect)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(ssu18_ps_perfect, split = TRUE, measures = "Observed") %>%
@@ -1322,7 +1384,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu_perfect_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu_perfect_samp_summary
 seq_table %>%
   download_this(
@@ -1335,7 +1399,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1363,7 +1429,8 @@ rm(seq_table)
 
 **ITS**
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(its18_ps_perfect)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(its18_ps_perfect, split = TRUE, measures = "Observed") %>%
@@ -1383,7 +1450,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its_perfect_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its_perfect_samp_summary
 seq_table %>%
   download_this(
@@ -1396,7 +1465,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1424,12 +1495,14 @@ rm(seq_table)
 
 And finally, save the PERfect filtered phyloseq objects.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 saveRDS(ssu18_ps_perfect, "files/filtering/perfect/rdata/ssu18_ps_perfect.rds")
 saveRDS(its18_ps_perfect, "files/filtering/perfect/rdata/its18_ps_perfect.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("page_build/filtering_wf.rdata")
 ```
 
@@ -1439,7 +1512,8 @@ The first step in the PIME process is to rarefy the data and then proceed with t
 
 ## 16S rRNA
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 ## Initial Load for PIME  ANALYSIS #1
 remove(list = ls())
 set.seed(119)
@@ -1462,7 +1536,9 @@ ssu18_pime_ds@phy_tree <- NULL
 ssu18_pime_ds
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_ps <- ssu18_ps_work
 tmp_ps@phy_tree <- NULL
 tmp_ps
@@ -1483,7 +1559,9 @@ ssu18_pime_ds <- rarefy_even_depth(ssu18_pime_ds_full,
 present in any sample after random subsampling
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_pime_ds
 ```
 
@@ -1493,7 +1571,9 @@ The first step in PIME is to define if the microbial community presents a high r
 ssu18_pime.oob.error <- pime.oob.error(ssu18_pime_ds, "TEMP")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_pime.oob.error
 ```
 
@@ -1505,7 +1585,9 @@ ssu18_per_variable_obj <- pime.split.by.variable(ssu18_pime_ds, "TEMP")
 ssu18_per_variable_obj
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_per_variable_obj
 ```
 
@@ -1521,7 +1603,9 @@ ssu18_prevalences
 <details markdown="1">
 <summary>Detailed results for all prevalences intervals  </summary>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_prevalences
 ```
 </details>
@@ -1535,7 +1619,9 @@ set.seed(1911)
 ssu18_best.prev <- pime.best.prevalence(ssu18_prevalences, "TEMP")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_best.prev$`OOB error`
 ```
 
@@ -1555,14 +1641,17 @@ Looks like the lowest OOB error rate (%) that retains the most ASVs is `r min(ss
 
 ### Best Prevalence Summary
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_imp_best[, 13:14] <- list(NULL)
 ssu18_imp_best <- ssu18_imp_best %>% dplyr::rename("ASV_ID" = "SequenceID")
 ```
 
 <small>`r caption_tab_ssu("ssu_pime_filt_top_asvs")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_imp_best
 seq_table %>%
   download_this(
@@ -1575,7 +1664,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_imp_best %>%
   dplyr::rename("Control" = 2, "Warm_3" = 3, "Warm_8" = 4) %>% 
  mutate_if(is.numeric, round, digits = 4)
@@ -1613,7 +1704,9 @@ rm(seq_table)
 
 Here is a list of the top 30 ASVs.
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_imp_best_t$ASV_ID
 ```
 
@@ -1628,11 +1721,14 @@ saveRDS(ssu18_prevalence_best, "files/filtering/pime/rdata/ssu18_prevalence_best
 
 And look at a summary of the phyloseq object.
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_prevalence_best
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 rm(list = ls(pattern = "tmp_"))
 tmp_samples <- c("ssu18_ps_work", "ssu18_prevalence_best")
 tmp_objects <- c(
@@ -1709,7 +1805,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu_perfect_filt_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_sum_pime
 seq_table %>%
   download_this(
@@ -1722,7 +1820,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_sum_pime
 reactable(seq_table,
   defaultColDef = colDef(
@@ -1759,13 +1859,16 @@ ssu18_randomized <- pime.error.prediction(ssu18_pime_ds, "TEMP",
                                           max.prev = 95)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_oob_error <- ssu18_randomized$`Results table`
 ```
 
 <small>`r caption_tab_ssu("ssu_pime_est_error")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_oob_error
 seq_table %>%
   download_this(
@@ -1778,7 +1881,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_oob_error  %>% 
  mutate_if(is.numeric, round, digits = 4)
 
@@ -1799,7 +1904,8 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_randomized$Plot
 ```
 
@@ -1810,7 +1916,10 @@ ssu18_replicated.oob.error <- pime.oob.replicate(ssu18_prevalences, "TEMP",
                                          bootstrap = 100, parallel = TRUE)
 ```
 
-```{r, echo=FALSE, eval=TRUE, fig.height=5}
+```{r}
+#| echo: false
+#| eval: true
+#| fig-height: 5
 ssu18_obb_orig <- ssu18_replicated.oob.error$Plot
 ssu18_obb_rand <- ssu18_randomized$Plot
 
@@ -1855,14 +1964,17 @@ saveRDS(ssu18_ps_pime_split$`3`, "files/filtering/pime/rdata/ssu18_ps_pime_3.rds
 saveRDS(ssu18_ps_pime_split$`8`, "files/filtering/pime/rdata/ssu18_ps_pime_8.rds")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_ps_pime_split
 #ssu18_ps_pime_split$`0`
 #ssu18_ps_pime_split$`3`
 #ssu18_ps_pime_split$`8`
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_pime_preval.tax <- tax_table(ssu18_ps_pime)
 write.table(ssu18_pime_preval.tax,
             file="files/filtering/pime/tables/ssu18_asv_PIME_tax_table.txt",
@@ -1883,7 +1995,8 @@ write.table(ssu18_pime_preval.samp,
 
 You know the routine. How did filtering affect total reads and ASVs for each sample?
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(ssu18_ps_pime)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(ssu18_ps_pime, split = TRUE, measures = "Observed") %>%
@@ -1903,7 +2016,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu_pime_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu_pime_samp_summary
 seq_table %>%
   download_this(
@@ -1916,7 +2031,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1944,7 +2061,9 @@ rm(seq_table)
 
 And here is how the subsets changed through the PIME filtering process.
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 ssu18_ps_pime_0 <- ssu18_ps_pime_split$`0`
 ssu18_ps_pime_3 <- ssu18_ps_pime_split$`3`
 ssu18_ps_pime_8 <- ssu18_ps_pime_split$`8`
@@ -1982,7 +2101,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_ssu("ssu18_asv_pime_sum")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_asv_pime_sum
 seq_table %>%
   download_this(
@@ -1995,7 +2116,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -2033,7 +2156,9 @@ its18_which_pime <- "its18_pime_ds"
 its18_pime_ds@phy_tree <- NULL
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_ps_work
 ```
 
@@ -2052,7 +2177,9 @@ its18_pime_ds <- rarefy_even_depth(its18_pime_ds_full,
 present in any sample after random subsampling
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_pime_ds
 ```
 
@@ -2062,7 +2189,9 @@ The first step in PIME is to define if the microbial community presents a high r
 its18_pime.oob.error <- pime.oob.error(its18_pime_ds, "TEMP")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_pime.oob.error
 ```
 
@@ -2074,7 +2203,9 @@ its18_per_variable_obj <- pime.split.by.variable(its18_pime_ds, "TEMP")
 its18_per_variable_obj
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_per_variable_obj
 ```
 
@@ -2090,7 +2221,9 @@ its18_prevalences
 <details markdown="1">
 <summary>Detailed results for all prevalences intervals  </summary>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_prevalences
 ```
 </details>
@@ -2104,7 +2237,9 @@ set.seed(1911)
 its18_best.prev <- pime.best.prevalence(its18_prevalences, "TEMP")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_best.prev$`OOB error`
 ```
 
@@ -2124,14 +2259,17 @@ Looks like the lowest OOB error rate (%) that retains the most ASVs is `r min(it
 
 ### Best Prevalence Summary
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_imp_best[, 13:14] <- list(NULL)
 its18_imp_best <- its18_imp_best %>% dplyr::rename("ASV_ID" = "SequenceID")
 ```
 
 <small>`r caption_tab_its("its_pime_filt_top_asvs")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_imp_best
 seq_table %>%
   download_this(
@@ -2145,7 +2283,9 @@ seq_table %>%
 ```
 
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_imp_best %>%
   dplyr::rename("Control" = 2, "Warm_3" = 3, "Warm_8" = 4) %>% 
  mutate_if(is.numeric, round, digits = 4)
@@ -2181,7 +2321,9 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 its18_imp_best_t$ASV_ID
 ```
 
@@ -2196,11 +2338,14 @@ saveRDS(its18_prevalence_best, "files/filtering/pime/rdata/its18_asv_prevalence_
 
 And look at a summary of the data.
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_prevalence_best
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 rm(list = ls(pattern = "tmp_"))
 tmp_samples <- c("its18_ps_work", "its18_prevalence_best")
 tmp_objects <- c(
@@ -2277,7 +2422,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its_perfect_filt_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_sum_pime
 seq_table %>%
   download_this(
@@ -2291,7 +2438,9 @@ seq_table %>%
 ```
 
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_sum_pime
 reactable(seq_table,
   defaultColDef = colDef(
@@ -2328,13 +2477,16 @@ its18_randomized <- pime.error.prediction(its18_pime_ds, "TEMP",
                                           max.prev = 95)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_oob_error <- its18_randomized$`Results table`
 ```
 
 <small>`r caption_tab_its("its_pime_est_error")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_oob_error
 seq_table %>%
   download_this(
@@ -2347,7 +2499,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_oob_error  %>% 
  mutate_if(is.numeric, round, digits = 4)
 
@@ -2368,7 +2522,8 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_randomized$Plot
 ```
 
@@ -2379,7 +2534,10 @@ its18_replicated.oob.error <- pime.oob.replicate(its18_prevalences, "TEMP",
                                          bootstrap = 100, parallel = TRUE)
 ```
 
-```{r, echo=FALSE, eval=TRUE, fig.height=5}
+```{r}
+#| echo: false
+#| eval: true
+#| fig-height: 5
 its18_obb_orig <- its18_replicated.oob.error$Plot
 its18_obb_rand <- its18_randomized$Plot
 
@@ -2424,14 +2582,17 @@ saveRDS(its18_ps_pime_split$`3`, "files/filtering/pime/rdata/its18_ps_pime_3.rds
 saveRDS(its18_ps_pime_split$`8`, "files/filtering/pime/rdata/its18_ps_pime_8.rds")
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_ps_pime_split
 #its18_ps_pime_split$`0`
 #its18_ps_pime_split$`4`
 #its18_ps_pime_split$`8`
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_pime_preval.tax <- tax_table(its18_ps_pime)
 write.table(its18_pime_preval.tax,
             file="files/filtering/pime/tables/its18_asv_PIME_tax_table.txt",
@@ -2452,7 +2613,8 @@ write.table(its18_pime_preval.samp,
 
 The influence of filtering on total reads and ASVs for each sample. 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 tmp_read_count <- data.frame(sample_sums(its18_ps_pime)) %>%
   tibble::rownames_to_column("SamName")
 tmp_asv_count <- estimate_richness(its18_ps_pime, split = TRUE, measures = "Observed") %>%
@@ -2472,7 +2634,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its_pime_samp_summary")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its_pime_samp_summary
 seq_table %>%
   download_this(
@@ -2485,7 +2649,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -2513,7 +2679,9 @@ rm(seq_table)
 
 And here is how the subsets changed through the PIME filtering process.
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 its18_ps_pime_0 <- its18_ps_pime_split$`0`
 its18_ps_pime_3 <- its18_ps_pime_split$`3`
 its18_ps_pime_8 <- its18_ps_pime_split$`8`
@@ -2551,7 +2719,9 @@ rm(list = ls(pattern = "tmp_"))
 
 <small>`r caption_tab_its("its18_asv_pime_sum")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_asv_pime_sum
 seq_table %>%
   download_this(
@@ -2564,7 +2734,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -2590,11 +2762,14 @@ reactable(seq_table,
 rm(seq_table)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("page_build/filtering_wf.rdata")
 ```
 
-```{r include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 remove(list = ls())
 ```
 
@@ -2602,25 +2777,38 @@ remove(list = ls())
 
 Data products generated in this workflow can be downloaded from figshare.
 
-<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14701440/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
 </br>
 
 <a href="taxa.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 4. Taxonomic Diversity</a>
 <a href="data-prep.html" class="btnnav button_round" style="float: left;">Previous workflow:
-<br> 2. Data Set Preparation</a>
+<br> 2. Data Set Preparation</a><br><br>
 
-##  Source Code {.appendix}
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/filtering.Rmd).
+####  Source Code {.appendix}
 
-## Data Availability {.appendix}
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
+
+#### Data Availability {.appendix}
 
 Data generated in this workflow and the `Rdata` file need to run the workflow can be accessed on figshare at [10.25573/data.14701440](https://doi.org/10.25573/data.14701440).
 
-## Last updated on {.appendix}
+#### Last updated on {.appendix}
 
-```{r,echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 Sys.time()
 ```

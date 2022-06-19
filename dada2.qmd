@@ -2,19 +2,14 @@
 title: "1. DADA2 Workflow"
 description: |
   DADA2 workflow for processing the **16S rRNA** and the **ITS** high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.
-author:
-#  - name: Jarrod J Scott
-#    url: https://example.com/norajones
-#    affiliation: Spacely Sprockets
-#    affiliation_url: https://example.com/spacelysprokets
-bibliography: assets/cite.bib
 ---
-
 
 <details markdown="1">
 <summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup, message=FALSE, results = 'hide'}
+```{r}
+#| message: false
+#| results: hide
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(919191)
 #pacman::p_depends(ape, local = TRUE)  
@@ -22,9 +17,9 @@ set.seed(919191)
 library(dada2); packageVersion("dada2")
 library(ShortRead); packageVersion("ShortRead")
 library(ggplot2); packageVersion("ggplot2")
-pacman::p_load(rmarkdown, DT, gridExtra, grid, 
+pacman::p_load(tidyverse, gridExtra, grid, 
                formatR, reactable, downloadthis,
-               captioner, dplyr, sparkline, 
+               captioner, sparkline, 
                install = FALSE, update = FALSE)
 
 options(scipen=999)
@@ -41,7 +36,10 @@ source(file.path("assets", "functions.R"))
 
 </details>
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
 caption_fig <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
@@ -50,24 +48,15 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r echo=FALSE, eval=TRUE}
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
-```
-
-```{r, echo = FALSE, eval = TRUE}
+```{r}
+#| echo: false
+#| eval: true
 source("assets/captions/captions_dada2.R")
 ```
 
 # Prerequisites
 
 In order to run this workflow, you either need the *raw* data, available on the figshare project site (see below), or the *trimmed* data, available from the European Nucleotide Archive (ENA) under project accession number [PRJEB45074](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). See the [Data Availability](data-availability.html) page for more details.
-
-<aside>
-Because the workflows share many variable names, you must either split the workflow into a script for each data set OR run the command `remove(list = ls())` before beginning the next workflow.
-</aside>
 
 This workflow contains the code we used to process the 16S rRNA and ITS data sets using [DADA2](https://benjjneb.github.io/dada2/) [@callahan2016dada2]. Workflow construction is based on the [DADA2 Pipeline Tutorial (1.8)](https://benjjneb.github.io/dada2/tutorial_1_8.html) and the primer identification section of the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html).
 
@@ -77,7 +66,7 @@ This workflow contains the code we used to process the 16S rRNA and ITS data set
 
 All files needed to run this workflow can be downloaded from figshare. 
 
-<iframe src="https://widgets.figshare.com/articles/14686665/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14686665/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
 > NOTE: The reverse reads for 16S rRNA data set are unusable (see below), therefore this workflow deals with forward reads *only*.
 
@@ -89,14 +78,18 @@ We will screen the forward reads for reverse primers and show the quality plots 
 
 We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/ssu18_sample_seq_info.txt",
                         header = TRUE, sep = "\t")
 ```
 
 <small>`r caption_tab("seq_dets_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_sample_seq_info",
@@ -163,7 +156,8 @@ To make the parsing easier, we will eliminate the lane and well number from each
 
 > CAUTION. If you use this for your own data, please check that this code works on a few backup files before proceeding.
 
-```{r, warning=FALSE}
+```{r}
+#| warning: false
 setwd("RAW")
 orig_fastq <- list.files(pattern = "*.fastq.gz")
 newname_fastq <- gsub("_S.*_L001", "", orig_fastq)
@@ -177,7 +171,9 @@ path <- "RAW"
 head(list.files(path))
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 c("P1_R1.fastq.gz", "P1_R2.fastq.gz", "P1-8C_R1.fastq.gz",
   "P1-8C_R2.fastq.gz", "P10_R1.fastq.gz", "P10_R2.fastq.gz")
 ```
@@ -190,7 +186,9 @@ fnRs <- sort(list.files(path, pattern = "_R2.fastq.gz", full.names = TRUE))
 ```
 
 
-```{r, layout="l-body-outset", warning=FALSE, fig.height=3}
+```{r}
+#| warning: false
+#| fig-height: 3
 p1a <- plotQualityProfile(fnFs[1:15], aggregate = TRUE)
 p2a <- plotQualityProfile(fnRs[1:15], aggregate = TRUE)
 
@@ -198,13 +196,19 @@ p3a <- grid.arrange(p1a, p2a, nrow = 1)
 ggsave("plot_qscores_2018a.png", p3a, width = 7, height = 3)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/ssu18_plot_qscores_a.png include/dada2/ssu18_plot_qscores_a.png")
 ```
 
 Unfortunately, the reverse reads are unusable.
 
-```{r, echo=FALSE, layout="l-body", warning=FALSE, fig.height=4, fig.width=4, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
+#| fig-height: 4
+#| fig-width: 4
+#| warning: false
 knitr::include_graphics("include/dada2/ssu18_plot_qscores_a.png")
 ```
 <small>`r caption_fig("qual_scores_ssu")`</small>
@@ -259,7 +263,8 @@ filterAndTrim(fnFs, fnFs.filtN,
 
 Nice.  Time to assess the number of times a primer (and all primer orientations) appear in the forward and reverse reads. According to the workflow, counting the primers on one set of paired end fastq files is sufficient to see if there is a problem. This assumes that all the files were created using the same library prep. Basically for both primers, we will search for all four orientations in both forward and reverse reads. Since this is 16S rRNA we do not anticipate any issues but it is worth checking anyway.
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 sampnum <- 2
 ```
 
@@ -355,13 +360,16 @@ REV.ForwardReads       0          0       0       0
 
 Basically, primers are no longer detected in the cutadapted reads. Now, for each sample, we can take a look at how the pre-filtering step and primer removal affected the total number of raw reads.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 temp1 <- read.table("files/dada2/tables/ssu18_read_changes.txt", header = TRUE)
 temp1[, 4:6] <- list(NULL)
 write.table(temp1, "files/dada2/tables/ssu18_cut.txt", sep = "\t", quote = FALSE)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/ssu18_cut.txt",
                        header = TRUE, sep = "\t")
 
@@ -371,7 +379,9 @@ seq_table$per_reads_kept <- round(seq_table$cutadapt_reads/seq_table$raw_reads,
 
 <small>`r caption_tab("seq_cutadapt_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_cutadapt",
@@ -421,7 +431,8 @@ sample.names <- unname(sapply(cutFs, get.sample.name))
 head(sample.names)
 ```
 
-```{r, eval=TRUE}
+```{r}
+#| eval: true
 c("P1", "P1-8C", "P10", "P2", "P3", "P3-8C")
 ```
 
@@ -429,17 +440,26 @@ First let's look at the quality of our reads. The numbers in brackets specify wh
 
 ### Quality plots
 
-```{r, warning=FALSE}
+```{r}
+#| warning: false
 p1 <- plotQualityProfile(cutFs[1:15], aggregate = TRUE)
 ggsave("ssu18_plot_qscores.png", p1, width = 7, height = 3)
 ggsave("ssu18_plot_qscores.png", p1)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/ssu18_plot_qscores_b.png include/dada2/ssu18_plot_qscores_b.png")
 ```
 
-```{r, echo=FALSE, warning=FALSE, eval=TRUE, out.width = "55%", fig.align="center"}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| out-width: 55%
+#| fig-align: center
+
+
 knitr::include_graphics("include/dada2/ssu18_plot_qscores_b.png")
 ```
 <small>`r caption_fig("qual_scores_after_ssu")`</small>
@@ -464,13 +484,15 @@ out <- filterAndTrim(cutFs, filtFs,
 out
 ```
 
-<aside>
+:::{.callout-note}
 These parameters should be set based on the anticipated length of the amplicon and the read quality.
-</aside>
+:::
 
 And here is a table of how the filtering step affected the number of reads in each sample. As you can see, there are a few samples that started with a low read count to begin with---we will likely remove those samples at some point.
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/ssu18_filter.txt",
                        header = TRUE, sep = "\t")
 
@@ -479,7 +501,9 @@ seq_table$per_reads_kept <- round(seq_table$reads_out/seq_table$reads_in,
 ```
 <small>`r caption_tab("filter_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_filter",
@@ -529,15 +553,19 @@ errF <- learnErrors(filtFs, multithread = FALSE)
 103002523 total bases in 443994 reads from 6 samples will be used for learning the error rates.
 ```
 
-```{r, warning=FALSE, layout="l-body-outset"}
+```{r}
+#| warning: false
 plotErrors(errF, nominalQ=TRUE)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/ssu18_plot_errorF.png include/dada2/ssu18_plot_errorF.png")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 knitr::include_graphics("include/dada2/ssu18_plot_errorF.png")
 ```
 <small>`r caption_fig("error_F_ssu")`</small>
@@ -550,7 +578,9 @@ Now we can use `derepFastq` to identify the unique sequences in the forward and 
 
 #### Forward Reads
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 # TO run and cache the derepFastq you must set
 # `cache.lazy=FALSE`
 # For both code blocks
@@ -617,13 +647,17 @@ We tested all three methods through the full pipeline. Click the `+` to see the 
 Here are summary tables of results from the tests. Values are from the final sequence table produced by each option. 
 
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/ssu18_dada_compare.txt",
                         header = TRUE, sep = "\t", row.names = 1)
 ```
 <small>`r caption_tab("pooling_summary_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_pooling_summary",
@@ -650,13 +684,17 @@ reactable(seq_table,
 ```
 
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/ssu18_dada_compare_by_samp.txt",
                         header = TRUE, sep = "\t")
 ```
 <small>`r caption_tab("pooling_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_pooling_results",
@@ -742,7 +780,9 @@ seqtab <- makeSequenceTable(dadaFs)
 dim(seqtab)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seqtab <- c(15, 21685)
 seqtab
 ```
@@ -762,7 +802,8 @@ table(nchar(getSequences(seqtab)))
 
 The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants. We have `r (seqtab)[2]` sequence variants but also a range of sequence lengths. Since many of these sequence variants are singletons or doubletons, we can just select a range that corresponds to the expected amplicon length and eliminate the spurious reads.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 read_length <-  data.frame(nchar(getSequences(seqtab)))
 colnames(read_length) <- "length"
 plot_a <- qplot(length, data = read_length,
@@ -773,11 +814,14 @@ plot_a <- qplot(length, data = read_length,
 ggsave("read_length_before.png", plot_a, width = 7, height = 3)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/ssu18_read_length_before.png include/dada2/ssu18_read_length_before.png")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 knitr::include_graphics("include/dada2/ssu18_read_length_before.png")
 ```
 <small>`r caption_fig("read_length_ssu")`</small>
@@ -787,11 +831,13 @@ seqtab.2 <- seqtab[,nchar(colnames(seqtab)) %in% seq(230,235)]
 dim(seqtab.2)
 ```
 
-<aside>
+:::{.callout-note}
 The values you select should be based on the sequence table generated above.
-</aside>
+:::
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seqtab2 <-  c(15, 21573)
 seqtab2
 ```
@@ -807,7 +853,8 @@ table(nchar(getSequences(seqtab.2)))
 
 After removing the extreme length variants, we have `r (seqtab2)[2]`, a reduction of `r (seqtab)[2] - (seqtab2)[2]` sequence variants.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 saveRDS(seqtab.2, "ssu18_seqtab.rds")
 ```
 
@@ -827,7 +874,9 @@ dim(seqtab.nochim)
 Identified 1241 bimeras out of 21573 input sequences.
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seqtab3 <- c(15, 20332)
 seqtab3
 ```
@@ -836,7 +885,9 @@ seqtab3
 sum(seqtab.nochim)/sum(seqtab.2)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 chim_rem <- 0.9596595
 0.9596595
 ```
@@ -863,14 +914,18 @@ rownames(track) <- sample.names
 ```
 
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/ssu18_read_changes.txt",
                         header = TRUE, sep = "\t")
 ```
 
 <small>`r caption_tab("track_ssu")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "ssu18_track_read_changes",
@@ -918,7 +973,8 @@ write.table(track, "ssu18_read_changes.txt",
             sep = "\t", quote = FALSE, col.names=NA)
 ```
 
-```{r save_image_part_11, echo=FALSE}
+```{r}
+#| echo: false
 save.image("pre_tax_16s_2018.rdata")
 ```
 
@@ -948,7 +1004,8 @@ And finally, we save an image for use in the analytic part of the workflow. This
 save.image("ssu18_dada2_wf.rdata")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 # Classify with IdTAX db
 remove(list = ls())
 seqtab <- readRDS("ssu18_seqtab.nochim.rds")
@@ -1120,11 +1177,15 @@ devtools::session_info()
 
 # ITS Data
 
-```{r, include=FALSE}
+```{r}
+#| include: false
 remove(list = ls())
 ```
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab <- captioner(prefix = "(ITS) Table", suffix = " |", style = "b")
 caption_fig <- captioner(prefix = "(ITS) Figure", suffix = " |", style = "b")
@@ -1133,7 +1194,10 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 ## Table captions
 caption_tab("seq_dets_its", "Sample data & associated sequencing information.")
 caption_tab("seq_cutadapt_its", "Total reads per sample after prefiltering and primer removal (using cutadapt).")
@@ -1144,7 +1208,10 @@ caption_tab("track_its", "Tracking reads changes at each step of the DADA2 workf
 #<small>`r caption_tab("qual_scores_after_its")`</small>
 ```
 
-```{r, echo = FALSE, eval = TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 ## Figure captions
 caption_fig("qual_scores_its", "Aggregated quality score plots for forward (left) & reverse (right) reads before filtering.")
 caption_fig("qual_scores_after_its", "Aggregated quality score plot for forward reads after prefilter & primer removal.")
@@ -1166,14 +1233,18 @@ All files needed to run this workflow can be downloaded from figshare.
 
 We sequenced a total of 15 samples collected from 10 different plots at a single depth in each plot.
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/its18_sample_seq_info.txt",
                         header = TRUE, sep = "\t")
 ```
 
 <small>`r caption_tab("seq_dets_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_sample_seq_info",
@@ -1239,7 +1310,8 @@ To make the parsing easier, we will eliminate the lane and well number from each
 
 > CAUTION. You should check that this code works on a few backup files before proceeding.
 
-```{r, warning=FALSE}
+```{r}
+#| warning: false
 setwd("RAW")
 orig_fastq <- list.files(pattern = "*.fastq.gz")
 newname_fastq <- gsub("_S.*_L001", "", orig_fastq)
@@ -1253,7 +1325,9 @@ path <- "RAW"
 head(list.files(path))
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 c("P1_R1.fastq.gz", "P1_R2.fastq.gz", "P1-8C_R1.fastq.gz",
   "P1-8C_R2.fastq.gz", "P10_R1.fastq.gz", "P10_R2.fastq.gz")
 ```
@@ -1316,7 +1390,7 @@ filterAndTrim(fnFs, fnFs.filtN, fnRs, fnRs.filtN,
 
 Sweet. Time to assess the number of times a primer (and all possible primer orientation) appear in the forward and reverse reads. According to the workflow, counting the primers on one set of paired end fastq files is sufficient to see if there is a problem. This assumes that all the files were created using the same library prep. Basically for both primers, we will search for all four orientations in both forward and reverse reads
 
-```{r primer_assess}
+```{r}
 sampnum <- 1
 primerHits <- function(primer, fn) {
     # Counts number of reads in which the primer is found
@@ -1355,7 +1429,8 @@ REV.ForwardReads       0          0       0    6237
 REV.ReverseReads   43902          0       0       0
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 fnFsXX <- sort(list.files(path, pattern = "_R1.fastq.gz", full.names = FALSE))
 qsamp <- fnFsXX[sampnum]
 qsamp <- sapply(strsplit(qsamp, "_"), `[`, 1)
@@ -1430,13 +1505,16 @@ REV.ReverseReads       0          0       0       0
 
 Basically, primers are no longer detected in the cutadapted reads. Now, for each sample, we can take a look at how the pre-filtering step and primer removal affected the total number of raw reads.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 temp1 <- read.table("files/dada2/tables/its18_read_changes.txt", header = TRUE)
 temp1[, 4:8] <- list(NULL)
 write.table(temp1, "files/dada2/tables/its18_cut.txt", sep = "\t", quote = FALSE)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/its18_cut.txt",
                        header = TRUE, sep = "\t")
 
@@ -1446,7 +1524,9 @@ seq_table$per_reads_kept <- round(seq_table$cutadapt_reads/seq_table$raw_reads,
 
 <small>`r caption_tab("seq_cutadapt_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_cutadapt",
@@ -1498,7 +1578,9 @@ sample.names <- unname(sapply(cutFs, get.sample.name))
 head(sample.names)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 c("P1", "P1-8C", "P10", "P2", "P3", "P3-8C")
 ```
 
@@ -1514,11 +1596,16 @@ p3 <- grid.arrange(p1, p2, nrow = 1)
 ggsave("plot_qscores_2018.png", p3, width = 7, height = 3)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/its18_plot_qscores.png include/dada2/its18_plot_qscores.png")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", warning=FALSE, fig.height=3, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
+#| fig-height: 3
+#| warning: false
 knitr::include_graphics("include/dada2/its18_plot_qscores.png")
 ```
 <small>`r caption_fig("qual_scores_its")`</small>
@@ -1542,14 +1629,16 @@ out <- filterAndTrim(cutFs, filtFs, cutRs, filtRs,
 out
 ```
 
-<aside>
+:::{.callout-note}
 These parameters should be set based on the anticipated length of the amplicon and the read quality.
-</aside>
+:::
 
 And here is a table of how the filtering step affected the number of reads in each sample.
 
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/its18_filter.txt",
                        header = TRUE, sep = "\t")
 
@@ -1558,7 +1647,9 @@ seq_table$per_reads_kept <- round(seq_table$reads_out/seq_table$reads_in,
 ```
 <small>`r caption_tab("filter_its")`</small>
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_filter",
@@ -1613,17 +1704,21 @@ errF <- learnErrors(filtFs, multithread = TRUE)
 plotErrors(errF, nominalQ = TRUE)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 p3 <- plotErrors(errF, nominalQ = TRUE)
 ggsave("plot_errorF_1.png", p3, width = 7, height = 5)
 ggsave("plot_errorF_2.png", p3)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/its18_plot_errorF.png include/dada2/its18_plot_errorF.png")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 knitr::include_graphics("include/dada2/its18_plot_errorF.png")
 ```
 <small>`r caption_fig("error_F_its")`</small>
@@ -1642,17 +1737,21 @@ errR <- learnErrors(filtRs, multithread = TRUE)
 plotErrors(errR, nominalQ = TRUE)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 p4 <- plotErrors(errR, nominalQ = TRUE)
 ggsave("plot_errorR_1.png", p4, width = 7, height = 5)
 ggsave("plot_errorR_2.png", p4)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/its18_plot_errorR.png include/dada2/its18_plot_errorR.png")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 knitr::include_graphics("include/dada2/its18_plot_errorR.png")
 ```
 <small>`r caption_fig("error_R_its")`</small>
@@ -1768,13 +1867,17 @@ We tested all three methods through the full pipeline. Click the `+` to see the 
 
 Here are a few summary tables of results from the tests. Values are from the final sequence table prodcuced by each option. 
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/its18_dada_compare.txt",
                         header = TRUE, sep = "\t", row.names = 1)
 ```
 <small>`r caption_tab("pooling_summary_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_pooling_summary",
@@ -1801,13 +1904,17 @@ reactable(seq_table,
 ```
 
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/its18_dada_compare_by_samp.txt",
                         header = TRUE, sep = "\t")
 ```
 <small>`r caption_tab("pooling_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_pooling_results",
@@ -1923,7 +2030,8 @@ Duplicate sequences in merged output.
 
 <br/>
 
-``` {r, echo=FALSE}
+```{r}
+#| echo: false
 head(mergers[[1]])
 ```
 
@@ -1934,7 +2042,9 @@ seqtabF <- makeSequenceTable(mergers)
 dim(seqtabF)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seqtabX <- c(15, 3364)
 seqtabX
 ```
@@ -1977,7 +2087,8 @@ table(nchar(getSequences(seqtabF)))
 
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 read_length <-  data.frame(nchar(getSequences(seqtab)))
 colnames(read_length) <- "length"
 plot_a <- qplot(length, data = read_length,
@@ -1988,11 +2099,14 @@ plot_a <- qplot(length, data = read_length,
 ggsave("read_length_before.png", plot_a, width = 7, height = 3)
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/dada2/figures/its18_read_length_before.png include/dada2/its18_read_length_before.png")
 ```
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 knitr::include_graphics("include/dada2/its18_read_length_before.png")
 ```
 
@@ -2005,7 +2119,9 @@ seqtab <- seqtabF[,nchar(colnames(seqtabF)) %in% seq(100,450)]
 dim(seqtab)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seqtabY <- c(15, 3364)
 seqtabY
 ```
@@ -2016,7 +2132,8 @@ After removing the extreme length variants, we have `r (seqtabY)[2]`, a reductio
 table(nchar(getSequences(seqtab)))
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 saveRDS(seqtab, "its18_seqtab.rds")
 ```
 
@@ -2033,7 +2150,9 @@ dim(seqtab.nochim)
 Identified 7 bimeras out of 3364 input sequences.
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seqtabZ <- c(15, 3357)
 seqtabZ
 ```
@@ -2042,7 +2161,9 @@ seqtabZ
 sum(seqtab.nochim)/sum(seqtab.2)
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 chim_rem <- 0.9990135
 0.9990135
 ```
@@ -2075,20 +2196,25 @@ The last thing we want to do is write the sequence table to an `RDS` file.
 saveRDS(seqtab.nochim, "its18_seqtab.nochim.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 table(nchar(getSequences(seqtab.nochim)))
 ```
 
 ## 11. Track Reads through Workflow
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- read.table("files/dada2/tables/its18_read_changes.txt",
                         header = TRUE, sep = "\t")
 ```
 
 <small>`r caption_tab("track_its")`</small>
 
-```{r, echo=FALSE, layout="l-body-outset", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table %>%
   download_this(
     output_name = "its18_track_read_changes",
@@ -2131,7 +2257,8 @@ reactable(seq_table,
   theme = reactableTheme(style = list(fontSize = "0.8em")))
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("pre_tax_its_2018.rdata")
 ```
 
@@ -2139,7 +2266,8 @@ save.image("pre_tax_its_2018.rdata")
 
 For taxonomic classification, we used the UNITE [@nilsson2019unite] database, specifically the [UNITE general FASTA release for Fungi (v. 04.02.2020)](https://plutof.ut.ee/#/doi/10.15156/BIO/786368) [@abarenkov2020unite].
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 remove(list = ls())
 seqtab <- readRDS("its18_seqtab.nochim.rds")
 ```
@@ -2310,27 +2438,42 @@ devtools::session_info()
 
 Data products generated in this workflow can be downloaded from figshare.
 
-<iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="568" height="351" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="100%" height="351" frameborder="0"></iframe>
 
 The end!
 
-```{r include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 remove(list = ls())
 ```
 
 <a href="data-prep.html" class="btnnav button_round" style="float: left;">Next workflow:
-<br> 2. Data Set Preparation</a>
+<br> 2. Data Set Preparation</a><br><br>
 
-##  Source Code {.appendix}
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/dada2.Rmd). 
+###  Source Code {.appendix}
 
-## Data Availability {.appendix}
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
+
+### Data Availability {.appendix}
 
 Raw fastq files available on figshare at [10.25573/data.14686665](https://doi.org/10.25573/data.14686665) for the 16S rRNA data and [10.25573/data.14686755](https://doi.org/10.25573/data.14686755) for the ITS data. Trimmed fastq files (primers removed) available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). Data generated in this workflow can be accessed on figshare at [10.25573/data.14687184](https://doi.org/10.25573/data.14687184).
 
-## Last updated on {.appendix}
+### Last updated on {.appendix}
 
-```{r,echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 Sys.time()
 ```

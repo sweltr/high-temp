@@ -2,28 +2,24 @@
 title: "6. Beta Diversity & Dispersion Estimates"
 description: |
   Reproducible workflow for assessing community dissimilarity across temperature treatments.
-author:
-#  - name: Jarrod J Scott
-#    url: https://example.com/norajones
-#    affiliation: Spacely Sprockets
-#    affiliation_nrl: https://example.com/spacelysprokets
-bibliography: assets/cite.bib
-output:
-    distill::distill_article:
-      css: assets/styles.css
-      toc: true
-      toc_depth: 3
+format:
+  html:
+    toc: true
+    toc-depth: 3
 ---
 
 <details markdown="1">
 <summary><strong>Click here</strong> for setup information.</summary>
 
-```{r setup, message=FALSE, results = 'hide'}
+```{r}
+#| message: false
+#| results: hide
+
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 set.seed(119)
 library(phyloseq); packageVersion("phyloseq")
 library(Biostrings); packageVersion("Biostrings")
-pacman::p_load(tidyverse, DT, ampvis2, hilldiv, 
+pacman::p_load(tidyverse, 
                microbiome, phytools, phangorn, reactable, Matrix, 
                pairwiseAdonis, naniar, downloadthis,
                labdsv, patchwork, agricolae, captioner, microeco,
@@ -44,14 +40,18 @@ knitr::opts_current$get(c(
 
 </details> 
 
-
-```{r master_load_ssu18, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 ## Load to build page only #2
 remove(list = ls())
 load("page_build/beta_wf_part_1.rdata")
 ```
 
-```{r, echo = FALSE, eval=TRUE, results = 'hide'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: hide
 # Create the caption(s) with captioner
 caption_tab_ssu <- captioner(prefix = "(16S rRNA) Table", suffix = " |", style = "b")
 caption_fig_ssu <- captioner(prefix = "(16S rRNA) Figure", suffix = " |", style = "b")
@@ -63,16 +63,10 @@ ref <- function(x) str_extract(x, "[^|]*") %>%
   trimws(which = "right", whitespace = "[ ]")
 ```
 
-```{r, echo = FALSE, eval = TRUE}
+```{r}
+#| echo: false
+#| eval: true
 source("assets/captions/captions_beta.R")
-```
-
-```{r echo=FALSE, eval=TRUE}
-source(file.path("assets", "functions.R"))
-# This is needed to add a COPY CODE button to code chunks
-clipboard_button()
-# This is needed to use PANELS
-xaringanExtra::use_panelset()
 ```
 
 # Synopsis
@@ -83,11 +77,13 @@ This workflow contains beta diversity assessments for the high temperature data 
 
 Files needed to run this workflow can be downloaded from figshare. 
 
-<iframe src="https://widgets.figshare.com/articles/16826779/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/16826779/embed?show_title=1" width="100%" height="251" allowfullscreen frameborder="0"></iframe>
 
 # 16s rRNA
 
-```{r, include=FALSE, eval=FALSE}
+```{r}
+#| include: false
+#| eval: false
 ## Initial Load for  ANALYSIS #1
 set.seed(119)
 ssu18_ps_work <- readRDS("files/alpha/rdata/ssu18_ps_work.rds")
@@ -96,7 +92,8 @@ ssu18_ps_perfect <- readRDS("files/alpha/rdata/ssu18_ps_perfect.rds")
 ssu18_ps_pime <- readRDS("files/alpha/rdata/ssu18_ps_pime.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
@@ -112,7 +109,8 @@ Steps 2--4 are combined in a `for` loop that tests all three distance metrics.
 
 Before we begin, we need to first transform sample counts to relative abundance and generate some new trees.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu_samp_ps <- c("ssu18_ps_work", "ssu18_ps_filt", 
              "ssu18_ps_perfect", "ssu18_ps_pime")
 for (i in ssu_samp_ps) {
@@ -135,7 +133,8 @@ for (i in ssu_samp_ps) {
 
 Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 ssu_dist <- c("jsd", "unifrac", "wunifrac")
 for (i in ssu_samp_ps) {
     for (d in ssu_dist){
@@ -160,18 +159,20 @@ objects()
 <details markdown="1">
 <summary><strong>Detailed results</strong> of Beta Dispersion & Permutation tests</summary>
 
-::: l-body
-::: {.panelset}
+::: {.panel-tabset}
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 ssu_samp_ps <- c("ssu18_ps_work", "ssu18_ps_filt", "ssu18_ps_perfect", "ssu18_ps_pime")
 ssu_dist <- c("jsd", "unifrac", "wunifrac")
 ```
 
-::: {.panel}
 #### FULL
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in ssu_samp_ps[1]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in ssu_dist){
@@ -187,12 +188,12 @@ for (i in ssu_samp_ps[1]) {
         }
 }
 ```
-:::
 
-::: {.panel}
 #### Arbitrary
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in ssu_samp_ps[2]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in ssu_dist){
@@ -209,12 +210,12 @@ for (i in ssu_samp_ps[2]) {
 }
 
 ```
-:::
 
-::: {.panel}
 #### PERfect
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in ssu_samp_ps[3]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in ssu_dist){
@@ -230,12 +231,12 @@ for (i in ssu_samp_ps[3]) {
         }
 }
 ```
-:::
 
-::: {.panel}
 #### PIME
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in ssu_samp_ps[4]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in ssu_dist){
@@ -252,13 +253,15 @@ for (i in ssu_samp_ps[4]) {
 }
 ```
 :::
-:::
-:::
+
 </details>
 
 Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
 
-```{r, echo=FALSE, eval=TRUE, results='markdown'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
 ssu18_perm_pvalues <- data.frame()
 for (i in ssu_samp_ps) {
         for (d in ssu_dist){
@@ -281,7 +284,8 @@ ssu18_perm_pvalues <- ssu18_perm_pvalues %>% tibble::remove_rownames()
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_perm_summary <- ssu18_perm_pvalues
 ssu18_perm_summary <- ssu18_perm_summary %>% separate(col = 1, 
                                               into = c("dummy", "metric", "dataset"), 
@@ -300,7 +304,9 @@ ssu18_perm_summary$pval <- round(ssu18_perm_summary[[3]], 4)
 
 <small>`r caption_tab_ssu("ssu_beta_disp_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_perm_summary
 seq_table %>%
   download_this(
@@ -313,7 +319,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -352,7 +360,8 @@ rm(seq_table)
 
 Now we to create sample data frames for each data set. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in ssu_samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
      tmp_samp <- data.frame(sample_data(tmp_get))
@@ -367,18 +376,20 @@ objects(pattern="_sampledf")
 
 Depending on the test, we need different data structures. For `adonis` we use the sample metadata and for `anosim` we will start with a phyloseq object. So for each data set we create two variables: `adonis_sampledf` and `anosim_data`
 
-::: l-body
-::: {.panelset}
-::: {.panel}
+::: {.column-body}
+::: {.panel-tabset}
 
 #### FULL
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- ssu18_ps_work_sampledf
 anosim_data <- ssu18_ps_work
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_work',]
 ```
 
@@ -412,18 +423,17 @@ ssu18_ps_work_anosim_wunifrac <-
          grouping = ssu18_ps_work_groups)
 ```
 
-:::
-
-::: {.panel}
-
 #### Arbitrary
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- ssu18_ps_filt_sampledf
 anosim_data <- ssu18_ps_filt
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_filt',]
 ```
 
@@ -456,18 +466,18 @@ ssu18_ps_filt_anosim_wunifrac <-
   anosim(phyloseq::distance(ssu18_ps_filt_prop, "wunifrac"),
          grouping = ssu18_ps_filt_groups)
 ```
-:::
-
-::: {.panel}
 
 #### PERfect
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- ssu18_ps_perfect_sampledf
 anosim_data <- ssu18_ps_perfect
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_perfect',]
 ```
 
@@ -500,18 +510,18 @@ ssu18_ps_perfect_anosim_wunifrac <-
   anosim(phyloseq::distance(ssu18_ps_perfect_prop, "wunifrac"),
          grouping = ssu18_ps_perfect_groups)
 ```
-:::
-
-::: {.panel}
 
 #### PIME
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- ssu18_ps_pime_sampledf
 anosim_data <- ssu18_ps_pime
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- ssu18_perm_pvalues[ssu18_perm_pvalues$data_set == 'ssu18_ps_pime',]
 ```
 
@@ -547,18 +557,17 @@ ssu18_ps_pime_anosim_wunifrac <-
 
 :::
 :::
-:::
 
 <details markdown="1">
 <summary><strong>Detailed results</strong> of Significance tests</summary>
 
-::: l-body
-::: {.panelset}
-::: {.panel}
+::: {.panel-tabset}
 
 #### FULL
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 ssu18_ps_work_adonis2_jsd
 cat("\n")
@@ -571,13 +580,12 @@ cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
 summary(ssu18_ps_work_anosim_wunifrac)
 cat("\n")
 ```
-:::
-
-::: {.panel}
 
 #### Arbitrary
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 ssu18_ps_filt_adonis2_jsd
 cat("\n")
@@ -590,13 +598,13 @@ cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
 summary(ssu18_ps_filt_anosim_wunifrac)
 cat("\n")
 ```
-:::
 
-::: {.panel}
 
 #### PERfect
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***ANOSIM for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 summary(ssu18_ps_perfect_anosim_jsd)
 cat("\n")
@@ -609,13 +617,13 @@ cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
 summary(ssu18_ps_perfect_anosim_wunifrac)
 cat("\n")
 ```
-:::
 
-::: {.panel}
 
 #### PIME
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 ssu18_ps_pime_adonis2_jsd
 cat("\n")
@@ -629,9 +637,6 @@ summary(ssu18_ps_pime_anosim_wunifrac)
 cat("\n")
 ```
 :::
-:::
-:::
-
 
 </details>
 
@@ -639,7 +644,8 @@ cat("\n")
 
 Here is a quick summary of significance tests for the data sets against three distance matrices.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 data_set <- data.frame(c("FULL", "FILT", "PERfect", "PIME"))
 ssu_dist_metric <- data.frame(c("Jensen-Shannon Divergence", "unweighted UniFrac", "weighted UniFrac"))
 
@@ -671,7 +677,9 @@ rm(list = ls(pattern = "tmp_"))
 ```
 <small>`r caption_tab_ssu("ssu_sign_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- ssu18_tab_sig_test
 seq_table %>%
   download_this(
@@ -684,7 +692,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -725,7 +735,10 @@ rm(seq_table)
 
 # ITS
 
-```{r initial_load_its18, include=FALSE, eval=FALSE}
+```{r}
+#| include: false
+#| eval: false
+
 ## Initial Load for  ANALYSIS #1
 #remove(list = ls())
 #set.seed(119)
@@ -735,7 +748,8 @@ its18_ps_perfect <- readRDS("files/alpha/rdata/its18_ps_perfect.rds")
 its18_ps_pime <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 ```
 
@@ -751,7 +765,8 @@ Steps 2--4 are combined in a `for` loop that tests all three distance metrics.
 
 Before we begin, we need to first transform sample counts to relative abundance and generate some new trees.
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 its_samp_ps <- c("its18_ps_work", "its18_ps_filt", 
              "its18_ps_perfect", "its18_ps_pime")
 for (i in its_samp_ps) {
@@ -772,7 +787,8 @@ for (i in its_samp_ps) {
 
 Here we create distance matrices for each metric, calculate the beta dispersion, and run a permutation test for homogeneity of multivariate dispersions. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 its_dist <- c("jsd", "bray", "gower")
 for (i in its_samp_ps) {
     for (d in its_dist){
@@ -797,18 +813,20 @@ objects()
 <details markdown="1">
 <summary><strong>Detailed results</strong> of Beta Dispersion & Permutation tests</summary>
 
-::: l-body
-::: {.panelset}
+::: {.panel-tabset}
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 its_samp_ps <- c("its18_ps_work", "its18_ps_filt", "its18_ps_perfect", "its18_ps_pime")
 its_dist <- c("jsd", "bray", "gower")
 ```
 
-::: {.panel}
 #### FULL
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in its_samp_ps[1]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in its_dist){
@@ -824,12 +842,12 @@ for (i in its_samp_ps[1]) {
         }
 }
 ```
-:::
 
-::: {.panel}
 #### Arbitrary
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in its_samp_ps[2]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in its_dist){
@@ -846,12 +864,12 @@ for (i in its_samp_ps[2]) {
 }
 
 ```
-:::
 
-::: {.panel}
 #### PERfect
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in its_samp_ps[3]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in its_dist){
@@ -867,12 +885,12 @@ for (i in its_samp_ps[3]) {
         }
 }
 ```
-:::
 
-::: {.panel}
 #### PIME
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 for (i in its_samp_ps[4]) {
   #cat("\n", "           *****", i, "*****", "\n")
         for (d in its_dist){
@@ -889,13 +907,15 @@ for (i in its_samp_ps[4]) {
 }
 ```
 :::
-:::
-:::
+
 </details>
 
 Remember, if the beta dispersion p-value is greater than `0.05` we use PERMANOVA, otherwise we use ANOSIM.
 
-```{r, echo=FALSE, eval=TRUE, results='markdown'}
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
 its18_perm_pvalues <- data.frame()
 for (i in its_samp_ps) {
         for (d in its_dist){
@@ -918,7 +938,8 @@ its18_perm_pvalues <- its18_perm_pvalues %>% tibble::remove_rownames()
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_perm_summary <- its18_perm_pvalues
 its18_perm_summary <- its18_perm_summary %>% separate(col = 1, 
                                               into = c("dummy", "metric", "dataset"), 
@@ -936,7 +957,9 @@ its18_perm_summary$pval <- round(its18_perm_summary[[3]], 4)
 ```
 <small>`r caption_tab_its("its_beta_disp_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_perm_summary
 seq_table %>%
   download_this(
@@ -949,7 +972,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -988,7 +1013,8 @@ rm(seq_table)
 
 Now we to create sample data frames for each data set. 
 
-```{r, code_folding=TRUE}
+```{r}
+#| code-fold: true
 for (i in its_samp_ps) {
      tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_prop")))
      tmp_samp <- data.frame(sample_data(tmp_get))
@@ -1004,18 +1030,20 @@ objects(pattern="_sampledf")
 Depending on the test, we need different data structures. For `adonis` we use the sample metadata and for `anosim` we will start with a phyloseq object. So for each data set we create two variables: `adonis_sampledf` and `anosim_data`
 
 
-::: l-body
-::: {.panelset}
-::: {.panel}
+::: {.column-body}
+::: {.panel-tabset}
 
 #### FULL
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- its18_ps_work_sampledf
 anosim_data <- its18_ps_work
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_work',]
 ```
 
@@ -1048,18 +1076,19 @@ its18_ps_work_adonis_gower <-  adonis(its18_ps_work_beta_dist_gower ~ TEMP,
 its18_ps_work_adonis2_gower <- adonis2(its18_ps_work_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
-:::
 
-::: {.panel}
 
 #### Arbitrary
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- its18_ps_filt_sampledf
 anosim_data <- its18_ps_filt
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_filt',]
 ```
 
@@ -1092,18 +1121,19 @@ its18_ps_filt_adonis_gower <-  adonis(its18_ps_filt_beta_dist_gower ~ TEMP,
 its18_ps_filt_adonis2_gower <- adonis2(its18_ps_filt_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
-:::
 
-::: {.panel}
 
 #### PERfect
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- its18_ps_perfect_sampledf
 anosim_data <- its18_ps_perfect
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_perfect',]
 ```
 
@@ -1136,18 +1166,19 @@ its18_ps_perfect_adonis_gower <-  adonis(its18_ps_perfect_beta_dist_gower ~ TEMP
 its18_ps_perfect_adonis2_gower <- adonis2(its18_ps_perfect_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
-:::
 
-::: {.panel}
 
 #### PIME
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 adonis_sampledf <- its18_ps_pime_sampledf
 anosim_data <- its18_ps_pime
 ```
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 tmp_perm_tests <- its18_perm_pvalues[its18_perm_pvalues$data_set == 'its18_ps_pime',]
 ```
 
@@ -1183,18 +1214,18 @@ its18_ps_pime_anosim_gower <-
 
 :::
 :::
-:::
+
 
 <details markdown="1">
 <summary><strong>Detailed results</strong> of Significance tests.</summary>
 
-::: l-body
-::: {.panelset}
-::: {.panel}
+::: {.panel-tabset}
 
 #### FULL
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 its18_ps_work_adonis2_jsd
 cat("\n")
@@ -1207,13 +1238,13 @@ cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
 summary(its18_ps_work_adonis2_gower)
 cat("\n")
 ```
-:::
 
-::: {.panel}
 
 #### Arbitrary
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 its18_ps_filt_adonis2_jsd
 cat("\n")
@@ -1226,13 +1257,13 @@ cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
 summary(its18_ps_filt_adonis2_gower)
 cat("\n")
 ```
-:::
 
-::: {.panel}
 
 #### PERfect
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 its18_ps_perfect_adonis2_jsd
 cat("\n")
@@ -1245,13 +1276,13 @@ cat("\n", "***PERMANOVA for Gower distance, `gower`***", "\n\n")
 summary(its18_ps_perfect_adonis2_gower)
 cat("\n")
 ```
-:::
 
-::: {.panel}
 
 #### PIME
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 cat("\n", "***PERMANOVA for Jensen-Shannon Divergence, `jsd`***", "\n\n")
 its18_ps_pime_adonis2_jsd
 cat("\n")
@@ -1264,17 +1295,16 @@ cat("\n", "***ANOSIM for Gower distance, `gower`***", "\n\n")
 summary(its18_ps_pime_anosim_gower)
 cat("\n")
 ```
+:::
 
-:::
-:::
-:::
 </details>
 
 ## Summaries 
 
 Here is a quick summary of significance tests for the data sets against three distance matrices.
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 data_set <- data.frame(c("FULL", "FILT", "PERfect", "PIME"))
 its_dist_metric <- data.frame(c("Jensen-Shannon Divergence", "Bray-Curtis dissimilarity", "Gower distance"))
 
@@ -1306,7 +1336,9 @@ rm(list = ls(pattern = "tmp_"))
 ```
 <small>`r caption_tab_its("its_sign_tests")`</small>
 
-```{r, echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 seq_table <- its18_tab_sig_test
 seq_table %>%
   download_this(
@@ -1319,7 +1351,9 @@ seq_table %>%
     icon = "fa fa-save")
 ```
 
-```{r, echo=FALSE, layout="l-body", eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 reactable(seq_table,
   defaultColDef = colDef(
     header = function(value) gsub("_", " ", value, fixed = TRUE),
@@ -1359,17 +1393,21 @@ rm(seq_table)
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 save.image("page_build/beta_wf_part_1.rdata")
 ```
 
 # Ordinations
 
-```{r, eval=TRUE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: true
 load("page_build/beta_wf_part_2.rdata")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 remove(list = ls())
 load("page_build/beta_wf_part_1.rdata")
 gdata::keep(ssu18_ps_work, ssu18_ps_filt, ssu18_ps_pime, ssu18_ps_perfect, 
@@ -1471,7 +1509,9 @@ for (i in ssu18_data_sets) {
 }
 ```
 
-```{r, echo=TRUE, eval=TRUE}
+```{r}
+#| echo: true
+#| eval: true
 class(ssu18_ps_perfect_me$beta_diversity)
 summary(ssu18_ps_perfect_me$beta_diversity)
 ```
@@ -1555,7 +1595,8 @@ for (j in 1:length(get(paste("ssu18_ps_pime", "_me", sep = ""))$beta_diversity))
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_ps_work_title <- "FULL Ordination Plots"
 ssu18_ps_filt_title <- "Arbitrary Ordination Plots"
 ssu18_ps_perfect_title <- "PERfect Ordination Plots"
@@ -1593,7 +1634,8 @@ for (samp_ps in ssu18_data_sets) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in ssu18_data_sets) {
   dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
   tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
@@ -1605,7 +1647,8 @@ for (i in ssu18_data_sets) {
 }  
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/beta/figures/combo_plots/ssu18_ps_work_beta_div_ord_plots.png include/beta/ssu18_ps_work_beta_div_ord_plots.png")
 system("cp files/beta/figures/combo_plots/ssu18_ps_filt_beta_div_ord_plots.png include/beta/ssu18_ps_filt_beta_div_ord_plots.png")
 system("cp files/beta/figures/combo_plots/ssu18_ps_perfect_beta_div_ord_plots.png include/beta/ssu18_ps_perfect_beta_div_ord_plots.png")
@@ -1691,7 +1734,9 @@ for (i in its18_data_sets) {
 }
 ```
 
-```{r, echo=TRUE, eval=TRUE}
+```{r}
+#| echo: true
+#| eval: true
 class(its18_ps_perfect_me$beta_diversity)
 summary(its18_ps_perfect_me$beta_diversity)
 ```
@@ -1725,7 +1770,8 @@ for (j in 1:length(get(paste("its18_ps_pime", "_me", sep = ""))$beta_diversity))
 ```
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_ps_work_title <- "FULL Ordination Plots"
 its18_ps_filt_title <- "Arbitrary Ordination Plots"
 its18_ps_perfect_title <- "PERfect Ordination Plots"
@@ -1765,7 +1811,8 @@ for (samp_ps in its18_data_sets) {
 its18_ps_pime_plots
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in its18_data_sets) {
   dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
   tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
@@ -1777,7 +1824,8 @@ for (i in its18_data_sets) {
 }  
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/beta/figures/combo_plots/its18_ps_work_beta_div_ord_plots.png include/beta/its18_ps_work_beta_div_ord_plots.png")
 system("cp files/beta/figures/combo_plots/its18_ps_filt_beta_div_ord_plots.png include/beta/its18_ps_filt_beta_div_ord_plots.png")
 system("cp files/beta/figures/combo_plots/its18_ps_perfect_beta_div_ord_plots.png include/beta/its18_ps_perfect_beta_div_ord_plots.png")
@@ -1789,96 +1837,103 @@ system("cp files/beta/figures/combo_plots/its18_ps_pime_beta_div_ord_plots.png i
 
 ## 16S rRNA
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### FULL 
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_work_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_beta_div_plots_full")`</small>
-:::
 
-::: {.panel}
 
 #### Arbitrary
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_filt_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_beta_div_plots_filt")`</small>
-:::
 
-::: {.panel}
 #### PERfect
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_perfect_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_beta_div_plots_perfect")`</small>
-:::
 
-::: {.panel}
 #### PIME
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_pime_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_beta_div_plots_pime")`</small>
-:::
-
 :::
 :::
 
 ## ITS
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### Arbitrary 
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_work_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_its("its_beta_div_plots_full")`</small>
-:::
 
-::: {.panel}
 
 #### FILT 
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_filt_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_its("its_beta_div_plots_filt")`</small>
-:::
 
-::: {.panel}
 #### PERfect
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_perfect_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_its("its_beta_div_plots_perfect")`</small>
-:::
 
-::: {.panel}
 #### PIME
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_pime_beta_div_ord_plots.png")
 ```
 <small>`r caption_fig_its("its_beta_div_plots_pime")`</small>
 :::
-
-:::
 :::
 
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ## NEXT few blocks are to modify with and between group plots
 for (i in objects(pattern = "_wg_")) {
   tmp_dataset <- get(i)
@@ -1890,7 +1945,9 @@ for (i in objects(pattern = "_wg_")) {
 }
 ```
 
-```{r, eval=FALSE, echo=FALSE}
+```{r}
+#| echo: false
+#| eval: false
 btw_colors <- c("#FF00FF", "#FFFF00", "#00FFFF")
 for (i in objects(pattern = "_bg_")) {
   tmp_dataset <- get(i)
@@ -1902,7 +1959,8 @@ for (i in objects(pattern = "_bg_")) {
 }
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in objects(pattern = "_jsd_PCoA_mod")) {
   tmp_wg <- get(i)
   tmp_wg <- tmp_wg + ylab("Jensen-Shannon divergence")
@@ -1934,7 +1992,8 @@ Above we calculated the sample distances within groups. Let's see what those plo
 
 ## 16S rRNA
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 ssu18_ps_work_title <- "FULL (unfiltered)"
 ssu18_ps_filt_title <- "Arbitrary filtered"
 ssu18_ps_perfect_title <- "PERfect filtered"
@@ -1975,7 +2034,8 @@ ssu18_ps_pime_me_variation_plots
 objects(pattern = "_plots")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in ssu18_data_sets) {
   dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
   tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
@@ -1987,59 +2047,64 @@ for (i in ssu18_data_sets) {
 }  
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/beta/figures/combo_plots/ssu18_ps_work_variation_plots.png include/beta/ssu18_ps_work_variation_plots.png")
 system("cp files/beta/figures/combo_plots/ssu18_ps_filt_variation_plots.png include/beta/ssu18_ps_filt_variation_plots.png")
 system("cp files/beta/figures/combo_plots/ssu18_ps_perfect_variation_plots.png include/beta/ssu18_ps_perfect_variation_plots.png")
 system("cp files/beta/figures/combo_plots/ssu18_ps_pime_variation_plots.png include/beta/ssu18_ps_pime_variation_plots.png")
 ```
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### FULL 
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_work_variation_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_variation_plots_full")`</small>
-:::
 
-::: {.panel}
 
 #### Arbitrary
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_filt_variation_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_variation_plots_filt")`</small>
-:::
 
-::: {.panel}
 #### PERfect
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_perfect_variation_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_variation_plots_perfect")`</small>
-:::
 
-::: {.panel}
 #### PIME
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/ssu18_ps_pime_variation_plots.png")
 ```
 <small>`r caption_fig_ssu("ssu_variation_plots_pime")`</small>
-:::
-
 :::
 :::
 
 ## ITS
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 its18_ps_work_title <- "FULL (unfiltered)"
 its18_ps_filt_title <- "Arbitrary filtered"
 its18_ps_perfect_title <- "PERfect filtered"
@@ -2080,7 +2145,8 @@ its18_ps_pime_me_variation_plots
 objects(pattern = "_plots")
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 for (i in its18_data_sets) {
   dir.create(paste("files/beta/figures/combo_plots", sep = ""), recursive = TRUE)
   tmp_path <- paste("files/beta/figures/combo_plots", sep = "")
@@ -2092,63 +2158,70 @@ for (i in its18_data_sets) {
 }  
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 system("cp files/beta/figures/combo_plots/its18_ps_work_variation_plots.png include/beta/its18_ps_work_variation_plots.png")
 system("cp files/beta/figures/combo_plots/its18_ps_filt_variation_plots.png include/beta/its18_ps_filt_variation_plots.png")
 system("cp files/beta/figures/combo_plots/its18_ps_perfect_variation_plots.png include/beta/its18_ps_perfect_variation_plots.png")
 system("cp files/beta/figures/combo_plots/its18_ps_pime_variation_plots.png include/beta/its18_ps_pime_variation_plots.png")
 ```
 
-::: l-body-outset
-::: {.panelset}
-::: {.panel}
+::: {.column-body-outset}
+::: {.panel-tabset}
 
 #### FULL 
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_work_variation_plots.png")
 ```
 <small>`r caption_fig_its("its_variation_plots_full")`</small>
-:::
 
-::: {.panel}
 
 #### Arbitrary 
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_filt_variation_plots.png")
 ```
 <small>`r caption_fig_its("its_variation_plots_filt")`</small>
-:::
 
-::: {.panel}
 #### PERfect
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_perfect_variation_plots.png")
 ```
 <small>`r caption_fig_its("its_variation_plots_perfect")`</small>
-:::
 
-::: {.panel}
 #### PIME
 
-```{r, echo=FALSE, eval=TRUE, warning=FALSE, layout='l-body-outset'}
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
 knitr::include_graphics("include/beta/its18_ps_pime_variation_plots.png")
 ```
 <small>`r caption_fig_its("its_variation_plots_pime")`</small>
 :::
-
-:::
 :::
 
-```{r, echo=FALSE}
+```{r}
+#| echo: false
 #objects()
 #rm(ssu18_ps_filt, ssu18_ps_work, ssu18_ps_perfect, ssu18_ps_pime)
 save.image("page_build/beta_wf_part_2.rdata")
 ```
 
-```{r, include=FALSE, eval=TRUE}
+```{r}
+#| include: false
+#| eval: true
 remove(list = ls())
 ```
 
@@ -2156,18 +2229,29 @@ remove(list = ls())
 
 Data products generated in this workflow can be downloaded from figshare.
 
-<iframe src="https://widgets.figshare.com/articles/16828063/embed?show_title=1" width="568" height="251" allowfullscreen frameborder="0"></iframe>
+<iframe src="https://widgets.figshare.com/articles/16828063/embed?show_title=1" width="100%" height="251" allowfullscreen frameborder="0"></iframe>
 
 </br>
 
 <a href="da.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 7. Differentially Abundant ASVs & Taxa</a>
 <a href="alpha.html" class="btnnav button_round" style="float: left;">Previous workflow:
-<br> 5. Alpha Diversity Estimates</a>
+<br> 5. Alpha Diversity Estimates</a><br><br>
 
-##  Source Code {.appendix}
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/beta.Rmd). 
+####  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
 ## Data Availability {.appendix}
 
@@ -2175,6 +2259,8 @@ Data generated in this workflow and the Rdata need to run the workflow can be ac
 
 ## Last updated on {.appendix}
 
-```{r,echo=FALSE, eval=TRUE}
+```{r}
+#| echo: false
+#| eval: true
 Sys.time()
 ```

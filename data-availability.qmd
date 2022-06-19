@@ -2,19 +2,7 @@
 title: "Data Availability"
 description: |
   On this page, you can find information on obtaining sequence data, data products, and processing scripts. Code is  embedded in indivudual workflows on the website or can be accessed through the project GitHub repo.
-bibliography: assets/cite.bib  
 ---
-
-```{r, xaringanExtra-clipboard, echo=FALSE, eval=TRUE}
-htmltools::tagList(
-  xaringanExtra::use_clipboard(
-    button_text = "<i class=\"fa fa-clone fa-2x\" style=\"color: #301e64\"></i>",
-    success_text = "<i class=\"fa fa-check fa-2x\" style=\"color: #90BE6D\"></i>",
-    error_text = "<i class=\"fa fa-times fa-2x\" style=\"color: #F94144\"></i>"
-  ),
-  rmarkdown::html_dependency_font_awesome()
-)
-```
 
 ## Archived Sequence Data
 
@@ -26,32 +14,33 @@ All trimmed sequence data (primers removed) is deposited at the European Nucleot
 
 Data for each individual pipeline are available through the Smithsonian figshare under a single collection at [doi:10.25573/data.c.5667571.v2](https://doi.org/10.25573/data.c.5667571.v2). In addition, data from each pipeline are available for download from figshare using the links at the bottom of each workflow page (where applicable).
 
-<details markdown="1">
-<summary>**Show** descriptions and DOI's for each workflow</summary>
-
 </br>
 
-Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14686665.v1
+:::{.callout-note collapse="true" icon=false}
 
-Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14686755.v1
+## **Show** descriptions and DOI's for each workflow
 
-Scott, Jarrod (2022): (high-temp) No 1. DADA2 Workflow (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14687184.v1
+Scott, Jarrod (2022): (high-temp/16s) No 0. Raw 16S rRNA fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.14686665.v1](https://doi.org/10.25573/data.14686665.v1)
+  
+Scott, Jarrod (2022): (high-temp/ITS) No 0. Raw ITS fastq data files for the high-temp SWELTR study. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.14686755.v1](https://doi.org/10.25573/data.14686755.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 1. [DADA2 Workflow (16S rRNA/ITS)](https://sweltr.github.io/high-temp/dada2.html) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.14687184.v1](https://doi.org/10.25573/data.14687184.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 2. [Data Preparation](https://sweltr.github.io/high-temp/data-prep.html) (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.14690739.v1](https://doi.org/10.25573/data.14690739.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 3. [Filtering](https://sweltr.github.io/high-temp/filtering.html): (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.14701440.v1](https://doi.org/10.25573/data.14701440.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 4. [Taxonomic diversity](https://sweltr.github.io/high-temp/taxa.html): (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.16826737.v1](https://doi.org/10.25573/data.16826737.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 5. [Aplha diversity](https://sweltr.github.io/high-temp/alpha.html) (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.16826779.v1](https://doi.org/10.25573/data.16826779.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 6. [Beta diversity](https://sweltr.github.io/high-temp/beta.html) (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.16828063.v1](https://doi.org/10.25573/data.16828063.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 7. [Differentially Abundant ASVs & Taxa](https://sweltr.github.io/high-temp/da.html) (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.16828249.v1](https://doi.org/10.25573/data.16828249.v1)
+  
+Scott, Jarrod (2022): (high-temp) No 8. [Metadata Analysis](https://sweltr.github.io/high-temp/metadata.html) (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. [https://doi.org/10.25573/data.16828294.v1](https://doi.org/10.25573/data.16828294.v1)
+:::
 
-Scott, Jarrod (2022): (high-temp) No 2. Data Preparation (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14690739.v1
-
-Scott, Jarrod (2022): (high-temp) No 3. Filtering: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.14701440.v1
-
-Scott, Jarrod (2022): (high-temp) No 4. Taxonomic: (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16826737.v1
-
-Scott, Jarrod (2022): (high-temp) No 5. Aplha diversity (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16826779.v1
-
-Scott, Jarrod (2022): (high-temp) No 6. Beta diversity (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16828063.v1
-
-Scott, Jarrod (2022): (high-temp) No 7. Differentially Abundant ASVs & Taxa (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16828249.v1
-
-Scott, Jarrod (2022): (high-temp) No 8. Metadata Analysis (16S rRNA/ITS) Output. Smithsonian Tropical Research Institute. Dataset. https://doi.org/10.25573/data.16828294.v1
-
-</details>
 
 ## Submitting Sequence Data
 
@@ -123,11 +112,22 @@ The files should begin uploading. Depending on internet speed and/or file sizes/
 18) Once the upload is finished, upload and submit the fastq submission form. If the `sample alias` field dows not autofill you may need to upload the sample form again. 
 
 
-## Source Code {.appendix}
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
 
-The source code for this page can be accessed on GitHub by [clicking this link](https://github.com/sweltr/high-temp/blob/master/data-availability.Rmd).
+###  Source Code {.appendix}
 
-## Last updated on {.appendix}
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
+
+### Last updated on {.appendix}
 
 ```{r,echo=FALSE, eval=TRUE}
 Sys.time()

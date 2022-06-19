@@ -1,0 +1,109 @@
+project:
+  type: website
+  output-dir: public_build
+  exclude: ["sandbox", "public", "README.html", "README.md", "hack_code", "page_build", "files", "public_build", "archive_code"]
+
+website:
+  title: ""
+  favicon: "assets/favicon.ico"
+  page-footer: "© Copyright 2022 [metacrobe](https://metacrobe.github.io/) & The SWELTR Project. Site constructed using [Quarto](https://quarto.org/)."
+  license: "CC BY"
+  site-url: https://sweltr.github.io/high-temp/
+  repo-url: https://github.com/sweltr/high-temp/
+  repo-actions: [edit, issue]
+  page-navigation: true
+  search:
+    location: navbar
+    type: overlay
+  navbar:
+    logo: "assets/icon.png"
+    background: light
+    left:
+  #    - text: "Home"
+      - icon: home
+        href: index.html
+  #    - text: "Introduction"
+  #      icon: fa-info
+  #      href: temp.html
+  #    - text: "Field Analyses"
+  #      icon: fa-flask
+  #      href: temp.html
+      - text: "A. Processing"
+        menu:
+          - text: "Workflows"
+          - text: "---------"
+          - text: "1. DADA2"
+            href: dada2.html
+          - text: "2. Data Set Prep"
+            href: data-prep.html
+          - text: "3. Filtering"
+            href: filtering.html
+      - text: "B. Diversity"
+        menu:
+          - text: "Workflows"
+          - text: "---------"
+          - text: "4. Taxonomic"
+            href: taxa.html
+          - text: "5. Alpha Diversity"
+            href: alpha.html
+          - text: "6. Beta Diversity"
+            href: beta.html
+          - text: "7. DA ASVs & Taxa"
+            href: da.html
+          - text: "8. Metadata"
+            href: metadata.html
+  #    - icon: fa-code fa-lg
+  #      href: raw_code.txt
+    right:
+      - text: "DATA"
+        href: data-availability.html
+      - text: "SOM"
+        href: som.html
+      - icon: github
+        href: https://github.com/sweltr/high-temp/
+        aria-label: Agua Salud GitHub
+      - icon: question
+        href: about.html
+  sidebar:
+      title: "stuff"
+      collapse-level: 1
+      style: "floating"
+      align: left
+      contents:
+        - section: "A. Processing"
+          contents:
+            - dada2.qmd
+            - data-prep.qmd
+            - filtering.qmd
+        - section: "B. Diversity"
+          contents:
+            - taxa.qmd
+            - alpha.qmd
+            - beta.qmd
+            - da.qmd
+            - metadata.qmd
+        - section: "More"
+          contents:
+            - data-availability.qmd
+            - som.qmd
+            - about.qmd
+
+bibliography: assets/cite.bib
+
+format:
+  html:
+    theme: cosmo
+    css: assets/styles.css
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: false
+      caption: none
+    code-overflow: wrap
+    toc: true
+    toc-depth: 2
+    appendix-style: default
+    title-block-banner: '#FFFFFF'
+    title-block-style: default
+    code-link: true
+    #title-block-banner-color: '#414141'
