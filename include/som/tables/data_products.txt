@@ -1,5 +1,5 @@
 url	archive	content
-https://doi.org/10.25573/data.c.5667571.v2	Figshare	collection of data and data products.
+https://doi.org/10.25573/data.c.5667571	Figshare	collection of data and data products.
 https://zenodo.org/badge/latestdoi/XXXXXXXX	Zenodo	reproducible workflows in R Markdown format.
 https://doi.org/10.25573/data.14686665	Figshare	Raw 16S rRNA data for each sample (before removing primers).
 https://doi.org/10.25573/data.14686755	Figshare	Raw ITS data for each sample (before removing primers).
