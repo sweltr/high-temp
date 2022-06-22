@@ -1,24 +1,28 @@
 ---
 title: "Website Contruction"
 description: |
-  Notes on how this site was  created using Distill & hosted with GitHub Pages.
+  Notes on how this site was  created using Quarto & hosted with GitHub Pages.
 format:
   html:
-    css: ["assets/styles_about.css", "assets/styles.css"]
+    css: ["assets/css/styles_about.css", "assets/css/styles.css"]
     toc: true
     toc-depth: 3
+execute:
+    echo: false
+    eval: true
+    warning: false
+    message: false     
 ---
 
 ```{r}
 #| include: false
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+#knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 remove(list = ls())
 ```
 
+This is how I created this website for the SWELTR temperature manipulation experiment using **a**) [Quarto](https://quarto.org/) to build the site and **b**) GitHub Pages to host the site. 
 
-This is how I created this website for the SWELTR temperature manipulation experiment using **a**) [Distill](https://rstudio.github.io/distill/) to build the site and **b**) GitHub Pages to host the site. 
-
-> This tutorial assumes you have **a**) [git installed](https://github.com/git-guides/install-git#:~:text=To%20install%20Git%2C%20run%20the,installation%20by%20typing%3A%20git%20version%20.), **b**) a [GitHub account](https://github.com/join), **c)**  [RStudio installed](https://www.rstudio.com/products/rstudio/download/), and **d**) [Distill](https://rstudio.github.io/distill/) for R installed. 
+> This tutorial assumes you have **a**) [git installed](https://github.com/git-guides/install-git#:~:text=To%20install%20Git%2C%20run%20the,installation%20by%20typing%3A%20git%20version%20.), **b**) a [GitHub account](https://github.com/join), **c)**  [RStudio installed](https://www.rstudio.com/products/rstudio/download/), and **d**) [Quarto](https://quarto.org/) for R installed. 
 
 You will need to jump back and forth between the RStudio IDE and a terminal. You can use the terminal in RStudio if you wish, it is up to you. 
 
@@ -27,6 +31,7 @@ I will try to point out which code you run in the RStudio console and which you 
 When you see a code block that looks like this, the command(s) must be executed in the RStudio console. 
 
 ```{r}
+#| echo: true
 #R code blocks will look like this.
 ```
 
@@ -68,8 +73,8 @@ Here is an overview of what we will be doing in this tutorial:
 2) Create two GitHub repos for the site, one to host the organization URL and  another to host the raw code ***plus*** the `gh-pages` branch.
 3) Clone the code repo to your computer.
 4) Create a `gh-pages` branch.
-5) Build the initial site with Distill for R.
-6) Customize the default `_site.yml` file.
+5) Build the initial site with Quarto for R.
+6) Customize the default `_quarto.yml` file.
 7) Rebuild the site.
 8) Push changes to GitHub. 
 
@@ -82,9 +87,6 @@ Here is an overview of what we will be doing in this tutorial:
 **a**) In  the upper right-hand corner of your GitHub page click on your avatar and select `Your organizations`. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| fig-width: 4
 knitr::include_graphics("include/about/step1.png")
 ```
@@ -94,9 +96,6 @@ knitr::include_graphics("include/about/step1.png")
 **b**) On the page that opens, hit `New organization`.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| fig-height: 4
 knitr::include_graphics("include/about/step2.png")
 ```
@@ -107,9 +106,6 @@ knitr::include_graphics("include/about/step2.png")
 > The name of the organization does not need to be the same as the website you create later.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step3.png")
@@ -119,9 +115,6 @@ knitr::include_graphics("include/about/step3.png")
 **d**) Here you can add members. For now, just hit `Complete setup`. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step4.png")
@@ -131,14 +124,11 @@ knitr::include_graphics("include/about/step4.png")
 
 ### Create repos for the site
 
-In this section, we need to create two repositories for the site: **i**) one to host the organization URL (i.e., ht<span>tps://</span>sweltr.github.io/) and **ii**) another to host the raw code (e.g. `.Rmd` files) ***plus*** the `gh-pages` branch. More on that in a minute. I am including instructions for things you *MUST* do in order to get the rest of the tutorial to work properly. 
+In this section, we need to create two repositories for the site: **i**) one to host the organization URL (i.e., ht<span>tps://</span>sweltr.github.io/) and **ii**) another to host the raw code (e.g. `.qmd` files) ***plus*** the `gh-pages` branch. More on that in a minute. I am including instructions for things you *MUST* do in order to get the rest of the tutorial to work properly. 
 
 **a**) Hit the `Create a new repository button`. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step5.png")
@@ -158,9 +148,6 @@ There are a few things to do here:
 > Note: you can host a site on GitHub without the `github.io` extension but that is a more advanced skill and beyond the scope of this tutorial.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step6.png")
@@ -178,9 +165,6 @@ knitr::include_graphics("include/about/step6.png")
 > Note: you can make these repos private, however that is a bit more advanced and beyond the scope of the tutorial provided here :)
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step7.png")
@@ -202,14 +186,11 @@ Now that we have the main pieces in place of GitHub, it is time to setup everyth
 
 ### Clone the Code Repo
 
-Let's take a look at the `high-temp` [repo page](https://github.com/sweltr/high-temp). There are two important things to point out. First, in the upper left corner is a box that says `main`. This is the primary branch for the repo and contains the source code for the site build (e.g., the `.Rmd` files). This will become important in a moment when we create a branch called `gh-pages` that will link the build files (e.g., `.html` files) to the organization URL. More on that in a minute.
+Let's take a look at the `high-temp` [repo page](https://github.com/sweltr/high-temp). There are two important things to point out. First, in the upper left corner is a box that says `main`. This is the primary branch for the repo and contains the source code for the site build (e.g., the `.qmd` files). This will become important in a moment when we create a branch called `gh-pages` that will link the build files (e.g., `.html` files) to the organization URL. More on that in a minute.
 
 First, we need to clone the `high-temp`  repo from GitHub to our local machine. There are several ways to do this,  but I will show you how I do it. Navigate to the [repo page](https://github.com/sweltr/high-temp). At the time of creation, it looked like this:
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step8.png")
@@ -220,9 +201,6 @@ knitr::include_graphics("include/about/step8.png")
 See the green button that says `Code`. Click on that button and copy the URL.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step9.png")
@@ -247,10 +225,10 @@ So we have the `README.md` file that was generated when we created the repo and 
 
 ```
 total 8
-drwxr-xr-x@  4 scottjj  923590601  128 Oct 22 08:25 .
-drwxr-xr-x@  5 scottjj  923590601  160 Oct 22 08:25 ..
-drwxr-xr-x@ 12 scottjj  923590601  384 Oct 22 08:25 .git
--rw-r--r--@  1 scottjj  923590601   11 Oct 22 08:25 README.md
+drwxr-xr-x@  4 scottjj  923590601  128 May 13 08:25 .
+drwxr-xr-x@  5 scottjj  923590601  160 May 13 08:25 ..
+drwxr-xr-x@ 12 scottjj  923590601  384 May 13 08:25 .git
+-rw-r--r--@  1 scottjj  923590601   11 May 13 08:25 README.md
 ```
 
 ### Create a gh-pages branch
@@ -286,9 +264,6 @@ git push origin main
 If everything worked OK, your files have been pushed to the GitHub repo. Have  a look at the code repo on GitHub to confirm your changes have been pushed.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step9_1.png")
@@ -375,12 +350,12 @@ ls -al
 ```
 
 ```
-drwxr-xr-x@  6 scottjj  923590601  192 Oct 22 08:41 .
-drwxr-xr-x@  5 scottjj  923590601  160 Oct 22 08:25 ..
-drwxr-xr-x@ 14 scottjj  923590601  448 Oct 22 08:41 .git
--rw-r--r--@  1 scottjj  923590601    8 Oct 22 08:40 .gitignore
--rw-r--r--@  1 scottjj  923590601   11 Oct 22 08:40 README.md
-drwxr-xr-x@  3 scottjj  923590601   96 Oct 22 08:41 public
+drwxr-xr-x@  6 scottjj  923590601  192 May 13 08:41 .
+drwxr-xr-x@  5 scottjj  923590601  160 May 13 08:25 ..
+drwxr-xr-x@ 14 scottjj  923590601  448 May 13 08:41 .git
+-rw-r--r--@  1 scottjj  923590601    8 May 13 08:40 .gitignore
+-rw-r--r--@  1 scottjj  923590601   11 May 13 08:40 README.md
+drwxr-xr-x@  3 scottjj  923590601   96 May 13 08:41 public
 ```
 
 There should now be a `public/` directory. Run the following to make sure this is a `.git` directory.
@@ -391,9 +366,9 @@ ls -al public/
 
 ```
 total 8
-drwxr-xr-x@ 3 scottjj  923590601   96 Oct 22 08:41 .
-drwxr-xr-x@ 6 scottjj  923590601  192 Oct 22 08:41 ..
--rw-r--r--@ 1 scottjj  923590601  104 Oct 22 08:41 .git
+drwxr-xr-x@ 3 scottjj  923590601   96 May 13 08:41 .
+drwxr-xr-x@ 6 scottjj  923590601  192 May 13 08:41 ..
+-rw-r--r--@ 1 scottjj  923590601  104 May 13 08:41 .git
 ```
 
 ### Review
@@ -402,14 +377,11 @@ At this point all the pieces are in place to build your site and host it on GitH
 
 ## 3. Site Build
 
-Time to build the site. As mentioned in the intro, we  will use  [Distill](https://rstudio.github.io/distill/) to create  the website. To keep things simple, we will generate the  initial site in a temporary directory and copy the files to the git formatted directory at the end. 
+Time to build the site. As mentioned in the intro, we  will use  [Quarto](https://quarto.org/) to create  the website. To keep things simple, we will generate the  initial site in a temporary directory and copy the files to the git formatted directory at the end. 
 
 Open RStudio and hit `File >> New Project`. In the pop-up window hit `New Project`. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step10.png")
@@ -420,9 +392,6 @@ knitr::include_graphics("include/about/step10.png")
 Then  in the ***New Project Wizard*** select the `New Directory` option. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step11.png")
@@ -430,12 +399,9 @@ knitr::include_graphics("include/about/step11.png")
 
 ***
 
-Under Project Type, scroll down until you see `Distill Website` and select that option. 
+Under Project Type, scroll down until you see `Quarto Website` and select that option. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step12.png")
@@ -446,9 +412,6 @@ knitr::include_graphics("include/about/step12.png")
 Give the Directory a name and hit `Create Project`. Consider this an intermediate step in the process. We need to create a project directory to generate the initial site. Eventually we will copy all of these file to the directory of the repo we cloned earlier. You can call this something like `web` if you wish, it doesn't really matter since this is only a temporary directory.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step13.png")
@@ -456,16 +419,12 @@ knitr::include_graphics("include/about/step13.png")
 
 ***
 
-Now, if everything worked OK, you should see three files open in your RStudio IDE. 
+Now, if everything worked OK, you should see that five files were created and two of the files are open in your RStudio IDE. 
 
--- `index.Rmd`. This is the *landing* page of your site. This file is the first thing people see when they navigate to your site.   
--- `about.Rmd`. This is really just a sample page for your site. You can use it or not, it is up to you.  
--- `_site.yml`. This is a [YAML](https://en.wikipedia.org/wiki/YAML) file and is used to configure your site. **DO NOT** erase this file.   
+-- `index.qmd`. This is the *landing* page of your site. This file is the first thing people see when they navigate to your site.   
+-- `_quarto.yml`. This is a [YAML](https://en.wikipedia.org/wiki/YAML) file and is used to configure your site. **DO NOT** erase this file.   
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step14.png")
@@ -473,12 +432,9 @@ knitr::include_graphics("include/about/step14.png")
 
 ***
 
-In fact, we need to edit the `_site.yml` file to configure it for our site. As you move further into building your site, you will need to make many modifications to this file. For now however, we will just focus on the minimum changes you need to make to get your site online. Go ahead and click on that file. This is what the default file looks like. 
+In fact, we need to edit the `_quarto.yml` file to configure it for our site. As you move further into building your site, you will need to make many modifications to this file. For now however, we will just focus on the minimum changes you need to make to get your site online. Go ahead and click on that file. This is what the default file looks like. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step15.png")
@@ -486,29 +442,38 @@ knitr::include_graphics("include/about/step15.png")
 
 ***
 
-First, below the `title` line (beginning on line 2) add the following lines. 
+First, below the `title` line (nested under `website`) add the following lines. 
 
 ```
-base_url: https://sweltr.github.io/
-repository_url: https://github.com/sweltr/high-temp/
+site-url: https://sweltr.github.io/high-temp/
+repo-url: https://github.com/sweltr/high-temp/
 ```
 
-The `base_url` is the `.github.io` URL we created way back when we created the [site repo](#create-repos-for-the-site). The `repository_url` is the repo we created to host the project source code.
+The `site-url` is the `.github.io` URL we created way back when we created the [site repo](#create-repos-for-the-site). The `repo-url` is the repo we created to host the project source code.
 
-When you build or *render* your site, RStudio will dump all the site files (e.g., `.html` files) in the `output_dir`. The default output directory is `_site`, which RStudio generated when you first created the site. Take a look in your directory and you should see this sub directory. I see no reason why you cannot leave the build directory as is but I prefer to call mine `public_build/`. Go ahead and edit that line of the `_site.yml` file.
-
-```
-output_dir: "public_build"
-```
-
-Great. One last thing to do. When you render your site, RStudio will try to add everything in the main directory to the output directory, in this case `public_build/`. There are many cases where this is not desirable. For example, let's say we have you have a directory called `sequence_data` that contains a bunch of `fastq` files. We do not need these files to build the site (and we probably do not want these on GitHub) so we need to tell RStudio to ignore these files when it builds the site. For that, we add the line `exclude` below the `output_dir` line. Anything listed here will be ignored by RStudio when it builds the site. As you get deeper into building your site, you will likely have many files/directories that you want excluded. 
-
-> Don't get confused here. The `exclude` line in the `_site.yml` file is different than the `.gitignore` file discussed earlier. They do completely different  things. If this is unclear, go back and review the section on the `.gitignore` file. 
-
-For now, we will focus on the necessary things to include on the `exclude` line. Multiple items must be listed within square brackets, be in double quotes, and separated by commas. Go ahead and add this line.
+When you build or *render* your site, RStudio will dump all the site files (e.g., `.html` files) in the `output_dir`. The default output directory is `_site`, which RStudio generates when you render the site for the first time. I see no reason why you cannot leave the build directory as is but I prefer to call mine `public_build/`. Go ahead and add a line of the `_quarto.yml` file specifying the `output-dir`. This should be nested under `project` like so:
 
 ```
-exclude: ["public_build", "public", "README.html", "README.md"]
+project:
+  type: website
+  output-dir: public_build
+
+```
+
+Great. One last thing to do. When you render your site, RStudio will try to add everything in the main directory to the output directory, in this case `public_build/`. There are many cases where this is not desirable. For example, let's say we have you have a directory called `sequence_data` that contains a bunch of `fastq` files. We do not need these files to build the site (and we probably do not want these on GitHub) so we need to tell RStudio to ignore these files when it builds the site. For that, we add the line `render` nested under `project`. Here we can specify what is, and is not, rendered when the site is build. As you get deeper into building your site, you will likely have many files/directories that you want excluded. 
+
+> Don't get confused here. The `render` line in the `_quarto.yml` file is different than the `.gitignore` file discussed earlier. They do completely different  things. If this is unclear, go back and review the section on the `.gitignore` file. 
+
+For now, we will focus on the necessary things to include and exclude from the build. Items must be listed on separate lines, in double quotes. So let's say we want to render all `.qmd` files but ignore a few directories. The way to code this is that anything we want to exclude should begin with an exclamation point (`!`).  Go ahead and add these lines.
+
+```
+project:
+  type: website
+  output-dir: public_build
+  render:
+    - "*.qmd"
+    - "!public/"
+    - "!public_build/"
 ```
 
 OK, a little explanation. The first thing we need to exclude in the actual build directory `public_build/` (or `_site` if you kept the default). If we do not include this, RStudio will get stuck in a loop where it continues to add `public_build/` to the `public_build/` directory. Next, remember that to host a gh-pages site, the build files (e.g., the `.html` files) **must** be in a directory called `public/`. We created this directory when we created the `gh-pages` branch.  
@@ -523,26 +488,25 @@ If you changed the name of the default build directory, go ahead and remove the 
 rm -r _site
 ```
 
-Now, save all of your changes to the `_site.yml` file and in the RStudio Console run the following:
+Now, save all of your changes to the `_quarto.yml` file and in the RStudio Console run the following:
 
 ```{r}
-rmarkdown::render_site()
+#| echo: true
+#| eval: false
+quarto::quarto_render()
 ```
 
 You should see a new directory called `public_build/`. Open that folder and double-click on `index.html`. The homepage of your new site should open in your default browser.  
 
 ### Review
 
-Sweet. Let's review what we have so far. From the [1. GitHub Setup](#github-setup) we created two repos, one to host the `.github.io` organization and another to host the raw code (e.g. .Rmd files) plus the gh-pages branch. In [2. Local Setup](#local-setup) we cloned the code repo and create a gh-pages branch in a directory called `public/`. In [3. Site Build](#site-build) we generated an initial site within a dummy directory, modified the `_site.yml` file, and re-rendered the site to an output directory called `public_build/`
+Sweet. Let's review what we have so far. From the [1. GitHub Setup](#github-setup) we created two repos, one to host the `.github.io` organization and another to host the raw code (e.g. .qmd files) plus the gh-pages branch. In [2. Local Setup](#local-setup) we cloned the code repo and create a gh-pages branch in a directory called `public/`. In [3. Site Build](#site-build) we generated an initial site within a dummy directory, modified the `_quarto.yml` file, and re-rendered the site to an output directory called `public_build/`
 
 ## Integration
 
 Time to push our changes to GitHub. The first step is to copy all of the files in your dummy site directory to the directory of the cloned repo (`high-temp`). 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step16.png")
@@ -557,7 +521,7 @@ pwd
 ```
 
 ```
-/Users/scottjj/Dropbox (Smithsonian)/GITHUB_PROJECTS/AGUA_SALUD/high-temp
+/Users/scottjj/Dropbox (Smithsonian)/GITHUB_PROJECTS/SWELTR/high-temp
 ```
 
 Assuming your directory structure  setup is similar to the image above, next run the following to copy all of the files. 
@@ -576,20 +540,21 @@ ls -al
 It should look something like this: 
 
 ```
-drwxr-xr-x  14 scottjj  923590601   448 Oct 22 09:18 .
-drwxr-xr-x@  7 scottjj  923590601   224 Oct 22 09:15 ..
--rw-r--r--@  1 scottjj  923590601  6148 Oct 22 09:18 .DS_Store
--rw-r--r--   1 scottjj  923590601    50 Oct 22 09:18 .Rhistory
-drwxr-xr-x   4 scottjj  923590601   128 Oct 22 09:18 .Rproj.user
-drwxr-xr-x@ 14 scottjj  923590601   448 Oct 22 08:41 .git
--rw-r--r--@  1 scottjj  923590601     8 Oct 22 08:40 .gitignore
--rw-r--r--@  1 scottjj  923590601    11 Oct 22 08:40 README.md
--rw-r--r--   1 scottjj  923590601   383 Oct 22 09:18 _site.yml
--rw-r--r--   1 scottjj  923590601   162 Oct 22 09:18 about.Rmd
--rw-r--r--   1 scottjj  923590601   296 Oct 22 09:18 index.Rmd
-drwxr-xr-x@  3 scottjj  923590601    96 Oct 22 08:41 public
-drwxr-xr-x   7 scottjj  923590601   224 Oct 22 09:18 public_build
--rw-r--r--   1 scottjj  923590601   225 Oct 22 09:18 web.Rproj
+drwxr-xr-x  14 scottjj  923590601   448 May 13 09:18 .
+drwxr-xr-x@  7 scottjj  923590601   224 May 13 09:15 ..
+-rw-r--r--@  1 scottjj  923590601  6148 May 13 09:18 .DS_Store
+-rw-r--r--   1 scottjj  923590601    50 May 13 09:18 .Rhistory
+drwxr-xr-x   4 scottjj  923590601   128 May 13 09:18 .Rproj.user
+drwxr-xr-x@ 14 scottjj  923590601   448 May 13 08:41 .git
+-rw-r--r--@  1 scottjj  923590601     8 May 13 08:40 .gitignore
+-rw-r--r--@  1 scottjj  923590601    11 May 13 08:40 README.md
+-rw-r--r--   1 scottjj  923590601   202 May 13 09:18 _quarto.yml
+-rw-r--r--   1 scottjj  923590601    58 May 13 09:18 about.qmd
+-rw-r--r--   1 scottjj  923590601   145 May 13 09:18 index.qmd
+-rw-r--r--   1 scottjj  923590601    17 May 13 09:18 styles.css
+drwxr-xr-x@  3 scottjj  923590601    96 May 13 08:41 public
+drwxr-xr-x   7 scottjj  923590601   224 May 13 09:18 public_build
+-rw-r--r--   1 scottjj  923590601   225 May 13 09:18 web.Rproj
 ```
 
 At this point we need to do a few final housekeeping tasks. First, let's add a few additional files to the `.gitignore` file. 
@@ -775,13 +740,10 @@ git commit -m "Publishing to gh-pages initial commit"
 git push origin main
 ```
 
-Now head over to your GitHub code repo and look at the two branches to make sure everything looks good. In this case, https://github.com/sweltr/high-temp. You should see the `main` branch of this repo---this contains all of the `.Rmd` files. 
+Now head over to your GitHub code repo and look at the two branches to make sure everything looks good. In this case, https://github.com/sweltr/high-temp. You should see the `main` branch of this repo---this contains all of the `.qmd` files. 
 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step17.png")
@@ -792,9 +754,6 @@ knitr::include_graphics("include/about/step17.png")
 Find the button in the upper left that says `main`. Click on that and select `gh-pages`. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 75%
 #| fig-align: center
 knitr::include_graphics("include/about/step18.png")
@@ -805,9 +764,6 @@ knitr::include_graphics("include/about/step18.png")
 The `gh-pages` branch contains all of the `.html` files. 
 
 ```{r}
-#| echo: false
-#| eval: true
-#| warning: false
 #| out-width: 100%
 #| fig-align: center
 knitr::include_graphics("include/about/step19.png")
@@ -826,13 +782,17 @@ Most of the steps up to this point **should only need to be done once**. Now it 
 1) Render the site.
 
 ```{r}
-rmarkdown::render_site()
+#| echo: true
+#| eval: false
+quarto::quarto_render()
 ```
 
 Or to build individual pages run:
 
 ```{r}
-rmarkdown::render_site("new_page.Rmd")
+#| echo: true
+#| eval: false
+quarto::quarto_render("new_page.qmd")
 ```
 
 2) Copy files from `public_build/` to `public/`
@@ -864,9 +824,6 @@ git push origin main
 ```
 
 ```{r}
-#| message: false 
-#| results: hide
-#| eval: true
 #| echo: false
 remove(list = ls())
 ### COmmon formatting scripts
@@ -881,7 +838,5 @@ The source code for this page can be accessed on GitHub `r fa(name = "github")` 
 #### Last updated on {.appendix}
 
 ```{r}
-#| echo: false
-#| eval: true
 Sys.time()
 ```

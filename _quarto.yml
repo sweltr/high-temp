@@ -15,7 +15,7 @@ project:
     - "!paper/*/*.qmd"
 
 website:
-  title: ""
+  title: "SWELTR"
   favicon: "assets/favicon.ico"
   page-footer: "© Copyright 2022 [metacrobe](https://metacrobe.github.io/) & The SWELTR Project. Site constructed using [Quarto](https://quarto.org/)."
   license: "CC BY"
@@ -28,6 +28,7 @@ website:
     type: overlay
   navbar:
     logo: "assets/icon.png"
+    title: false
     background: light
     left:
   #    - text: "Home"
@@ -104,17 +105,17 @@ bibliography: assets/cite.bib
 format:
   html:
     theme: cosmo
-    css: assets/styles.css
+    css: assets/css/styles.css
     code-copy: true
+    code-link: true
+    code-overflow: wrap
     code-tools:
       source: true
       toggle: false
       caption: none
-    code-overflow: wrap
     toc: true
     toc-depth: 2
     appendix-style: default
-    title-block-banner: '#FFFFFF'
+    title-block-banner: '#113858'
     title-block-style: default
-    code-link: true
     #title-block-banner-color: '#414141'

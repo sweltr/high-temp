@@ -1,7 +1,7 @@
 
 [![DOI](https://zenodo.org/badge/268354818.svg)](https://zenodo.org/badge/latestdoi/268354818)
 
-This repo contains reproducible workflows for the study *[Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission](https://www.nature.com/nmicrobiol/)*, also known as SWELTR.
+This repo contains reproducible workflows for the study *[Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil](https://www.nature.com/nmicrobiol/)*.
 
 ## Code Availability
 
@@ -11,7 +11,7 @@ To access the code, you have a few options:
 
 2) Clone or download this repo.
 
-3) Visit specific workflow pages and/or download individual Quarto (.qmd) files. Details for this option are provided below under **Workflows**.
+3) Visit specific workflow pages and/or download individual Quarto (`.qmd`) files. Details for this option are provided below under **Workflows**.
 
 ## Data Availability
 

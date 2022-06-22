@@ -4496,11 +4496,11 @@ source(file.path("assets", "functions.R"))
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
-## Data Availability {.appendix}
+#### Data Availability {.appendix}
 
 Data generated in this workflow and the Rdata needed to run the workflow can be accessed on figshare at [10.25573/data.16828249](https://doi.org/10.25573/data.16828249).
 
-## Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r}
 #| echo: false

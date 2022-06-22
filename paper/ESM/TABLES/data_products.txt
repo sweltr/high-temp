@@ -1,5 +1,5 @@
 url	archive	content
-\url{https://doi.org/10.25573/data.c.5667571.v2}{}	Figshare	collection of data and data products.
+\url{https://doi.org/10.25573/data.c.5667571}{}	Figshare	collection of data and data products.
 \multirow{2}{*}[0pt]{\url{https://zenodo.org/badge/latestdoi/XXXXXXXX}{}}	\multirow{2}{*}[0pt]{Zenodo}	reproducible workflows in R Markdown format.
 \multirow{2}{*}[0pt]{\url{https://doi.org/10.25573/data.14686665}{}}	\multirow{2}{*}[0pt]{Figshare}	Raw 16S rRNA data for each sample (before removing primers).
 \multirow{2}{*}[-1.5pt]{\url{https://doi.org/10.25573/data.14686755}{}}	\multirow{2}{*}[0pt]{Figshare}	Raw ITS data for each sample (before removing primers).

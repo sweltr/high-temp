@@ -12,7 +12,7 @@ All trimmed sequence data (primers removed) is deposited at the European Nucleot
 
 ## Pipeline Data
 
-Data for each individual pipeline are available through the Smithsonian figshare under a single collection at [doi:10.25573/data.c.5667571.v2](https://doi.org/10.25573/data.c.5667571.v2). In addition, data from each pipeline are available for download from figshare using the links at the bottom of each workflow page (where applicable).
+Data for each individual pipeline are available through the Smithsonian figshare under a single collection at [doi:10.25573/data.c.5667571](https://doi.org/10.25573/data.c.5667571). In addition, data from each pipeline are available for download from figshare using the links at the bottom of each workflow page (where applicable).
 
 </br>
 
@@ -123,11 +123,11 @@ remove(list = ls())
 source(file.path("assets", "functions.R"))
 ```
 
-###  Source Code {.appendix}
+####  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
-### Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r,echo=FALSE, eval=TRUE}
 Sys.time()

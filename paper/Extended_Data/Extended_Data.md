@@ -1,6 +1,6 @@
 ---
 title: |
-  | \LARGE Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission
+  | \LARGE Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil
   |
   | Extended Data
 #subtitle: |
