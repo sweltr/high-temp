@@ -126,7 +126,7 @@ We provide additional data products and code through online repositories (**Supp
 \begingroup\fontsize{10}{12}\selectfont \textcolor{black}{\textbf{url}}\endgroup & \begingroup\fontsize{10}{12}\selectfont \textcolor{black}{\textbf{archive}}\endgroup & \begingroup\fontsize{10}{12}\selectfont \textcolor{black}{\textbf{content}}\endgroup\\
 \midrule
 \cellcolor{gray!6}{\url{https://doi.org/10.25573/data.c.5667571}{}} & \cellcolor{gray!6}{Figshare} & \cellcolor{gray!6}{collection of data and data products.}\\
-\multirow{2}{*}[0pt]{\url{https://zenodo.org/badge/latestdoi/XXXXXXXX}{}} & \multirow{2}{*}[0pt]{Zenodo} & reproducible workflows in R Markdown format.\\
+\multirow{2}{*}[0pt]{\url{https://zenodo.org/badge/latestdoi/368915237}{}} & \multirow{2}{*}[0pt]{Zenodo} & reproducible workflows in R Markdown format.\\
 \cellcolor{gray!6}{\multirow{2}{*}[0pt]{\url{https://doi.org/10.25573/data.14686665}{}}} & \cellcolor{gray!6}{\multirow{2}{*}[0pt]{Figshare}} & \cellcolor{gray!6}{Raw 16S rRNA data for each sample (before removing primers).}\\
 \multirow{2}{*}[-1.5pt]{\url{https://doi.org/10.25573/data.14686755}{}} & \multirow{2}{*}[0pt]{Figshare} & Raw ITS data for each sample (before removing primers).\\
 \cellcolor{gray!6}{\multirow{2}{*}[-1.5pt]{\url{https://www.ebi.ac.uk/ena/browser/view/PRJEB45074}{}}} & \cellcolor{gray!6}{European Nucleotide Archive} & \cellcolor{gray!6}{study accession number PRJEB45074 (ERP129199) for all sequencing data (primers removed).}\\

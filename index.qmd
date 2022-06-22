@@ -178,6 +178,8 @@ source(file.path("assets", "functions.R"))
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
+<a href="https://zenodo.org/badge/latestdoi/368915237"><img src="https://zenodo.org/badge/368915237.svg" alt="DOI"></a>
+
 #### Data Availability {.appendix}
 
 All data associated with this project can be accessed through the figshare Collection at [doi:10.25573/data.c.5667571](https://doi.org/10.25573/data.c.5667571) with the exception of trimmed fastq files (primers removed), which are available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). 
