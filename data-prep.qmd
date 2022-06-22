@@ -1,7 +1,7 @@
 ---
 title: "2. Data Set Preparation"
 description: |
-  Workflow for preparation  of the **16S rRNA** and **ITS** data sets. These steps are needed before analyzing the data. In this workflow, sample groups are defined, and phyloseq objects are created and curated.
+  Workflow for preparation  of the 16S rRNA and ITS data sets. These steps are needed before analyzing the data. In this workflow, sample groups are defined, and phyloseq objects are created and curated.
 ---
 
 <details markdown="1">
@@ -1280,15 +1280,15 @@ remove(list = ls())
 source(file.path("assets", "functions.R"))
 ```
 
-###  Source Code {.appendix}
+####  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
-## Data Availability {.appendix}
+#### Data Availability {.appendix}
 
 Data generated in this workflow and the `.Rdata` need to run the workflow can be accessed on figshare at [10.25573/data.14690739](https://doi.org/10.25573/data.14690739).
 
-## Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r}
 #| echo: false

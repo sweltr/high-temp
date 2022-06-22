@@ -1,6 +1,6 @@
 ---
 title: |
-  | \LARGE Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission
+  | \LARGE Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil
   |
   | Extended Data
 #subtitle: |
@@ -90,7 +90,7 @@ set.seed(0199)
 knitr::opts_knit$set(root.dir = getwd())
 options(knitr.kable.NA = '')
 #knitr::opts_current$get('label')
-# This will setwd to wherever the .Rmd file is opened.
+# This will setwd to wherever the .qmd file is opened.
 #\hfill\break
 options(knitr.table.format = "latex")
 ```

@@ -36,6 +36,9 @@ author:
 format:
   html: 
     code-tools: false    
+    css: ["assets/css/styles_index.css", "assets/css/styles.css"]
+title-block-banner: assets/banner.png
+    
 ---
 
 ```{r}
@@ -51,11 +54,11 @@ pacman::p_load(tidyverse, tm, SnowballC, wordcloud, RColorBrewer,
 
 # Site Overview
 
-Welcome to the website of the **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR hig temperature experiment. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the Rmd file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
+Welcome to the website of the **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR high temperature experiment, entitled *Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil*. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the `qmd` file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
 
 # Data Availability
 
-In order to run a complete pipeline, you either need the *raw* fastq files, available on the figshare project site, or the *trimmed* fastq files, available from the European Nucleotide Archive (ENA) under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). See the specific pipeline or [Data Availability](data-availability.html) page for more details.
+In order to run a complete pipeline, you either need the *raw* fastq files, available on the [figshare project site](https://doi.org/10.25573/data.c.5667571), or the *trimmed* fastq files, available from the European Nucleotide Archive (ENA) under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). See the specific pipeline or [Data Availability](data-availability.html) page for more details.
 
 Each workflow page within a pipeline also contains a Data Availability appendix that links to specific data packets require for the workflow. Or again, you can visit the [Data Availability](data-availability.html) page for more information.
 
@@ -171,15 +174,15 @@ ATN conceived the study. ATN, JJS, MM, JP, EB, KB and KS performed the study. AT
 source(file.path("assets", "functions.R"))
 ```
 
-###  Source Code {.appendix}
+####  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
-### Data Availability {.appendix}
+#### Data Availability {.appendix}
 
-All data associated with this project can be accessed through the figshare Collection at []() with the exception of trimmed fastq files (primers removed), which are available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). 
+All data associated with this project can be accessed through the figshare Collection at [doi:10.25573/data.c.5667571](https://doi.org/10.25573/data.c.5667571) with the exception of trimmed fastq files (primers removed), which are available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). 
 
-### Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r,echo=FALSE, eval=TRUE}
 Sys.time()

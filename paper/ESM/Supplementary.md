@@ -1,6 +1,6 @@
 ---
 title: |
-  | \LARGE Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission
+  | \LARGE Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil
   |
   | Electronic Supplementary Material 
 #subtitle: |
@@ -125,7 +125,7 @@ We provide additional data products and code through online repositories (**Supp
 \toprule
 \begingroup\fontsize{10}{12}\selectfont \textcolor{black}{\textbf{url}}\endgroup & \begingroup\fontsize{10}{12}\selectfont \textcolor{black}{\textbf{archive}}\endgroup & \begingroup\fontsize{10}{12}\selectfont \textcolor{black}{\textbf{content}}\endgroup\\
 \midrule
-\cellcolor{gray!6}{\url{https://doi.org/10.25573/data.c.5667571.v2}{}} & \cellcolor{gray!6}{Figshare} & \cellcolor{gray!6}{collection of data and data products.}\\
+\cellcolor{gray!6}{\url{https://doi.org/10.25573/data.c.5667571}{}} & \cellcolor{gray!6}{Figshare} & \cellcolor{gray!6}{collection of data and data products.}\\
 \multirow{2}{*}[0pt]{\url{https://zenodo.org/badge/latestdoi/XXXXXXXX}{}} & \multirow{2}{*}[0pt]{Zenodo} & reproducible workflows in R Markdown format.\\
 \cellcolor{gray!6}{\multirow{2}{*}[0pt]{\url{https://doi.org/10.25573/data.14686665}{}}} & \cellcolor{gray!6}{\multirow{2}{*}[0pt]{Figshare}} & \cellcolor{gray!6}{Raw 16S rRNA data for each sample (before removing primers).}\\
 \multirow{2}{*}[-1.5pt]{\url{https://doi.org/10.25573/data.14686755}{}} & \multirow{2}{*}[0pt]{Figshare} & Raw ITS data for each sample (before removing primers).\\

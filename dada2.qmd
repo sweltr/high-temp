@@ -1,7 +1,7 @@
 ---
 title: "1. DADA2 Workflow"
 description: |
-  DADA2 workflow for processing the **16S rRNA** and the **ITS** high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.
+  DADA2 workflow for processing the 16S rRNA and the ITS high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.
 ---
 
 <details markdown="1">
@@ -2448,7 +2448,7 @@ The end!
 remove(list = ls())
 ```
 
-<a href="data-prep.html" class="btnnav button_round" style="float: left;">Next workflow:
+<a href="data-prep.html" class="btnnav button_round" style="float: right;">Next workflow:
 <br> 2. Data Set Preparation</a><br><br>
 
 ```{r}
@@ -2462,15 +2462,15 @@ remove(list = ls())
 source(file.path("assets", "functions.R"))
 ```
 
-###  Source Code {.appendix}
+####  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
-### Data Availability {.appendix}
+#### Data Availability {.appendix}
 
 Raw fastq files available on figshare at [10.25573/data.14686665](https://doi.org/10.25573/data.14686665) for the 16S rRNA data and [10.25573/data.14686755](https://doi.org/10.25573/data.14686755) for the ITS data. Trimmed fastq files (primers removed) available through the ENA under project accession number [PRJEB45074 (ERP129199)](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074). Data generated in this workflow can be accessed on figshare at [10.25573/data.14687184](https://doi.org/10.25573/data.14687184).
 
-### Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r}
 #| echo: false

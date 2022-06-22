@@ -1,7 +1,7 @@
 ---
 title: "8. Metadata Analysis"
 description: |
-  Workflow for to compare environmental metadata with microbial communities. 
+  Workflow to assess the relationship between environmental parameters and microbial communities. 
 ---
 
 <details markdown="1">
@@ -969,6 +969,10 @@ edaphic_cor_ggheatmap
 edaphic_norm_cor_ggheatmap
 ```
 <small>`r caption_fig_ssu("ssu_autocor_edaph_norm_plots")`</small>
+:::
+
+::: {.panel-tabset}
+
 #### Functional responses
 
 ```{r}
@@ -990,6 +994,9 @@ soil_funct_cor_ggheatmap
 soil_funct_norm_cor_ggheatmap
 ```
 <small>`r caption_fig_ssu("ssu_autocor_funct_norm_plots")`</small>
+:::
+
+::: {.panel-tabset}
 
 #### Temperature adaptation 
 
@@ -1014,8 +1021,6 @@ temp_adapt_norm_cor_ggheatmap
 <small>`r caption_fig_ssu("ssu_autocor_temp_norm_plots")`</small>
 :::
 :::
-:::
-
 
 ```{r}
 #| echo: false
@@ -2391,7 +2396,6 @@ temp_adapt_plot
 <small>`r caption_fig_ssu("ssu_cap_temp_plots")`</small>
 :::
 :::
-:::
 
 ```{r}
 #| echo: false
@@ -3149,6 +3153,9 @@ edaphic_cor_ggheatmap
 edaphic_norm_cor_ggheatmap
 ```
 <small>`r caption_fig_its("its_autocor_edaph_norm_plots")`</small>
+:::
+
+::: {.panel-tabset}
 
 #### Functional responses
 
@@ -3173,6 +3180,10 @@ soil_funct_norm_cor_ggheatmap
 ```
 <small>`r caption_fig_its("its_autocor_funct_norm_plots")`</small>
 
+:::
+
+::: {.panel-tabset}
+
 #### Temperature adaptation 
 
 ```{r}
@@ -3194,7 +3205,6 @@ temp_adapt_cor_ggheatmap
 temp_adapt_norm_cor_ggheatmap
 ```
 <small>`r caption_fig_its("its_autocor_temp_norm_plots")`</small>
-:::
 :::
 :::
 
@@ -4555,9 +4565,6 @@ temp_adapt_plot
 <small>`r caption_fig_its("its_cap_temp_plots")`</small>
 :::
 :::
-:::
-
-
 
 ```{r}
 #| echo: false
@@ -4733,11 +4740,12 @@ source(file.path("assets", "functions.R"))
 ####  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
-## Data Availability {.appendix}
+
+#### Data Availability {.appendix}
 
 Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.16828294](https://doi.org/10.25573/data.16828294).
 
-## Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r}
 #| echo: false

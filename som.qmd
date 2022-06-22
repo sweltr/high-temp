@@ -1,7 +1,8 @@
 ---
 title: "Electronic Supplementary Material"
-description: |
-  Extended supplementary material for the publication.
+subtitle: "Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil"
+#description: |
+#  Extended supplementary material for the publication.
 bibliography: assets/cite_som.bib
 ---
 
@@ -41,7 +42,7 @@ remove(list = ls())
 #knitr::opts_knit$set(root.dir = getwd())
 #options(knitr.kable.NA = '')
 #knitr::opts_current$get('label')
-# This will setwd to wherever the .Rmd file is opened.
+# This will setwd to wherever the .qmd file is opened.
 #\hfill\break
 options(knitr.table.format = "html")
 ```
@@ -179,7 +180,7 @@ file.copy("include/som", "public_build/include", recursive = TRUE)
 
 # Overview
 
-This page contains the Supplementary Information for the manuscript ***Warming-induced decline in tropical soil microbial diversity and community-adaptation do not explain increased CO~2~ emission***. It is basically the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly.
+This page contains the Supplementary Information for the manuscript ***Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil***. It is basically the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly.
 
 ::: {.callout-note}
 The source code for the PDF version of this page (publication Electronic Supplementary Material)---including all figures, tables, and data sets---can be found on the [project GitHub repo](https://github.com/sweltr/high-temp/tree/main/paper/ESM). 
@@ -1938,11 +1939,11 @@ pixture::pixfigure(paths[14], caption = caption_fig("fig_taxa_veruco"))
 source(file.path("assets", "functions.R"))
 ```
 
-###  Source Code {.appendix}
+####  Source Code {.appendix}
 
 The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
 
-### Last updated on {.appendix}
+#### Last updated on {.appendix}
 
 ```{r}
 #| echo: false
