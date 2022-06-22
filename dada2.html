@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-0.9.514">
+<meta name="generator" content="quarto-0.9.598">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="description" content="DADA2 workflow for processing the 16S rRNA and the ITS high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.">
-<title>- 1. DADA2 Workflow</title>
+<title>SWELTR - 1. DADA2 Workflow</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -134,10 +134,10 @@ div.csl-indent {
   }
 }</script><style>
     .quarto-title-block .quarto-title-banner {
-      background: #FFFFFF;
+      background: #113858;
     }
     </style>
-<script src="site_libs/font-awesome-5.13.0/js/script.js"></script><script src="site_libs/core-js-2.5.3/shim.min.js"></script><script src="site_libs/react-17.0.0/react.min.js"></script><script src="site_libs/react-17.0.0/react-dom.min.js"></script><script src="site_libs/reactwidget-1.0.0/react-tools.js"></script><script src="site_libs/htmlwidgets-1.5.4/htmlwidgets.js"></script><script src="site_libs/reactable-binding-0.2.3.9000/reactable.js"></script><link rel="stylesheet" href="assets/styles.css">
+<script src="site_libs/font-awesome-5.13.0/js/script.js"></script><script src="site_libs/core-js-2.5.3/shim.min.js"></script><script src="site_libs/react-17.0.0/react.min.js"></script><script src="site_libs/react-17.0.0/react-dom.min.js"></script><script src="site_libs/reactwidget-1.0.0/react-tools.js"></script><script src="site_libs/htmlwidgets-1.5.4/htmlwidgets.js"></script><script src="site_libs/reactable-binding-0.2.3.9000/reactable.js"></script><link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body class="nav-sidebar floating nav-fixed">
 
@@ -234,7 +234,7 @@ div.csl-indent {
       <div class="quarto-title-block"><div><h1 class="title d-none d-lg-block">1. DADA2 Workflow</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
                   <div>
         <div class="description">
-          <p>DADA2 workflow for processing the <strong>16S rRNA</strong> and the <strong>ITS</strong> high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.</p>
+          <p>DADA2 workflow for processing the 16S rRNA and the ITS high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.</p>
         </div>
       </div>
                 </div>
@@ -323,6 +323,11 @@ div.csl-indent {
 <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./data-availability.html" class="sidebar-item-text sidebar-link">Data Availability</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./som.html" class="sidebar-item-text sidebar-link">Electronic Supplementary Material</a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -2155,18 +2160,18 @@ devtools::session_info()
 <iframe src="https://widgets.figshare.com/articles/14687184/embed?show_title=1" width="100%" height="351" frameborder="0">
 </iframe>
 <p>The end!</p>
-<p><a href="data-prep.html" class="btnnav button_round" style="float: left;">Next workflow: <br> 2. Data Set Preparation</a><br><br></p>
+<p><a href="data-prep.html" class="btnnav button_round" style="float: right;">Next workflow: <br> 2. Data Set Preparation</a><br><br></p>
 <div class="cell">
 
 </div>
-</section><div id="quarto-appendix" class="default"><section id="source-code" class="level3 appendix"><h2 class="quarto-appendix-heading">Source Code</h2><div class="quarto-appendix-contents">
+</section><div id="quarto-appendix" class="default"><section id="source-code" class="level4 appendix"><h2 class="quarto-appendix-heading">Source Code</h2><div class="quarto-appendix-contents">
 <p>The source code for this page can be accessed on GitHub <svg aria-hidden="true" role="img" viewbox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg> by <a href="https://github.com/sweltr/high-temp/blob/main/dada2.qmd">clicking this link</a>.</p>
-</div></section><section id="data-availability" class="level3 appendix"><h2 class="quarto-appendix-heading">Data Availability</h2><div class="quarto-appendix-contents">
+</div></section><section id="data-availability" class="level4 appendix"><h2 class="quarto-appendix-heading">Data Availability</h2><div class="quarto-appendix-contents">
 <p>Raw fastq files available on figshare at <a href="https://doi.org/10.25573/data.14686665">10.25573/data.14686665</a> for the 16S rRNA data and <a href="https://doi.org/10.25573/data.14686755">10.25573/data.14686755</a> for the ITS data. Trimmed fastq files (primers removed) available through the ENA under project accession number <a href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074 (ERP129199)</a>. Data generated in this workflow can be accessed on figshare at <a href="https://doi.org/10.25573/data.14687184">10.25573/data.14687184</a>.</p>
-</div></section><section id="last-updated-on" class="level3 appendix"><h2 class="quarto-appendix-heading">Last updated on</h2><div class="quarto-appendix-contents">
+</div></section><section id="last-updated-on" class="level4 appendix"><h2 class="quarto-appendix-heading">Last updated on</h2><div class="quarto-appendix-contents">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "2022-06-19 13:16:42 EST"</code></pre>
+<pre><code>[1] "2022-06-21 14:30:52 EST"</code></pre>
 </div>
 </div>
 
@@ -2342,7 +2347,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <div class="sourceCode" id="cb120" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "1. DADA2 Workflow"</span></span>
 <span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> |</span></span>
-<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a><span class="co">  DADA2 workflow for processing the **16S rRNA** and the **ITS** high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.</span></span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a><span class="co">  DADA2 workflow for processing the 16S rRNA and the ITS high temperature data sets. Workflow uses paired end reads, beginning with raw fastq files, ending with sequence and taxonomy tables.</span></span>
 <span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;details</span> <span class="er">markdown</span><span class="ot">=</span><span class="st">"1"</span><span class="kw">&gt;</span></span>
@@ -4789,7 +4794,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb120-2748"><a href="#cb120-2748" aria-hidden="true" tabindex="-1"></a><span class="fu">remove</span>(<span class="at">list =</span> <span class="fu">ls</span>())</span>
 <span id="cb120-2749"><a href="#cb120-2749" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb120-2750"><a href="#cb120-2750" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb120-2751"><a href="#cb120-2751" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;a</span> <span class="er">href</span><span class="ot">=</span><span class="st">"data-prep.html"</span> <span class="er">class</span><span class="ot">=</span><span class="st">"btnnav button_round"</span> <span class="er">style</span><span class="ot">=</span><span class="st">"float: left;"</span><span class="kw">&gt;</span>Next workflow:</span>
+<span id="cb120-2751"><a href="#cb120-2751" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;a</span> <span class="er">href</span><span class="ot">=</span><span class="st">"data-prep.html"</span> <span class="er">class</span><span class="ot">=</span><span class="st">"btnnav button_round"</span> <span class="er">style</span><span class="ot">=</span><span class="st">"float: right;"</span><span class="kw">&gt;</span>Next workflow:</span>
 <span id="cb120-2752"><a href="#cb120-2752" aria-hidden="true" tabindex="-1"></a><span class="kw">&lt;br&gt;</span> 2. Data Set Preparation<span class="kw">&lt;/a&gt;&lt;br&gt;&lt;br&gt;</span></span>
 <span id="cb120-2753"><a href="#cb120-2753" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb120-2756"><a href="#cb120-2756" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
@@ -4803,15 +4808,15 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb120-2764"><a href="#cb120-2764" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">file.path</span>(<span class="st">"assets"</span>, <span class="st">"functions.R"</span>))</span>
 <span id="cb120-2765"><a href="#cb120-2765" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb120-2766"><a href="#cb120-2766" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb120-2767"><a href="#cb120-2767" aria-hidden="true" tabindex="-1"></a><span class="fu">###  Source Code {.appendix}</span></span>
+<span id="cb120-2767"><a href="#cb120-2767" aria-hidden="true" tabindex="-1"></a><span class="fu">####  Source Code {.appendix}</span></span>
 <span id="cb120-2768"><a href="#cb120-2768" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb120-2769"><a href="#cb120-2769" aria-hidden="true" tabindex="-1"></a>The source code for this page can be accessed on GitHub <span class="in">`r fa(name = "github")`</span> by <span class="co">[</span><span class="ot">clicking this link</span><span class="co">]</span>(<span class="in">`r source_code()`</span>). </span>
 <span id="cb120-2770"><a href="#cb120-2770" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb120-2771"><a href="#cb120-2771" aria-hidden="true" tabindex="-1"></a><span class="fu">### Data Availability {.appendix}</span></span>
+<span id="cb120-2771"><a href="#cb120-2771" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Data Availability {.appendix}</span></span>
 <span id="cb120-2772"><a href="#cb120-2772" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb120-2773"><a href="#cb120-2773" aria-hidden="true" tabindex="-1"></a>Raw fastq files available on figshare at <span class="co">[</span><span class="ot">10.25573/data.14686665</span><span class="co">](https://doi.org/10.25573/data.14686665)</span> for the 16S rRNA data and <span class="co">[</span><span class="ot">10.25573/data.14686755</span><span class="co">](https://doi.org/10.25573/data.14686755)</span> for the ITS data. Trimmed fastq files (primers removed) available through the ENA under project accession number <span class="co">[</span><span class="ot">PRJEB45074 (ERP129199)</span><span class="co">](https://www.ebi.ac.uk/ena/browser/view/PRJEB45074)</span>. Data generated in this workflow can be accessed on figshare at <span class="co">[</span><span class="ot">10.25573/data.14687184</span><span class="co">](https://doi.org/10.25573/data.14687184)</span>.</span>
 <span id="cb120-2774"><a href="#cb120-2774" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb120-2775"><a href="#cb120-2775" aria-hidden="true" tabindex="-1"></a><span class="fu">### Last updated on {.appendix}</span></span>
+<span id="cb120-2775"><a href="#cb120-2775" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Last updated on {.appendix}</span></span>
 <span id="cb120-2776"><a href="#cb120-2776" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb120-2779"><a href="#cb120-2779" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb120-2780"><a href="#cb120-2780" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
