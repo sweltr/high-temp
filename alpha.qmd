@@ -661,7 +661,6 @@ ssu18_norm_res <- ssu18_norm_res %>%
   dplyr::rename(c("p-value (normality)" = 3, "p-value (homogeneity)" = 4, "method" = 5))
 ```
 
-
 <small>`r caption_tab_ssu("ssu_norm_tests")`</small>
 
 ```{r}
@@ -1144,8 +1143,8 @@ where `x` is the results from the `div_test` function, `"type"` is chart type (b
 ```{r}
 #| code-fold: true
 source("hack_code/div_test_plot_jjs.R")
-rm(list = ls(pattern="_adt_plot"))
-for (i in objects(pattern="_adt")) {
+rm(list = ls(pattern = "_adt_plot"))
+for (i in objects(pattern = "_adt")) {
      tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
      tmp_get <- get(i)
      tmp_df <- div_test_plot_jjs(tmp_get, chart = "box",

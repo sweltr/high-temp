@@ -1471,6 +1471,7 @@ plot_ef_bar(ssu18_ps_perfect_lefse_all_viz_trim) +
 
 
 #### PIME filtered
+
 ```{r}
 #| echo: false
 #| eval: true
@@ -1559,8 +1560,7 @@ marker_table(ssu_group_anova)
 #filter(data.frame(TMM_results@result), group_name == "k__Bacteria|p__Actinobacteriota|c__Thermoleophilia|o__Gaiellales")
 ```
 
-And then conduct ost hoc pairwise comparisons for multiple groups test using the `run_posthoc_test` function.
-
+And then conduct post hoc pairwise comparisons for multiple groups test using the `run_posthoc_test` function.
 
 ```{r}
 #| code-fold: true
@@ -1581,15 +1581,16 @@ But what we really want to do is get all of the markers that are significant fro
 
 ```{r}
 #| code-fold: true
+#| 
 ssu_pht <- ssu_default_pht
 ssu18_pht_filt <- filter(data.frame(ssu_pht@result), pvalue <= "0.05")[!grepl("ASV", filter(data.frame(ssu_pht@result), pvalue <= "0.05")$group_name),]
 ssu18_pht_filt <- ssu18_pht_filt[!grepl("[a-z]__$", ssu18_pht_filt$group_name),]
-ssu18_pht_filt <- unique(ssu18_pht_filt$group_name)
-length(ssu18_pht_filt)
+ssu18_pht_filt <- distinct(ssu18_pht_filt, group_name, .keep_all = TRUE)
+nrow(ssu18_pht_filt)
 save.image("page_build/mmarker_wf.rdata")
 ```
 
-There are **`r length(ssu18_pht_filt)`** significantly different lineage markers.
+There are **`r nrow(ssu18_pht_filt)`** significantly different lineage markers.
 
 <details markdown="1">
 <summary>**Click here** to see a list of significantly different lineage markers.</summary>
@@ -1597,7 +1598,41 @@ There are **`r length(ssu18_pht_filt)`** significantly different lineage markers
 ```{r}
 #| echo: false
 #| eval: true
-ssu18_pht_filt
+
+seq_table <- filter(data.frame(ssu_pht@result), pvalue <= "0.05")[!grepl("ASV", filter(data.frame(ssu_pht@result), pvalue <= "0.05")$group_name),]
+seq_table <- seq_table[!grepl("[a-z]__$", seq_table$group_name),]
+seq_table$group <- NULL
+
+reactable(seq_table, rownames = FALSE,
+  defaultColDef = colDef(headerStyle = list(fontSize = "0.8em"),
+    header = function(value) gsub("_", " ", value, fixed = TRUE),
+    cell = function(value) format(value, nsmall = 0),
+    align = "left", filterable = TRUE, sortable = TRUE, resizable = TRUE,
+    footerStyle = list(fontWeight = "bold")
+    ), 
+  columns = list(
+    group_name = colDef(name = "Lineage", 
+                       sticky = "left", 
+                       style = list(borderRight = "5px solid #eee"),
+                       headerStyle = list(borderRight = "5px solid #eee", fontSize = "0.8em"), 
+                       align = "left",
+                       minWidth = 150), 
+    comparions = colDef(name = "comparions", align = "center"),
+    diff_mean = colDef(name = "diff_mean", align = "center", filterable = FALSE,
+                       minWidth = 130),
+    pvalue = colDef(name = "p-value", align = "center", filterable = FALSE,
+                  style = list(borderRight = "5px solid #eee"),
+                  headerStyle = list(borderRight = "5px solid #eee", fontSize = "0.8em")),
+    ci_lower = colDef(name = "ci_lower", align = "center", filterable = FALSE),
+    ci_upper = colDef(name = "ci_upper", align = "center", filterable = FALSE)
+    ),
+  searchable = TRUE, defaultPageSize = 5, 
+  pageSizeOptions = c(5, 10, nrow(seq_table)), 
+  showPageSizeOptions = TRUE, highlight = TRUE, 
+  bordered = TRUE, striped = TRUE, compact = FALSE, 
+  wrap = FALSE, showSortable = TRUE, fullWidth = TRUE,
+  theme = reactableTheme(style = list(fontSize = "0.8em")))
+rm(seq_table)
 ```
 </details>
 
@@ -1607,7 +1642,7 @@ source("hack_code/plot_postHocTest_jjs.R")
 environment(plot_postHocTest_jjs) <- asNamespace('microbiomeMarker')
 ```
 
-Now we select a subset of the `r length(ssu18_pht_filt)` markers to plot and visualize the results.
+Now we select a subset of the `r nrow(ssu18_pht_filt)` markers to plot and visualize the results.
 
 ```{r}
 #| code-fold: true
