@@ -2,50 +2,54 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://sweltr.github.io/high-temp/about.html</loc>
-    <lastmod>2022-06-21T18:59:08.530Z</lastmod>
+    <lastmod>2022-06-29T12:26:03.762Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/alpha.html</loc>
-    <lastmod>2022-06-21T18:48:41.301Z</lastmod>
+    <lastmod>2022-06-29T12:26:45.863Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/beta.html</loc>
-    <lastmod>2022-06-21T18:54:46.367Z</lastmod>
+    <lastmod>2022-06-29T12:27:59.974Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/da.html</loc>
-    <lastmod>2022-06-21T18:50:44.056Z</lastmod>
+    <lastmod>2022-06-29T12:29:58.479Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/dada2.html</loc>
-    <lastmod>2022-06-21T19:34:01.562Z</lastmod>
+    <lastmod>2022-06-29T12:31:04.297Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/data-availability.html</loc>
-    <lastmod>2022-06-22T13:40:22.110Z</lastmod>
+    <lastmod>2022-06-29T12:31:28.587Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/data-prep.html</loc>
-    <lastmod>2022-06-21T19:31:56.700Z</lastmod>
+    <lastmod>2022-06-29T12:32:13.091Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/filtering.html</loc>
-    <lastmod>2022-06-21T19:01:21.056Z</lastmod>
+    <lastmod>2022-06-29T12:33:12.838Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/index.html</loc>
-    <lastmod>2022-06-22T13:46:14.053Z</lastmod>
+    <lastmod>2022-06-29T12:33:46.305Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/metadata.html</loc>
-    <lastmod>2022-06-21T20:07:20.097Z</lastmod>
+    <lastmod>2022-06-29T12:23:53.569Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/taxa.html</loc>
-    <lastmod>2022-06-21T18:58:29.677Z</lastmod>
+    <lastmod>2022-06-29T12:21:46.791Z</lastmod>
   </url>
   <url>
     <loc>https://sweltr.github.io/high-temp/som.html</loc>
-    <lastmod>2022-06-22T13:41:22.102Z</lastmod>
+    <lastmod>2022-06-29T12:19:58.327Z</lastmod>
+  </url>
+  <url>
+    <loc>https://sweltr.github.io/high-temp/pub.html</loc>
+    <lastmod>2022-06-29T12:17:53.560Z</lastmod>
   </url>
 </urlset>
