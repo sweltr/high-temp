@@ -1,0 +1,4381 @@
+---
+title: "Code for Publication Figures"
+description: |
+  Reproducible workflows to reproduce all Main, Extended Data, and Supplementary figures in the publication. 
+page-layout: full
+  
+format:
+  html:
+    sidebar: false
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Get the code"
+    code-overflow: scroll
+    code-tools: 
+      source: true
+      toggle: true
+      caption: Code
+execute:
+  echo: true
+  eval: false
+  warning: false
+  message: false
+comments:
+  hypothesis: true  
+---
+
+```{r}
+#| results: hide
+set.seed(119)
+library(phyloseq); packageVersion("phyloseq")
+pacman::p_load(tidyverse, magrittr, file2meco, microbiomeMarker,
+               microeco, cowplot, hilldiv, ggpubr, vegan, Matrix,
+               patchwork,
+               install = FALSE, update = FALSE)
+options(scipen = 999)
+knitr::opts_current$get(c(
+  "cache",
+  "cache.path",
+  "cache.rebuild",
+  "dependson",
+  "autodep"
+))
+```
+
+```{=html}
+<style>
+
+details {
+    background-color: #F6F6F6;
+    border: 1px solid  #B22271;
+
+}
+
+pre.sourceCode.r {
+    font-size: 0.85em;
+}
+
+.step #download-button {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+</style>
+```
+
+
+For each figure we include the raw figure generated in R, the post-processed figure, plus the code and data needed to generate the figure. 
+
+
+# Main Paper
+
+
+# Extended Data
+
+## Extended Data Figure 2
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include axes and label resizing, removing non-significant (NS) values from plots,  changing significant p-values to asterisks (`*`), creating a legend, and enlarging outlier points. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/ext/Extended_Data_Figure_2.png)
+
+### Final
+
+![](paper/Extended_Data/FIGURES/Extended_Data_Fig_2.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/extended_data_fig_2.rdata)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_2.pdf)
+:::
+
+:::
+
+### Alpha diversity plot code
+
+```{r}
+remove(list = ls())
+load("include/pub/ext/extended_data_fig_2.rdata")
+
+#####################################
+#####################################
+### 16S rRNA ALPHA DIV PLOTS ########
+#####################################
+#####################################
+
+tmp_objects <- c("ssu18_ps_perfect")
+
+tmp_metric <- data.frame(c("Observed", "Shannon exponential", "Inverse Simpson"))
+tmp_qvalue <- data.frame(c("0", "1", "2"))
+
+qvalue <- c(0,1,2)
+for (i in tmp_objects) {
+
+  tmp_h_pvalue <- c()
+     for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$homogeneity.pvalue
+          tmp_h_pvalue <- c(append(tmp_h_pvalue, tmp_get))
+     }
+  tmp_h_pvalue <- data.frame(tmp_h_pvalue)
+
+  tmp_n_pvalue <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$normality.pvalue
+          tmp_n_pvalue <- c(append(tmp_n_pvalue, tmp_get))
+     }
+  tmp_n_pvalue <- data.frame(tmp_n_pvalue)
+
+  tmp_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$method
+          tmp_method <- c(append(tmp_method, tmp_get))
+     }
+  tmp_method <- data.frame(tmp_method)
+
+  tmp_phoc_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$posthoc.method
+          tmp_phoc_method <- c(append(tmp_phoc_method, tmp_get))
+     }
+  tmp_phoc_method <- data.frame(tmp_phoc_method)
+
+  tmp_df <- dplyr::bind_cols(tmp_metric, tmp_qvalue) %>%
+                     dplyr::bind_cols(., tmp_n_pvalue) %>%
+                     dplyr::bind_cols(., tmp_h_pvalue) %>%
+                     dplyr::bind_cols(., tmp_method) %>%
+                     dplyr::bind_cols(., tmp_phoc_method) %>%
+  dplyr::rename("metric" = 1, "q-value" = 2, "normality p-value" = 3, 
+                "homogeneity p-value" = 4, "method" = 5, "posthoc method" = 6)
+  tmp_name <- purrr::map_chr(i, ~ paste0(i, "_sig_tab"))
+  assign(tmp_name, tmp_df)
+}
+
+## FALSE Kruskal-Wallis Test = its18_pime_q1_adt$test[[3]]
+## TRUE Tukey post-hoc  = its18_ps_work_q0_adt$test[[1]][[1, 5]]
+
+tmp_pvalue <- data.frame(c(ssu18_ps_perfect_q0_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_q1_adt$test[[1]][[1, 5]],
+                           ssu18_ps_perfect_q2_adt$test[[1]][[1, 5]]))
+ssu18_ps_perfect_sig_tab <- dplyr::bind_cols(ssu18_ps_perfect_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+rm(list = ls(pattern = "tmp_"))
+
+ssu18_ps_perfect_sig_tab$dataset <- "PERfect"
+ssu18_ps_perfect_sig_tab$type <- "ASV"
+ssu18_ps_perfect_sig_tab$lineage <- "No"
+ssu18_ps_perfect_sig_tab <- ssu18_ps_perfect_sig_tab[,c(8:10,1:7)]
+
+ssu18_sig_tab_all <- ssu18_ps_perfect_sig_tab
+
+## PostHoc Analyses 
+
+## First let's check the results of each posthoc analysis.
+### Observed (q-value = 0)
+ssu18_asvr0_lab <- "Observed"
+ssu18_asvr0_lab
+ssu18_ps_perfect_q0_adt$posthoc.method
+data.frame(ssu18_ps_perfect_q0_adt$posthoc)
+
+ssu18_asvr1_lab <- "Shannon exponential"
+ssu18_asvr1_lab
+ssu18_ps_perfect_q1_adt$posthoc.method
+data.frame(ssu18_ps_perfect_q1_adt$posthoc)
+
+ssu18_asvr2_lab <- "Inverse Simpson"
+ssu18_asvr2_lab
+ssu18_ps_perfect_q2_adt$posthoc.method
+data.frame(ssu18_ps_perfect_q2_adt$posthoc)
+## Now we can plot the results from the posthoc analyses for each metric 
+## and data set using the function `div_test_plot_jjs`. 
+## I modified the original function (`div_test_plot`) to control a 
+## little of the formatting.
+
+## The command is as follows:
+
+
+## div_test_plot(divtest = x, chart = "type", colour = col.pal, 
+##               posthoc = TRUE, threshold = value))
+
+## where `x` is the results from the `div_test` function, `"type"` is 
+## chart type (box, jitter, or violin), `colour` is is a color palette, 
+## `posthoc` indicates whether to run posthoc pairwise analyses, and `value` 
+## is the maximum p-value to show in pairwise posthoc results. 
+## **WARNING** if none of the posthoc results are below the specified 
+## threshold, the function will throw an error. Therefore, until this is 
+## fixed, all posthoc values are shown.
+
+div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold) 
+{
+    if (missing(chart)) {
+        chart = "box"
+    }
+    if (missing(posthoc)) {
+        posthoc = FALSE
+    }
+    if ((names(divtest)[1] != "data") & (names(divtest)[2] != 
+        "normality.pvalue")) 
+        stop("The input object does not seem to be a div_test output.")
+    divtestdata <- divtest$data
+    divtestdata$Group <- as.factor(divtestdata$Group)
+    divtestdata$Group <- factor(divtestdata$Group, levels = as.character(unique(divtestdata$Group)))
+    if (missing(colour) || (length(colour) < divtest$groups)) {
+        getPalette <- colorRampPalette(brewer.pal(divtest$groups, 
+            "Paired"))
+        colour <- getPalette(divtest$groups)
+    }
+    if (posthoc == TRUE) {
+        if (is.na(names(divtest)[7])) 
+            stop("The input div_test object does not seem to contain pairwise posthoc data. 
+                 Re-run div_test() using 'posthoc=TRUE' argument.")
+        if (divtest[7] == "Tukey post-hoc test") {
+            combinations <- matrix(gsub(" $", "", gsub("^ ", 
+                "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
+                  "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
+            pvalue <- round(divtest$posthoc[, 4], 3)
+            pairwisetable <- as.data.frame(cbind(combinations, 
+                pvalue))
+            colnames(pairwisetable) <- c("group1", "group2", 
+                "p")
+        }
+        if (divtest[7] == "Dunn test with Benjamini-Hochberg correction") {
+            combinations <- matrix(gsub(" $", "", gsub("^ ", 
+                "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
+                  "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
+            pvalue <- round(divtest$posthoc[, 3], 3)
+            pairwisetable <- as.data.frame(cbind(combinations, 
+                pvalue))
+            colnames(pairwisetable) <- c("group1", "group2", 
+                "p")
+        }
+        pairwisetable[, 1] <- as.character(pairwisetable[, 1])
+        pairwisetable[, 2] <- as.character(pairwisetable[, 2])
+        pairwisetable[, 3] <- as.numeric(as.character(pairwisetable[, 
+            3]))
+        if (!missing(threshold)) {
+            pairwisetable <- pairwisetable[which(pairwisetable$p < 
+                threshold), ]
+        }
+        sortedgroups <- unique(sort(c(pairwisetable$group1, pairwisetable$group2)))
+        datamax <- round(max(divtest$data[which(divtest$data$Group %in% 
+            sortedgroups), 3]))
+        datamin <- round(min(divtest$data[which(divtest$data$Group %in% 
+            sortedgroups), 3]))
+        datarange <- datamax - datamin
+        by <- datarange * 0.1
+        min <- datamax
+        max <- min + (by * nrow(pairwisetable))
+        ypos <- seq(min, max, by)[-1]
+        pairwisetable$ypos <- ypos
+    }
+    if (chart == "box") {
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", outlier.size = 3,
+            color = "Group", fill = "Group", x.text.angle = 0) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            #scale_colour_manual(values = scales::alpha(colour, 1)) + 
+            scale_colour_manual(values=c("#191919", "#191919", "#191919")) + 
+            scale_fill_manual(values = scales::alpha(colour, 1)) +
+            scale_linetype_manual()
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        return(plot)
+    }
+    if (chart == "jitter") {
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", 
+            color = "Group", add = "jitter", width = 0, x.text.angle = 45) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            scale_colour_manual(values = scales::alpha(colour, 
+                0))
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        print(plot)
+    }
+    if (chart == "violin") {
+        plot <- ggviolin(divtestdata, x = "Group", y = "Value", 
+            color = "Group", fill = "Group", x.text.angle = 45) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            scale_fill_manual(values = scales::alpha(colour, 
+                0.1)) + scale_colour_manual(values = scales::alpha(colour, 
+            1))
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        print(plot)
+    }
+}
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+rm(list = ls(pattern = "_adt_plot"))
+for (i in objects(pattern = "_adt")) {
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
+     tmp_get <- get(i)
+     tmp_df <- div_test_plot_jjs(tmp_get, chart = "box",
+                                 colour	= swel_col, posthoc = TRUE)
+     tmp_df <- ggpar(tmp_df, legend = "none")
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+#
+ssu18_ps_perfect_q0_adt_plot <- ssu18_ps_perfect_q0_adt_plot +
+                             labs(y = "Effective no. of Taxon Units", x = "") +
+                             ggtitle(ssu18_asvr0_lab) + 
+                             theme(plot.title = element_text(size = 12, face = "bold"))
+ssu18_ps_perfect_q1_adt_plot <- ssu18_ps_perfect_q1_adt_plot +
+                             labs(x = "Treatment") +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(ssu18_asvr1_lab) + 
+                             theme(plot.title = element_text(size = 12, face = "bold"))
+ssu18_ps_perfect_q2_adt_plot <- ssu18_ps_perfect_q2_adt_plot +
+                             labs(x = "") +
+                             theme(axis.title.y = element_blank()) + 
+                             ggtitle(ssu18_asvr2_lab) + 
+                             theme(plot.title = element_text(size = 12, face = "bold"))
+ssu18_alph_div_plots_asv <- ggarrange(
+  ssu18_ps_perfect_q0_adt_plot, 
+  ssu18_ps_perfect_q1_adt_plot, 
+  ssu18_ps_perfect_q2_adt_plot, 
+  ncol = 3, nrow = 1)
+ssu18_alph_div_plots_asv
+
+#####################################
+#####################################
+### ITS ALPHA DIV PLOTS #############
+#####################################
+#####################################
+
+tmp_objects <- c("its18_ps_perfect")
+
+tmp_metric <- data.frame(c("Observed", "Shannon exponential", "Inverse Simpson"))
+tmp_qvalue <- data.frame(c("0", "1", "2"))
+
+qvalue <- c(0,1,2)
+for (i in tmp_objects) {
+
+  tmp_h_pvalue <- c()
+     for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$homogeneity.pvalue
+          tmp_h_pvalue <- c(append(tmp_h_pvalue, tmp_get))
+     }
+  tmp_h_pvalue <- data.frame(tmp_h_pvalue)
+
+  tmp_n_pvalue <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$normality.pvalue
+          tmp_n_pvalue <- c(append(tmp_n_pvalue, tmp_get))
+     }
+  tmp_n_pvalue <- data.frame(tmp_n_pvalue)
+
+  tmp_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$method
+          tmp_method <- c(append(tmp_method, tmp_get))
+     }
+  tmp_method <- data.frame(tmp_method)
+
+  tmp_phoc_method <- c()
+      for (j in qvalue) {
+          tmp_name <- purrr::map_chr(i, ~ paste0(., "_q", j, "_adt"))
+          tmp_get <- get(tmp_name)$posthoc.method
+          tmp_phoc_method <- c(append(tmp_phoc_method, tmp_get))
+     }
+  tmp_phoc_method <- data.frame(tmp_phoc_method)
+
+  tmp_df <- dplyr::bind_cols(tmp_metric, tmp_qvalue) %>%
+                     dplyr::bind_cols(., tmp_n_pvalue) %>%
+                     dplyr::bind_cols(., tmp_h_pvalue) %>%
+                     dplyr::bind_cols(., tmp_method) %>%
+                     dplyr::bind_cols(., tmp_phoc_method) %>%
+  dplyr::rename("metric" = 1, "q-value" = 2, "normality p-value" = 3, 
+                "homogeneity p-value" = 4, "method" = 5, "posthoc method" = 6)
+  tmp_name <- purrr::map_chr(i, ~ paste0(i, "_sig_tab"))
+  assign(tmp_name, tmp_df)
+}
+
+## FALSE Kruskal-Wallis Test = its18_pime_q1_adt$test[[3]]
+## TRUE Tukey post-hoc  = its18_ps_work_q0_adt$test[[1]][[1, 5]]
+
+tmp_pvalue <- data.frame(c(its18_ps_perfect_q0_adt$test[[1]][[1, 5]],
+                           its18_ps_perfect_q1_adt$test[[1]][[1, 5]],
+                           its18_ps_perfect_q2_adt$test[[1]][[1, 5]]))
+its18_ps_perfect_sig_tab <- dplyr::bind_cols(its18_ps_perfect_sig_tab, tmp_pvalue) %>%
+                         dplyr::rename("posthoc p-value" = 7)
+rm(list = ls(pattern = "tmp_"))
+
+its18_ps_perfect_sig_tab$dataset <- "PERfect"
+its18_ps_perfect_sig_tab$type <- "ASV"
+its18_ps_perfect_sig_tab$lineage <- "No"
+its18_ps_perfect_sig_tab <- its18_ps_perfect_sig_tab[,c(8:10,1:7)]
+
+its18_sig_tab_all <- its18_ps_perfect_sig_tab
+
+## PostHoc Analyses 
+
+## First let's check the results of each posthoc analysis.
+### Observed (q-value = 0)
+its18_asvr0_lab <- "Observed"
+its18_asvr0_lab
+its18_ps_perfect_q0_adt$posthoc.method
+data.frame(its18_ps_perfect_q0_adt$posthoc)
+
+its18_asvr1_lab <- "Shannon exponential"
+its18_asvr1_lab
+its18_ps_perfect_q1_adt$posthoc.method
+data.frame(its18_ps_perfect_q1_adt$posthoc)
+
+its18_asvr2_lab <- "Inverse Simpson"
+its18_asvr2_lab
+its18_ps_perfect_q2_adt$posthoc.method
+data.frame(its18_ps_perfect_q2_adt$posthoc)
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+rm(list = ls(pattern = "_adt_plot"))
+for (i in objects(pattern = "_adt")) {
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
+     tmp_get <- get(i)
+     tmp_df <- div_test_plot_jjs(tmp_get, chart = "box",
+                                 colour	= swel_col, posthoc = TRUE)
+     tmp_df <- ggpar(tmp_df, legend = "none")
+     print(tmp_name)
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+#
+its18_ps_perfect_q0_adt_plot <- its18_ps_perfect_q0_adt_plot +
+                             labs(y = "Effective no. of Taxon Units", x = "") +
+                             ggtitle(its18_asvr0_lab) + 
+                             theme(plot.title = element_text(size = 12, face = "bold"))
+its18_ps_perfect_q1_adt_plot <- its18_ps_perfect_q1_adt_plot +
+                             labs(x = "Treatment") +
+                             theme(axis.title.y = element_blank()) +
+                             ggtitle(its18_asvr1_lab) + 
+                             theme(plot.title = element_text(size = 12, face = "bold"))
+its18_ps_perfect_q2_adt_plot <- its18_ps_perfect_q2_adt_plot +
+                             labs(x = "") +
+                             theme(axis.title.y = element_blank()) + 
+                             ggtitle(its18_asvr2_lab) + 
+                             theme(plot.title = element_text(size = 12, face = "bold"))
+its18_alph_div_plots_asv <- ggarrange(
+  its18_ps_perfect_q0_adt_plot, 
+  its18_ps_perfect_q1_adt_plot, 
+  its18_ps_perfect_q2_adt_plot, 
+  ncol = 3, nrow = 1)
+its18_alph_div_plots_asv
+objects()
+```
+
+### Beta diversity plot code
+
+```{r}
+#####################################
+#####################################
+### 16S rRNA BETA DIV PLOTS #########
+#####################################
+#####################################
+## First the code for ordination implementation in `phyloseq`. 
+set.seed(119)
+
+ssu18_data_sets <- c("ssu18_ps_perfect")
+ssu_dist <- c("unifrac", "wunifrac")
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+for (samp_ps in ssu18_data_sets) {
+for (d in ssu_dist){
+     tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
+     ord_meths <- c("PCoA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
+     tmp_plist <- plyr::llply(as.list(ord_meths), function(i, physeq, d) {
+        ordi = ordinate(physeq, method = i, distance = d)
+        plot_ordination(physeq, ordi, "samples", color = "TEMP")
+   }, tmp_get, d)
+
+  names(tmp_plist) <- ord_meths
+
+  tmp_df <- plyr::ldply(tmp_plist, function(x){
+      df = x$data[, 1:2]
+      colnames(df) = c("Axis_1", "Axis_2")
+      return(cbind(df, x$data))})
+  names(tmp_df)[1] = "method"
+  
+  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2, color = TEMP, fill = TEMP))
+  tmp_plot <- tmp_plot + geom_point(size = 4)
+  tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
+  tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
+  
+  tmp_df_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
+  tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
+  tmp_plot_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
+  tmp_list <- list("tmp_df_name" = tmp_df, tmp_plist_name = tmp_plist, tmp_plot_name = tmp_plot)
+  assign(paste0(samp_ps, "_",  d, "_ord_results"), tmp_list)
+  rm(list = ls(pattern = "_tmp"))
+ }
+}
+
+plist_name <- objects(pattern="_ord_results")
+#plot_num <- c(1,2,3,4)
+plot_num <- c(1)
+for (i in plist_name) {
+  for (j in plot_num) {
+       tmp_get_i <- get(i)$tmp_plist_name
+       tmp_ord <- names(tmp_get_i)[j]
+       tmp_name <- stringr::str_replace(i, "ord_results", tmp_ord)
+       tmp_dist <- stringr::str_remove(tmp_name, "ssu18_ps_perfect_") %>% 
+         stringr::str_remove(., tmp_ord) %>% 
+         stringr::str_remove(., "_")
+       tmp_plot <- tmp_get_i[[j]] + scale_colour_manual(values = swel_col)
+       tmp_plot <- tmp_plot + geom_point(size = 4) +
+         theme(legend.position = "none", 
+               panel.grid.major = element_blank(), 
+               panel.grid.minor = element_blank(),
+               panel.background = element_blank(), 
+               axis.line = element_line(colour = "black"))
+       tmp_plot$labels$shape <- "TEMP"
+       
+    if (tmp_dist == "unifrac") {
+      tmp_dist_name <- "Unweighted Unifrac"
+    }   else if (tmp_dist == "wunifrac") {
+      tmp_dist_name <- "Weighted Unifrac"
+    }   else {
+      tmp_dist_name <- ""
+    }
+   tmp_plot <- tmp_plot + ggtitle(tmp_dist_name)
+       
+       assign(tmp_name, tmp_plot)
+       rm(list = ls(pattern = "tmp_"))
+  }
+}
+
+## And now the code for ordination implementation in `microeco`. 
+
+microeco_path <- "include/pub/ext/"
+for (i in ssu18_data_sets) {
+  tmp_dataset <- get(purrr::map_chr(i, ~paste0(., "_me")))
+  tmp_dataset$cal_betadiv(unifrac = TRUE)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## Here I made a custom "function" to run the analysis, plot the graphs, 
+## save graph objects, and save plots (as `.png` and `.pdf` files). 
+## I am sure an actual programmer would be shocked, but it works. 
+
+microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {  
+  tmp_dataset <- get(purrr::map_chr(choose_input, ~paste0(., "_me")))
+  tmp_t1 <- trans_beta$new(dataset = tmp_dataset, group = "TEMP", measure = choose_metric)
+  tmp_t1$cal_ordination(ordination = choose_ord)
+  tmp_t1_ord_plot <- tmp_t1$plot_ordination(plot_color = "TEMP", 
+                                            plot_shape = "TEMP", 
+                                            color_values = swel_col, 
+                                            shape_values = c(16, 16, 16)) + 
+                       geom_point(size = 4) +  
+    theme(legend.position = "none", 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))
+  
+    if (choose_metric == "unwei_unifrac") {
+      tmp_plt_name <- "Unweighted Unifrac"
+    }   else if (choose_metric == "wei_unifrac") {
+      tmp_plt_name <- "Weighted Unifrac"
+    }   else {
+      tmp_plt_name <- ""
+    }
+   tmp_t1_ord_plot <- tmp_t1_ord_plot + ggtitle(tmp_plt_name)
+
+  tmp_t1$cal_group_distance()
+  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col)
+  tmp_t1_within_group_plot <- tmp_t1_within_group_plot + ggtitle(tmp_plt_name)
+  tmp_t1$res_group_distance
+  tmp_t1$cal_group_distance(within_group = FALSE)
+  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col) 
+  tmp_t1_btwn_group_plot <- tmp_t1_btwn_group_plot + ggtitle(tmp_plt_name)
+
+###### SET names
+  tmp_name_ord <- paste(choose_input, "_me_", choose_metric, "_", choose_ord, sep = "")
+  tmp_name_wg <- paste(choose_input, "_me_wg_", choose_metric, "_", choose_ord, sep = "")
+  tmp_name_bg <- paste(choose_input, "_me_bg_", choose_metric, "_", choose_ord, sep = "")
+  
+  assign(tmp_name_ord, tmp_t1_ord_plot, envir = parent.frame() )
+  assign(tmp_name_wg, tmp_t1_within_group_plot, envir = parent.frame() )
+  assign(tmp_name_bg, tmp_t1_btwn_group_plot, envir = parent.frame() )
+  rm(list = ls(pattern = "_PCoA"))
+}
+
+for (j in 1:length(get(paste("ssu18_ps_perfect", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("ssu18_ps_perfect", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "ssu18_ps_perfect", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+ssu18_unifrac <- ssu18_ps_perfect_unifrac_PCoA + geom_point(size = 7)
+ssu18_wunifrac <- ssu18_ps_perfect_wunifrac_PCoA  +  geom_point(size = 7)
+ssu18_wg_unwei_unifrac <- ssu18_ps_perfect_me_wg_unwei_unifrac_PCoA
+ssu18_wg_wei_unifrac <- ssu18_ps_perfect_me_wg_wei_unifrac_PCoA
+
+ssu18_wg_unwei_unifrac <- ssu18_wg_unwei_unifrac + theme(axis.title.y = element_text(size = 10)) + ylab("distance")
+ssu18_wg_wei_unifrac <- ssu18_wg_wei_unifrac + theme(axis.title.y = element_text(size = 10)) + ylab("distance")
+
+#####################################
+#####################################
+### ITS  BETA DIV PLOTS #############
+#####################################
+#####################################
+
+set.seed(119)
+
+its18_data_sets <- c("its18_ps_perfect")
+its_dist <- c("jsd", "bray")
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+for (samp_ps in its18_data_sets) {
+for (d in its_dist){
+     tmp_get <- get(purrr::map_chr(samp_ps, ~ paste0(., "_prop")))
+     ord_meths <- c("PCoA") # MDS = PCoA, "CCA", "DCA", "DPCoA", "RDA"
+     tmp_plist <- plyr::llply(as.list(ord_meths), function(i, physeq, d) {
+        ordi = ordinate(physeq, method = i, distance = d)
+        plot_ordination(physeq, ordi, "samples", color = "TEMP")
+   }, tmp_get, d)
+
+  names(tmp_plist) <- ord_meths
+
+  tmp_df <- plyr::ldply(tmp_plist, function(x){
+      df = x$data[, 1:2]
+      colnames(df) = c("Axis_1", "Axis_2")
+      return(cbind(df, x$data))})
+  names(tmp_df)[1] = "method"
+  
+  tmp_plot <- ggplot(tmp_df, aes(Axis_1, Axis_2, color = TEMP, fill = TEMP))
+  tmp_plot <- tmp_plot + geom_point(size = 4)
+  tmp_plot <- tmp_plot + facet_wrap(~method, scales = "free")
+  tmp_plot <- tmp_plot + scale_colour_manual(values = swel_col)
+  
+  tmp_df_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", .))
+  tmp_plist_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_", ., "_plist"))
+  tmp_plot_name <- purrr::map_chr(d, ~ paste0(samp_ps, "_dist_", ., "_plot"))
+  tmp_list <- list("tmp_df_name" = tmp_df, tmp_plist_name = tmp_plist, tmp_plot_name = tmp_plot)
+  assign(paste0(samp_ps, "_",  d, "_ord_results"), tmp_list)
+  rm(list = ls(pattern = "_tmp"))
+ }
+}
+
+plist_name <- objects(pattern="_ord_results")
+#plot_num <- c(1,2,3,4)
+plot_num <- c(1)
+for (i in plist_name) {
+  for (j in plot_num) {
+       tmp_get_i <- get(i)$tmp_plist_name
+       tmp_ord <- names(tmp_get_i)[j]
+       tmp_name <- stringr::str_replace(i, "ord_results", tmp_ord)
+       tmp_dist <- stringr::str_remove(tmp_name, "its18_ps_perfect_") %>% 
+         stringr::str_remove(., tmp_ord) %>% 
+         stringr::str_remove(., "_")
+       tmp_plot <- tmp_get_i[[j]] + scale_colour_manual(values = swel_col)
+       tmp_plot <- tmp_plot + geom_point(size = 4) +
+         theme(legend.position = "none", 
+               panel.grid.major = element_blank(), 
+               panel.grid.minor = element_blank(),
+               panel.background = element_blank(), 
+               axis.line = element_line(colour = "black"))
+       tmp_plot$labels$shape <- "TEMP"
+       
+    if (tmp_dist == "jsd") {
+      tmp_dist_name <- "Jensen-Shannon"
+    }   else if (tmp_dist == "bray") {
+      tmp_dist_name <- "Bray-Curtis"
+    }   else {
+      tmp_dist_name <- ""
+    }
+   tmp_plot <- tmp_plot + ggtitle(tmp_dist_name)
+       
+       assign(tmp_name, tmp_plot)
+       rm(list = ls(pattern = "tmp_"))
+  }
+}
+
+## And now the code for ordination implementation in `microeco`. 
+
+microeco_path <- "include/pub/ext/"
+for (i in its18_data_sets) {
+  tmp_dataset <- get(purrr::map_chr(i, ~paste0(., "_me")))
+  tmp_dataset$cal_betadiv(unifrac = FALSE)
+#### CODE TO ADD JSD DISTANCE ####  
+  tmp_jsd <- phyloseq::distance(get(i), method = "jsd") 
+  tmp_jsd <- forceSymmetric(as.matrix(tmp_jsd), uplo = "L")
+  tmp_jsd <- as.matrix(tmp_jsd)
+  tmp_dataset$beta_diversity$jsd <- tmp_jsd
+  rm(list = ls(pattern = "tmp_"))
+}    
+
+## Here I made a custom "function" to run the analysis, plot the graphs, 
+## save graph objects, and save plots (as `.png` and `.pdf` files). 
+## I am sure an actual programmer would be shocked, but it works. 
+
+microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {  
+  tmp_dataset <- get(purrr::map_chr(choose_input, ~paste0(., "_me")))
+  tmp_t1 <- trans_beta$new(dataset = tmp_dataset, group = "TEMP", measure = choose_metric)
+  tmp_t1$cal_ordination(ordination = choose_ord)
+  tmp_t1_ord_plot <- tmp_t1$plot_ordination(plot_color = "TEMP", 
+                                            plot_shape = "TEMP", 
+                                            color_values = swel_col, 
+                                            shape_values = c(16, 16, 16)) + 
+                       geom_point(size = 4) +  
+    theme(legend.position = "none", 
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"))
+  
+    if (choose_metric == "jsd") {
+      tmp_plt_name <- "Jensen-Shannon"
+    }   else if (choose_metric == "bray") {
+      tmp_plt_name <- "Bray-Curtis"
+    }   else {
+      tmp_plt_name <- ""
+    }
+   tmp_t1_ord_plot <- tmp_t1_ord_plot + ggtitle(tmp_plt_name)
+
+  tmp_t1$cal_group_distance()
+  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col)
+  tmp_t1_within_group_plot <- tmp_t1_within_group_plot + ggtitle(tmp_plt_name)
+  tmp_t1$res_group_distance
+  tmp_t1$cal_group_distance(within_group = FALSE)
+  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col) 
+  tmp_t1_btwn_group_plot <- tmp_t1_btwn_group_plot + ggtitle(tmp_plt_name)
+
+###### SET names
+  tmp_name_ord <- paste(choose_input, "_me_", choose_metric, "_", choose_ord, sep = "")
+  tmp_name_wg <- paste(choose_input, "_me_wg_", choose_metric, "_", choose_ord, sep = "")
+  tmp_name_bg <- paste(choose_input, "_me_bg_", choose_metric, "_", choose_ord, sep = "")
+  
+  assign(tmp_name_ord, tmp_t1_ord_plot, envir = parent.frame() )
+  assign(tmp_name_wg, tmp_t1_within_group_plot, envir = parent.frame() )
+  assign(tmp_name_bg, tmp_t1_btwn_group_plot, envir = parent.frame() )
+  rm(list = ls(pattern = "_PCoA"))
+}
+
+for (j in 1:length(get(paste("its18_ps_perfect", "_me", sep = ""))$beta_diversity)) {
+  tmp_metric <- names(get(paste("its18_ps_perfect", "_me", sep = ""))$beta_diversity[j])
+  microeco_beta_plot(choose_input = "its18_ps_perfect", choose_metric = tmp_metric, choose_ord = "PCoA")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+its18_jsd <- its18_ps_perfect_jsd_PCoA + geom_point(size = 7)
+its18_bray <- its18_ps_perfect_bray_PCoA  +  geom_point(size = 7)
+its18_wg_jsd <- its18_ps_perfect_me_wg_jsd_PCoA
+its18_wg_bray <- its18_ps_perfect_me_wg_bray_PCoA
+
+its18_wg_jsd <- its18_wg_jsd + theme(axis.title.y = element_text(size = 10)) + ylab("distance")
+its18_wg_bray <- its18_wg_bray + theme(axis.title.y = element_text(size = 10)) + ylab("distance")
+
+### CREATE combo plot using PATCHWORK
+
+layout <- c(
+  area(t = 1, b = 15, l = 1, r = 22),
+  area(t = 17, b = 31, l = 2, r = 9),
+  area(t = 17, b = 31, l = 10, r = 17),
+  area(t = 16, b = 23, l = 18, r = 21),
+  area(t = 24, b = 31, l = 18, r = 21),
+
+  area(t = 32, b = 46, l = 1, r = 22),
+  area(t = 48, b = 62, l = 2, r = 9),
+  area(t = 48, b = 62, l = 10, r = 17),
+  area(t = 47, b = 54, l = 18, r = 21),
+  area(t = 55, b = 62, l = 18, r = 21)
+  
+  )
+plot(layout)
+
+combo_plot <- 
+  ssu18_alph_div_plots_asv + 
+           ssu18_unifrac + ssu18_wunifrac +  
+           ssu18_wg_unwei_unifrac + ssu18_wg_wei_unifrac + 
+  its18_alph_div_plots_asv + 
+           its18_jsd + its18_bray +  
+           its18_wg_jsd + its18_wg_bray + 
+  plot_layout(design = layout)  
+ggplot2::ggsave(combo_plot, path = "include/pub/ext/", filename = "Extended_Data_Figure_2.png", height = 56, width = 40,
+    units = 'cm', dpi = 600, bg = "white")
+ggplot2::ggsave(combo_plot, path = "include/pub/ext/", filename = "Extended_Data_Figure_2.pdf", height = 56, width = 40,
+    units = 'cm', dpi = 600, bg = "white")
+
+```
+
+## Extended Data Figure 3
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include axes renaming, removing non-significant (NS) values from plots,  changing significant p-values to asterisks (`*`), removing gridlines, and enlarging outlier points. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/ext/Extended_Data_Figure_3.png)
+
+### Final
+
+![](paper/Extended_Data/FIGURES/Extended_Data_Fig_3.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_ps_perfect_rf_all.rds)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_3.pdf)
+:::
+
+:::
+
+```{r}
+## In this section of the workflow we use the 
+## [`microbiomeMarker`](https://github.com/yiluheihei/microbiomeMarker) package 
+## to assess the response of taxonomic lineages to soil warming. 
+## In the first step we need to fix the selected data set to make it 
+## compatible with the various functions. For this analysis we use the 
+## PERfect filtered data set.
+
+
+remove(list = ls())
+ssu18_ps_perfect_rf_all <-
+  readRDS("include/pub/ext/ssu18_ps_perfect_rf_all.rds")
+
+## FIX ps object
+ssu_ps <- ssu18_ps_perfect_rf_all
+tmp_tax1 <- data.frame(tax_table(ssu_ps))
+tmp_rn <- row.names(tmp_tax1)
+tmp_tax <-
+  data.frame(lapply(tmp_tax1, function(x) {
+    gsub("\\(|)", "", x)
+  }))
+row.names(tmp_tax) <- tmp_rn
+identical(row.names(tmp_tax), row.names(tmp_tax1))
+ps_tax_new <- as.matrix(tmp_tax)
+tmp_ps <- phyloseq(otu_table(ssu_ps),
+                   phy_tree(ssu_ps),
+                   tax_table(ps_tax_new),
+                   sample_data(ssu_ps))
+ssu_ps <- tmp_ps
+phyloseq::rank_names(ssu_ps)
+## Next we run a statistical test for multiple groups
+## using the `run_test_multiple_groups` function.
+
+ssu_group_anova <-
+  run_test_multiple_groups(ssu_ps,
+                           group = "TEMP",
+                           taxa_rank = "all",
+                           method = "anova")
+ssu_group_anova@marker_table
+marker_table(ssu_group_anova)
+## And then conduct post hoc pairwise comparisons for multiple
+## groups test using the `run_posthoc_test` function.
+
+ssu_default_pht <- run_posthoc_test(ssu_ps,
+                                    group = "TEMP",
+                                    method = "tukey",
+                                    transform = "log10")
+
+## We can filter out a select taxa and plot the results.
+
+filter(
+  data.frame(ssu_default_pht@result),
+  group_name == "k__Bacteria|p__Actinobacteriota|c__Thermoleophilia|o__Gaiellales"
+)
+plot_postHocTest(ssu_default_pht, feature = "k__Bacteria|p__Actinobacteriota|c__Thermoleophilia|o__Gaiellales") &
+  theme_bw()
+
+## But what we really want to do is get all of the markers that are
+## significant from the analysis, excluding any significant ASVs so we can
+## look at high taxa ranks.
+
+ssu_pht <- ssu_default_pht
+ssu18_pht_filt <-
+  filter(data.frame(ssu_pht@result), pvalue <= "0.05")[!grepl("ASV", filter(data.frame(ssu_pht@result), pvalue <= "0.05")$group_name), ]
+ssu18_pht_filt <-
+  ssu18_pht_filt[!grepl("[a-z]__$", ssu18_pht_filt$group_name), ]
+ssu18_pht_filt <-
+  distinct(ssu18_pht_filt, group_name, .keep_all = TRUE)
+nrow(ssu18_pht_filt)
+
+plot_postHocTest_jjs <- function (pht, feature, step_increase = 0.12) 
+{
+    abd_long <- pht@abundance %>% tidyr::pivot_longer(-.data$group, 
+        names_to = "feat")
+    if (!is.null(feature)) {
+        abd_long <- filter(abd_long, .data$feat %in% feature)
+    }
+    annotation <- get_sig_annotation(pht, step_increase = step_increase)
+    p_box <- suppressWarnings(ggplot(abd_long, aes(x = .data$group, 
+        y = .data$value)) + geom_boxplot() + ggsignif::geom_signif(data = annotation[annotation$feature %in% 
+        feature, ], aes(xmin = .data$xmin, xmax = .data$xmax, 
+        annotations = .data$annotation, y_position = .data$y_position), 
+        manual = TRUE, textsize = 3, vjust = 0.2) + labs(x = NULL, 
+        y = "Abundance"))
+    test_res <- as.data.frame(pht@result[[feature]])
+    p_test <- ggplot(test_res, aes(x = .data$comparions)) + geom_errorbar(aes(ymin = .data$ci_lower, 
+        ymax = .data$ci_upper), width = 0.2) + geom_point(aes(y = .data$diff_mean)) + 
+        labs(x = NULL, y = "95% confidence intervals")
+    patchwork::wrap_plots(p_box)
+}
+environment(plot_postHocTest_jjs) <- asNamespace('microbiomeMarker')
+
+ssu_select <- c(
+"k__Bacteria|p__Acidobacteriota|c__Acidobacteriae|o__Subgroup_2", 
+"k__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Chitinophagales|f__Saprospiraceae", 
+"k__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Cytophagales", 
+"k__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Flavobacteriales", 
+"k__Bacteria|p__Bacteroidota|c__Bacteroidia|o__Sphingobacteriales", 
+"k__Bacteria|p__Myxococcota|c__Polyangia|o__mle1-27", 
+"k__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Burkholderiales|f__Comamonadaceae|g__Rubrivivax", 
+"k__Bacteria|p__Actinobacteriota|c__Acidimicrobiia|o__Microtrichales", 
+"k__Bacteria|p__Actinobacteriota|c__Thermoleophilia|o__Gaiellales", 
+"k__Bacteria|p__Firmicutes|c__Bacilli|o__Bacillales", 
+"k__Bacteria|p__Myxococcota|c__Myxococcia|o__Myxococcales|f__Myxococcaceae|g__Corallococcus", 
+"k__Bacteria|p__Proteobacteria|c__Gammaproteobacteria|o__Burkholderiales|f__Burkholderiaceae|g__Ralstonia" 
+)
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+for (i in ssu_select) {
+  tmp_select_feat <- i
+  tmp_plot <- plot_postHocTest_jjs(ssu_pht, feature = tmp_select_feat) & theme_bw() 
+  tmp_plot <- tmp_plot + geom_boxplot(fill = swel_col) + 
+    scale_colour_manual(values = c("#191919", "#191919", "#191919")) + 
+    geom_point(size = 2, show.legend = FALSE) + 
+    ylab("Relative abundance (% total reads)")
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_tax_plot"))
+  assign(tmp_name, tmp_plot)
+  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".png", sep = ""), 
+  #                height = 7, width = 9, units = 'cm', dpi = 600, bg = "white")
+  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".pdf", sep = ""), 
+  #                height = 5, width = 6.5)
+  rm(list = ls(pattern = "tmp_"))
+} 
+
+ssu_title <- c(
+"Subgroup_2 (Acidobacteriota)", 
+"Saprospiraceae (Bacteroidota)", 
+"Cytophagales (Bacteroidota)", 
+"Flavobacteriales (Bacteroidota)", 
+"Sphingobacteriales (Bacteroidota)", 
+"mle1-27 (Myxococcota)", 
+"Rubrivivax (Proteobacteria)", 
+"Microtrichales (Actinobacteriota)", 
+"Gaiellales (Actinobacteriota)", 
+"Bacillales (Firmicutes)", 
+"Corallococcus (Myxococcota)", 
+"Ralstonia (Proteobacteria)"
+)
+
+ssu_plt_info <- data.frame(lineage = ssu_select, label = ssu_title)
+
+for (i in seq_len(nrow(ssu_plt_info))) {
+  tmp_name <- paste("plot_", i, sep = "")
+  tmp_plot <- get(purrr::map_chr(ssu_plt_info[i, 1], ~ paste0(., "_tax_plot"))) + 
+    geom_point(show.legend = FALSE) + ggtitle(ssu_plt_info[i, 2])
+  assign(tmp_name, tmp_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+  
+ssu_taxa_combo_plot <- ((plot_1 + plot_2 + plot_3) / (plot_4 + plot_5 + plot_6) / (plot_7 + plot_8 + plot_9) / (plot_10 + plot_11 + plot_12))
+ssu_taxa_combo_plot
+
+ggplot2::ggsave(ssu_taxa_combo_plot, path = "include/pub/ext/", 
+                filename =  "Extended_Data_Figure_3.png", 
+                height = 14157, width = 12186, 
+                units = 'px', bg = "white", dpi = 600)
+                
+ggplot2::ggsave(ssu_taxa_combo_plot, path = "include/pub/ext/", 
+                filename = "Extended_Data_Figure_3.pdf", 
+                height = 14157, width = 12186, 
+                units = 'px', bg = "white", dpi = 600)
+
+```
+
+## Extended Data Figure 4
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include axes renaming, removing non-significant (NS) values from plots,  changing significant p-values to asterisks (`*`), removing gridlines, and enlarging outlier points. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/ext/Extended_Data_Figure_4.png)
+
+### Final
+
+![](paper/Extended_Data/FIGURES/Extended_Data_Fig_4.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its18_ps_perfect_rf_all.rds)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_4.pdf)
+:::
+
+:::
+
+```{r}
+## In this section of the workflow we use the 
+## [`microbiomeMarker`](https://github.com/yiluheihei/microbiomeMarker) package 
+## to assess the response of taxonomic lineages to soil warming. 
+## In the first step we need to fix the selected data set to make it 
+## compatible with the various functions. For this analysis we use the 
+## PERfect filtered data set.
+remove(list = ls())
+its18_ps_perfect_rf_all <-
+  readRDS("include/pub/ext/its18_ps_perfect_rf_all.rds")
+
+## FIX ps object
+its_ps <- its18_ps_perfect_rf_all
+tmp_tax1 <- data.frame(tax_table(its_ps))
+tmp_tax1$ASV_SEQ <- NULL
+tmp_rn <- row.names(tmp_tax1)
+tmp_tax <-
+  data.frame(lapply(tmp_tax1, function(x) {
+    gsub("\\(|)", "", x)
+  }))
+row.names(tmp_tax) <- tmp_rn
+identical(row.names(tmp_tax), row.names(tmp_tax1))
+ps_tax_new <- as.matrix(tmp_tax)
+tmp_ps <- phyloseq(otu_table(its_ps),
+                   tax_table(ps_tax_new),
+                   sample_data(its_ps))
+its_ps <- tmp_ps
+phyloseq::rank_names(its_ps)
+
+## Next we run a statistical test for multiple groups
+## using the `run_test_multiple_groups` function.
+
+its_group_anova <-
+  run_test_multiple_groups(its_ps,
+                           group = "TEMP",
+                           taxa_rank = "all",
+                           method = "anova")
+its_group_anova@marker_table
+marker_table(its_group_anova)
+## And then conduct post hoc pairwise comparisons for multiple
+## groups test using the `run_posthoc_test` function.
+
+its_default_pht <- run_posthoc_test(its_ps,
+                                    group = "TEMP",
+                                    method = "tukey",
+                                    transform = "log10")
+
+## But what we really want to do is get all of the markers that are
+## significant from the analysis, excluding any significant ASVs so we can
+## look at high taxa ranks.
+
+its_pht <- its_default_pht
+its18_pht_filt <- filter(data.frame(its_pht@result), pvalue <= "0.05")[!grepl("ASV", filter(data.frame(its_pht@result), pvalue <= "0.05")$group_name),]
+its18_pht_filt <- its18_pht_filt[!grepl("[a-z]__$", its18_pht_filt$group_name),]
+its18_pht_filt <- unique(its18_pht_filt$group_name)
+
+plot_postHocTest_jjs <- function (pht, feature, step_increase = 0.12) 
+{
+    abd_long <- pht@abundance %>% tidyr::pivot_longer(-.data$group, 
+        names_to = "feat")
+    if (!is.null(feature)) {
+        abd_long <- filter(abd_long, .data$feat %in% feature)
+    }
+    annotation <- get_sig_annotation(pht, step_increase = step_increase)
+    p_box <- suppressWarnings(ggplot(abd_long, aes(x = .data$group, 
+        y = .data$value)) + geom_boxplot() + ggsignif::geom_signif(data = annotation[annotation$feature %in% 
+        feature, ], aes(xmin = .data$xmin, xmax = .data$xmax, 
+        annotations = .data$annotation, y_position = .data$y_position), 
+        manual = TRUE, textsize = 3, vjust = 0.2) + labs(x = NULL, 
+        y = "Abundance"))
+    test_res <- as.data.frame(pht@result[[feature]])
+    p_test <- ggplot(test_res, aes(x = .data$comparions)) + geom_errorbar(aes(ymin = .data$ci_lower, 
+        ymax = .data$ci_upper), width = 0.2) + geom_point(aes(y = .data$diff_mean)) + 
+        labs(x = NULL, y = "95% confidence intervals")
+    patchwork::wrap_plots(p_box)
+}
+environment(plot_postHocTest_jjs) <- asNamespace('microbiomeMarker')
+
+its_select <- c(
+"k__Fungi|p__Ascomycota|c__Sordariomycetes|o__Xylariales|f__Microdochiaceae", 
+"k__Fungi|p__Basidiomycota|c__Agaricomycetes|o__Agaricales|f__Entolomataceae", 
+"k__Fungi|p__Basidiomycota|c__Agaricomycetes|o__Agaricales|f__Clavariaceae", 
+"k__Fungi|p__Basidiomycota|c__Agaricomycetes|o__Agaricales", 
+"k__Fungi|p__Basidiomycota|c__Microbotryomycetes|o__Sporidiobolales", 
+"k__Fungi|p__Rozellomycota|c__Rozellomycotina_cls_Incertae_sedis", 
+"k__Fungi|p__Ascomycota|c__Eurotiomycetes|o__Eurotiales|f__Trichocomaceae|g__Talaromyces", 
+"k__Fungi|p__Ascomycota|c__Pezizomycetes|o__Pezizales|f__Pyronemataceae", 
+"k__Fungi|p__Ascomycota|c__Sordariomycetes|o__Hypocreales|f__Nectriaceae|g__Fusarium", 
+"k__Fungi|p__Ascomycota|c__Saccharomycetes|o__Saccharomycetales|f__Metschnikowiaceae", 
+"k__Fungi|p__Glomeromycota|c__Glomeromycetes|o__Glomerales", 
+"k__Fungi|p__Mortierellomycota|c__Mortierellomycetes|o__Mortierellales"
+)
+
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+for (i in its_select) {
+  tmp_select_feat <- i
+  tmp_plot <- plot_postHocTest_jjs(its_pht, feature = tmp_select_feat) & theme_bw() 
+  tmp_plot <- tmp_plot + geom_boxplot(fill = swel_col) + 
+    scale_colour_manual(values = c("#191919", "#191919", "#191919")) + 
+    geom_point(size = 2, show.legend = FALSE) + 
+    ylab("Relative abundance (% total reads)")
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_tax_plot"))
+  assign(tmp_name, tmp_plot)
+  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".png", sep = ""), 
+  #                height = 7, width = 9, units = 'cm', dpi = 600, bg = "white")
+  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".pdf", sep = ""), 
+  #                height = 5, width = 6.5)
+  rm(list = ls(pattern = "tmp_"))
+} 
+
+its_title <- c(
+"Microdochiaceae (Ascomycota)", 
+"Entolomataceae (Basidiomycota)", 
+"Clavariaceae (Basidiomycota)", 
+"Agaricales (Basidiomycota)", 
+"Sporidiobolales (Basidiomycota)", 
+"Rozellomycotina (Rozellomycota)", 
+"Talaromyces (Ascomycota)", 
+"Pyronemataceae (Ascomycota)", 
+"Fusarium (Ascomycota)", 
+"Metschnikowiaceae (Ascomycota)", 
+"Glomerales (Glomeromycota)", 
+"Mortierellales (Mortierellomycota)"
+)
+
+its_plt_info <- data.frame(lineage = its_select, label = its_title)
+
+for (i in seq_len(nrow(its_plt_info))) {
+  tmp_name <- paste("plot_", i, sep = "")
+  tmp_plot <- get(purrr::map_chr(its_plt_info[i, 1], ~ paste0(., "_tax_plot"))) + 
+    geom_point(show.legend = FALSE) + ggtitle(its_plt_info[i, 2])
+  assign(tmp_name, tmp_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+  
+its_taxa_combo_plot <- ((plot_1 + plot_2 + plot_3) / (plot_4 + plot_5 + plot_6) / (plot_7 + plot_8 + plot_9) / (plot_10 + plot_11 + plot_12))
+its_taxa_combo_plot
+
+ggplot2::ggsave(its_taxa_combo_plot, path = "include/pub/ext/", 
+                filename =  "Extended_Data_Figure_4.png", 
+                height = 14157, width = 12186, 
+                units = 'px', bg = "white", dpi = 600)
+                
+ggplot2::ggsave(its_taxa_combo_plot, path = "include/pub/ext/", 
+                filename = "Extended_Data_Figure_4.pdf", 
+                height = 14157, width = 12186, 
+                units = 'px', bg = "white", dpi = 600)
+
+```
+
+## Extended Data Figure 5
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include repositioning vector overlay labels, styling legend, and changing font size and style. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/ext/Extended_Data_Figure_5.png)
+
+### Final
+
+![](paper/Extended_Data/FIGURES/Extended_Data_Fig_5.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/extended_data_fig_5.rdata)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_5.pdf)
+:::
+
+:::
+
+```{r}
+remove(list = ls())
+load("include/pub/ext/extended_data_fig_5.rdata")
+## 1) Run `rankindex` to compare metadata and community dissimilarity indices 
+## for gradient detection. This will help us select the best dissimilarity 
+## metric to use.
+## 2) Run `capscale` for distance-based redundancy analysis.
+## 3) Run `envfit` to fit environmental parameters onto the ordination. 
+## This function basically calculates correlation scores between the metadata 
+## parameters and the ordination axes. 
+## 4) Select metadata parameters significant for `bioenv` (see above) 
+## and/or `envfit` analyses.
+## 5) Run `envfit` on ASVs.
+## 6) Plot the ordination and vector overlays. 
+
+#####################################
+#####################################
+### 16S rRNA EDAPHIC PROPERTIES #####
+#####################################
+#####################################
+tmp_md <- ssu18_select_mc_norm_split_no_ac$edaphic
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+edaphic_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+
+## Run `capscale` using Bray-Curtis. 
+
+## * Starting properties: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, PO4, DOC, DON, DOCN
+## * Autocorrelated removed: TEB, DON, Na, Al, Ca
+## 15 total, only works with 13
+## * Remove for capscale: Mg, Mn
+edaphic_cap <- capscale(tmp_comm ~ AST + H2O + N + P + Fe + K + ECEC + 
+                                   pH + NH4 + NO3 + PO4 + DOC + DOCN, 
+                        tmp_md, dist = "bray")
+
+anova(edaphic_cap) # overall test of the significant of the analysis
+anova(edaphic_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(edaphic_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+## Next, we need to grab capscale scores for the samples and create a 
+## data frame of the first two dimensions. We will also need to add some 
+## of the sample details to the data frame. For this we use the vegan 
+## function `scores` which gets species or site scores from the ordination.
+library(ggvegan)
+tmp_auto_plt <- ggplot2::autoplot(edaphic_cap, arrows = TRUE)
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+edaphic_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, by = "SampleID")
+## Now we have a new data frame that contains sample details and capscale values. 
+
+## We can then do the same with the metadata vectors. 
+## Here though we only need the scores and parameter name. 
+
+edaphic_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+edaphic_md_scores[,1] <- NULL
+edaphic_md_scores <- edaphic_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+
+## Let's run some quick correlations of metadata with ordination axes to 
+## see which parameters are significant. For this we use the vegan function `envfit`.
+
+tmp_samp_scores_sub <- edaphic_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- edaphic_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_edaphic_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+edaphic_md_signif_hits <- base::subset(envfit_edaphic_md$vectors$pvals, 
+                                  c(envfit_edaphic_md$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_md$vectors$r > 0.4))
+edaphic_md_signif_hits <- data.frame(edaphic_md_signif_hits)
+edaphic_md_signif_hits <- rownames(edaphic_md_signif_hits)
+edaphic_md_signif <- edaphic_md_scores[edaphic_md_scores$parameters %in% edaphic_md_signif_hits,]
+## Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+print("Significant parameters from bioenv analysis.")
+row.names(summary(ssu18_edaphic_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+edaphic_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(ssu18_edaphic_bioenv_ind_mantel)), 
+                       edaphic_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(edaphic_md_signif$parameters, 
+              row.names(summary(ssu18_edaphic_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+edaphic_sig_diff <- base::union(edaphic_md_signif$parameters, 
+              row.names(summary(ssu18_edaphic_bioenv_ind_mantel)))
+
+new_edaphic_md_signif_hits <- edaphic_sig_diff
+edaphic_md_signif_all <- edaphic_md_scores[edaphic_md_scores$parameters %in% new_edaphic_md_signif_hits,]
+## Check. Next, we run `envfit` for the ASVs.
+
+envfit_edaphic_asv <- envfit(tmp_samp_scores_sub, 
+                             tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                             perm = 1000, choices = c(1, 2))
+edaphic_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+edaphic_asv_scores <- edaphic_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+edaphic_asv_scores[,1] <- NULL
+edaphic_asv_signif_hits <- base::subset(envfit_edaphic_asv$vectors$pvals, 
+                                  c(envfit_edaphic_asv$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_asv$vectors$r > 0.5))
+edaphic_asv_signif_hits <- data.frame(edaphic_asv_signif_hits)
+edaphic_asv_signif_hits <- rownames(edaphic_asv_signif_hits)
+edaphic_asv_signif <- edaphic_asv_scores[edaphic_asv_scores$parameters %in% edaphic_asv_signif_hits,]
+
+edaphic_md_signif_all$variable_type <- "metadata"
+edaphic_asv_signif$variable_type <- "ASV"
+edaphic_bioplot_data <- rbind(edaphic_md_signif_all, edaphic_asv_signif)
+## The last thing to do is categorize parameters scores and ASV 
+## scores into different variable types for plotting.
+
+edaphic_bioplot_data_md <- subset(edaphic_bioplot_data, 
+                                  edaphic_bioplot_data$variable_type == "metadata")
+edaphic_bioplot_data_asv <- subset(edaphic_bioplot_data, 
+                                   edaphic_bioplot_data$variable_type == "ASV")
+##  code for the plot
+
+edaphic_cap_vals <- data.frame(edaphic_cap$CCA$eig[1:2])
+edaphic_cap1 <- signif((edaphic_cap_vals[1,] * 100), digits = 3)
+edaphic_cap2 <- signif((edaphic_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", edaphic_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", edaphic_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+edaphic_plot <- ggplot(edaphic_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 8) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = edaphic_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.9, 
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = edaphic_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 7, 
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(subtitle = "Edaphic properties", 
+       x = cpa1_lab, 
+       y = cpa2_lab)
+edaphic_plot <- edaphic_plot + coord_fixed() + theme(aspect.ratio = 1)
+rm(list = ls(pattern = "tmp_"))
+
+
+#####################################
+#####################################
+# 16S rRNA Soil Functional Response #
+#####################################
+#####################################
+
+tmp_md <- ssu18_select_mc_norm_split_no_ac$soil_funct
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+soil_funct_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+
+## Let's run `capscale` using Bray-Curtis. 
+
+## * Starting properties: micC, micN, micP, micCN, micCP, micNP, AG_ase, BG_ase, BP_ase, CE_ase, P_ase, N_ase, S_ase, XY_ase,  LP_ase, PX_ase, CO2, enzCN, enzCP, enzNP
+## * Autocorrelated removed: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase
+## * Remove for capscale: NONE
+soil_funct_cap <- capscale(tmp_comm ~ micC + micP + micCN + micCP + AG_ase + BG_ase + 
+                                      S_ase + XY_ase + PX_ase + CO2 + enzNP, 
+                           tmp_md, dist = "bray")
+
+
+tmp_auto_plt <- autoplot(soil_funct_cap, arrows = TRUE)
+
+anova(soil_funct_cap) # overall test of the significant of the analysis
+anova(soil_funct_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(soil_funct_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+soil_funct_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+
+soil_funct_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+soil_funct_md_scores[,1] <- NULL
+soil_funct_md_scores <- soil_funct_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+
+tmp_samp_scores_sub <- soil_funct_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- soil_funct_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_soil_funct_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+
+soil_funct_md_signif_hits <- base::subset(envfit_soil_funct_md$vectors$pvals, 
+                                  c(envfit_soil_funct_md$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_md$vectors$r > 0.4))
+soil_funct_md_signif_hits <- data.frame(soil_funct_md_signif_hits)
+soil_funct_md_signif_hits <- rownames(soil_funct_md_signif_hits)
+soil_funct_md_signif <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                               soil_funct_md_signif_hits,]
+soil_funct_md_signif$parameters
+
+print("Significant parameters from bioenv analysis.")
+row.names(summary(ssu18_soil_funct_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+soil_funct_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(ssu18_soil_funct_bioenv_ind_mantel)), 
+                       soil_funct_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(soil_funct_md_signif$parameters, 
+              row.names(summary(ssu18_soil_funct_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+soil_funct_sig_diff <- base::union(soil_funct_md_signif$parameters, 
+                                   row.names(summary(ssu18_soil_funct_bioenv_ind_mantel)))
+soil_funct_sig_diff
+
+new_soil_funct_md_signif_hits <- soil_funct_sig_diff
+soil_funct_md_signif_all <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                                   new_soil_funct_md_signif_hits,]
+
+envfit_soil_funct_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10], 
+                                perm = 1000, choices = c(1, 2))
+soil_funct_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+soil_funct_asv_scores <- soil_funct_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+soil_funct_asv_scores[,1] <- NULL
+
+soil_funct_asv_signif_hits <- base::subset(envfit_soil_funct_asv$vectors$pvals, 
+                                  c(envfit_soil_funct_asv$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_asv$vectors$r > 0.5))
+soil_funct_asv_signif_hits <- data.frame(soil_funct_asv_signif_hits)
+soil_funct_asv_signif_hits <- rownames(soil_funct_asv_signif_hits)
+soil_funct_asv_signif <- soil_funct_asv_scores[soil_funct_asv_scores$parameters %in% 
+                                                 soil_funct_asv_signif_hits,]
+soil_funct_md_signif_all$variable_type <- "metadata"
+soil_funct_asv_signif$variable_type <- "ASV"
+soil_funct_bioplot_data <- rbind(soil_funct_md_signif_all, soil_funct_asv_signif)
+
+soil_funct_bioplot_data_md <- subset(soil_funct_bioplot_data, 
+                                  soil_funct_bioplot_data$variable_type == "metadata")
+soil_funct_bioplot_data_asv <- subset(soil_funct_bioplot_data, 
+                                   soil_funct_bioplot_data$variable_type == "ASV")
+
+## PLOT Code
+
+soil_funct_cap_vals <- data.frame(soil_funct_cap$CCA$eig[1:2])
+soil_funct_cap1 <- signif((soil_funct_cap_vals[1,] * 100), digits = 3)
+soil_funct_cap2 <- signif((soil_funct_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", soil_funct_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", soil_funct_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+soil_funct_plot <- ggplot(soil_funct_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 8) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = soil_funct_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.9, 
+               color = "#191919") +
+  geom_text(data = soil_funct_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 7,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(subtitle = "Functional Response", 
+       x = cpa1_lab, 
+       y = cpa2_lab)
+soil_funct_plot <- soil_funct_plot + coord_fixed() + theme(aspect.ratio = 1)
+rm(list = ls(pattern = "tmp_"))
+
+#####################################
+#####################################
+### 16S rRNA Temperature Adaptation #
+#####################################
+#####################################
+
+### 
+tmp_md <- ssu18_select_mc_norm_split_no_ac$temp_adapt
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+## Let's run `capscale` using Bray-Curtis. 
+
+## * Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
+## * Autocorrelated removed: NUE, PUE, SI
+## * Remove for capscale: NONE
+
+temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BP_Q10 + CE_Q10 + 
+                                       P_Q10 + N_Q10 + S_Q10 + XY_Q10 + 
+                                       LP_Q10 + PX_Q10 + CUEcn + CUEcp + Tmin, 
+                             tmp_md, dist = "bray")
+tmp_auto_plt <- autoplot(temp_adapt_cap, arrows = TRUE)
+
+anova(temp_adapt_cap) # overall test of the significant of the analysis
+anova(temp_adapt_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(temp_adapt_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+temp_adapt_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+temp_adapt_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+temp_adapt_md_scores[,1] <- NULL
+temp_adapt_md_scores <- temp_adapt_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+
+tmp_samp_scores_sub <- temp_adapt_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- temp_adapt_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_temp_adapt_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+temp_adapt_md_signif_hits <- base::subset(envfit_temp_adapt_md$vectors$pvals, 
+                                  c(envfit_temp_adapt_md$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_md$vectors$r > 0.4))
+temp_adapt_md_signif_hits <- data.frame(temp_adapt_md_signif_hits)
+temp_adapt_md_signif_hits <- rownames(temp_adapt_md_signif_hits)
+temp_adapt_md_signif <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                               temp_adapt_md_signif_hits,]
+print("Significant parameters from bioenv analysis.")
+row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+temp_adapt_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel)), 
+                       temp_adapt_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(temp_adapt_md_signif$parameters, 
+              row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and  bioenv.")
+temp_adapt_sig_diff <- base::union(temp_adapt_md_signif$parameters, 
+                                   row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel)))
+temp_adapt_sig_diff
+
+new_temp_adapt_md_signif_hits <- temp_adapt_sig_diff
+temp_adapt_md_signif_all <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                                   new_temp_adapt_md_signif_hits,]
+
+envfit_temp_adapt_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                                perm = 1000, choices = c(1, 2))
+
+temp_adapt_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+
+temp_adapt_asv_scores <- temp_adapt_asv_scores %>% 
+                         dplyr::mutate(parameters = Label, .before = CAP1) %>%
+                         tibble::column_to_rownames("Label")
+temp_adapt_asv_scores[,1] <- NULL
+temp_adapt_asv_signif_hits <- base::subset(envfit_temp_adapt_asv$vectors$pvals, 
+                                  c(envfit_temp_adapt_asv$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_asv$vectors$r > 0.5))
+temp_adapt_asv_signif_hits <- data.frame(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif_hits <- rownames(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif <- temp_adapt_asv_scores[temp_adapt_asv_scores$parameters %in% 
+                                                 temp_adapt_asv_signif_hits,]
+temp_adapt_md_signif_all$variable_type <- "metadata"
+temp_adapt_asv_signif$variable_type <- "ASV"
+temp_adapt_bioplot_data <- rbind(temp_adapt_md_signif_all, temp_adapt_asv_signif)
+
+temp_adapt_bioplot_data_md <- subset(temp_adapt_bioplot_data, 
+                                  temp_adapt_bioplot_data$variable_type == "metadata")
+temp_adapt_bioplot_data_asv <- subset(temp_adapt_bioplot_data, 
+                                   temp_adapt_bioplot_data$variable_type == "ASV")
+temp_adapt_cap_vals <- data.frame(temp_adapt_cap$CCA$eig[1:2])
+temp_adapt_cap1 <- signif((temp_adapt_cap_vals[1,] * 100), digits = 3)
+temp_adapt_cap2 <- signif((temp_adapt_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", temp_adapt_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", temp_adapt_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+temp_adapt_plot <- ggplot(temp_adapt_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 8) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.9,
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = temp_adapt_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 7,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(subtitle = "Temperature Adaptation",
+       x = cpa1_lab, 
+       y = cpa2_lab)
+temp_adapt_plot <- temp_adapt_plot + coord_fixed() + theme(aspect.ratio=1)
+
+objects(pattern = "_plot")
+
+ssu18_edaphic_plot <- edaphic_plot
+ssu18_soil_funct_plot <- soil_funct_plot
+ssu18_temp_adapt_plot <- temp_adapt_plot
+gdata::keep(ssu18_edaphic_plot, ssu18_soil_funct_plot, ssu18_temp_adapt_plot, its18_edaphic_bioenv_ind_mantel, its18_select_mc_norm_split_no_ac, its18_soil_funct_bioenv_ind_mantel, its18_temp_adapt_bioenv_ind_mantel, ssu18_edaphic_bioenv_ind_mantel, ssu18_select_mc_norm_split_no_ac, ssu18_soil_funct_bioenv_ind_mantel, ssu18_temp_adapt_bioenv_ind_mantel, sure = TRUE)
+
+#####################################
+#####################################
+###### ITS EDAPHIC PROPERTIES #######
+#####################################
+#####################################
+
+tmp_md <- its18_select_mc_norm_split_no_ac$edaphic
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+edaphic_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+## Run `capscale` using Bray-Curtis. 
+
+## * Starting properties: AST, H2O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH4, NO3, PO4, DOC, DON, DOCN.
+## * Autocorrelated removed: TEB, DON, Na, Al, Ca.
+## * Remove for capscale: Mg, Mn, Na, Al, Fe, K
+
+edaphic_cap <- capscale(tmp_comm ~ AST + H2O + N + P + ECEC + pH + 
+                                   NH4 + NO3 + PO4 + DOC + DOCN, 
+                        tmp_md, dist = "bray")
+
+anova(edaphic_cap) # overall test of the significant of the analysis
+anova(edaphic_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(edaphic_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+## Next, we need to grab capscale scores for the samples and create a 
+## data frame of the first two dimensions. We will also need to add some 
+## of the sample details to the data frame. For this we use the vegan 
+## function `scores` which gets species or site scores from the ordination.
+library(ggvegan)
+tmp_auto_plt <- ggplot2::autoplot(edaphic_cap, arrows = TRUE)
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+edaphic_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, by = "SampleID")
+## Now we have a new data frame that contains sample details and capscale values. 
+
+## We can then do the same with the metadata vectors. 
+## Here though we only need the scores and parameter name. 
+
+edaphic_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+edaphic_md_scores[,1] <- NULL
+edaphic_md_scores <- edaphic_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+
+## Let's run some quick correlations of metadata with ordination axes to 
+## see which parameters are significant. For this we use the vegan function `envfit`.
+
+tmp_samp_scores_sub <- edaphic_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- edaphic_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_edaphic_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+
+edaphic_md_signif_hits <- base::subset(envfit_edaphic_md$vectors$pvals, 
+                                  c(envfit_edaphic_md$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_md$vectors$r > 0.4))
+edaphic_md_signif_hits <- data.frame(edaphic_md_signif_hits)
+edaphic_md_signif_hits <- rownames(edaphic_md_signif_hits)
+edaphic_md_signif <- edaphic_md_scores[edaphic_md_scores$parameters %in% edaphic_md_signif_hits,]
+edaphic_md_signif$parameters
+## Now let's see if the same parameters are significant for the `envfit` and `bioenv` analyses.
+
+print("Significant parameters from bioenv analysis.")
+row.names(summary(its18_edaphic_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+edaphic_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(its18_edaphic_bioenv_ind_mantel)), 
+                       edaphic_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(edaphic_md_signif$parameters, 
+              row.names(summary(its18_edaphic_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+edaphic_sig_diff <- base::union(edaphic_md_signif$parameters, 
+              row.names(summary(its18_edaphic_bioenv_ind_mantel)))
+edaphic_sig_diff
+
+new_edaphic_md_signif_hits <- edaphic_sig_diff
+edaphic_md_signif_all <- edaphic_md_scores[edaphic_md_scores$parameters %in% new_edaphic_md_signif_hits,]
+## Check. Next, we run `envfit` for the ASVs.
+
+envfit_edaphic_asv <- envfit(tmp_samp_scores_sub, 
+                             tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                             perm = 1000, choices = c(1, 2))
+edaphic_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+edaphic_asv_scores <- edaphic_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>%
+  tibble::column_to_rownames("Label")
+edaphic_asv_scores[,1] <- NULL
+
+edaphic_asv_signif_hits <- base::subset(envfit_edaphic_asv$vectors$pvals, 
+                                  c(envfit_edaphic_asv$vectors$pvals 
+                                  < 0.05 & envfit_edaphic_asv$vectors$r > 0.5))
+edaphic_asv_signif_hits <- data.frame(edaphic_asv_signif_hits)
+edaphic_asv_signif_hits <- rownames(edaphic_asv_signif_hits)
+edaphic_asv_signif <- edaphic_asv_scores[edaphic_asv_scores$parameters %in% edaphic_asv_signif_hits,]
+
+edaphic_md_signif_all$variable_type <- "metadata"
+edaphic_asv_signif$variable_type <- "ASV"
+edaphic_bioplot_data <- rbind(edaphic_md_signif_all, edaphic_asv_signif)
+## The last thing to do is categorize parameters scores and ASV 
+## scores into different variable types for plotting.
+
+edaphic_bioplot_data_md <- subset(edaphic_bioplot_data, 
+                                  edaphic_bioplot_data$variable_type == "metadata")
+edaphic_bioplot_data_asv <- subset(edaphic_bioplot_data, 
+                                   edaphic_bioplot_data$variable_type == "ASV")
+##  code for the plot
+
+edaphic_cap_vals <- data.frame(edaphic_cap$CCA$eig[1:2])
+edaphic_cap1 <- signif((edaphic_cap_vals[1,] * 100), digits = 3)
+edaphic_cap2 <- signif((edaphic_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", edaphic_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", edaphic_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+edaphic_plot <- ggplot(edaphic_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 8) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = edaphic_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.9, 
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = edaphic_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 7, 
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(x = cpa1_lab, 
+       y = cpa2_lab)
+edaphic_plot <- edaphic_plot + coord_fixed() + theme(aspect.ratio = 1)
+edaphic_plot
+rm(list = ls(pattern = "tmp_"))
+
+#####################################
+#####################################
+###### ITS Soil Functional Response #
+#####################################
+#####################################
+
+
+tmp_md <- its18_select_mc_norm_split_no_ac$soil_funct
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+soil_funct_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow", "bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+
+## Let's run `capscale` using Bray-Curtis 
+## * Starting properties: micC, micN, micP, micCN, micCP, micNP, AG_ase, BG_ase, BP_ase, CE_ase, P_ase, N_ase, S_ase, XY_ase,  LP_ase, PX_ase, CO2, enzCN, enzCP, enzNP
+## * Autocorrelated removed: micN, micNP, enzCN, enzCP, BP_ase, CE_ase, LP_ase, N_ase, P_ase
+## * Remove for capscale: NONE
+
+soil_funct_cap <- capscale(tmp_comm ~  micC + micP + micCN + micCP + AG_ase + BG_ase + 
+                                       S_ase + XY_ase + PX_ase + CO2 + enzNP, 
+                           tmp_md, dist = "bray")
+
+
+tmp_auto_plt <- autoplot(soil_funct_cap, arrows = TRUE)
+
+anova(soil_funct_cap) # overall test of the significant of the analysis
+anova(soil_funct_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(soil_funct_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+soil_funct_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+
+soil_funct_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+soil_funct_md_scores[,1] <- NULL
+soil_funct_md_scores <- soil_funct_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+
+tmp_samp_scores_sub <- soil_funct_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- soil_funct_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_soil_funct_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+
+soil_funct_md_signif_hits <- base::subset(envfit_soil_funct_md$vectors$pvals, 
+                                  c(envfit_soil_funct_md$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_md$vectors$r > 0.4))
+soil_funct_md_signif_hits <- data.frame(soil_funct_md_signif_hits)
+soil_funct_md_signif_hits <- rownames(soil_funct_md_signif_hits)
+soil_funct_md_signif <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                               soil_funct_md_signif_hits,]
+soil_funct_md_signif$parameters
+
+print("Significant parameters from bioenv analysis.")
+row.names(summary(its18_soil_funct_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+soil_funct_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(its18_soil_funct_bioenv_ind_mantel)), 
+                       soil_funct_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(soil_funct_md_signif$parameters, 
+              row.names(summary(its18_soil_funct_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and bioenv.")
+soil_funct_sig_diff <- base::union(soil_funct_md_signif$parameters, 
+                                   row.names(summary(its18_soil_funct_bioenv_ind_mantel)))
+soil_funct_sig_diff
+
+new_soil_funct_md_signif_hits <- soil_funct_sig_diff
+soil_funct_md_signif_all <- soil_funct_md_scores[soil_funct_md_scores$parameters %in% 
+                                                   new_soil_funct_md_signif_hits,]
+
+envfit_soil_funct_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10], 
+                                perm = 1000, choices = c(1, 2))
+soil_funct_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+soil_funct_asv_scores <- soil_funct_asv_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+soil_funct_asv_scores[,1] <- NULL
+
+soil_funct_asv_signif_hits <- base::subset(envfit_soil_funct_asv$vectors$pvals, 
+                                  c(envfit_soil_funct_asv$vectors$pvals 
+                                  < 0.05 & envfit_soil_funct_asv$vectors$r > 0.5))
+soil_funct_asv_signif_hits <- data.frame(soil_funct_asv_signif_hits)
+soil_funct_asv_signif_hits <- rownames(soil_funct_asv_signif_hits)
+soil_funct_asv_signif <- soil_funct_asv_scores[soil_funct_asv_scores$parameters %in% 
+                                                 soil_funct_asv_signif_hits,]
+soil_funct_md_signif_all$variable_type <- "metadata"
+soil_funct_asv_signif$variable_type <- "ASV"
+soil_funct_bioplot_data <- rbind(soil_funct_md_signif_all, soil_funct_asv_signif)
+
+soil_funct_bioplot_data_md <- subset(soil_funct_bioplot_data, 
+                                  soil_funct_bioplot_data$variable_type == "metadata")
+soil_funct_bioplot_data_asv <- subset(soil_funct_bioplot_data, 
+                                   soil_funct_bioplot_data$variable_type == "ASV")
+
+## PLOT Code
+
+soil_funct_cap_vals <- data.frame(soil_funct_cap$CCA$eig[1:2])
+soil_funct_cap1 <- signif((soil_funct_cap_vals[1,] * 100), digits = 3)
+soil_funct_cap2 <- signif((soil_funct_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", soil_funct_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", soil_funct_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+soil_funct_plot <- ggplot(soil_funct_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 8) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = soil_funct_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.9, 
+               color = "#191919") +
+  geom_text(data = soil_funct_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 7,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(x = cpa1_lab, 
+       y = cpa2_lab)
+soil_funct_plot <- soil_funct_plot + coord_fixed() + theme(aspect.ratio = 1)
+
+rm(list = ls(pattern = "tmp_"))
+
+#####################################
+#####################################
+###### ITS Temperature Adaptation ###
+#####################################
+#####################################
+
+
+tmp_md <- its18_select_mc_norm_split_no_ac$temp_adapt
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow", "bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+
+## Let's run `capscale` using Bray-Curtis. 
+
+## * Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
+## * Autocorrelated removed: NUE, PUE, P_Q10, SI                                                                        
+## * Remove for capscale: S_Q10
+
+
+temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BP_Q10 + CE_Q10 + 
+                                       N_Q10 + XY_Q10 + LP_Q10 + PX_Q10 + 
+                                       CUEcn + CUEcp + Tmin, 
+                           tmp_md, dist = "bray")
+tmp_auto_plt <- autoplot(temp_adapt_cap, arrows = TRUE)
+
+anova(temp_adapt_cap) # overall test of the significant of the analysis
+anova(temp_adapt_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(temp_adapt_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+temp_adapt_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+temp_adapt_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+temp_adapt_md_scores[,1] <- NULL
+temp_adapt_md_scores <- temp_adapt_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+
+tmp_samp_scores_sub <- temp_adapt_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- temp_adapt_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_temp_adapt_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+
+temp_adapt_md_signif_hits <- base::subset(envfit_temp_adapt_md$vectors$pvals, 
+                                  c(envfit_temp_adapt_md$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_md$vectors$r > 0.4))
+temp_adapt_md_signif_hits <- data.frame(temp_adapt_md_signif_hits)
+temp_adapt_md_signif_hits <- rownames(temp_adapt_md_signif_hits)
+temp_adapt_md_signif <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                               temp_adapt_md_signif_hits,]
+print("Significant parameters from bioenv analysis.")
+row.names(summary(its18_temp_adapt_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+temp_adapt_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(its18_temp_adapt_bioenv_ind_mantel)), 
+                       temp_adapt_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(temp_adapt_md_signif$parameters, 
+              row.names(summary(its18_temp_adapt_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and  bioenv.")
+temp_adapt_sig_diff <- base::union(temp_adapt_md_signif$parameters, 
+                                   row.names(summary(its18_temp_adapt_bioenv_ind_mantel)))
+temp_adapt_sig_diff
+
+new_temp_adapt_md_signif_hits <- temp_adapt_sig_diff[1:4]
+temp_adapt_md_signif_all <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                                   new_temp_adapt_md_signif_hits,]
+
+envfit_temp_adapt_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                                perm = 1000, choices = c(1, 2))
+
+temp_adapt_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+
+temp_adapt_asv_scores <- temp_adapt_asv_scores %>% 
+                         dplyr::mutate(parameters = Label, .before = CAP1) %>%
+                         tibble::column_to_rownames("Label")
+temp_adapt_asv_scores[,1] <- NULL
+temp_adapt_asv_signif_hits <- base::subset(envfit_temp_adapt_asv$vectors$pvals, 
+                                  c(envfit_temp_adapt_asv$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_asv$vectors$r > 0.5))
+temp_adapt_asv_signif_hits <- data.frame(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif_hits <- rownames(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif <- temp_adapt_asv_scores[temp_adapt_asv_scores$parameters %in% 
+                                                 temp_adapt_asv_signif_hits,]
+temp_adapt_md_signif_all$variable_type <- "metadata"
+temp_adapt_asv_signif$variable_type <- "ASV"
+temp_adapt_bioplot_data <- rbind(temp_adapt_md_signif_all, temp_adapt_asv_signif)
+
+temp_adapt_bioplot_data_md <- subset(temp_adapt_bioplot_data, 
+                                  temp_adapt_bioplot_data$variable_type == "metadata")
+temp_adapt_bioplot_data_asv <- subset(temp_adapt_bioplot_data, 
+                                   temp_adapt_bioplot_data$variable_type == "ASV")
+temp_adapt_cap_vals <- data.frame(temp_adapt_cap$CCA$eig[1:2])
+temp_adapt_cap1 <- signif((temp_adapt_cap_vals[1,] * 100), digits = 3)
+temp_adapt_cap2 <- signif((temp_adapt_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", temp_adapt_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", temp_adapt_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+temp_adapt_plot <- ggplot(temp_adapt_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 8) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.9,
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = temp_adapt_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 7,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(x = cpa1_lab, 
+       y = cpa2_lab)
+temp_adapt_plot <- temp_adapt_plot + coord_fixed() + theme(aspect.ratio = 1)
+
+its18_edaphic_plot <- edaphic_plot
+its18_soil_funct_plot <- soil_funct_plot
+its18_temp_adapt_plot <- temp_adapt_plot
+
+### BUILD the final Plot
+tmp_plot_final <- (ssu18_edaphic_plot | ssu18_soil_funct_plot) / (its18_edaphic_plot | its18_soil_funct_plot) +
+   patchwork::plot_annotation(tag_levels = "a", 
+                              title = NULL, 
+                              subtitle = NULL, 
+                              caption = NULL) 
+tmp_plot_final <- tmp_plot_final + 
+  patchwork::plot_layout(guides = "collect") &
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 24),
+             plot.tag = element_text(size = 31), 
+             axis.title = element_text(size = 18), 
+             axis.text = element_text(size = 16)) 
+
+ggplot2::ggsave(tmp_plot_final, path = "include/pub/ext/", 
+                filename =  "Extended_Data_Figure_5.png", 
+                height = 8398, width = 7485, units = 'px', dpi = 600, bg = "white")
+                
+ggplot2::ggsave(tmp_plot_final, path = "include/pub/ext/", 
+                filename = "Extended_Data_Figure_5.pdf", 
+                height = 8398, width = 7485, units = 'px', dpi = 600, bg = "white")
+  
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Supplementary Material
+
+## Supplementary Figure 1
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, and small adjustments in bar height/width. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/som/Supplementary_Figure_1.png)
+
+### Final
+
+![](paper/ESM/FIGURES/taxa_plots_main_ssu.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_ps_work.rds)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_1.pdf)
+:::
+
+:::
+
+
+```{r}
+## Load data
+remove(list = ls())
+set.seed(119)
+ssu18_ps_work <- readRDS("include/pub/som/ssu18_ps_work.rds")
+
+## 1) Get all Class-level Proteobacteria names
+ssu18_data_sets <- c("ssu18_ps_work")
+
+for (i in ssu18_data_sets) {
+     tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo"))
+     tmp_get <- get(i)
+     tmp_df <- subset_taxa(tmp_get, Phylum == "Proteobacteria")
+     assign(tmp_name, tmp_df)
+     print(tmp_name)
+     tmp_get_taxa <- get_taxa_unique(tmp_df,
+                                     taxonomic.rank = rank_names(tmp_df)[3],
+                                     errorIfNULL=TRUE)
+     print(tmp_get_taxa)
+     rm(list = ls(pattern = "tmp_"))
+     rm(list = ls(pattern = "_proteo"))
+}
+
+## 2) Replace Phylum Proteobacteria with the Class name.
+for (j in ssu18_data_sets) {
+  tmp_name <- purrr::map_chr(j, ~ paste0(., "_proteo_clean"))
+  tmp_get <- get(j)
+  tmp_clean <- data.frame(tax_table(tmp_get))
+  
+  for (i in 1:nrow(tmp_clean)) {
+    if (tmp_clean[i, 2] == "Proteobacteria" &
+        tmp_clean[i, 3] == "Alphaproteobacteria") {
+      phylum <- base::paste("Alphaproteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }   else if (tmp_clean[i, 2] == "Proteobacteria" &
+                 tmp_clean[i, 3] == "Gammaproteobacteria") {
+      phylum <- base::paste("Gammaproteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }   else if (tmp_clean[i, 2] == "Proteobacteria" &
+                 tmp_clean[i, 3] == "Zetaproteobacteria") {
+      phylum <- base::paste("Zetaproteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }   else if (tmp_clean[i, 2] == "Proteobacteria" &
+                 tmp_clean[i, 3] == "p_Proteobacteria") {
+      phylum <- base::paste("p_Proteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }
+  }
+  tax_table(tmp_get) <- as.matrix(tmp_clean)
+  rank_names(tmp_get)
+  assign(tmp_name, tmp_get)
+  print(c(tmp_name, tmp_get))
+  print(length(
+    get_taxa_unique(
+      tmp_get,
+      taxonomic.rank = rank_names(tmp_get)[2],
+      errorIfNULL = TRUE
+    )
+  ))
+  tmp_path <- file.path("include/pub/som/")
+  saveRDS(tmp_get, paste(tmp_path, j, "_clean.rds", sep = ""))
+  rm(list = ls(pattern = "tmp_"))
+}
+rm(class, order, phylum)
+
+## 3) In order to use `microeco`, we need to add the rank designation as a prefix to each taxa. 
+## For example, `Actinobacteriota` is changed to `p__Actinobacteriota`. 
+for (i in ssu18_data_sets) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_proteo_clean")))
+  tmp_sam_data <- sample_data(tmp_get)
+  tmp_tax_data <- data.frame(tax_table(tmp_get))
+  tmp_tax_data$Phylum <-
+    gsub("p_Proteobacteria", "Proteobacteria", tmp_tax_data$Phylum)
+  
+  tmp_tax_data$ASV_ID <- NULL # Some have, some do not
+  tmp_tax_data$ASV_SEQ <- NULL
+  
+  tmp_tax_data[] <- data.frame(
+    lapply(
+      tmp_tax_data,
+      gsub,
+      pattern = "^[k | p | c | o | f]_.*",
+      replacement = "",
+      fixed = FALSE
+    )
+  )
+  tmp_tax_data$Kingdom <-
+    paste("k__", tmp_tax_data$Kingdom, sep = "")
+  tmp_tax_data$Phylum <- paste("p__", tmp_tax_data$Phylum, sep = "")
+  tmp_tax_data$Class <- paste("c__", tmp_tax_data$Class, sep = "")
+  tmp_tax_data$Order <- paste("o__", tmp_tax_data$Order, sep = "")
+  tmp_tax_data$Family <- paste("f__", tmp_tax_data$Family, sep = "")
+  tmp_tax_data$Genus <- paste("g__", tmp_tax_data$Genus, sep = "")
+  tmp_tax_data <- as.matrix(tmp_tax_data)
+  
+  tmp_ps <- phyloseq(otu_table(tmp_get),
+                     phy_tree(tmp_get),
+                     tax_table(tmp_tax_data),
+                     tmp_sam_data)
+  assign(i, tmp_ps)
+  rm(list = ls(pattern = "tmp_"))
+}
+rm(list = ls(pattern = "_proteo_clean"))
+
+## 4) Next, we need to covert each `phyloseq object` to a `microtable class`.  
+## The microtable class is the basic data structure for the `microeco` package 
+## and designed to store basic information from all the downstream analyses 
+## (e.g, alpha diversity, beta diversity, etc.). 
+## We use the [file2meco](https://github.com/ChiLiubio/file2meco) to read the phyloseq 
+## object and convert into a microtable object. We can add `_me` as a suffix 
+## to each object to distiguish it from its' phyloseq counterpart. 
+
+for (i in ssu18_data_sets) {
+  tmp_get <- get(i)
+  tmp_otu_table <- data.frame(t(otu_table(tmp_get)))
+  tmp_sample_info <- data.frame(sample_data(tmp_get))
+  tmp_taxonomy_table <- data.frame(tax_table(tmp_get))
+  tmp_phylo_tree <- phy_tree(tmp_get)
+  tmp_taxonomy_table %<>% tidy_taxonomy
+  tmp_dataset <- microtable$new(
+    sample_table = tmp_sample_info,
+    otu_table = tmp_otu_table,
+    tax_table = tmp_taxonomy_table,
+    phylo_tree = tmp_phylo_tree
+  )
+  tmp_dataset$tidy_dataset()
+  print(tmp_dataset)
+  tmp_dataset$tax_table %<>% base::subset(Kingdom == "k__Archaea" |
+                                            Kingdom == "k__Bacteria")
+  print(tmp_dataset)
+  tmp_dataset$filter_pollution(taxa = c("mitochondria", "chloroplast"))
+  print(tmp_dataset)
+  tmp_dataset$tidy_dataset()
+  print(tmp_dataset)
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_me"))
+  assign(tmp_name, tmp_dataset)
+  rm(list = ls(pattern = "tmp_"))
+}  
+
+saveRDS(ssu18_ps_work_me, "include/pub/som/ssu18_ps_work_me.rds")
+
+## 5) Now, we calculate the taxa abundance at each taxonomic rank using 
+## `cal_abund()`. This function return a list called `taxa_abund` containing 
+## several data frame of the abundance information at each taxonomic rank. 
+## The list is stored in the microtable object automatically. 
+## It’s worth noting that the `cal_abund()` function can be used to solve 
+## some complex cases, such as supporting both the relative and absolute 
+## abundance calculation and selecting the partial taxonomic columns. More 
+## information can be found in the description of the 
+## [file2meco package](https://github.com/ChiLiubio/file2meco). 
+## In the same loop we also create a `trans_abund` class, which is used to 
+## transform taxonomic abundance data for plotting.
+
+for (i in ssu18_data_sets) {
+  tmp_me <- get(purrr::map_chr(i, ~ paste0(., "_me")))
+  tmp_me$cal_abund()
+  tmp_me_abund <-
+    trans_abund$new(dataset = tmp_me,
+                    taxrank = "Phylum",
+                    ntaxa = 12)
+  tmp_me_abund$abund_data$Abundance <-
+    tmp_me_abund$abund_data$Abundance / 100
+  tmp_me_abund_gr <-
+    trans_abund$new(
+      dataset = tmp_me,
+      taxrank = "Phylum",
+      ntaxa = 12,
+      groupmean = "TEMP"
+    )
+  tmp_me_abund_gr$abund_data$Abundance <-
+    tmp_me_abund_gr$abund_data$Abundance / 100
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_me_abund"))
+  assign(tmp_name, tmp_me_abund)
+  tmp_name_gr <- purrr::map_chr(i, ~ paste0(., "_me_abund_group"))
+  assign(tmp_name_gr, tmp_me_abund_gr)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## 6) I prefer to specify the order of taxa in these kinds of plots. 
+## We can look the top `ntaxa` (defined above) by accessing the 
+## `data_taxanames` character vector of each microtable object.
+## Now we can define the order. Once we do that, we will override the 
+## `data_taxanames` character vectors with the reordered vectors.
+
+ssu18_ps_work_tax_ord <- c("Alphaproteobacteria", "Gammaproteobacteria", 
+                           "Acidobacteriota", "Actinobacteriota", 
+                           "Bacteroidota", "Firmicutes", "Myxococcota", 
+                           "Verrucomicrobiota", "Chloroflexi", 
+                           "Planctomycetota", "Methylomirabilota", 
+                           "Crenarchaeota")
+## 7) And one more little step before plotting. 
+## Here we  **a**) specify a custom color palette and  
+## **b**) specify the sample order. 
+
+top_level <- "Phylum"
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+ssu18_colvec.tax <- c("#00463C","#FFD5FD","#00A51C","#C80B2A","#00C7F9",
+                      "#FFA035", "#ED0DFD","#0063E5","#5FFFDE","#C00B6F",
+                      "#00A090","#FF95BA")
+ssu18_samp_order <- c("P02_D00_010_C0A", "P04_D00_010_C0B", "P06_D00_010_C0C", 
+                      "P08_D00_010_C0D", "P10_D00_010_C0E", "P01_D00_010_W3A", 
+                      "P03_D00_010_W3B", "P05_D00_010_W3C", "P07_D00_010_W3D", 
+                      "P09_D00_010_W3E", "P01_D00_010_W8A", "P03_D00_010_W8B", 
+                      "P05_D00_010_W8C", "P07_D00_010_W8D", "P09_D00_010_W8E")
+## 8) Now we can generate plots (in a loop) for each faceted data set.
+
+for (i in ssu18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~ paste0(., "_me_abund")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~ paste0(., "_tax_ord")))
+  tmp_abund$data_taxanames <- tmp_tax_order
+  tmp_facet_plot <-
+    tmp_abund$plot_bar(
+      color_values = ssu18_colvec.tax,
+      others_color = "#323232",
+      facet = "TEMP",
+      xtext_keep = TRUE,
+      xtext_type_hor = FALSE,
+      legend_text_italic = FALSE,
+      xtext_size = 6,
+      facet_color = "#cccccc",
+      order_x = ssu18_samp_order
+    )
+  tmp_facet_name <- purrr::map_chr(i, ~ paste0(., "_facet_plot"))
+  assign(tmp_facet_name, tmp_facet_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+## Then add a little formatting to the faceted plots.
+
+set_to_plot <- c("ssu18_ps_work_facet_plot")
+for (i in  set_to_plot) {
+  tmp_get <- get(i)
+  tmp_get <- tmp_get +
+    theme_cowplot() +
+    guides(fill = guide_legend(
+      title = top_level,
+      reverse = FALSE,
+      keywidth = 0.7,
+      keyheight = 0.7
+    )) +
+    ylab(NULL) + xlab("Sample") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
+      panel.border = element_rect(fill = NA, color = "black"),
+      legend.text = element_text(size = 7),
+      legend.title = element_text(size = 10),
+      legend.position = "right",
+      axis.text.y = element_text(size = 8),
+      axis.text.x = element_text(size = 6, angle = 90),
+      strip.text = element_text(size = 8, angle = 0),
+      axis.title = element_text(size = 10)
+    ) +
+    ylab(NULL) +
+    scale_y_continuous()
+  assign(i, tmp_get)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## And now plots for the group-means sets. We can use the same 
+## taxa order since that should not have changed.
+
+set_to_plot <- c("ssu18_ps_work_group_plot")
+for (i in ssu18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~ paste0(., "_me_abund_group")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~ paste0(., "_tax_ord")))
+  tmp_abund$data_taxanames <- tmp_tax_order
+  tmp_group_plot <-
+    tmp_abund$plot_bar(
+      color_values = ssu18_colvec.tax,
+      others_color = "#323232",
+      xtext_keep = TRUE,
+      xtext_type_hor = TRUE,
+      legend_text_italic = FALSE,
+      xtext_size = 10,
+      facet_color = "#cccccc"
+    )
+  tmp_group_name <- purrr::map_chr(i, ~ paste0(., "_group_plot"))
+  assign(tmp_group_name, tmp_group_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## Let's also add a little formatting to the groupmean plots.
+
+for (i in  set_to_plot) {
+  tmp_get <- get(i)
+  tmp_get <- tmp_get +
+    theme_cowplot() +
+    ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
+      panel.border = element_rect(fill = NA, color = "black"),
+      legend.position = "none",
+      axis.text = element_text(size = 8),
+      axis.title = element_text(size = 10)
+    ) +
+    scale_y_continuous()
+  
+  assign(i, tmp_get)
+  rm(list = ls(pattern = "tmp_"))
+}
+## 10) Finally we use the `patchwork` package to combine the 
+## two plots and customize the look.
+## single index that acts as an index for referencing elements (variables) in a list
+##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460
+var_list <- list(var1 = ssu18_data_sets,
+                 var2 = c("FULL"))
+for (j in  1:length(var_list$var1)) {
+  tmp_plot_final_name <-
+    purrr::map_chr(var_list$var1[j], ~ paste0(., "_", top_level, "_plot_final"))
+  tmp_set_type <- var_list$var2[j]
+  tmp_p_plot <-
+    get(purrr::map_chr(var_list$var1[j], ~ paste0(., "_group_plot")))
+  tmp_m_plot <-
+    get(purrr::map_chr(var_list$var1[j], ~ paste0(., "_facet_plot")))
+  tmp_plot_final <- tmp_p_plot + tmp_m_plot
+  tmp_plot_final <- tmp_plot_final +
+    plot_annotation(tag_levels = "a") +
+    plot_layout(widths = c(1, 2)) &
+    theme(
+      plot.title = element_text(size = 13),
+      plot.subtitle = element_text(size = 10),
+      plot.tag = element_text(size = 12),
+      axis.title = element_text(size = 10),
+      axis.text = element_text(size = 8)
+    )
+  assign(tmp_plot_final_name, tmp_plot_final)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in ssu18_data_sets) {
+   tmp_plot_final <- 
+     get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
+   ggplot2::ggsave(
+     tmp_plot_final, 
+     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.png", sep = ""), 
+     height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
+   ggplot2::ggsave(
+     tmp_plot_final, 
+     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+     height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
+   rm(list = ls(pattern = "tmp_"))
+}
+file.rename("include/pub/som/ssu18_ps_work_tax_div_bar_plots.png", 
+            "include/pub/som/Supplementary_Figure_1.png")
+file.rename("include/pub/som/ssu18_ps_work_tax_div_bar_plots.pdf", 
+            "include/pub/som/Supplementary_Figure_1.pdf")
+```
+
+
+## Supplementary Figure 2
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, and small adjustments in bar height/width. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/som/Supplementary_Figure_2.png)
+
+### Final
+
+![](paper/ESM/FIGURES/taxa_plots_main_its.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its18_ps_work.rds)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_2.pdf)
+:::
+
+:::
+
+
+```{r}
+its18_ps_work <- readRDS("include/pub/som/its18_ps_work.rds")
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+its18_data_sets <- c("its18_ps_work")
+## 1) Choose the **number** of taxa to display and the 
+## taxonomic **level**. Aggregate the rest into "Other".
+top_hits <- 14
+top_level <- "Order"
+## As above, in order to use `microeco`, we need to add the rank 
+## designation as a prefix to each taxa. For example, `Basidiomycota` 
+## is changed to `p__Basidiomycota`. 
+for (i in its18_data_sets) {
+  tmp_get <- get(i)
+  tmp_sam_data <- sample_data(tmp_get)
+  tmp_tax_data <- data.frame(tax_table(tmp_get))
+  tmp_tax_data$ASV_ID <- NULL # Some have, some do not
+  tmp_tax_data$ASV_SEQ <- NULL
+  
+  tmp_tax_data$Kingdom <-
+    paste("k__", tmp_tax_data$Kingdom, sep = "")
+  tmp_tax_data$Phylum <- paste("p__", tmp_tax_data$Phylum, sep = "")
+  tmp_tax_data$Class <- paste("c__", tmp_tax_data$Class, sep = "")
+  tmp_tax_data$Order <- paste("o__", tmp_tax_data$Order, sep = "")
+  tmp_tax_data$Family <- paste("f__", tmp_tax_data$Family, sep = "")
+  tmp_tax_data$Genus <- paste("g__", tmp_tax_data$Genus, sep = "")
+  tmp_tax_data <- as.matrix(tmp_tax_data)
+  
+  tmp_ps <- phyloseq(otu_table(tmp_get),
+                     tax_table(tmp_tax_data),
+                     tmp_sam_data)
+  assign(i, tmp_ps)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in its18_data_sets) {
+  tmp_get <- get(i)
+  tmp_otu_table <- data.frame(t(otu_table(tmp_get)))
+  tmp_sample_info <- data.frame(sample_data(tmp_get))
+  tmp_taxonomy_table <- data.frame(tax_table(tmp_get))
+  tmp_dataset <- microtable$new(sample_table = tmp_sample_info,
+                                otu_table = tmp_otu_table,
+                                tax_table = tmp_taxonomy_table)
+  tmp_dataset$tidy_dataset()
+  print(tmp_dataset)
+  tmp_dataset$tax_table %<>% base::subset(Kingdom == "k__Fungi")
+  print(tmp_dataset)
+  tmp_dataset$tidy_dataset()
+  print(tmp_dataset)
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_me"))
+  assign(tmp_name, tmp_dataset)
+  rm(list = ls(pattern = "tmp_"))
+}  
+
+saveRDS(its18_ps_work_me, "include/pub/som/its18_ps_work_me.rds")
+## 5) Now, we calculate the taxa abundance at each taxonomic 
+## rank using `cal_abund()`. This function return a list called 
+## `taxa_abund` containing several data frame of the abundance 
+## information at each taxonomic rank. The list is stored in the 
+## microtable object automatically. It’s worth noting that the 
+## `cal_abund()` function can be used to solve some complex cases, 
+## such as supporting both the relative and absolute abundance 
+## calculation and selecting the partial taxonomic columns. 
+## More information can be found in the description of the 
+## [file2meco package](https://github.com/ChiLiubio/file2meco). 
+## In the same loop we also create a `trans_abund` class, which 
+## is used to transform taxonomic abundance data for plotting.
+
+for (i in its18_data_sets) {
+  tmp_me <- get(purrr::map_chr(i, ~ paste0(., "_me")))
+  tmp_me$cal_abund()
+  tmp_me_abund <-
+    trans_abund$new(dataset = tmp_me,
+                    taxrank = top_level,
+                    ntaxa = top_hits)
+  tmp_me_abund$abund_data$Abundance <-
+    tmp_me_abund$abund_data$Abundance / 100
+  tmp_me_abund_gr <-
+    trans_abund$new(
+      dataset = tmp_me,
+      taxrank = top_level,
+      ntaxa = top_hits,
+      groupmean = "TEMP"
+    )
+  tmp_me_abund_gr$abund_data$Abundance <-
+    tmp_me_abund_gr$abund_data$Abundance / 100
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_me_abund"))
+  assign(tmp_name, tmp_me_abund)
+  tmp_name_gr <- purrr::map_chr(i, ~ paste0(., "_me_abund_group"))
+  assign(tmp_name_gr, tmp_me_abund_gr)
+  rm(list = ls(pattern = "tmp_"))
+}
+## 6) I prefer to specify the order of taxa in these kinds of plots. 
+## We can look the top `ntaxa` (defined above) by accessing the 
+## `data_taxanames` character vector of each microtable object.
+
+its18_ps_work_tax_ord <- rev(c(
+  "k_Fungi",  "p_Ascomycota",  "c_Agaricomycetes", "Agaricales",  
+  "Archaeorhizomycetales",  "Capnodiales",  "Eurotiales",  "Geastrales",  
+  "Glomerales",  "Helotiales", "Hypocreales",  "Saccharomycetales",  
+  "Trichosporonales",  "Xylariales"))   
+## And one more little step before plotting. Here we  
+## **a**) specify a custom color palette and  
+## **b**) specify the sample order. 
+
+its18_colvec.tax <- rev(c("#323232", "#004949", "#924900", "#490092", 
+                      "#6db6ff", "#920000", "#ffb6db", "#24ff24", 
+                      "#006ddb", "#db6d00", "#b66dff", "#ffff6d", 
+                      "#009292", "#b6dbff", "#ff6db6"))
+its18_samp_order <- c("P02_D00_010_C0A", "P04_D00_010_C0B", "P06_D00_010_C0C", 
+                      "P08_D00_010_C0D", "P10_D00_010_C0E", "P01_D00_010_W3A", 
+                      "P03_D00_010_W3B", "P07_D00_010_W3D", "P09_D00_010_W3E", 
+                      "P01_D00_010_W8A", "P03_D00_010_W8B", "P05_D00_010_W8C", 
+                      "P07_D00_010_W8D")
+## 8) Now we can generate plots (in a loop) for each faceted data set.
+for (i in its18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~ paste0(., "_me_abund")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~ paste0(., "_tax_ord")))
+  tmp_abund$data_taxanames <- tmp_tax_order
+  tmp_facet_plot <-
+    tmp_abund$plot_bar(
+      color_values = its18_colvec.tax,
+      others_color = "#323232",
+      facet = "TEMP",
+      xtext_keep = TRUE,
+      xtext_type_hor = FALSE,
+      legend_text_italic = FALSE,
+      xtext_size = 6,
+      facet_color = "#cccccc",
+      order_x = its18_samp_order
+    )
+  tmp_facet_name <- purrr::map_chr(i, ~ paste0(., "_facet_plot"))
+  assign(tmp_facet_name, tmp_facet_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+## Then add a little formatting to the faceted plots.
+set_to_plot <- c("its18_ps_work_facet_plot")
+for (i in  set_to_plot) {
+  tmp_get <- get(i)
+  tmp_get <- tmp_get +
+    theme_cowplot() +
+    guides(fill = guide_legend(
+      title = top_level,
+      reverse = FALSE,
+      keywidth = 0.7,
+      keyheight = 0.7
+    )) +
+    ylab(NULL) + xlab("Sample") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
+      panel.border = element_rect(fill = NA, color = "black"),
+      legend.text = element_text(size = 7),
+      legend.title = element_text(size = 10),
+      legend.position = "right",
+      axis.text.y = element_text(size = 8),
+      axis.text.x = element_text(size = 6, angle = 90),
+      strip.text = element_text(size = 8, angle = 0),
+      axis.title = element_text(size = 10)
+    ) + ylab(NULL) +
+    scale_y_continuous()
+  assign(i, tmp_get)
+  rm(list = ls(pattern = "tmp_"))
+}
+## And now plots for the groupmeans sets. 
+## We can use the same taxa order since that 
+## should not have changed.
+set_to_plot <- c("its18_ps_work_group_plot")
+for (i in its18_data_sets) {
+  tmp_abund <- get(purrr::map_chr(i, ~ paste0(., "_me_abund_group")))
+  tmp_tax_order <- get(purrr::map_chr(i, ~ paste0(., "_tax_ord")))
+  tmp_abund$data_taxanames <- tmp_tax_order
+  tmp_group_plot <-
+    tmp_abund$plot_bar(
+      color_values = its18_colvec.tax,
+      others_color = "#323232",
+      xtext_keep = TRUE,
+      xtext_type_hor = TRUE,
+      legend_text_italic = FALSE,
+      xtext_size = 10,
+      facet_color = "#cccccc"
+    )
+  tmp_group_name <- purrr::map_chr(i, ~ paste0(., "_group_plot"))
+  assign(tmp_group_name, tmp_group_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+## Let's also add a little formatting to the groupmean plots.
+for (i in  set_to_plot) {
+  tmp_get <- get(i)
+  tmp_get <- tmp_get +
+    theme_cowplot() +
+    ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
+      panel.border = element_rect(fill = NA, color = "black"),
+      legend.position = "none",
+      axis.text = element_text(size = 8),
+      axis.title = element_text(size = 10)
+    ) +
+    scale_y_continuous()
+  
+  assign(i, tmp_get)
+  rm(list = ls(pattern = "tmp_"))
+}
+## 10) Finally we use the `patchwork` package to combine the 
+## two plots and customize the look.
+## single index that acts as an index for referencing elements (variables) in a list
+##  solution modified from this SO answerhttps://stackoverflow.com/a/54451460
+var_list <- list(var1 = its18_data_sets,
+                 var2 = c("FULL"))
+for (j in  1:length(var_list$var1)) {
+  tmp_plot_final_name <-
+    purrr::map_chr(var_list$var1[j], ~ paste0(., "_", top_level, "_plot_final"))
+  tmp_set_type <- var_list$var2[j]
+  tmp_p_plot <-
+    get(purrr::map_chr(var_list$var1[j], ~ paste0(., "_group_plot")))
+  tmp_m_plot <-
+    get(purrr::map_chr(var_list$var1[j], ~ paste0(., "_facet_plot")))
+  tmp_plot_final <- tmp_p_plot + tmp_m_plot
+  tmp_plot_final <- tmp_plot_final +
+    plot_annotation(tag_levels = "a") +
+    plot_layout(widths = c(1, 2)) &
+    theme(
+      plot.title = element_text(size = 13),
+      plot.subtitle = element_text(size = 10),
+      plot.tag = element_text(size = 12),
+      axis.title = element_text(size = 10),
+      axis.text = element_text(size = 8)
+    )
+  assign(tmp_plot_final_name, tmp_plot_final)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in its18_data_sets) {
+   tmp_plot_final <- get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
+   ggplot2::ggsave(
+     tmp_plot_final, 
+     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.png", sep = ""), 
+     height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
+   ggplot2::ggsave(
+     tmp_plot_final, 
+     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+     height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
+   rm(list = ls(pattern = "tmp_"))
+}
+file.rename("include/pub/som/its18_ps_work_tax_div_bar_plots.png", 
+            "include/pub/som/Supplementary_Figure_2.png")
+file.rename("include/pub/som/its18_ps_work_tax_div_bar_plots.pdf", 
+            "include/pub/som/Supplementary_Figure_2.pdf")
+```
+
+
+## Supplementary Figure 3
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, removing non-significant values from plots, and changing significant p-values to asterisks (`*`). 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/som/Supplementary_Figure_3.png)
+
+### Final
+
+![](paper/ESM/FIGURES/ssu_supp_alpha_div.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu_alpha_diversity.rdata)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_3.pdf)
+:::
+
+:::
+
+```{r}
+objects()
+alpha_ds
+```
+
+
+```{r}
+remove(list = ls())
+load("include/pub/som/ssu_alpha_diversity.rdata")
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold) 
+{
+    if (missing(chart)) {
+        chart = "box"
+    }
+    if (missing(posthoc)) {
+        posthoc = FALSE
+    }
+    if ((names(divtest)[1] != "data") & (names(divtest)[2] != 
+        "normality.pvalue")) 
+        stop("The input object does not seem to be a div_test output.")
+    divtestdata <- divtest$data
+    divtestdata$Group <- as.factor(divtestdata$Group)
+    divtestdata$Group <- factor(divtestdata$Group, levels = as.character(unique(divtestdata$Group)))
+    if (missing(colour) || (length(colour) < divtest$groups)) {
+        getPalette <- colorRampPalette(brewer.pal(divtest$groups, 
+            "Paired"))
+        colour <- getPalette(divtest$groups)
+    }
+    if (posthoc == TRUE) {
+        if (is.na(names(divtest)[7])) 
+            stop("The input div_test object does not seem to contain pairwise posthoc data. 
+                 Re-run div_test() using 'posthoc=TRUE' argument.")
+        if (divtest[7] == "Tukey post-hoc test") {
+            combinations <- matrix(gsub(" $", "", gsub("^ ", 
+                "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
+                  "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
+            pvalue <- round(divtest$posthoc[, 4], 3)
+            pairwisetable <- as.data.frame(cbind(combinations, 
+                pvalue))
+            colnames(pairwisetable) <- c("group1", "group2", 
+                "p")
+        }
+        if (divtest[7] == "Dunn test with Benjamini-Hochberg correction") {
+            combinations <- matrix(gsub(" $", "", gsub("^ ", 
+                "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
+                  "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
+            pvalue <- round(divtest$posthoc[, 3], 3)
+            pairwisetable <- as.data.frame(cbind(combinations, 
+                pvalue))
+            colnames(pairwisetable) <- c("group1", "group2", 
+                "p")
+        }
+        pairwisetable[, 1] <- as.character(pairwisetable[, 1])
+        pairwisetable[, 2] <- as.character(pairwisetable[, 2])
+        pairwisetable[, 3] <- as.numeric(as.character(pairwisetable[, 
+            3]))
+        if (!missing(threshold)) {
+            pairwisetable <- pairwisetable[which(pairwisetable$p < 
+                threshold), ]
+        }
+        sortedgroups <- unique(sort(c(pairwisetable$group1, pairwisetable$group2)))
+        datamax <- round(max(divtest$data[which(divtest$data$Group %in% 
+            sortedgroups), 3]))
+        datamin <- round(min(divtest$data[which(divtest$data$Group %in% 
+            sortedgroups), 3]))
+        datarange <- datamax - datamin
+        by <- datarange * 0.1
+        min <- datamax
+        max <- min + (by * nrow(pairwisetable))
+        ypos <- seq(min, max, by)[-1]
+        pairwisetable$ypos <- ypos
+    }
+    if (chart == "box") {
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", outlier.size = 3,
+            color = "Group", fill = "Group", x.text.angle = 0) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            #scale_colour_manual(values = scales::alpha(colour, 1)) + 
+            scale_colour_manual(values=c("#191919", "#191919", "#191919")) + 
+            scale_fill_manual(values = scales::alpha(colour, 1)) +
+            scale_linetype_manual()
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        return(plot)
+    }
+    if (chart == "jitter") {
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", 
+            color = "Group", add = "jitter", width = 0, x.text.angle = 45) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            scale_colour_manual(values = scales::alpha(colour, 
+                0))
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        print(plot)
+    }
+    if (chart == "violin") {
+        plot <- ggviolin(divtestdata, x = "Group", y = "Value", 
+            color = "Group", fill = "Group", x.text.angle = 45) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            scale_fill_manual(values = scales::alpha(colour, 
+                0.1)) + scale_colour_manual(values = scales::alpha(colour, 
+            1))
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        print(plot)
+    }
+}
+
+rm(list = ls(pattern = "_adt_plot"))
+for (i in objects(pattern = "_adt")) {
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
+  tmp_get <- get(i)
+  tmp_df <- div_test_plot_jjs(tmp_get,
+                              chart = "box",
+                              colour	= swel_col,
+                              posthoc = TRUE)
+  tmp_df <- ggpar(tmp_df, legend = "none")
+  print(tmp_name)
+  assign(tmp_name, tmp_df)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in objects(pattern = "_adt_plot")) {
+  tmp_split <- stringr::str_split(i, "_")
+  
+  if (tmp_split[[1]][3] == "work") {
+    tmp_ds <- "f"
+    tmp_name1 <- "FULL"
+  } else if (tmp_split[[1]][3] == "filt") {
+    tmp_ds <- "l"
+    tmp_name1 <- "FILT"
+  } else if (tmp_split[[1]][3] == "perfect") {
+    tmp_ds <- "r"
+    tmp_name1 <- "PERfect"
+  } else if (tmp_split[[1]][3] == "pime") {
+    tmp_ds <- "p"
+    tmp_name1 <- "PIME"
+  }
+  
+  if (tmp_split[[1]][4] == "q0") {
+    tmp_hill <- "0"
+    tmp_name2 <- "Observed"
+  } else if (tmp_split[[1]][4] == "q1") {
+    tmp_hill <- "1"
+    tmp_name2 <- "Shannon exponential"
+  } else if (tmp_split[[1]][4] == "q2") {
+    tmp_hill <- "2"
+    tmp_name2 <- "Inverse Simpson"
+  }
+  
+  tmp_var <-
+    paste(tmp_split[[1]][1], "_asv", tmp_ds, tmp_hill, "_lab", sep = "")
+  tmp_name <- paste(tmp_name1, " (", tmp_name2, ")", sep = "")
+  assign(tmp_var, tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+ssu18_ps_work_q0_adt_plot <- ssu18_ps_work_q0_adt_plot +
+  theme(axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvf0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_filt_q0_adt_plot <- ssu18_ps_filt_q0_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvl0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_perfect_q0_adt_plot <- ssu18_ps_perfect_q0_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvr0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_pime_q0_adt_plot <- ssu18_ps_pime_q0_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvp0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+#####################
+ssu18_ps_work_q1_adt_plot <- ssu18_ps_work_q1_adt_plot +
+  theme(axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvf1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_filt_q1_adt_plot <- ssu18_ps_filt_q1_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvl1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_perfect_q1_adt_plot <- ssu18_ps_perfect_q1_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvr1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_pime_q1_adt_plot <- ssu18_ps_pime_q1_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(ssu18_asvp1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+#####################
+ssu18_ps_work_q2_adt_plot <- ssu18_ps_work_q2_adt_plot +
+  ggtitle(ssu18_asvf2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_filt_q2_adt_plot <- ssu18_ps_filt_q2_adt_plot +
+  theme(axis.title.y = element_blank()) +
+  ggtitle(ssu18_asvl2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_perfect_q2_adt_plot <- ssu18_ps_perfect_q2_adt_plot +
+  theme(axis.title.y = element_blank()) +
+  ggtitle(ssu18_asvr2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+ssu18_ps_pime_q2_adt_plot <- ssu18_ps_pime_q2_adt_plot +
+  theme(axis.title.y = element_blank()) +
+  ggtitle(ssu18_asvp2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+
+ssu18_alph_div_plots_asv <- ggarrange(
+  ssu18_ps_work_q0_adt_plot,
+  ssu18_ps_filt_q0_adt_plot,
+  ssu18_ps_perfect_q0_adt_plot,
+  ssu18_ps_pime_q0_adt_plot,
+  ssu18_ps_work_q1_adt_plot,
+  ssu18_ps_filt_q1_adt_plot,
+  ssu18_ps_perfect_q1_adt_plot,
+  ssu18_ps_pime_q1_adt_plot,
+  ssu18_ps_work_q2_adt_plot,
+  ssu18_ps_filt_q2_adt_plot,
+  ssu18_ps_perfect_q2_adt_plot,
+  ssu18_ps_pime_q2_adt_plot,
+  ncol = 4,
+  nrow = 3
+)
+
+ggplot2::ggsave(
+  ssu18_alph_div_plots_asv,
+  file = "include/pub/som/ssu18_alph_div_plots_asv.png",
+  height = 5852,
+  width = 7449,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+
+ggplot2::ggsave(
+  ssu18_alph_div_plots_asv,
+  file = "include/pub/som/ssu18_alph_div_plots_asv.pdf",
+  height = 5852,
+  width = 7449,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+file.rename(
+  "include/pub/som/ssu18_alph_div_plots_asv.png",
+  "include/pub/som/Supplementary_Figure_3.png"
+)
+file.rename(
+  "include/pub/som/ssu18_alph_div_plots_asv.pdf",
+  "include/pub/som/Supplementary_Figure_3.pdf"
+)
+```
+
+
+## Supplementary Figure 4
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, removing non-significant values from plots, and changing significant p-values to asterisks (`*`). 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/som/Supplementary_Figure_4.png)
+
+### Final
+
+![](paper/ESM/FIGURES/its_supp_alpha_div.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its_alpha_diversity.rdata)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_4.pdf)
+:::
+
+:::
+
+```{r}
+remove(list = ls())
+load("include/pub/som/its_alpha_diversity.rdata")
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold) 
+{
+    if (missing(chart)) {
+        chart = "box"
+    }
+    if (missing(posthoc)) {
+        posthoc = FALSE
+    }
+    if ((names(divtest)[1] != "data") & (names(divtest)[2] != 
+        "normality.pvalue")) 
+        stop("The input object does not seem to be a div_test output.")
+    divtestdata <- divtest$data
+    divtestdata$Group <- as.factor(divtestdata$Group)
+    divtestdata$Group <- factor(divtestdata$Group, levels = as.character(unique(divtestdata$Group)))
+    if (missing(colour) || (length(colour) < divtest$groups)) {
+        getPalette <- colorRampPalette(brewer.pal(divtest$groups, 
+            "Paired"))
+        colour <- getPalette(divtest$groups)
+    }
+    if (posthoc == TRUE) {
+        if (is.na(names(divtest)[7])) 
+            stop("The input div_test object does not seem to contain pairwise posthoc data. 
+                 Re-run div_test() using 'posthoc=TRUE' argument.")
+        if (divtest[7] == "Tukey post-hoc test") {
+            combinations <- matrix(gsub(" $", "", gsub("^ ", 
+                "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
+                  "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
+            pvalue <- round(divtest$posthoc[, 4], 3)
+            pairwisetable <- as.data.frame(cbind(combinations, 
+                pvalue))
+            colnames(pairwisetable) <- c("group1", "group2", 
+                "p")
+        }
+        if (divtest[7] == "Dunn test with Benjamini-Hochberg correction") {
+            combinations <- matrix(gsub(" $", "", gsub("^ ", 
+                "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
+                  "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
+            pvalue <- round(divtest$posthoc[, 3], 3)
+            pairwisetable <- as.data.frame(cbind(combinations, 
+                pvalue))
+            colnames(pairwisetable) <- c("group1", "group2", 
+                "p")
+        }
+        pairwisetable[, 1] <- as.character(pairwisetable[, 1])
+        pairwisetable[, 2] <- as.character(pairwisetable[, 2])
+        pairwisetable[, 3] <- as.numeric(as.character(pairwisetable[, 
+            3]))
+        if (!missing(threshold)) {
+            pairwisetable <- pairwisetable[which(pairwisetable$p < 
+                threshold), ]
+        }
+        sortedgroups <- unique(sort(c(pairwisetable$group1, pairwisetable$group2)))
+        datamax <- round(max(divtest$data[which(divtest$data$Group %in% 
+            sortedgroups), 3]))
+        datamin <- round(min(divtest$data[which(divtest$data$Group %in% 
+            sortedgroups), 3]))
+        datarange <- datamax - datamin
+        by <- datarange * 0.1
+        min <- datamax
+        max <- min + (by * nrow(pairwisetable))
+        ypos <- seq(min, max, by)[-1]
+        pairwisetable$ypos <- ypos
+    }
+    if (chart == "box") {
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", outlier.size = 3,
+            color = "Group", fill = "Group", x.text.angle = 0) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            #scale_colour_manual(values = scales::alpha(colour, 1)) + 
+            scale_colour_manual(values=c("#191919", "#191919", "#191919")) + 
+            scale_fill_manual(values = scales::alpha(colour, 1)) +
+            scale_linetype_manual()
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        return(plot)
+    }
+    if (chart == "jitter") {
+        plot <- ggboxplot(divtestdata, x = "Group", y = "Value", 
+            color = "Group", add = "jitter", width = 0, x.text.angle = 45) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            scale_colour_manual(values = scales::alpha(colour, 
+                0))
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        print(plot)
+    }
+    if (chart == "violin") {
+        plot <- ggviolin(divtestdata, x = "Group", y = "Value", 
+            color = "Group", fill = "Group", x.text.angle = 45) + 
+            ylab("Effective no. of Taxon Units") + xlab("Treatment") + 
+            scale_fill_manual(values = scales::alpha(colour, 
+                0.1)) + scale_colour_manual(values = scales::alpha(colour, 
+            1))
+        if (posthoc == TRUE) {
+            plot <- suppressWarnings(plot + stat_pvalue_manual(pairwisetable, 
+                label = "p", y.position = "ypos"))
+        }
+        print(plot)
+    }
+}
+
+rm(list = ls(pattern = "_adt_plot"))
+for (i in objects(pattern = "_adt")) {
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
+  tmp_get <- get(i)
+  tmp_df <- div_test_plot_jjs(tmp_get,
+                              chart = "box",
+                              colour	= swel_col,
+                              posthoc = TRUE)
+  tmp_df <- ggpar(tmp_df, legend = "none")
+  print(tmp_name)
+  assign(tmp_name, tmp_df)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in objects(pattern = "_adt_plot")) {
+  tmp_split <- stringr::str_split(i, "_")
+  
+  if (tmp_split[[1]][3] == "work") {
+    tmp_ds <- "f"
+    tmp_name1 <- "FULL"
+  } else if (tmp_split[[1]][3] == "filt") {
+    tmp_ds <- "l"
+    tmp_name1 <- "FILT"
+  } else if (tmp_split[[1]][3] == "perfect") {
+    tmp_ds <- "r"
+    tmp_name1 <- "PERfect"
+  } else if (tmp_split[[1]][3] == "pime") {
+    tmp_ds <- "p"
+    tmp_name1 <- "PIME"
+  }
+  
+  if (tmp_split[[1]][4] == "q0") {
+    tmp_hill <- "0"
+    tmp_name2 <- "Observed"
+  } else if (tmp_split[[1]][4] == "q1") {
+    tmp_hill <- "1"
+    tmp_name2 <- "Shannon exponential"
+  } else if (tmp_split[[1]][4] == "q2") {
+    tmp_hill <- "2"
+    tmp_name2 <- "Inverse Simpson"
+  }
+  
+  tmp_var <-
+    paste(tmp_split[[1]][1], "_asv", tmp_ds, tmp_hill, "_lab", sep = "")
+  tmp_name <- paste(tmp_name1, " (", tmp_name2, ")", sep = "")
+  assign(tmp_var, tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+its18_ps_work_q0_adt_plot <- its18_ps_work_q0_adt_plot +
+  theme(axis.title.x = element_blank()) +
+  ggtitle(its18_asvf0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_filt_q0_adt_plot <- its18_ps_filt_q0_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(its18_asvl0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_perfect_q0_adt_plot <- its18_ps_perfect_q0_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(its18_asvr0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_pime_q0_adt_plot <- its18_ps_pime_q0_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(its18_asvp0_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+#####################
+its18_ps_work_q1_adt_plot <- its18_ps_work_q1_adt_plot +
+  theme(axis.title.x = element_blank()) +
+  ggtitle(its18_asvf1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_filt_q1_adt_plot <- its18_ps_filt_q1_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(its18_asvl1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_perfect_q1_adt_plot <- its18_ps_perfect_q1_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(its18_asvr1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_pime_q1_adt_plot <- its18_ps_pime_q1_adt_plot +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  ggtitle(its18_asvp1_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+#####################
+its18_ps_work_q2_adt_plot <- its18_ps_work_q2_adt_plot +
+  ggtitle(its18_asvf2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_filt_q2_adt_plot <- its18_ps_filt_q2_adt_plot +
+  theme(axis.title.y = element_blank()) +
+  ggtitle(its18_asvl2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_perfect_q2_adt_plot <- its18_ps_perfect_q2_adt_plot +
+  theme(axis.title.y = element_blank()) +
+  ggtitle(its18_asvr2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+its18_ps_pime_q2_adt_plot <- its18_ps_pime_q2_adt_plot +
+  theme(axis.title.y = element_blank()) +
+  ggtitle(its18_asvp2_lab) +
+  theme(plot.title = element_text(size = 20, face = "bold"))
+
+its18_alph_div_plots_asv <- ggarrange(
+  its18_ps_work_q0_adt_plot,
+  its18_ps_filt_q0_adt_plot,
+  its18_ps_perfect_q0_adt_plot,
+  its18_ps_pime_q0_adt_plot,
+  its18_ps_work_q1_adt_plot,
+  its18_ps_filt_q1_adt_plot,
+  its18_ps_perfect_q1_adt_plot,
+  its18_ps_pime_q1_adt_plot,
+  its18_ps_work_q2_adt_plot,
+  its18_ps_filt_q2_adt_plot,
+  its18_ps_perfect_q2_adt_plot,
+  its18_ps_pime_q2_adt_plot,
+  ncol = 4,
+  nrow = 3
+)
+
+ggplot2::ggsave(
+  its18_alph_div_plots_asv,
+  file = "include/pub/som/its18_alph_div_plots_asv.png",
+  height = 5852,
+  width = 7449,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+
+ggplot2::ggsave(
+  its18_alph_div_plots_asv,
+  file = "include/pub/som/its18_alph_div_plots_asv.pdf",
+  height = 5852,
+  width = 7449,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+file.rename(
+  "include/pub/som/its18_alph_div_plots_asv.png",
+  "include/pub/som/Supplementary_Figure_4.png"
+)
+file.rename(
+  "include/pub/som/its18_alph_div_plots_asv.pdf",
+  "include/pub/som/Supplementary_Figure_4.pdf"
+)
+```
+
+## Supplementary Figure 5
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+No post processing performed.
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/som/Supplementary_Figure_5.png)
+
+### Final
+
+![](paper/ESM/FIGURES/ssu18_auto_cor_combo.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_select_mc_norm_split.rds)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_5.pdf)
+:::
+
+:::
+
+```{r}
+remove(list = ls())
+ssu18_select_mc_norm_split <- readRDS(
+  "include/pub/som/ssu18_select_mc_norm_split.rds"
+  )
+```
+
+```{r}
+edaphic_norm_cor <- ssu18_select_mc_norm_split$edaphic
+edaphic_norm_cor[,1:8] <- NULL
+
+soil_funct_norm_cor <- ssu18_select_mc_norm_split$soil_funct
+soil_funct_norm_cor[,1:8] <- NULL
+
+temp_adapt_norm_cor <- ssu18_select_mc_norm_split$temp_adapt
+temp_adapt_norm_cor[,1:8] <- NULL
+
+for (i in objects(pattern = "_cor$")) {
+  tmp_get <- get(i)
+  tmp_cormat <- round(cor(tmp_get), 2)
+  tmp_melted_cormat <- reshape2::melt(tmp_cormat)
+  
+  tmp_get_lower_tri <- function(tmp_cormat){
+    tmp_cormat[upper.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  # Get upper triangle of the correlation matrix
+  tmp_get_upper_tri <- function(tmp_cormat){
+    tmp_cormat[lower.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  tmp_upper_tri <- tmp_get_upper_tri(tmp_cormat)
+  tmp_melted_cormat <- reshape2::melt(tmp_upper_tri, na.rm = TRUE)
+  ggplot(data = tmp_melted_cormat, aes(x = Var1, y = Var2, fill = value)) +
+    geom_tile()
+  
+  tmp_ggheatmap <- ggplot(data = tmp_melted_cormat, aes(Var2, Var1, fill = value)) +
+    geom_tile(color = "white") +
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name="Pearson\nCorrelation") +
+    theme_minimal() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                     size = 7, hjust = 1),
+          axis.text.y = element_text(vjust = 1, size = 7, hjust = 1)) + 
+    coord_fixed() + 
+    geom_text(aes(Var2, Var1, label = value), color = "black", size = 1.75) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank(),
+      legend.justification = c(1, 0),
+      legend.position = c(0.6, 0.7),
+      legend.direction = "horizontal") +
+      guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                                   title.position = "top", 
+                                   title.hjust = 0.5))
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_ggheatmap"))
+  assign(tmp_name, tmp_ggheatmap)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}  
+objects(pattern = "_ggheatmap")
+edaphic_norm_cor_ggheatmap
+
+ggplot2::ggsave(
+  edaphic_norm_cor_ggheatmap,
+  path = "include/pub/som/",
+  filename = "ssu_auto_cor_edaphic.png",
+  dpi = 600
+)
+ggplot2::ggsave(
+  soil_funct_norm_cor_ggheatmap,
+  path = "include/pub/som/",
+  filename = "ssu_auto_cor_functional.png",
+  dpi = 600
+)
+ggplot2::ggsave(
+  temp_adapt_norm_cor_ggheatmap,
+  path = "include/pub/som/",
+  filename = "ssu_auto_cor_temperature.png",
+  dpi = 600
+)
+
+auto_cor_figs <- ggarrange(
+  edaphic_norm_cor_ggheatmap,
+  soil_funct_norm_cor_ggheatmap,
+  temp_adapt_norm_cor_ggheatmap,
+  ncol = 3,
+  nrow = 1,
+  common.legend = FALSE
+)
+
+ggplot2::ggsave(
+  auto_cor_figs,
+  file = "include/pub/som/ssu18_auto_cor_figs.png",
+  height = 2500,
+  width = 7500,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+
+ggplot2::ggsave(
+  auto_cor_figs,
+  file = "include/pub/som/ssu18_auto_cor_figs.pdf",
+  height = 2500,
+  width = 7500,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+file.rename(
+  "include/pub/som/ssu18_auto_cor_figs.png",
+  "include/pub/som/Supplementary_Figure_5.png"
+)
+file.rename(
+  "include/pub/som/ssu18_auto_cor_figs.pdf",
+  "include/pub/som/Supplementary_Figure_5.pdf"
+)
+```
+
+
+## Supplementary Figure 6
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+No post processing performed.
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/som/Supplementary_Figure_6.png)
+
+### Final
+
+![](paper/ESM/FIGURES/its18_auto_cor_combo.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its18_select_mc_norm_split.rds)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_6.pdf)
+:::
+
+:::
+
+```{r}
+remove(list = ls())
+its18_select_mc_norm_split <- readRDS("include/pub/som/its18_select_mc_norm_split.rds")
+
+edaphic_norm_cor <- its18_select_mc_norm_split$edaphic
+edaphic_norm_cor[,1:8] <- NULL
+
+soil_funct_norm_cor <- its18_select_mc_norm_split$soil_funct
+soil_funct_norm_cor[,1:8] <- NULL
+
+temp_adapt_norm_cor <- its18_select_mc_norm_split$temp_adapt
+temp_adapt_norm_cor[,1:8] <- NULL
+
+for (i in objects(pattern = "_cor$")) {
+  tmp_get <- get(i)
+  tmp_cormat <- round(cor(tmp_get), 2)
+  tmp_melted_cormat <- reshape2::melt(tmp_cormat)
+  
+  tmp_get_lower_tri <- function(tmp_cormat){
+    tmp_cormat[upper.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  # Get upper triangle of the correlation matrix
+  tmp_get_upper_tri <- function(tmp_cormat){
+    tmp_cormat[lower.tri(tmp_cormat)] <- NA
+    return(tmp_cormat)
+    }
+  tmp_upper_tri <- tmp_get_upper_tri(tmp_cormat)
+  tmp_melted_cormat <- reshape2::melt(tmp_upper_tri, na.rm = TRUE)
+  ggplot(data = tmp_melted_cormat, aes(x = Var1, y = Var2, fill = value)) + 
+    geom_tile()
+  
+  tmp_ggheatmap <- ggplot(data = tmp_melted_cormat, aes(Var2, Var1, fill = value)) +
+    geom_tile(color = "white") +
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name="Pearson\nCorrelation") +
+    theme_minimal() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                     size = 7, hjust = 1),
+          axis.text.y = element_text(vjust = 1, size = 7, hjust = 1)) + 
+    coord_fixed() + 
+    geom_text(aes(Var2, Var1, label = value), color = "black", size = 1.75) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank(),
+      legend.justification = c(1, 0),
+      legend.position = c(0.6, 0.7),
+      legend.direction = "horizontal") +
+      guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                                   title.position = "top", 
+                                   title.hjust = 0.5))
+  tmp_name <- purrr::map_chr(i, ~ paste0(., "_ggheatmap"))
+  assign(tmp_name, tmp_ggheatmap)
+  print(tmp_name)
+  rm(list = ls(pattern = "tmp_"))
+}  
+objects(pattern = "_ggheatmap")
+
+auto_cor_figs <- ggarrange(
+  edaphic_norm_cor_ggheatmap, 
+  soil_funct_norm_cor_ggheatmap, 
+  temp_adapt_norm_cor_ggheatmap,
+  ncol = 3, nrow = 1, common.legend = FALSE)
+
+ggplot2::ggsave(
+  auto_cor_figs,
+  file = "include/pub/som/its18_auto_cor_figs.png",
+  height = 2500,
+  width = 7500,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+
+ggplot2::ggsave(
+  auto_cor_figs,
+  file = "include/pub/som/its18_auto_cor_figs.pdf",
+  height = 2500,
+  width = 7500,
+  units = 'px',
+  bg = "white",
+  dpi = 600
+)
+
+file.rename(
+  "include/pub/som/its18_auto_cor_figs.png",
+  "include/pub/som/Supplementary_Figure_6.png"
+)
+file.rename(
+  "include/pub/som/its18_auto_cor_figs.pdf",
+  "include/pub/som/Supplementary_Figure_6.pdf"
+)
+```
+
+
+## Supplementary Figures 7--14
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_ps_work.rds)  
+:::
+
+```{r}
+remove(list = ls())
+ssu18_ps_work <- readRDS("include/pub/som/ssu18_ps_work.rds")
+ssu18_data_sets <- c("ssu18_ps_work")
+for (i in ssu18_data_sets) {
+     tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo"))
+     tmp_get <- get(i)
+     tmp_df <- subset_taxa(tmp_get, Phylum == "Proteobacteria")
+     assign(tmp_name, tmp_df)
+     print(tmp_name)
+     tmp_get_taxa <- get_taxa_unique(tmp_df,
+                                     taxonomic.rank = rank_names(tmp_df)[3],
+                                     errorIfNULL=TRUE)
+     print(tmp_get_taxa)
+     rm(list = ls(pattern = "tmp_"))
+     rm(list = ls(pattern = "_proteo"))
+}
+## 2) Replace Phylum Proteobacteria with the Class name.
+
+for (j in ssu18_data_sets) {
+  tmp_name <- purrr::map_chr(j, ~paste0(., "_proteo_clean"))
+  tmp_get <- get(j)
+  tmp_clean <- data.frame(tax_table(tmp_get))
+
+   for (i in 1:nrow(tmp_clean)){
+       if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "Alphaproteobacteria"){
+           phylum <- base::paste("Alphaproteobacteria")
+           tmp_clean[i, 2] <- phylum
+   }   else if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "Gammaproteobacteria"){
+           phylum <- base::paste("Gammaproteobacteria")
+           tmp_clean[i, 2] <- phylum
+   }   else if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "Zetaproteobacteria"){
+              phylum <- base::paste("Zetaproteobacteria")
+           tmp_clean[i, 2] <- phylum
+   }   else if (tmp_clean[i,2] == "Proteobacteria" & tmp_clean[i,3] == "p_Proteobacteria"){
+           phylum <- base::paste("p_Proteobacteria")
+           tmp_clean[i, 2] <- phylum
+       }
+     }
+  tax_table(tmp_get) <- as.matrix(tmp_clean)
+  rank_names(tmp_get)
+  assign(tmp_name, tmp_get)
+  print(c(tmp_name, tmp_get))
+  print(length(get_taxa_unique(tmp_get,
+                               taxonomic.rank = rank_names(tmp_get)[2],
+                               errorIfNULL=TRUE)))
+  tmp_path <- file.path("include/pub/som/")
+  saveRDS(tmp_get, paste(tmp_path, j, "_clean.rds", sep = ""))
+  rm(list = ls(pattern = "tmp_"))
+}
+rm(class, order, phylum)
+
+set_to_plot <- "ssu18_ps_work"
+tax_group <- c(
+  "Alphaproteobacteria",
+  "Gammaproteobacteria",
+  "Acidobacteriota",
+  "Actinobacteriota",
+  "Bacteroidota",
+  "Firmicutes",
+  "Myxococcota",
+  "Verrucomicrobiota"
+)
+for (i in set_to_plot) {
+  for (j in tax_group) {
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_proteo_clean")))
+    tmp_sub <- subset_taxa(tmp_get, Phylum == j)
+    tmp_name <- purrr::map_chr(i, ~ paste0(., "_", j))
+    assign(tmp_name, tmp_sub)
+    rm(list = ls(pattern = "tmp_"))
+  }
+}
+
+for (i in tax_group) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i)))
+  tmp_list <-  get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[5], errorIfNULL = TRUE)
+  cat("\n")
+  cat("####################################################", "\n")
+  tmp_print <- c("Unique taxa:", i)
+  cat(tmp_print, "\n")
+  cat("####################################################")
+  cat("\n")
+  print(tmp_list)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## 3) Choose the **number** of taxa to display and the taxonomic **level**. 
+## Aggregate the rest into "Other".
+
+aggregate_top_taxa <- function (x, top, level) {
+  x <- aggregate_taxa(x, level)
+  
+  tops <- top_taxa(x, top)
+  tax <- tax_table(x)
+  
+  inds <- which(!rownames(tax) %in% tops)
+  
+  tax[inds, level] <- "Other"
+  
+  tax_table(x) <- tax
+  
+  tt <- tax_table(x)[, level]
+  tax_table(x) <- tax_table(tt)
+  
+  aggregate_taxa(x, level)
+}
+
+top_hits <- 12
+top_level <- "Family"
+for (i in tax_group) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i)))
+  tmp_otu <- data.frame(t(otu_table(tmp_get)))
+  tmp_otu[] <- lapply(tmp_otu, as.numeric)
+  tmp_otu <- as.matrix(tmp_otu)
+  tmp_tax <- as.matrix(data.frame(tax_table(tmp_get)))
+  tmp_samples <- data.frame(sample_data(tmp_get))
+  tmp_clean_df <-
+    merge_phyloseq(
+      otu_table(tmp_otu, taxa_are_rows = TRUE),
+      tax_table(tmp_tax),
+      sample_data(tmp_samples)
+    )
+  tmp_agg_df <- aggregate_top_taxa(tmp_clean_df,
+                                   top = top_hits,
+                                   level = top_level)
+  tmp_agg_name <-
+    purrr::map_chr(i, ~ paste0(set_to_plot, "_", i, "_agg"))
+  assign(tmp_agg_name, tmp_agg_df)
+  rm(list = ls(pattern = "_sep_agg"))
+}
+
+for (i in tax_group){
+  tmp_data <- purrr::map_chr(i, ~ paste0(set_to_plot, "_", i, "_agg"))
+  tmp_get <- get(tmp_data)
+  tmp_list <- get_taxa_unique(tmp_get, taxonomic.rank = rank_names(tmp_get)[2],
+                        errorIfNULL = TRUE)
+  tmp_name <- purrr::map_chr(tmp_data, ~ paste0(., "_order"))
+  assign(tmp_name, tmp_list)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in tax_group) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i, "_agg_order")))
+  cat("\n")
+  cat("#########", i, "########", "\n")
+  tmp_print <- c(tmp_get)
+  cat(tmp_print, "\n")
+  cat("####################################################")
+  cat("\n")
+  rm(list = ls(pattern = "tmp_"))
+}
+rm(i, j)
+
+tmp_order <- rev(c("Other", "c_Alphaproteobacteria", "o_Elsterales", 
+                   "o_Azospirillales", "Rhizobiales_Incertae_Sedis", 
+                   "Xanthobacteraceae", "Sphingomonadaceae", "Rhizobiaceae", 
+                   "Micropepsaceae", "Methyloligellaceae", "KF-JG30-B3", 
+                   "Hyphomicrobiaceae", "Dongiaceae"))
+assign(paste(set_to_plot, "_", "Alphaproteobacteria", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "c_Gammaproteobacteria", "o_PLTA13", "o_CCD24", 
+                   "Unknown_Family", "Xanthomonadaceae", "TRA3-20", 
+                   "Steroidobacteraceae", "SC-I-84", "Nitrosomonadaceae", 
+                   "Comamonadaceae", "Burkholderiaceae", "B1-7BS"))
+assign(paste(set_to_plot, "_", "Gammaproteobacteria", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "c_Subgroup_22", "c_Subgroup_25", "c_Subgroup_5", 
+                   "o_Vicinamibacterales", "o_11-24", "o_Subgroup_17", 
+                   "o_Subgroup_2", "o_Subgroup_7", "o_Acidobacteriales", 
+                   "Vicinamibacteraceae", "Solibacteraceae", "Pyrinomonadaceae"))
+assign(paste(set_to_plot, "_", "Acidobacteriota", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "c_MB-A2-108", "o_IMCC26256", "o_Gaiellales", 
+                   "o_Frankiales", "Streptomycetaceae", "Solirubrobacteraceae", 
+                   "Nocardioidaceae", "Mycobacteriaceae", "Micromonosporaceae", 
+                   "Gaiellaceae", "Acidothermaceae", "67-14"))
+assign(paste(set_to_plot, "_", "Actinobacteriota", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "c_SJA-28", "o_Chitinophagales", "Sphingobacteriaceae", 
+                   "Saprospiraceae", "Microscillaceae", "Hymenobacteraceae", 
+                   "Flavobacteriaceae", "Cytophagaceae", "Chitinophagaceae", 
+                   "BSV26", "env.OPS_17", "AKYH767"))
+assign(paste(set_to_plot, "_", "Bacteroidota", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "p_Firmicutes", "c_Bacilli", "o_Bacillales", 
+                   "Thermoactinomycetaceae", "type_III", "Paenibacillaceae", 
+                   "Lachnospiraceae", "Hungateiclostridiaceae", "Clostridiaceae", 
+                   "Bacillaceae", "Alicyclobacillaceae", "Planococcaceae"))
+assign(paste(set_to_plot, "_", "Firmicutes", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "p_Myxococcota", "c_bacteriap25", "c_Polyangia", 
+                   "o_mle1-27", "o_MSB-4B10", "Sandaracinaceae", "Polyangiaceae", 
+                   "Phaselicystidaceae", "Myxococcaceae", "Haliangiaceae", 
+                   "BIrii41", "Anaeromyxobacteraceae"))
+assign(paste(set_to_plot, "_", "Myxococcota", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+tmp_order <- rev(c("Other", "c_Verrucomicrobiae", "o_Chlamydiales", "o_LD1-PA32", 
+                   "o_S-BQ2-57_soil_group", "Xiphinematobacteraceae", 
+                   "Simkaniaceae", "Pedosphaeraceae", "Parachlamydiaceae", 
+                   "Opitutaceae", "Omnitrophaceae", "cvE6", "Chthoniobacteraceae"))
+assign(paste(set_to_plot, "_", "Verrucomicrobiota", "_agg_order", sep = ""), 
+       tmp_order) 
+###################
+
+## 4) Now, transform the data to relative abundance.
+
+for (i in tax_group) {
+  tmp_agg <- purrr::map_chr(i, ~ paste0(set_to_plot, "_", i, "_agg"))
+  tmp_order <- purrr::map_chr(tmp_agg, ~ paste0(., "_order"))
+  tmp_get_agg <- get(tmp_agg)
+  tmp_get_order <- get(tmp_order)
+  tmp_df <- tmp_get_agg %>%
+    transform_sample_counts(function(x) {
+      x / sum(x)
+    }) %>%
+    psmelt()
+  tmp_df[[top_level]] <- gdata::reorder.factor(tmp_df[[top_level]],
+                                               new.order = rev(tmp_get_order))
+  tmp_df <- tmp_df %>% dplyr::arrange(get(top_level))
+  tmp_name <- purrr::map_chr(tmp_agg, ~ paste0(., "_tax"))
+  assign(tmp_name, tmp_df)
+  #print(c(i, tmp_name, tmp_agg))
+  rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in tax_group) {
+  tmp_get <-
+    get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i, "_agg_tax")))
+  tmp_levels <- levels(tmp_get[[top_level]])
+  print(c(i, tmp_levels))
+}
+
+## 5) Plot the data for a single phyloseq object. Here you use an aggregated tax file.
+
+ssu18_colvec.tax <- c(
+"#3D3C04",
+"#FF95BA",
+"#00A090",
+"#C00B6F",
+"#5FFFDE",
+"#0063E5",
+"#ED0DFD",
+"#FFA035",
+"#00C7F9",
+"#C80B2A",
+"#00A51C",
+"#FFD5FD",
+"#00463C"
+)
+
+for (i in tax_group) {
+  tmp_get <-
+    get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", i, "_agg_tax")))
+  tmp_plot <- ggplot(tmp_get, aes(
+    x = factor(TEMP),
+    y = Abundance,
+    fill = get(top_level)
+  )) +
+    geom_bar(stat = "identity", position = "fill") +
+    scale_fill_manual(values = ssu18_colvec.tax) +
+    theme_cowplot() +
+    guides(fill = guide_legend(title = top_level)) +
+    ylab("Relative Abundance (% total reads)") + xlab("Temperature") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
+      panel.border = element_rect(fill = NA, color = "black"),
+      legend.position = "none"
+    )
+  tmp_name <-
+    purrr::map_chr(i, ~ paste0(set_to_plot, "_", ., "_plot"))
+  assign(tmp_name, tmp_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## 6) Plot the data for multiple taxa. Here again you use an aggregated tax file. 
+## This code can be used to generate plots for multiple data frames by adding the 
+## base  phyloseq names to the `ssu18_split_df` variable. This code will also 
+## facet the plots by a metadata variable. If you do not want to facet remove 
+## the line beginning with `facet_grid`.
+
+for (i in tax_group) {
+  tmp_level_get <-
+    get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", .)))
+  tmp_level <- data.frame(sample_data(tmp_level_get))
+  tmp_level <- tmp_level[order(tmp_level$TEMP),]
+  tmp_level <- as.vector(tmp_level$SamName)
+  
+  tmp_agg_name <-
+    purrr::map_chr(i, ~ paste0(set_to_plot, "_", .,  "_agg_tax"))
+  tmp_get <- get(tmp_agg_name)
+  tmp_df <-
+    reshape::melt(tmp_get, id.vars = c("Sample", "TEMP", "Abundance", "Family"))
+  tmp_plot_name <-
+    purrr::map_chr(i, ~ paste0(set_to_plot, "_", ., "_plot_melt"))
+  
+  tmp_plot <- ggplot(tmp_df,
+                     aes(
+                       x = Sample,
+                       y = Abundance,
+                       fill = get(top_level)
+                     )) +
+    facet_grid(. ~ TEMP, scale = "free_x", space = "free_x") +
+    geom_bar(stat = "identity", position = "fill")  +
+    scale_fill_manual(values = ssu18_colvec.tax) +
+    theme_cowplot() +
+    guides(fill = guide_legend(
+      title = top_level,
+      reverse = FALSE,
+      keywidth = 0.7,
+      keyheight = 0.7
+    )) +
+    ylab(NULL) +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
+      panel.border = element_rect(fill = NA, color = "black"),
+      legend.position = "right",
+      axis.text.x = element_text(angle = 90)
+    ) +
+    ylab(NULL)
+  
+  assign(tmp_plot_name, tmp_plot)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+## 7) Finally we use the `patchwork` package to combine the two 
+## plots and customize the look.
+
+for (i in tax_group) {
+  tmp_plot_main <-
+    get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", ., "_plot")))
+  tmp_plot_melt <-
+    get(purrr::map_chr(i, ~ paste0(set_to_plot, "_", ., "_plot_melt")))
+  tmp_final <- tmp_plot_main + tmp_plot_melt
+  tmp_final <- tmp_final +
+    plot_layout(widths = c(1, 2)) &
+    theme(
+      plot.title = element_text(size = 9),
+      plot.subtitle = element_text(size = 1),
+      plot.tag = element_text(size = 6),
+      axis.title = element_text(size = 7),
+      axis.text = element_text(size = 6),
+      strip.text = element_text(size = 8, angle = 0),
+      legend.text = element_text(size = 7),
+      legend.title = element_text(size = 9),
+    )
+  tmp_name <-
+    purrr::map_chr(i, ~ paste0(set_to_plot, "_", ., "_final_plot"))
+  assign(tmp_name, tmp_final)
+  rm(list = ls(pattern = "tmp_"))
+}
+
+taxa_to_plot <- c("Acidobacteriota", "Actinobacteriota", "Alphaproteobacteria", 
+                  "Bacteroidota", "Firmicutes", "Gammaproteobacteria", "Myxococcota", 
+                  "Verrucomicrobiota")
+for (i in taxa_to_plot) {
+  tmp_get <-
+    get(purrr::map_chr(i, ~ paste0(
+      "ssu18_ps_work_", i, "_final_plot", sep = ""
+    )))
+  ggplot2::ggsave(
+    tmp_get,
+    file = paste0("include/pub/som/", i, "_tax_div_bar_plots.png", sep = ""),
+    height = 2415,
+    width = 6350,
+    units = 'px',
+    bg = "white",
+    dpi = 600
+  )
+  ggplot2::ggsave(
+    tmp_get,
+    file = paste0("include/pub/som/", i, "_tax_div_bar_plots.pdf", sep = ""),
+    height = 2415,
+    width = 6350,
+    units = 'px',
+    bg = "white",
+    dpi = 600
+  )
+}
+
+file.rename(
+  "include/pub/som/Acidobacteriota_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_7.png"
+)
+file.rename(
+  "include/pub/som/Actinobacteriota_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_8.png"
+)
+file.rename(
+  "include/pub/som/Alphaproteobacteria_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_9.png"
+)
+file.rename(
+  "include/pub/som/Gammaproteobacteria_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_10.png"
+)
+file.rename(
+  "include/pub/som/Bacteroidota_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_11.png"
+)
+file.rename(
+  "include/pub/som/Firmicutes_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_12.png"
+)
+file.rename(
+  "include/pub/som/Myxococcota_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_13.png"
+)
+file.rename(
+  "include/pub/som/Verrucomicrobiota_tax_div_bar_plots.png",
+  "include/pub/som/Supplementary_Figure_14.png"
+)
+
+file.rename(
+  "include/pub/som/Acidobacteriota_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_7.pdf"
+)
+file.rename(
+  "include/pub/som/Actinobacteriota_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_8.pdf"
+)
+file.rename(
+  "include/pub/som/Alphaproteobacteria_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_9.pdf"
+)
+file.rename(
+  "include/pub/som/Gammaproteobacteria_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_10.pdf"
+)
+file.rename(
+  "include/pub/som/Bacteroidota_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_11.pdf"
+)
+file.rename(
+  "include/pub/som/Firmicutes_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_12.pdf"
+)
+file.rename(
+  "include/pub/som/Myxococcota_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_13.pdf"
+)
+file.rename(
+  "include/pub/som/Verrucomicrobiota_tax_div_bar_plots.pdf",
+  "include/pub/som/Supplementary_Figure_14.pdf"
+)
+```
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, and small adjustments in bar height/width. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original (SF7)
+
+![](include/pub/som/Supplementary_Figure_7.png)
+
+### Modified (SF7)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Acido.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S7](include/pub/som/Supplementary_Figure_7.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original (SF8)
+
+![](include/pub/som/Supplementary_Figure_8.png)
+
+### Modified (SF8)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Actino.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S8](include/pub/som/Supplementary_Figure_8.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original (SF9)
+
+![](include/pub/som/Supplementary_Figure_9.png)
+
+### Modified (SF9)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Alpha.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S9](include/pub/som/Supplementary_Figure_9.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original (SF10)
+
+![](include/pub/som/Supplementary_Figure_10.png)
+
+### Modified (SF10)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Gamma.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S10](include/pub/som/Supplementary_Figure_10.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original (SF11) 
+
+![](include/pub/som/Supplementary_Figure_11.png)
+
+### Modified (SF11)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Bacter.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S11](include/pub/som/Supplementary_Figure_11.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original  (SF12)
+
+![](include/pub/som/Supplementary_Figure_12.png)
+
+### Modified (SF12)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Firm.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S12](include/pub/som/Supplementary_Figure_12.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original (SF13) 
+
+![](include/pub/som/Supplementary_Figure_13.png)
+
+### Modified (SF13)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Myxo.png)
+
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S13](include/pub/som/Supplementary_Figure_13.pdf)
+:::
+
+::: {.panel-tabset}
+
+### Original (SF14)
+
+![](include/pub/som/Supplementary_Figure_14.png)
+
+### Modified (SF14)
+
+![](paper/ESM/FIGURES/taxa_plots_class_Verruco.png)
+
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S14](include/pub/som/Supplementary_Figure_14.pdf)
+:::

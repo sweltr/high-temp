@@ -183,7 +183,7 @@ file.copy("include/som", "public_build/include", recursive = TRUE)
 This page contains the Supplementary Information for the manuscript ***Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil***. It is basically the same information contained in the published version of the online material except here, all tables are embedded in the page and the information can be download directly.
 
 ::: {.callout-note}
-The source code for the PDF version of this page (publication Electronic Supplementary Material)---including all figures, tables, and data sets---can be found on the [project GitHub repo](https://github.com/sweltr/high-temp/tree/main/paper/ESM). 
+The source code for the PDF version of this page (publication Electronic Supplementary Material)---including all figures, tables, and data sets---can be found on the [project GitHub repo](https://github.com/sweltr/high-temp/tree/main/paper/ESM). The code and data needed to reproduce each figure can [here](pub.html#supplementary-material).
 :::
 
 # Content Description
