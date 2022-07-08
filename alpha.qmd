@@ -1154,7 +1154,6 @@ for (i in objects(pattern = "_adt")) {
      assign(tmp_name, tmp_df)
      rm(list = ls(pattern = "tmp_"))
 }
-ssu18_ps_work_q0_adt_plot
 ```
 
 ```{r}
@@ -1228,12 +1227,12 @@ ssu18_alph_div_plots_asv <- ggarrange(
   ssu18_ps_filt_q2_adt_plot, 
   ssu18_ps_perfect_q2_adt_plot, 
   ssu18_ps_pime_q2_adt_plot, 
-  ncol=4, nrow = 3)
+  ncol = 4, nrow = 3)
 
 ssu18_alph_div_plots_asv
 dev.off()
 png("files/alpha/figures/ssu18_alph_div_plots_asv.png",
-    height=32, width=60, units = 'cm', res = 600, bg = "white")
+    height = 32, width = 60, units = 'cm', res = 600, bg = "white")
 ssu18_alph_div_plots_asv
 dev.off()
 pdf("files/alpha/figures/ssu18_alph_div_plots_asv.pdf",
@@ -2070,8 +2069,8 @@ where `x` is the results from the `div_test` function, `"type"` is chart type (b
 ```{r}
 #| code-fold: true
 source("hack_code/div_test_plot_jjs.R")
-rm(list=ls(pattern="_adt_plot"))
-for (i in objects(pattern="_adt")) {
+rm(list = ls(pattern = "_adt_plot"))
+for (i in objects(pattern = "_adt")) {
      tmp_name <- purrr::map_chr(i, ~ paste0(., "_plot"))
      tmp_get <- get(i)
      tmp_df <- div_test_plot_jjs(tmp_get, chart = "box",

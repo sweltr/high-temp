@@ -162,14 +162,14 @@
   \newcommand\contentsname{Table of contents}
 \fi
 \ifdefined\listfigurename
-  \renewcommand*\listfigurename{Supplementray Figures}
+  \renewcommand*\listfigurename{Supplementary Figures}
 \else
-  \newcommand\listfigurename{Supplementray Figures}
+  \newcommand\listfigurename{Supplementary Figures}
 \fi
 \ifdefined\listtablename
-  \renewcommand*\listtablename{Supplementray Tables}
+  \renewcommand*\listtablename{Supplementary Tables}
 \else
-  \newcommand\listtablename{Supplementray Tables}
+  \newcommand\listtablename{Supplementary Tables}
 \fi
 \ifdefined\figurename
   \renewcommand*\figurename{Figure}
@@ -245,7 +245,7 @@ A.Nottingham@leeds.ac.uk}
 
 \begin{document}
 \maketitle
-\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[breakable, boxrule=0pt, sharp corners, enhanced, borderline west={3pt}{0pt}{shadecolor}, interior hidden, frame hidden]}{\end{tcolorbox}}\fi
+\ifdefined\Shaded\renewenvironment{Shaded}{\begin{tcolorbox}[borderline west={3pt}{0pt}{shadecolor}, boxrule=0pt, breakable, sharp corners, enhanced, frame hidden, interior hidden]}{\end{tcolorbox}}\fi
 
 \renewcommand*\contentsname{Contents}
 {
@@ -255,16 +255,14 @@ A.Nottingham@leeds.ac.uk}
 }
 \listoffigures
 \listoftables
-\hypertarget{overview}{%
-\section{Overview}\label{overview}}
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 This document contains Supplementary methods, results, tables, and
 figures for the manuscript. Large tables are provided as additional
 \textbf{Supplementary Dataset} files. See
-\hyperref[appendix-1]{\color{blue}Appendix 1} for more details.
-
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
-The source code for this PDF---including all figures, tables, and data
+\hyperref[appendix-1]{\color{blue}Appendix 1} for more details. The
+source code for this PDF---including all figures, tables, and data
 sets---can be found here:
 \url{https://github.com/sweltr/high-temp/tree/main/paper/ESM}. An HTML
 version of this file, including all Supplementary Datasets, can be found
@@ -304,8 +302,9 @@ Data Availability page on the project website at
 \hypertarget{supplementary-methods}{%
 \section{Supplementary Methods}\label{supplementary-methods}}
 
-\hypertarget{sample-naming}{%
-\subsection{Sample naming}\label{sample-naming}}
+\hypertarget{dna-extraction-sequencing}{%
+\subsection{DNA extraction \&
+sequencing}\label{dna-extraction-sequencing}}
 
 Samples were named by combining the plot number (P01--P10) with the
 treatment (C = control, W = warming), the temperature (0 = no warming, 3
@@ -319,32 +318,32 @@ this group) (\textbf{Supplementary Table 2}).
 
 \caption{\textbf{Supplementary Table 2 |} Sample Details.}
 \centering
-\fontsize{8}{10}\selectfont
+\fontsize{7.5}{9.5}\selectfont
 \begin{tabular}[t]{lcccc}
 \toprule
 \textcolor{black}{\textbf{Sample ID}} & \textcolor{black}{\textbf{Plot}} & \textcolor{black}{\textbf{Depth (cm)}} & \textcolor{black}{\textbf{Treatment}} & \textcolor{black}{\textbf{Pair}}\\
 \midrule
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}\cellcolor{gray!6}{P01\_W3A} & \cellcolor{gray!6}{P01} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+3°C} & \cellcolor{gray!6}{A}\\
 \hspace{1em}P01\_W8A & P01 & 00\_010 & +8°C & A\\
 \hspace{1em}\cellcolor{gray!6}{P02\_C0A} & \cellcolor{gray!6}{P02} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{Control} & \cellcolor{gray!6}{A}\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}P03\_W3B & P03 & 00\_010 & +3°C & B\\
 \hspace{1em}\cellcolor{gray!6}{P03\_W8B} & \cellcolor{gray!6}{P03} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+8°C} & \cellcolor{gray!6}{B}\\
 \hspace{1em}P04\_C0B & P04 & 00\_010 & Control & B\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}\cellcolor{gray!6}{P05\_W3C} & \cellcolor{gray!6}{P05} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+3°C} & \cellcolor{gray!6}{C}\\
 \hspace{1em}P05\_W8C & P05 & 00\_010 & +8°C & C\\
 \hspace{1em}\cellcolor{gray!6}{P06\_C0C} & \cellcolor{gray!6}{P06} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{Control} & \cellcolor{gray!6}{C}\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}P07\_W3D & P07 & 00\_010 & +3°C & D\\
 \hspace{1em}\cellcolor{gray!6}{P07\_W8D} & \cellcolor{gray!6}{P07} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+8°C} & \cellcolor{gray!6}{D}\\
 \hspace{1em}P08\_C0D & P08 & 00\_010 & Control & D\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}\cellcolor{gray!6}{P09\_W3E} & \cellcolor{gray!6}{P09} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+3°C} & \cellcolor{gray!6}{E}\\
 \hspace{1em}P09\_W8E & P09 & 00\_010 & +8°C & E\\
@@ -352,10 +351,6 @@ this group) (\textbf{Supplementary Table 2}).
 \bottomrule
 \end{tabular}
 \end{table}
-
-\hypertarget{processing-microbial-community-data}{%
-\subsection{Processing microbial community
-data}\label{processing-microbial-community-data}}
 
 DNA was extracted using the DNeasy Powersoil kit (Qiagen). Bacterial and
 fungal communities were amplified using a two-stage PCR protocol. Locus
@@ -372,7 +367,7 @@ ITS1F\textsuperscript{2} and ITS2\textsuperscript{3}
 
 \caption{\textbf{Supplementary Table 3 |} Primer sequences for 16S rRNA \& ITS gene amplification.}
 \centering
-\fontsize{9}{11}\selectfont
+\fontsize{8}{10}\selectfont
 \begin{tabular}[t]{lcl}
 \toprule
 \textcolor{black}{\textbf{Data set}} & \textcolor{black}{\textbf{Primer name}} & \textcolor{black}{\textbf{Primer sequence}}\\
@@ -393,32 +388,34 @@ We used Platinum 2X Mastermix (Thermo) in PCR reactions with a final
 volume of 12.5µl with 25 cycles using a 50°C annealing temperature for
 both loci. PCR2 used 2µl of PCR1 as template and added on remaining
 Illumina adaptors and index sequences. PCR2 products were cleaned and
-normalized using PCR Normalization plates (CharmBiotech, USA) and the
-pooled libraries concentrated using AMPure beads (Beckman Coulter, USA).
+normalized using PCR Normalization plates (CharmBiotech, USA) and pooled
+libraries concentrated using AMPure beads (Beckman Coulter, USA).
 Libraries were sequenced on an Illumina MiSeq with 250bp paired end
 reads.
 
-Reads in the 16S rRNA and ITS data sets were trimmed of forward and
-reverse primers using cutadapt\textsuperscript{4} (v1.18) following an
-initial filtering step that removed reads with ambiguous bases. Primer
-sequences with more than 12\% error rate (--error-rate = 0.12) were
-discarded. Reads were then processed using DADA2\textsuperscript{5}
-(v1.16.0) within the R environment\textsuperscript{6} (v4.1.0). Reads
-were dropped from the data set if they had three or more expected errors
-(maxEE = 2), at least one base with very low quality (truncQ = 2), or at
-least one position with an unspecified nucleotide (maxN = 0). Based on
-visual inspection of quality plots, only the forward reads from the 16S
-rRNA data were retained, while both forward and reverse reads were
-retained in the ITS data set. Remaining reads were dereplicated before
-inferring amplicon sequence variants (ASVs).
+\hypertarget{processing-microbial-community-data}{%
+\subsection{Processing microbial community
+data}\label{processing-microbial-community-data}}
 
-We used ASVs over traditional OTUs because ASVs provide single
-nucleotide resolution, thus providing more detailed resolution when
-examining treatment effects. Paired-end reads (ITS only) were merged and
-read pairs that did not match exactly across at least 12 base pairs
-(minOverlap = 12) were discarded. For the 16S rRNA data we retained
-amplicons between 230 and 235 base pairs and for the ITS data we
-retained amplicons between 100 and 450 base pairs. Reads were then
+Reads in both data sets were trimmed of forward and reverse primers
+using cutadapt\textsuperscript{4} (v1.18) following an initial filtering
+step that removed reads with ambiguous bases. Primer sequences with more
+than 12\% error rate (--error-rate = 0.12) were discarded. Reads were
+then processed using DADA2\textsuperscript{5} (v1.16.0) within
+R\textsuperscript{6} (v4.1.0). Reads were dropped from the data set if
+they had three or more expected errors (maxEE = 2), at least one base
+with very low quality (truncQ = 2), or at least one position with an
+unspecified nucleotide (maxN = 0). Based on visual inspection of quality
+plots, only the forward reads from the 16S rRNA data were retained,
+while both forward and reverse reads were retained in the ITS data set.
+Remaining reads were dereplicated before inferring amplicon sequence
+variants (ASVs). We used ASVs over traditional OTUs because ASVs provide
+single nucleotide resolution, thus providing more detailed resolution
+when examining treatment effects. Paired-end reads (ITS only) were
+merged and read pairs that did not match exactly across at least 12 base
+pairs (minOverlap = 12) were discarded. For the 16S rRNA data we
+retained amplicons between 230 and 235 base pairs and for the ITS data
+we retained amplicons between 100 and 450 base pairs. Reads were then
 screened for chimeras (method = consensus). Taxonomy for the 16S rRNA
 data set was assigned to each ASV using the naive Bayesian
 classifier\textsuperscript{7} against the Silva reference
@@ -431,15 +428,14 @@ release for Fungi (v. 04.02.2020)\textsuperscript{10}.
 contain the ASV table, taxonomic assignments, and unique sequences for
 the 16S rRNA and ITS data sets, respectively. The complete DADA2
 workflow is available here:
-\url{https://sweltr.github.io/high-temp/dada2.html}.
-
-Prior to community analysis of the 16S rRNA data set, ASVs classified as
-chloroplasts, mitochondria, or Eukaryota, or ASVs that remained
-unclassified (i.e., NA) at the kingdom level, were removed from the data
-set using the phyloseq package\textsuperscript{11} (v1.36.0) in the R
-environment\textsuperscript{6}. No such curation was performed on the
-ITS data set since all ASVs could be classified to kingdom level
-(Fungi). The complete data set preparation workflow is available here:
+\url{https://sweltr.github.io/high-temp/dada2.html}. Prior to community
+analysis of the 16S rRNA data set, ASVs classified as chloroplasts,
+mitochondria, or Eukaryota, or ASVs that remained unclassified (i.e.,
+NA) at the kingdom level, were removed from the data set using the
+phyloseq package\textsuperscript{11} (v1.36.0) in R\textsuperscript{6}.
+No curation was performed on the ITS data set since all ASVs could be
+classified to kingdom level (Fungi). The complete data set preparation
+workflow is available here:
 \url{https://sweltr.github.io/high-temp/data-prep.html}.
 
 \hypertarget{filtering}{%
@@ -450,8 +446,8 @@ We applied three complementary methods of prevalence filtering to the
 here: \url{https://sweltr.github.io/high-temp/filtering.html}.
 
 \textbf{i}) Sample-wise filtering with arbitrary functions. We used the
-\texttt{genefilter\_sample} function from the phyloseq
-package\textsuperscript{11} (v1.36.0) to remove ASVs represented by
+\texttt{genefilter\_sample} function (phyloseq
+package\textsuperscript{11}, v1.36.0) to remove ASVs represented by
 fewer than 5 reads and/or present in less that 20\% of samples.
 
 \textbf{ii}) PERFect (PERmutation Filtering test for microbiome
@@ -460,55 +456,50 @@ data)\textsuperscript{12} (v0.2.4) filtering. Here we used the function
 rRNA data and 0.1 for the ITS data.
 
 \textbf{iii}) PIME (Prevalence Interval for Microbiome
-Evaluation)\textsuperscript{13} (v0.1.0) filtering. First we rarefied
-all samples to even depths (per the developer's recommendation) then
-split the data sets by predictor variable (temperature treatment) using
-the \texttt{pime.split.by.variable} function. Next, we calculated the
-prevalence intervals with \texttt{pime.prevalence} and then used
+Evaluation)\textsuperscript{13} (v0.1.0) filtering. We rarefied all
+samples to even depths (per the developer's recommendation) then split
+the data sets by predictor variable (temperature treatment) using
+\texttt{pime.split.by.variable}. We then calculated the prevalence
+intervals with \texttt{pime.prevalence} and used
 \texttt{pime.best.prevalence} to calculate the best prevalence. The best
 prevalence interval was selected when the out-of-bag (OOB) error rate
 first reached zero or close to zero. The most prevalent ASVs (at the
-best prevalence interval) were retained from each split. Splits were
-then merged to obtain the final PIME filtered data set.
+best interval) were retained from each split. Splits were merged to
+obtain the final PIME data set.
 
 \hypertarget{alpha-diversity-estimates}{%
 \subsection{Alpha diversity estimates}\label{alpha-diversity-estimates}}
 
 To account for presence of rare sequence variants caused by sequencing
 errors (or other technical artifacts), we used Hill
-numbers\textsuperscript{14} for estimates of alpha diversity. Hill
-numbers allow the weight put on rare versus abundant sequence variants
-to be scaled while providing intuitive comparisons of diversity levels
-using \emph{effective number of ASVs} as a measuring unit. This approach
+numbers\textsuperscript{14} for alpha diversity estimates. Hill numbers
+allow the weight put on rare versus abundant sequence variants to be
+scaled while providing intuitive comparisons of diversity levels using
+\emph{effective number of ASVs} as a measuring unit. This approach
 allows for balancing the over representation of rare ASVs that might be
-inflated due to sequencing errors. To calculate Hill numbers, we used
-the R package hilldiv\textsuperscript{15}. We calculated three metrics
-that put less or more weight on common ASVs: \textbf{(i)} Observed
-richness, where q-value = 0; \textbf{(ii)} Shannon exponential, which
-weighs ASVs by their frequency, where q-value = 1; and \textbf{(iii)}
-Simpson multiplicative inverse, which over weighs abundant ASVs, where
-q-value = 2.
-
-We present all three metrics of alpha diversity, while acknowledging
-that each metric of alpha diversity is based on (measured) relative
-abundance and can be subject to bias due to variation in extraction
-efficiency and sequencing depth, especially when detecting rare taxa (or
-ASVs)\textsuperscript{16}. However, we also recognize that each metric
-provides complementary information, by varying in their relative
-sensitivity towards rare and common species\textsuperscript{17}. We
-therefore interpret alpha diversity metrics in terms of changes in
-diversity due to changes in rarer ASVs (observed richness) and due to
-changes in more proportionally abundant ASVs (Shannon and inverse
-Simpson).
-
-Next, we assessed whether the alpha diversity estimates were normally
-distributed using both the Shapiro-Wilk Normality
-test\textsuperscript{18} and the Bartlett Test of Homogeneity of
-Variances\textsuperscript{19}. If the p-values from both tests were not
-significant (p \textgreater{} 0.05), we accepted the null hypothesis
-that the results were normally distributed. If one or both of the the
-p-values were significant (p \textless{} 0.05), we rejected the null
-hypothesis. For parametric data we tested for significance across
+inflated due to sequencing errors. We calculated three Hill numbers
+(using the R package hilldiv\textsuperscript{15}) that weigh common ASVs
+differently: \textbf{(i)} Observed richness, where q-value = 0;
+\textbf{(ii)} Shannon exponential (q-value = 1), which weighs ASVs by
+their frequency; and \textbf{(iii)} Simpson multiplicative inverse
+(q-value = 2), which over weighs abundant ASVs. We report all three
+metrics of alpha diversity, while acknowledging that each metric is
+based on (measured) relative abundance and can be subject to bias due to
+variation in extraction efficiency and sequencing depth, especially when
+detecting rare taxa (or ASVs)\textsuperscript{16}. However, we also
+recognize that each metric provides complementary information, by
+varying in their relative sensitivity towards rare and common
+species\textsuperscript{17}. We therefore interpret alpha diversity
+metrics in terms of changes in diversity due to changes in rarer ASVs
+(observed richness) and due to changes in more proportionally abundant
+ASVs (Shannon and inverse Simpson). Next, we assessed whether the alpha
+diversity estimates were normally distributed using both the
+Shapiro-Wilk Normality test\textsuperscript{18} and the Bartlett Test of
+Homogeneity of Variances\textsuperscript{19}. If the p-values from both
+tests were not significant (p \textgreater{} 0.05), we accepted the null
+hypothesis that the results were normally distributed. If one or both of
+the the p-values were significant (p \textless{} 0.05), we rejected the
+null hypothesis. For parametric data we tested for significance across
 treatments using ANOVA followed by Tukey post-hoc test. For
 non-parametric data we tested for significance across treatments using
 Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg correction.
@@ -555,13 +546,11 @@ linear discriminant analysis (LDA) effect size
 16S rRNA and ITS data, we set the p-value cutoff to 0.5. For all other
 parameters the default values were used. For the LEfSe analysis we used
 pre-sample normalization of the sum of the values to
-1e\textsuperscript{+06} (\texttt{norm\ =\ "CPM"}), set the LDA score
-cutoff to 2 (\texttt{lda\_cutoff\ =\ 2}), set the p-value cutoff of
-Wilcoxon test to 0.05 (\texttt{wilcoxon\_cutoff\ =\ 0.05}), and the
-p-value cutoff of Kruskal-Wallis test to 0.05
-(\texttt{kw\_cutoff\ =\ 0.05}). The complete diffentially abundant
-workflow is available here:
-\url{https://sweltr.github.io/high-temp/da.html}.
+1e\textsuperscript{+06} (norm = ``CPM''), set the LDA score cutoff to 2
+(lda\_cutoff = 2), set the p-value cutoff of Wilcoxon test to 0.05
+(wilcoxon\_cutoff = 0.05), and the p-value cutoff of Kruskal-Wallis test
+to 0.05 (kw\_cutoff = 0.05). The complete diffentially abundant workflow
+is available here: \url{https://sweltr.github.io/high-temp/da.html}.
 
 \hypertarget{multivariate-analysis}{%
 \subsection{Multivariate analysis}\label{multivariate-analysis}}
@@ -593,28 +582,24 @@ contained the same major steps:
   \textbf{b}) microbial functional responses; and \textbf{c})
   temperature adaptation properties.
 
-  \begin{enumerate}
-  \def\labelenumii{\roman{enumii})}
-  \item
-    \textbf{Environmental and edaphic properties}: AST,
-    H\textsubscript{2}O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH,
-    NH\textsubscript{4}, NO\textsubscript{3}, PO\textsubscript{4}, DOC,
-    DON, DOCN.
-  \item
-    \textbf{Microbial functional responses}: micC, micN, micP, micCN,
-    micCP, micNP, AG\textsubscript{ase}, BG\textsubscript{ase},
-    BP\textsubscript{ase}, CE\textsubscript{ase}, P\textsubscript{ase},
-    N\textsubscript{ase}, S\textsubscript{ase}, XY\textsubscript{ase},
-    LP\textsubscript{ase}, PX\textsubscript{ase}, CO\textsubscript{2},
-    enzCN, enzCP, enzNP.
-  \item
-    \textbf{Temperature adaptation}: AG\textsubscript{Q10},
-    BG\textsubscript{Q10}, BP\textsubscript{Q10}, CE\textsubscript{Q10},
-    P\textsubscript{Q10}, N\textsubscript{Q10}, S\textsubscript{Q10},
-    XY\textsubscript{Q10}, LP\textsubscript{Q10}, PX\textsubscript{Q10},
-    CUE\textsubscript{cn}, CUE\textsubscript{cp}, NUE, PUE,
-    T\textsubscript{min}, SI.
-  \end{enumerate}
+  \small a) \textbf{Environmental and edaphic properties}: AST,
+  H\textsubscript{2}O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH,
+  NH\textsubscript{4}, NO\textsubscript{3}, PO\textsubscript{4}, DOC,
+  DON, DOCN.
+
+  \small b) \textbf{Microbial functional responses}: micC, micN, micP,
+  micCN, micCP, micNP, AG\textsubscript{ase}, BG\textsubscript{ase},
+  BP\textsubscript{ase}, CE\textsubscript{ase}, P\textsubscript{ase},
+  N\textsubscript{ase}, S\textsubscript{ase}, XY\textsubscript{ase},
+  LP\textsubscript{ase}, PX\textsubscript{ase}, CO\textsubscript{2},
+  enzCN, enzCP, enzNP.
+
+  \small c) \textbf{Temperature adaptation}: AG\textsubscript{Q10},
+  BG\textsubscript{Q10}, BP\textsubscript{Q10}, CE\textsubscript{Q10},
+  P\textsubscript{Q10}, N\textsubscript{Q10}, S\textsubscript{Q10},
+  XY\textsubscript{Q10}, LP\textsubscript{Q10}, PX\textsubscript{Q10},
+  CUE\textsubscript{cn}, CUE\textsubscript{cp}, NUE, PUE,
+  T\textsubscript{min}, SI.
 \end{enumerate}
 
 The following parameters were collected but not used in the analysis:
@@ -629,28 +614,26 @@ minTIN.
   comparisons of the normalized metadata (from step \#2) for each group
   (step \#3) to identify potential autocorrelated parameters.
 \item
-  \textbf{Remove autocorrelated parameters from each group}. Based on
-  the results of step \#4, we removed autocorrelated parameters.
+  \textbf{Remove autocorrelated parameters}. Based on the results of
+  step \#4.
 \item
-  \textbf{Dissimilarity correlation tests}: Here we used Mantel Tests to
+  \textbf{Dissimilarity correlation tests}: We used Mantel Tests to
   determine if any metadata groups were significantly correlated with
   community data. We generated Bray-Curtis\textsuperscript{23} distance
   matrices for the community data and Euclidean distance matrices for
-  each metadata group. Then we performed Mantel
-  tests\textsuperscript{33,34} for all comparisons using the function
-  \texttt{mantel} from the vegan\textsuperscript{20} package.
+  each metadata group. We performed Mantel tests\textsuperscript{33,34}
+  for all comparisons using the function \texttt{mantel} from the
+  vegan\textsuperscript{20} package.
 \item
-  \textbf{Best subset of variables}: Then we determined which metadata
+  \textbf{Best subset of variables}: We determined which metadata
   parameters (from each group) were the most strongly correlated with
-  the community data. For this we used the \texttt{bioenv} function from
-  the vegan\textsuperscript{20} package where
-  \texttt{method\ =\ "spearman"}, \texttt{index\ =\ "bray"}, and
-  \texttt{metric\ =\ "euclidean"}.
+  the community data using the \texttt{bioenv} function from the
+  vegan\textsuperscript{20} package where method = ``spearman'', index =
+  ``bray'', and metric = ``euclidean''.
 \item
-  \textbf{Distance-based Redundancy Analysis (dbRDA)}: Finally, we
-  performed ordination analysis of samples plus metadata vector overlays
-  using \texttt{capscale}, also from the vegan package. For each of the
-  three metadata subsets, we perform the following steps:
+  \textbf{Distance-based Redundancy Analysis (dbRDA)}: We performed
+  ordination analysis of samples and metadata vectors for each of the
+  three metadata subsets using the following recipe:
 
   \begin{enumerate}
   \def\labelenumii{\roman{enumii})}
@@ -662,8 +645,8 @@ minTIN.
     metric to use. Here we tested the following metrics: Euclidean,
     Manhattan, Gower, Bray--Curtis, and Kulczynski.
   \item
-    Run \texttt{capscale} in the vegan package for distance-based
-    redundancy analysis.
+    Run \texttt{capscale} in the vegan\textsuperscript{20} package for
+    distance-based redundancy analysis.
   \item
     Run \texttt{envfit} to fit environmental parameters onto the
     ordination. This function basically calculates correlation scores
@@ -1029,7 +1012,7 @@ P09\_W8E & 813 & 376 & 332 & 170 & 375.3 & 165.6 & 149.9 & 67.9 & 120.2 & 55.7 &
 
 \begin{table}[H]
 
-\caption{\textbf{Supplementary Table 9 |} Summary of 16S rRNA significant tests.}
+\caption{\textbf{Supplementary Table 9 |} Summary of 16S rRNA significant tests. Posthoc p-values adjusted for multiple comparisons.}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{threeparttable}
@@ -1075,9 +1058,19 @@ Inverse Simpson & PIME & 0.370 & 0.371 & ANOVA & Tukey post-hoc test & 1.00e-06\
 
 }
 
-\caption{\textbf{Supplementary Figure 3 |} Alpha diversity of 16S rRNA
-communities. Significant differences denoted by asterisks (* p \(\le\)
-0.05, ** p \(\le\) 0.01, *** p \(\le\) 0.001, **** p \(\le\) 0.0001).}
+\caption{\textbf{Supplementary Figure 3 |} Alpha diversity estimates of
+16S rRNA communities. The centre line of each box plot represents the
+median, the lower and upper hinges represent the first and third
+quartiles and whiskers represent + 1.5 the interquartile range.
+Shapiro-Wilk Normality Test and Bartlett Test of Homogeneity of
+Variances normality tests indicated all data was normally distributed
+except for Shannon exponential estimates of the PIME filtered data.
+Differences in alpha diversity assessed using analysis of variance
+(ANOVA) followed by Tukey HSD post hoc tests (normally distributed data)
+or Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg
+correction (non-normally distributed data). Only significant differences
+(p-values adjusted for multiple comparisons) between treatments and
+controls are shown in plots, where n = 5 for each treatment.}
 
 \end{figure}
 
@@ -1132,7 +1125,7 @@ P09\_W3E & 745 & 390 & 118 & 196 & 232.7 & 133.6 & 51.9 & 66.6 & 96.0 & 61.7 & 3
 
 \begin{table}[H]
 
-\caption{\textbf{Supplementary Table 11 |} Summary of ITS significant tests.}
+\caption{\textbf{Supplementary Table 11 |} Summary of ITS significant tests. Posthoc p-values adjusted for multiple comparisons.}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{threeparttable}
@@ -1178,9 +1171,16 @@ Inverse Simpson & PIME & 0.955 & 0.477 & ANOVA & Tukey post-hoc test & 3.42e-01\
 
 }
 
-\caption{\textbf{Supplementary Figure 4 |} Alpha diversity of ITS
-communities. Significant differences denoted by asterisks (* p \(\le\)
-0.05, ** p \(\le\) 0.01, *** p \(\le\) 0.001, **** p \(\le\) 0.0001).}
+\caption{\textbf{Supplementary Figure 4 |} Alpha diversity estimates of
+ITS communities. The centre line of each box plot represents the median,
+the lower and upper hinges represent the first and third quartiles and
+whiskers represent + 1.5 the interquartile range. Shapiro-Wilk Normality
+Test and Bartlett Test of Homogeneity of Variances indicated all data
+was normally distributed. Differences in alpha diversity for all metrics
+assessed using analysis of variance (ANOVA) followed by Tukey HSD post
+hoc tests. Only significant differences (p-values adjusted for multiple
+comparisons) between treatments and controls are shown in plots, where n
+= 5 (control) and n = 4 (treatments).}
 
 \end{figure}
 
@@ -1263,7 +1263,7 @@ significance tests.
 
 \begin{table}[H]
 
-\caption{\textbf{Supplementary Table 14 |} Summary of beta diversity significant tests.}
+\caption{\textbf{Supplementary Table 14 |} Summary of beta diversity significant tests. Where beta dispersion tests were not significant, we used Permutational multivariate analysis of variance (PERMANOVA) to calculate dissimilarity among treatment groups. Where beta dispersion tests were significant, we used Analysis of Similarity (ANOSIM).}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{llcccc}
@@ -1506,7 +1506,7 @@ information for 20,332 ASVs. The first column is the unique ASV ID,
 followed by the read counts for each sample, ASV taxonomic lineage
 (Kingdom to Genus), and finally the unique ASV sequence.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset1.txt
 \end{tcolorbox}
 
@@ -1519,7 +1519,7 @@ information for 3357 ASVs. The first column is the unique ASV ID,
 followed by the read counts for each sample, ASV taxonomic lineage
 (Kingdom to Genus), and finally the unique ASV sequence.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset2.txt
 \end{tcolorbox}
 
@@ -1534,7 +1534,7 @@ column is the sample ID, followed plot number (1--10), treatment
 and collection season (W = rainy season). Subsequent columns contain
 values for all metadata parameters.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset3.txt
 \end{tcolorbox}
 
@@ -1546,7 +1546,7 @@ values for all metadata parameters.
 against the PIME filtered data set. Tab delimited text file of all 251
 DA ASVs between temperature treatments.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset4.txt
 \end{tcolorbox}
 
@@ -1594,7 +1594,7 @@ by its' unique sequence.
 (LDA) effect size (LEfSe) against the PIME filtered data set. Tab
 delimited text file of all 676 DA ASVs between temperature treatments.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset5.txt
 \end{tcolorbox}
 
@@ -1640,7 +1640,7 @@ by its' unique sequence.
 against the PIME filtered data set. Tab delimited text file of all 203
 DA ASVs between temperature treatments.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset6.txt
 \end{tcolorbox}
 
@@ -1688,7 +1688,7 @@ by its' unique sequence.
 effect size (LEfSe) against the PIME filtered data set. Tab delimited
 text file of all 228 DA ASVs between temperature treatments.
 
-\begin{tcolorbox}[enhanced jigsaw, breakable, left=2mm, opacityback=0, colback=white, rightrule=.15mm, bottomrule=.15mm, arc=.35mm, leftrule=.75mm, toprule=.15mm, colframe=quarto-callout-note-color-frame]
+\begin{tcolorbox}[enhanced jigsaw, opacityback=0, left=2mm, breakable, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, colback=white, leftrule=.75mm, toprule=.15mm, arc=.35mm, rightrule=.15mm]
 \textbf{Filename} Supplementary\_Dataset7.txt
 \end{tcolorbox}
 

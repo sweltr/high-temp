@@ -1,7 +1,7 @@
 ---
 title: "Code for Publication Figures"
 description: |
-  Reproducible workflows to reproduce all Main, Extended Data, and Supplementary figures in the publication. 
+  Workflows to reproduce all Main, Extended Data, and Supplementary figures in the publication. 
 page-layout: full
   
 format:
@@ -27,11 +27,12 @@ comments:
 
 ```{r}
 #| results: hide
+#| code-summary: "Click here for packages used on this page."
 set.seed(119)
 library(phyloseq); packageVersion("phyloseq")
 pacman::p_load(tidyverse, magrittr, file2meco, microbiomeMarker,
                microeco, cowplot, hilldiv, ggpubr, vegan, Matrix,
-               patchwork,
+               patchwork, microbiome,
                install = FALSE, update = FALSE)
 options(scipen = 999)
 knitr::opts_current$get(c(
@@ -64,12 +65,2255 @@ pre.sourceCode.r {
 </style>
 ```
 
+<iframe src="https://widgets.figshare.com/articles/20263857/embed?show_title=1" width="100%" height="351" allowfullscreen frameborder="0"></iframe>
 
-For each figure we include the raw figure generated in R, the post-processed figure, plus the code and data needed to generate the figure. 
-
+For most figures we include the raw figure generated in R, the post-processed figure, plus the code and data needed to generate the figure. 
 
 # Main Paper
 
+## Figure 1
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include rotating combining 16S rRNA and ITS plots, dendrogram branches, changing color palettes, sample and variable renaming, and adding legend. 
+
+:::
+
+::: {.panel-tabset}
+
+### Final
+
+![](paper/MAIN/FIGURES/Figure_1.png)
+
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Figure 1 data pack](include/pub/MAIN/Figure_1.rdata)  
+:::
+
+
+```{r}
+#| code-summary: "This code is run in R"
+remove(list = ls())
+load("include/pub/MAIN/Figure_1.rdata")
+samp_ps <- c("ssu18_ps_pime")
+samp_ps_all <- c("ssu18_ps_pime", "ssu18_ps_work")
+
+## 1) Get all Class-level Proteobacteria names
+
+for (i in samp_ps_all) {
+     tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo"))
+     tmp_get <- get(i)
+     tmp_df <- subset_taxa(tmp_get, Phylum == "Proteobacteria")
+     assign(tmp_name, tmp_df)
+     print(tmp_name)
+     tmp_get_taxa <- get_taxa_unique(tmp_df,
+                                     taxonomic.rank = rank_names(tmp_df)[3],
+                                     errorIfNULL = TRUE)
+     print(tmp_get_taxa)
+     rm(list = ls(pattern = "tmp_"))
+     #rm(list = ls(pattern = "_proteo"))
+}
+
+## 2) Replace Phylum Proteobacteria with the Class name.
+for (j in samp_ps_all) {
+  tmp_get <- get(j)
+  tmp_clean <- data.frame(tax_table(tmp_get))
+  
+  for (i in 1:nrow(tmp_clean)) {
+    if (tmp_clean[i, 2] == "Proteobacteria" &
+        tmp_clean[i, 3] == "Alphaproteobacteria") {
+      phylum <- base::paste("Alphaproteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }   else if (tmp_clean[i, 2] == "Proteobacteria" &
+                 tmp_clean[i, 3] == "Gammaproteobacteria") {
+      phylum <- base::paste("Gammaproteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }   else if (tmp_clean[i, 2] == "Proteobacteria" &
+                 tmp_clean[i, 3] == "Zetaproteobacteria") {
+      phylum <- base::paste("Zetaproteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }   else if (tmp_clean[i, 2] == "Proteobacteria" &
+                 tmp_clean[i, 3] == "p_Proteobacteria") {
+      phylum <- base::paste("p_Proteobacteria")
+      tmp_clean[i, 2] <- phylum
+    }
+  }
+  tax_table(tmp_get) <- as.matrix(tmp_clean)
+  rank_names(tmp_get)
+  assign(j, tmp_get)
+  print(c(j, tmp_get))
+  print(length(
+    get_taxa_unique(
+      tmp_get,
+      taxonomic.rank = rank_names(tmp_get)[2],
+      errorIfNULL = TRUE
+    )
+  ))
+  tmp_path <- file.path("include/pub/MAIN/")
+  rm(list = ls(pattern = "tmp_"))
+}
+
+rm(class, order, phylum)
+
+# Visualizing DA ASVs in Anvi’o
+
+## Here, we combine the results of the ISA and LEfSe analyses with the 
+## distribution of ASVs across each sample. We are going to do the analysis 
+## in [anvi’o](https://github.com/merenlab/anvio)---an advanced analysis 
+## and visualization platform for ‘omics data [@eren2015anvi]---using the 
+## `anvi-interactive` command. Anvi’o likes databases but it also 
+## understands that sometimes you do not have a database. So it offers a 
+## manual mode. If you type this command you can have a look at the 
+## relevant pieces we need for the visualization, specifically those under 
+## the headings MANUAL INPUTS and ADDITIONAL STUFF.
+
+## There are also a few files we generate that cannot be loaded directly. 
+## So, in addition to the files that can be loaded when running the interactive, 
+## we also have files that must be added to the database created by anvi’o.
+
+
+## 1. View data: in our case, a sample by ASV abundance matrix.
+## 2. Additional info about each ASV.
+## 3. Additional info about each sample.
+## 4. Taxa abundance data for each sample at some rank.
+## 5. Dendrograms ordering the ASVs and samples (based on view data).
+## 6. Fasta file of all ASVs in the analysis.
+
+## ## ## ## ## ## ## ## ## ## ## ## 
+## ## ## ## ## ## ## ## ## ## ## ## 
+## ## ## Main Steps  ## ## ## ## ## 
+## ## ## ## ## ## ## ## ## ## ## ## 
+## ## ## ## ## ## ## ## ## ## ## ## 
+
+#######################################
+### 1. View data  #####################
+#######################################
+
+## Let’s start with the `-d` or `--view-data` file. This file needs to be 
+## an ASV by sample matrix of read counts. To simplify the visualization, 
+## we will use ***all*** ASVs represented by 100 or more total reads, 
+## including those identified as differentially abundant by the ISA and/or LEfSe. 
+
+trim_val <- 100
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- prune_taxa(taxa_sums(tmp_get) > trim_val, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps_all) {
+     tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+     dir.create(paste(tmp_path, i, sep = ""), recursive = TRUE)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_df <- as.data.frame(t(otu_table(tmp_get)))
+     tmp_df <- tmp_df %>% rownames_to_column("Group")
+     tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+     write.table(tmp_df, paste(tmp_path, i, "/", "data.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+## Or export a table of transformed data.
+
+for (i in samp_ps) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+  tmp_trans <-
+    transform_sample_counts(tmp_get, function(x)
+      1e5 * {
+        x / sum(x)
+      })
+  tmp_df <- as.data.frame(t(otu_table(tmp_trans)))
+  tmp_df <- tmp_df %>% rownames_to_column("Group")
+  tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+  write.table(
+    tmp_df,
+    paste(tmp_path, i, "/", "data_trans.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE
+  )
+  rm(list = ls(pattern = "tmp_"))
+}
+
+#######################################
+### 2. Additional Layers for ASVs  ####
+#######################################
+
+## Next, we need some additional data **about the ASVs** to overlay on the 
+## visual. This can be anything however what I specifically want are the details 
+## of the ISA analysis, total reads, and lineage info. 
+## I warn you; this code will get ugly and I urge you to find a better way.
+
+## Start with an ASV + lineage table for the ASVs in the new phyloseq object.
+
+for (i in samp_ps) {
+  tmp_get_indval <-
+    get(purrr::map_chr(i, ~ paste0(., "_indval_final")))
+  tmp_get_indval <-
+    tmp_get_indval %>% dplyr::rename("Group" = "ASV_ID") %>%
+    dplyr::rename("enrich_indval" = "group") %>%
+    dplyr::rename("test_indval" = "indval") %>%
+    dplyr::rename("pval_indval" = "pval")
+  tmp_get_indval <- tmp_get_indval[, 1:5]
+  
+  tmp_get_lefse <-
+    get(purrr::map_chr(i, ~ paste0(., "_lefse_final")))
+  tmp_get_lefse <-
+    tmp_get_lefse %>% dplyr::rename("Group" = "ASV_ID") %>%
+    dplyr::rename("enrich_lefse" = "group") %>%
+    dplyr::rename("test_lefse" = "lda") %>%
+    dplyr::rename("pval_lefse" = "pval")
+  tmp_get_lefse <- tmp_get_lefse[, 1:4]
+  
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+  tmp_otu_df <- as.data.frame(t(otu_table(tmp_get)))
+  tmp_total <-
+    cbind(tmp_otu_df, total_reads = rowSums(tmp_otu_df))
+  tmp_total <- rev(tmp_total)[1]
+  tmp_total <- tmp_total %>% tibble::rownames_to_column("Group")
+  tmp_tax_df <- as.data.frame(tax_table(tmp_get))
+  tmp_tax_df$ASV_SEQ <- NULL
+  tmp_tax_df$ASV_ID <- NULL
+  
+  tmp_tax_df <-
+    tmp_tax_df %>% tibble::rownames_to_column("Group")
+  tmp_add_lay <-
+    dplyr::left_join(tmp_tax_df, tmp_total, by = "Group") %>%
+    dplyr::left_join(., tmp_get_indval, by = "Group") %>%
+    dplyr::left_join(., tmp_get_lefse, by = "Group")
+  tmp_add_lay$ASV_ID <- tmp_add_lay$Group
+  tmp_add_lay <- tmp_add_lay[, c(1, 16, 8, 12, 9:11, 13:15, 2:7)]
+  tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+  write.table(
+    tmp_add_lay,
+    paste(tmp_path, i, "/", "additional_layers.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    na = ""
+  )
+  rm(list = ls(pattern = "tmp_"))
+}
+
+#######################################
+### 3. Additional Views for Samples  ##
+#######################################
+
+## Now we want some general data **about the samples** to overlay on the 
+## visual. Again, this can be anything. How about a table of alpha diversity 
+## metrics? We actually have such a table that was generated way back up the 
+## road. Just need to fix the column names.
+
+metadata_tab[,c(2:5)] <- list(NULL)
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(sample_data(tmp_get))
+     tmp_df <- tmp_df[,c(2:9)]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("id")
+     tmp_df <- tmp_df %>% dplyr::rename("no_asvs" = "Observed")
+     tmp_rc <- data.frame(readcount(tmp_get))
+     tmp_rc <- tmp_rc %>% tibble::rownames_to_column("id")
+     tmp_rc <- tmp_rc %>% dplyr::rename("no_reads" = 2)
+     tmp_merge <- dplyr::left_join(tmp_df, tmp_rc)
+     tmp_merge <- tmp_merge[, c(1:6,10,7:9)]
+     tmp_final <- dplyr::left_join(tmp_merge, metadata_tab, by = c("id" = "Sample_ID"))
+     tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+     write.table(tmp_final, paste(tmp_path, i, "/", "additional_views.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+#######################################
+### 4. Taxon rank abundance by sample #
+#######################################
+
+## Turned out this was a little tricky to figure out, but thanks to a 
+## [little nifty block of code](https://github.com/joey711/phyloseq/issues/418#issuecomment-262637034) 
+## written by [guoyanzhao](https://github.com/guoyanzhao) on the phyloseq 
+## Issues forum, it was a piece of cake. The code can be altered to take any 
+## rank. See the post for an explanation.
+
+## Anyway, the goal is to sum each taxon at some rank and present that as a 
+## bar chart for each sample in the visualization. Anvi'o has a specific format 
+## it needs where each row is a sample and each column is a taxon. Taxa names 
+## need the prefix `t_<RANK>!`. For example, `t_class!` should be added for 
+## Class rank.
+
+pick_rank <- "Phylum"
+pick_rank_l <- "phylum"
+for (i in samp_ps_all) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_glom <- tax_glom(tmp_get, taxrank = pick_rank)
+    tmp_melt <- psmelt(tmp_glom)
+    tmp_melt[[pick_rank]] <- as.character(tmp_melt[[pick_rank]])
+    tmp_abund <- aggregate(Abundance ~ Sample + tmp_melt[[pick_rank]], tmp_melt, FUN = sum)
+    colnames(tmp_abund)[2] <- "tax_rank"
+    library(reshape2)
+    tmp_abund <- as.data.frame(reshape::cast(tmp_abund, Sample ~ tax_rank))
+    tmp_abund <- tibble::remove_rownames(tmp_abund)
+    tmp_abund <- tibble::column_to_rownames(tmp_abund, "Sample")
+# Reorder table column by sum
+    tmp_layers <- tmp_abund[,names(sort(colSums(tmp_abund), decreasing = TRUE))]
+# Add the prefix
+    tmp_layers <- tmp_layers %>% dplyr::rename_all(function(x) paste0("t_", pick_rank_l,"!", x))
+    tmp_layers <- tibble::rownames_to_column (tmp_layers, "taxon")
+# save the dataframe
+    tmp_name <- paste(i, "_taxa", sep = "")
+    assign(tmp_name, tmp_layers)
+    rm(list = ls(pattern = "tmp_"))
+}
+
+## REORDER TAXA
+ssu18_ps_work_taxa <- dplyr::relocate(ssu18_ps_work_taxa, c(
+  "t_phylum!Alphaproteobacteria", 
+  "t_phylum!Gammaproteobacteria", 
+  "t_phylum!Acidobacteriota", 
+  "t_phylum!Actinobacteriota", 
+  "t_phylum!Bacteroidota", 
+  "t_phylum!Firmicutes",
+  "t_phylum!Myxococcota",
+  "t_phylum!Verrucomicrobiota",
+  "t_phylum!Myxococcota",
+  "t_phylum!Chloroflexi",
+  "t_phylum!Planctomycetota",
+  "t_phylum!Methylomirabilota",
+  "t_phylum!Crenarchaeota"
+  ),
+  .after = "taxon" )
+write.table(ssu18_ps_work_taxa, "include/pub/MAIN/anvio/ssu/ssu18_ps_work/tax_layers_mod.txt", quote = FALSE, sep = "\t", row.names = FALSE)  
+
+ssu18_ps_pime_taxa <- dplyr::relocate(ssu18_ps_pime_taxa, c(
+  "t_phylum!Alphaproteobacteria", 
+  "t_phylum!Gammaproteobacteria", 
+  "t_phylum!Acidobacteriota", 
+  "t_phylum!Actinobacteriota", 
+  "t_phylum!Bacteroidota", 
+  "t_phylum!Firmicutes",
+  "t_phylum!Myxococcota",
+  "t_phylum!Verrucomicrobiota",
+  "t_phylum!Myxococcota",
+  "t_phylum!Chloroflexi",
+  "t_phylum!Planctomycetota",
+  "t_phylum!Methylomirabilota",
+  "t_phylum!Crenarchaeota"
+   ), .after = "taxon" )
+write.table(ssu18_ps_pime_taxa, "include/pub/MAIN/anvio/ssu/ssu18_ps_pime/tax_layers_mod.txt", quote = FALSE, sep = "\t", row.names = FALSE)  
+
+rm(list = ls(pattern = "tmp_"))
+
+##############################
+### 5. Construct Dendrograms #
+##############################
+
+## The last piece we need is to generate dendrograms that order the ASVs 
+## by their distribution in the samples and the samples by their ASV composition. 
+## For this task we will use anvi'o.
+
+## The first command reads the view data we generated above and uses 
+## Euclidean distance and Ward linkage for hierarchical clustering of the ASVs. 
+## The second command transposes the view data table and then does the same for 
+## the samples. There are several distance metrics and linkage methods available. 
+## See the help menu for the command by typing `anvi-matrix-to-newick -h`.  Boom.
+
+#bash_commands <- c() USE this to combine all commands
+# including in loop creates separate files
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+
+# FOR TANSFORMED DATA
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv_trans.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample_trans.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre_transformed.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{bash}
+#| code-summary: "This code is run in anvi'o via a bash script"
+# The following commands NEED to run in anvio from base dir
+cd include/pub/MAIN/anvio/ssu
+cd ssu18_ps_pime
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+```
+
+```{r}
+#| code-summary: "This code is run in R"
+
+## Alternatively, we can generate dendrograms using `phyloseq::distance` and `hclust`. 
+pick_dist <- "bray"
+pick_clust <- "complete"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist, type = "sample")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+
+pick_dist_asv <- "euclidean"
+pick_clust_asv <- "ward"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist_asv, type = "taxa")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust_asv)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "asv_", pick_dist_asv, "_", pick_clust_asv, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+      tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      tmp_tab %>% janitor::remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+      tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/","sample_trans.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% janitor::remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_trans.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+objects()
+
+# FOR HCLUST TREE
+for (i in samp_ps) {
+      tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c(paste(pick_dist, "_", pick_clust, "_hclust", sep = ""))
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% janitor::remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+
+##############################
+### 6. Make a fasta file #####
+##############################
+
+## We don't need to add a fasta file, but it is a nice way to keep 
+## everything in one place. Plus, you can do BLAST searches directly 
+## in the interface by right clicking on the ASV of interest, so it is nice 
+## to have the sequences.
+
+for (i in samp_ps) {
+       tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+       tmp_tab <- tax_table(tmp_get)
+       tmp_tab <- tmp_tab[, 7]
+       tmp_df <- data.frame(row.names(tmp_tab), tmp_tab)
+       colnames(tmp_df) <- c("ASV_ID", "ASV_SEQ")
+       tmp_df$ASV_ID <- sub("^", ">", tmp_df$ASV_ID)
+       tmp_path <- file.path("include/pub/MAIN/anvio/ssu/")
+
+       write.table(tmp_df, paste(tmp_path, i, "/", i, ".fasta", sep = ""),
+            sep = "\n", col.names = FALSE, row.names = FALSE,
+            quote = FALSE, fileEncoding = "UTF-8")
+       rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{bash}
+#| code-summary: "This code is run in anvi'o"
+
+## Building the Profile Database
+
+## Time to put all of these pieces together. This gets a little tricky since 
+## we do not have a database to start with because some of these files can be 
+## loaded directly in the interface but some need to be added to a database. 
+## When we fire up the interactive in `--manual` mode, we ***must*** give 
+## anvi'o the name of a database and it will *create* that database for us. 
+## Then we can shut down the interactive, add the necessary data files, 
+## and start back up.
+cd ssu18_ps_pime
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db \
+                 --manual
+
+## Now we have a new profile database that we can add the sample metadata 
+## (`additional_layers.txt`) and the sample dendrogram (sample.tre) using the 
+## command `anvi-import-misc-data`. These commands add the table to the new 
+## `profile.db`. First, kill the interactive.
+
+anvi-import-misc-data additional_views.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+anvi-import-misc-data sample.tre \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layer_orders
+
+## One last this is to get the table with the taxonomy total by sample 
+## (`tax_layers.txt`) into the profile database. We will run the same command 
+## we just used.
+
+anvi-import-misc-data ../ssu18_ps_work/tax_layers_mod.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+
+## In fact, we could just as easily append the taxonomy total data onto the 
+## `additional_layers.txt` and import in one command. But we didn't.
+
+## Interactive Interface
+
+## With a populated database in hand, we can now begin modifying the 
+## visual by running the interactive command again.
+
+
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db
+                 --fasta-file ssu18_ps_pime.fasta \
+                 --manual
+```
+
+```{r}
+#| code-summary: "This code is run in R"
+## The ITS version of the anvi'o workflow is basically a carbon copy of the 
+## workflow presented above. It is included here for posterity.
+
+## 1. View data: in our case, a sample by ASV abundance matrix.
+## 2. Additional info about each ASV.
+## 3. Additional info about each sample.
+## 4. Taxa abundance data for each sample at some rank.
+## 5. Dendrograms ordering the ASVs and samples (based on view data).
+## 6. Fasta file of all ASVs in the analysis.
+
+### Main steps
+
+#######################################
+### 1. View data  #####################
+#######################################
+
+## Let’s start with the `-d` or `--view-data` file. This file needs to be 
+## an ASV by sample matrix of read counts. To simplify the visualization, 
+## we will use ***all*** ASVs represented by 100 or more total reads, 
+## including those identified as differentially abundant by the ISA and/or LEfSe. 
+
+samp_ps <- c("its18_ps_pime")
+samp_ps_all <- c("its18_ps_pime", "its18_ps_work")
+
+trim_val <- 50
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- prune_taxa(taxa_sums(tmp_get) > trim_val, tmp_get)
+     tmp_name <- purrr::map_chr(i, ~ paste0(., "_trim"))
+     assign(tmp_name, tmp_df)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps_all) {
+     tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+     dir.create(paste(tmp_path, i, sep = ""), recursive = TRUE)
+     rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+     tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+     tmp_df <- as.data.frame(t(otu_table(tmp_get)))
+     tmp_df <- tmp_df %>% rownames_to_column("Group")
+     tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+     write.table(tmp_df, paste(tmp_path, i, "/", "data.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+## Or export a table of transformed data.
+
+for (i in samp_ps) {
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+  tmp_trans <-
+    transform_sample_counts(tmp_get, function(x)
+      1e5 * {
+        x / sum(x)
+      })
+  tmp_df <- as.data.frame(t(otu_table(tmp_trans)))
+  tmp_df <- tmp_df %>% rownames_to_column("Group")
+  tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+  write.table(
+    tmp_df,
+    paste(tmp_path, i, "/", "data_trans.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE
+  )
+  rm(list = ls(pattern = "tmp_"))
+}
+
+#######################################
+### 2. Additional Layers for ASVs  ####
+#######################################
+
+## Next, we need some additional data **about the ASVs** to overlay on the 
+## visual. This can be anything however what I specifically want are the 
+## details of the ISA analysis, total reads, and lineage info. I warn you; 
+## this code will get ugly and I urge you to find a better way.
+
+## Start with an ASV + lineage table for the ASVs in the new phyloseq object.
+
+for (i in samp_ps) {
+  tmp_get_indval <-
+    get(purrr::map_chr(i, ~ paste0(., "_indval_final")))
+  tmp_get_indval <-
+    tmp_get_indval %>% dplyr::rename("Group" = "ASV_ID") %>%
+    dplyr::rename("enrich_indval" = "group") %>%
+    dplyr::rename("test_indval" = "indval") %>%
+    dplyr::rename("pval_indval" = "pval")
+  tmp_get_indval <- tmp_get_indval[, 1:5]
+  
+  tmp_get_lefse <-
+    get(purrr::map_chr(i, ~ paste0(., "_lefse_final")))
+  tmp_get_lefse <-
+    tmp_get_lefse %>% dplyr::rename("Group" = "ASV_ID") %>%
+    dplyr::rename("enrich_lefse" = "group") %>%
+    dplyr::rename("test_lefse" = "lda") %>%
+    dplyr::rename("pval_lefse" = "pval")
+  tmp_get_lefse <- tmp_get_lefse[, 1:4]
+  
+  tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+  tmp_otu_df <- as.data.frame(t(otu_table(tmp_get)))
+  tmp_total <-
+    cbind(tmp_otu_df, total_reads = rowSums(tmp_otu_df))
+  tmp_total <- rev(tmp_total)[1]
+  tmp_total <- tmp_total %>% tibble::rownames_to_column("Group")
+  tmp_tax_df <- as.data.frame(tax_table(tmp_get))
+  tmp_tax_df$ASV_SEQ <- NULL
+  tmp_tax_df$ASV_ID <- NULL
+  
+  tmp_tax_df <-
+    tmp_tax_df %>% tibble::rownames_to_column("Group")
+  tmp_add_lay <-
+    dplyr::left_join(tmp_tax_df, tmp_total, by = "Group") %>%
+    dplyr::left_join(., tmp_get_indval, by = "Group") %>%
+    dplyr::left_join(., tmp_get_lefse, by = "Group")
+  tmp_add_lay$ASV_ID <- tmp_add_lay$Group
+  tmp_add_lay <- tmp_add_lay[, c(1, 16, 8, 12, 9:11, 13:15, 2:7)]
+  tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+  write.table(
+    tmp_add_lay,
+    paste(tmp_path, i, "/", "additional_layers.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    na = ""
+  )
+  rm(list = ls(pattern = "tmp_"))
+}
+
+#######################################
+### 3. Additional Views for Samples  ##
+#######################################
+
+## Now we want some general data **about the samples** to overlay on the visual. 
+## Again, this can be anything. How about a table of alpha diversity metrics? 
+## We actually have such a table that was generated way back up the road. 
+## Just need to fix the column names.
+
+metadata_tab <- read.table("files/metadata/tables/metadata.txt",
+                           header = TRUE)
+
+tmp_x <- readRDS("files/alpha/rdata/its18_ps_pime.rds")
+data.frame(sample_data(tmp_x))
+metadata_tab[,c(2:5)] <- list(NULL)
+for (i in samp_ps) {
+     tmp_get <- get(i)
+     tmp_df <- data.frame(sample_data(tmp_get))
+     tmp_df <- tmp_df[,c(2:9)]
+     tmp_df <- tmp_df %>% tibble::rownames_to_column("id")
+     tmp_df <- tmp_df %>% dplyr::rename("no_asvs" = "Observed")
+     tmp_rc <- data.frame(readcount(tmp_get))
+     tmp_rc <- tmp_rc %>% tibble::rownames_to_column("id")
+     tmp_rc <- tmp_rc %>% dplyr::rename("no_reads" = 2)
+     #identical(tmp_df$id, tmp_rc$id)
+     tmp_merge <- dplyr::left_join(tmp_df, tmp_rc)
+     tmp_merge <- tmp_merge[, c(1:6,10,7:9)]
+     tmp_final <- dplyr::left_join(tmp_merge, metadata_tab, by = c("id" = "Sample_ID"))
+     tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+     write.table(tmp_final, paste(tmp_path, i, "/", "additional_views.txt", sep = ""),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+     rm(list = ls(pattern = "tmp_"))
+}
+rm(metadata_tab)
+
+#######################################
+### 4. Taxon rank abundance by sample #
+#######################################
+
+## Turned out this was a little tricky to figure out, but thanks to a 
+## [little nifty block of code](https://github.com/joey711/phyloseq/iitses/418#iitsecomment-262637034) 
+## written by [guoyanzhao](https://github.com/guoyanzhao) on the phyloseq 
+## Issues forum, it was a piece of cake. The code can be altered to take any 
+## rank. See the post for an explanation.
+
+## Anyway, the goal is to sum each taxon at some rank and present that as a 
+## bar chart for each sample in the visualization. Anvi'o has a specific 
+## format it needs where each row is a sample and each column is a taxon. 
+## Taxa names need the prefix `t_<RANK>!`. For example, `t_class!` should be 
+## added for Class rank.
+
+
+#| code-fold: true
+pick_rank <- "Order"
+pick_rank_l <- "order"
+for (i in samp_ps_all) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_glom <- tax_glom(tmp_get, taxrank = pick_rank)
+    tmp_melt <- psmelt(tmp_glom)
+    tmp_melt[[pick_rank]] <- as.character(tmp_melt[[pick_rank]])
+    tmp_abund <- aggregate(Abundance ~ Sample + tmp_melt[[pick_rank]], tmp_melt, FUN = sum)
+    colnames(tmp_abund)[2] <- "tax_rank"
+    library(reshape2)
+    tmp_abund <- as.data.frame(reshape::cast(tmp_abund, Sample ~ tax_rank))
+    tmp_abund <- tibble::remove_rownames(tmp_abund)
+    tmp_abund <- tibble::column_to_rownames(tmp_abund, "Sample")
+# Reorder table column by sum
+    tmp_layers <- tmp_abund[,names(sort(colSums(tmp_abund), decreasing = TRUE))]
+# Add the prefix
+    tmp_layers <- tmp_layers %>% dplyr::rename_all(function(x) paste0("t_", pick_rank_l,"!", x))
+    tmp_layers <- tibble::rownames_to_column (tmp_layers, "taxon")
+#  save the dataframe
+    tmp_name <- paste(i, "_taxa", sep = "")
+    assign(tmp_name, tmp_layers)
+    rm(list = ls(pattern = "tmp_"))
+}
+
+
+names(its18_ps_work_taxa)
+names(its18_ps_pime_taxa)
+## REORDER TAXA
+its18_ps_work_taxa <- dplyr::relocate(its18_ps_work_taxa, c(
+  "t_order!Geastrales", 
+  "t_order!Glomerales", 
+  "t_order!Helotiales", 
+  "t_order!Hypocreales", 
+  "t_order!Saccharomycetales", 
+  "t_order!Trichosporonales", 
+  "t_order!Xylariales", 
+  "t_order!Eurotiales", 
+  "t_order!Capnodiales", 
+  "t_order!Archaeorhizomycetales", 
+  "t_order!Agaricales", 
+  "t_order!c_Agaricomycetes", 
+  "t_order!p_Ascomycota", 
+  "t_order!k_Fungi"
+  ),
+  .after = "taxon" )
+write.table(its18_ps_work_taxa, "include/pub/MAIN/anvio/its/its18_ps_work/tax_layers_mod.txt", quote = FALSE, sep = "\t", row.names = FALSE)  
+
+its18_ps_pime_taxa <- dplyr::relocate(its18_ps_pime_taxa, c(
+  "t_order!Geastrales", 
+  "t_order!Glomerales", 
+  "t_order!Helotiales", 
+  "t_order!Hypocreales", 
+  "t_order!Saccharomycetales", 
+  "t_order!Trichosporonales", 
+  "t_order!Xylariales", 
+  "t_order!Eurotiales", 
+  "t_order!Capnodiales", 
+  "t_order!Archaeorhizomycetales", 
+  "t_order!Agaricales", 
+  "t_order!c_Agaricomycetes", 
+  "t_order!p_Ascomycota", 
+  "t_order!k_Fungi"
+   ), .after = "taxon" )
+write.table(its18_ps_pime_taxa, 
+            "include/pub/MAIN/anvio/its/its18_ps_pime/tax_layers_mod.txt", 
+            quote = FALSE, sep = "\t", row.names = FALSE)  
+
+rm(list = ls(pattern = "tmp_"))
+
+##############################
+### 5. Construct Dendrograms #
+##############################
+
+## The last piece we need is to generate dendrograms that order the ASVs 
+## by their distribution in the samples and the samples by their 
+## ASV composition. For this task we will use anvi'o.
+
+#bash_commands <- c() USE this to combine all commands
+# including in loop creates separate files
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+      bash_commands <- c()
+      tmp_command_asv <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance euclidean --linkage ward -o ",
+                                                "asv_trans.tre"))
+      bash_commands <- append(bash_commands, tmp_command_asv)
+      tmp_command_samp <- purrr::map_chr(i, ~ paste0("anvi-matrix-to-newick data_trans.txt",
+                                                " --distance braycurtis --linkage complete -o ",
+                                                "sample_trans.tre --transpose"))
+      bash_commands <- append(bash_commands, tmp_command_samp)
+      tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+      write(bash_commands, paste(tmp_path, i, "/", "tre_transformed.sh", sep = ""))
+      rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{bash}
+#| code-summary: "This code is run in anvi'o via a bash script"
+#NEED to run in anvio from base dir
+cd its18_ps_pime
+bash tre.sh
+bash tre_transformed.sh
+cd ../
+
+```
+
+```{r}
+#| code-summary: "This code is run in R"
+
+## Alternatively, we can generate dendrograms using `phyloseq::distance` and `hclust`. 
+
+pick_dist <- "bray"
+pick_clust <- "complete"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(i)
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist, type = "sample")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+
+pick_dist_asv <- "euclidean"
+pick_clust_asv <- "ward"
+
+for (i in samp_ps) {
+# Make the table
+    tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+    tmp_dist <- phyloseq::distance(physeq = tmp_get, method = pick_dist_asv, type = "taxa")
+    tmp_dend <- hclust(tmp_dist, method = pick_clust_asv)
+    plot(tmp_dend, hang = -1)
+    tmp_tree <- as.phylo(tmp_dend) 
+    
+    tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+    write.tree(phy = tmp_tree, file = paste(tmp_path, i, "/", "asv_", pick_dist_asv, "_", pick_clust_asv, ".tre", sep = ""))
+    rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+      tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% janitor::remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+
+# FOR TRANSFORMED DATA
+for (i in samp_ps) {
+      tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/","sample_trans.tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c("bray_complete")
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% janitor::remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_trans.tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+
+for (i in samp_ps) {
+      tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+      tmp_tree <- read_file(paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""))
+      tmp_tree <- gsub("[\r\n]", "", tmp_tree)
+      tmp_item <- c(paste(pick_dist, "_", pick_clust, "_hclust", sep = ""))
+      tmp_type <- c("newick")
+      tmp_df <- c(tmp_tree)
+      tmp_tab <- data.frame(tmp_item, tmp_type, tmp_df)
+      library(janitor)
+      tmp_tab %>% janitor::remove_empty("rows")
+      colnames(tmp_tab) <- c("item_name",	"data_type",	"data_value")
+      write.table(tmp_tab, paste(tmp_path, i, "/", "sample_", pick_dist, "_", pick_clust, ".tre", sep = ""),
+            sep = "\t", quote = FALSE, row.names = FALSE, na = "")
+      rm(list = ls(pattern = "tmp_"))
+}
+
+##############################
+### 6. Make a fasta file #####
+##############################
+
+## We don't need to add a fasta file, but it is a nice way to keep 
+## everything in one place. Plus, you can do BLAST searches directly 
+## in the interface by right clicking on the ASV of interest, so it is nice 
+## to have the sequences.
+
+for (i in samp_ps) {
+       tmp_get <- get(purrr::map_chr(i, ~ paste0(., "_trim")))
+       tmp_tab <- tax_table(tmp_get)
+       tmp_tab <- tmp_tab[, 7]
+       tmp_df <- data.frame(row.names(tmp_tab), tmp_tab)
+       colnames(tmp_df) <- c("ASV_ID", "ASV_SEQ")
+       tmp_df$ASV_ID <- sub("^", ">", tmp_df$ASV_ID)
+       tmp_path <- file.path("include/pub/MAIN/anvio/its/")
+
+       write.table(tmp_df, paste(tmp_path, i, "/", i, ".fasta", sep = ""),
+            sep = "\n", col.names = FALSE, row.names = FALSE,
+            quote = FALSE, fileEncoding = "UTF-8")
+       rm(list = ls(pattern = "tmp_"))
+}
+```
+
+```{bash}
+#| code-summary: "This code is run in anvi'o"
+
+### Building the Profile Database
+
+## Time to put all of these pieces together. This gets a little tricky 
+## since we do not have a database to start with because some of these 
+## files can be loaded directly in the interface but some need to be added 
+## to a database. When we fire up the interactive in `--manual` mode, we 
+## ***must*** give anvi'o the name of a database and it will *create* that 
+## database for us. Then we can shut down the interactive, add the necessary 
+## data files, and start back up.
+
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db \
+                 --manual
+## Now we have a new profile database that we can add the sample metadata 
+## (`additional_layers.txt`) and the sample dendrogram (sample.tre) using the 
+## command `anvi-import-misc-data`. These commands add the table to the new 
+## `profile.db`. First, kill the interactive.
+
+anvi-import-misc-data additional_views.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+anvi-import-misc-data sample.tre \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layer_orders
+
+## One last this is to get the table with the taxonomy total by sample 
+## (`tax_layers.txt`) into the profile database. We will run the same 
+## command we just used.
+
+anvi-import-misc-data tax_layers.txt \
+                      --pan-or-profile-db profile.db \
+                      --target-data-table layers
+## In fact, we could just as easily append the taxonomy total data onto 
+## the `additional_layers.txt` and import in one command. But we didn't.
+
+### Interactive Interface
+
+## With a populated database in hand, we can now begin modifying the 
+## visual by running the interactive command again.
+
+anvi-interactive --view-data data.txt \
+                 --tree asv.tre \
+                 --additional-layers additional_layers.txt \
+                 --profile-db profile.db
+                 --fasta-file anvio.fasta \
+                 --manual
+```
+
+## Figure 2
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, and small adjustments in bar height/width. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/MAIN/Figure_2.png)
+
+### Final
+
+![](paper/MAIN/FIGURES/Figure_2.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Figure 2 data pack](include/pub/MAIN/Figure_2.rdata)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Figure 2 raw pdf](include/pub/MAIN/Figure_2.pdf)
+:::
+
+:::
+
+
+```{r}
+#| code-summary: "Access the code for Figure 2"
+
+###################### For composite figure main text Tmin and Xylanase Vmax
+#load data
+rm(list = ls())
+load("include/pub/MAIN/Figure_2.rdata")
+
+#Box plots Tmin and Xylanase (use mean vals by plot from metadata)
+diversity_meta.TminXyl <-
+  subset(diversity_meta.long,  measure == "Tmin" |
+           measure == "XYL_micC")
+
+plot.Tminxyl <-
+  ggplot(diversity_meta.TminXyl, aes(x = TREAT, y = value), na.rm = T) +
+  geom_boxplot(
+    data = diversity_meta.TminXyl,
+    aes(TREAT, value , fill = TREAT),
+    alpha = 1,
+    size = 0.5,
+    outlier.colour = "grey"
+  ) +
+  facet_wrap(
+    facets =  . ~ measure,
+    scales = "free",
+    nrow = 1,
+    strip.position = "left",
+    labeller = as_labeller(c(Tmin = "Tmin (°C)", XYL_micC = "β-xylanase Vmax per micC at AST"))
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylab(bquote('')) +
+  xlab(bquote('')) +
+  labs(title = "") +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    plot.title = element_text(
+      size = 15,
+      color = "black",
+      face = "bold",
+      vjust = 1.5
+    ),
+    strip.text.y = element_text(size = 14, color = "black", face = "plain"),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 14,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 14,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 18,
+      angle = 0,
+      hjust = .5,
+      vjust = -0.5,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 15,
+      angle = 90,
+      hjust = .5,
+      vjust = 1,
+      face = "plain"
+    )
+  )
+
+plot.Tminxyl
+
+#Scatter plots Tmin and Xylanase
+
+#rename levels
+levels(Tmindata$treat)[levels(Tmindata$treat) ==  "C"] <- "Control"
+levels(Tmindata$treat)[levels(Tmindata$treat) == "W3"] <- "+3°C"
+levels(Tmindata$treat)[levels(Tmindata$treat) == "W8"] <- "+8°C"
+
+#Xylanase plot
+enzvmax.XY <- subset(enzvmax, enzyme == "XYase")
+enzvmax.XY$Vmax.log <- log(enzvmax.XY$Vmax)
+enzvmax.XY$Vmax.SQRT <- (enzvmax.XY$Vmax) ^ 0.5
+
+plot.vmax.XY <-
+  ggplot(enzvmax.XY, aes(x = assayT, y = Vmax.SQRT), na.rm = T) +
+  geom_point(aes(
+    x = assayT,
+    y = Vmax.SQRT,
+    colour = factor(Treat),
+    size = 2,
+    alpha = 1
+  )) +
+## forcats::fct_relevel(Treat, "Control", "+3°C", "+8°C")  
+## Added by JJS to order facets  
+## Changed color order as well  
+  
+  facet_wrap(facets = forcats::fct_relevel(Treat, "Control", "+3°C", "+8°C") ~ enzyme,
+             scales = "free",
+             ncol = 1) +
+  scale_colour_manual(values = c(
+    "#71b222", # green
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#2271b2"  # blue
+  )) +
+  scale_fill_manual(values = c(
+    "#71b222", # green
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#2271b2" # blue
+  )) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    geom = "errorbar",
+    fun.args = list(mult = 1),
+    size = 1
+  ) +
+  geom_smooth(
+    se = T,
+    method = lm,
+    colour = "grey20",
+    size = 2
+  ) +
+  ylab(bquote('B-Xylanase Vmax [SQRT(nmol MU/g/min)]')) +
+  xlab(bquote('Temperature (°C)')) +
+  ylim(c(0, 1.7)) +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    legend.text = element_text(size = 5),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 14,
+      angle = 0,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    ),
+    strip.text.x = element_blank(),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 14,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 14,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 14,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+
+#Tmin plot
+plot.Tmin_forVmax <-
+  ggplot(Tmindata , aes(x = temp_av, y = SQRT_activity), na.rm = T) +
+  geom_point(aes(
+    x = temp_av,
+    y = SQRT_activity,
+    colour = factor(treat),
+    size = 2,
+    alpha = 0.8
+  )) +
+  geom_point(aes(
+    x = temp_av,
+    y = SQRT_activity_inline,
+    colour = factor(treat),
+    size = 2,
+    alpha = 1
+  )) +
+  facet_wrap(facets = . ~ treat,
+             scales = "free",
+             nrow = 5) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  stat_smooth(
+    method = "lm",
+    size = 1,
+    mapping = aes(
+      x = temp_av,
+      y = SQRT_activity_inline,
+      group = treat,
+      colour = treat
+    ),
+    fullrange = T
+  ) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    geom = "errorbar",
+    fun.args = list(mult = 1),
+    size = 1
+  ) +
+  ylab(bquote('Bacterial growth [SQRT (dpm/h)]')) +
+  xlab(bquote('Temperature (°C)')) +
+  ylim(c(0, 450)) +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 15,
+      angle = 0,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    ),
+    strip.text.x = element_text(size = 14, color = "black", face = "plain"),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 14,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 15,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 15,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+#composite plot
+composite.plot <-
+  gridExtra::grid.arrange(plot.Tmin_forVmax, plot.vmax.XY, nrow = 1)
+
+plot(composite.plot)
+
+## CAPSCALE PLOTS 
+
+## SAME AS Extended_Data_Figure_5 but only using TEMP adaptation 
+## 1) Run `rankindex` to compare metadata and community dissimilarity indices 
+## for gradient detection. This will help us select the best dissimilarity 
+## metric to use.
+## 2) Run `capscale` for distance-based redundancy analysis.
+## 3) Run `envfit` to fit environmental parameters onto the ordination. 
+## This function basically calculates correlation scores between the metadata 
+## parameters and the ordination axes. 
+## 4) Select metadata parameters significant for `bioenv` (see above) 
+## and/or `envfit` analyses.
+## 5) Run `envfit` on ASVs.
+## 6) Plot the ordination and vector overlays. 
+#####################################
+#####################################
+### 16S rRNA Temperature Adaptation #
+#####################################
+#####################################
+
+### 
+tmp_md <- ssu18_select_mc_norm_split_no_ac$temp_adapt
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(ssu18_select_mc_norm_split_no_ac$data_loaded))
+temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow","bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+## Let's run `capscale` using Bray-Curtis. 
+
+## * Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
+## * Autocorrelated removed: NUE, PUE, SI
+## * Remove for capscale: NONE
+
+temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BP_Q10 + CE_Q10 + 
+                                       P_Q10 + N_Q10 + S_Q10 + XY_Q10 + 
+                                       LP_Q10 + PX_Q10 + CUEcn + CUEcp + Tmin, 
+                             tmp_md, dist = "bray")
+tmp_auto_plt <- autoplot(temp_adapt_cap, arrows = TRUE)
+
+anova(temp_adapt_cap) # overall test of the significant of the analysis
+anova(temp_adapt_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(temp_adapt_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+temp_adapt_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+temp_adapt_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+temp_adapt_md_scores[,1] <- NULL
+temp_adapt_md_scores <- temp_adapt_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+
+tmp_samp_scores_sub <- temp_adapt_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- temp_adapt_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_temp_adapt_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+temp_adapt_md_signif_hits <- base::subset(envfit_temp_adapt_md$vectors$pvals, 
+                                  c(envfit_temp_adapt_md$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_md$vectors$r > 0.4))
+temp_adapt_md_signif_hits <- data.frame(temp_adapt_md_signif_hits)
+temp_adapt_md_signif_hits <- rownames(temp_adapt_md_signif_hits)
+temp_adapt_md_signif <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                               temp_adapt_md_signif_hits,]
+print("Significant parameters from bioenv analysis.")
+row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+temp_adapt_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel)), 
+                       temp_adapt_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(temp_adapt_md_signif$parameters, 
+              row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and  bioenv.")
+temp_adapt_sig_diff <- base::union(temp_adapt_md_signif$parameters, 
+                                   row.names(summary(ssu18_temp_adapt_bioenv_ind_mantel)))
+temp_adapt_sig_diff
+
+new_temp_adapt_md_signif_hits <- temp_adapt_sig_diff
+temp_adapt_md_signif_all <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                                   new_temp_adapt_md_signif_hits,]
+
+envfit_temp_adapt_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                                perm = 1000, choices = c(1, 2))
+
+temp_adapt_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+
+temp_adapt_asv_scores <- temp_adapt_asv_scores %>% 
+                         dplyr::mutate(parameters = Label, .before = CAP1) %>%
+                         tibble::column_to_rownames("Label")
+temp_adapt_asv_scores[,1] <- NULL
+temp_adapt_asv_signif_hits <- base::subset(envfit_temp_adapt_asv$vectors$pvals, 
+                                  c(envfit_temp_adapt_asv$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_asv$vectors$r > 0.5))
+temp_adapt_asv_signif_hits <- data.frame(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif_hits <- rownames(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif <- temp_adapt_asv_scores[temp_adapt_asv_scores$parameters %in% 
+                                                 temp_adapt_asv_signif_hits,]
+temp_adapt_md_signif_all$variable_type <- "metadata"
+temp_adapt_asv_signif$variable_type <- "ASV"
+temp_adapt_bioplot_data <- rbind(temp_adapt_md_signif_all, temp_adapt_asv_signif)
+
+temp_adapt_bioplot_data_md <- subset(temp_adapt_bioplot_data, 
+                                  temp_adapt_bioplot_data$variable_type == "metadata")
+temp_adapt_bioplot_data_asv <- subset(temp_adapt_bioplot_data, 
+                                   temp_adapt_bioplot_data$variable_type == "ASV")
+temp_adapt_cap_vals <- data.frame(temp_adapt_cap$CCA$eig[1:2])
+temp_adapt_cap1 <- signif((temp_adapt_cap_vals[1,] * 100), digits = 3)
+temp_adapt_cap2 <- signif((temp_adapt_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", temp_adapt_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", temp_adapt_cap2, "%)", sep = "")
+
+#####################################
+###### 16S rRNA plot code ###
+#####################################
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+temp_adapt_plot <- ggplot(temp_adapt_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 6) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.6,
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = temp_adapt_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 5,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(x = cpa1_lab, 
+       y = cpa2_lab)
+temp_adapt_plot <-
+  temp_adapt_plot + coord_fixed() + theme(
+    aspect.ratio = 1,
+    legend.position = "none",
+    axis.text = element_text(size = 15),
+    axis.title = element_text(size = 17)
+  )
+ssu18_temp_adapt_plot <- temp_adapt_plot
+
+#####################################
+#####################################
+###### ITS Temperature Adaptation ###
+#####################################
+#####################################
+
+tmp_md <- its18_select_mc_norm_split_no_ac$temp_adapt
+tmp_md$TREAT_T <- as.character(tmp_md$TREAT_T)
+tmp_comm <- data.frame(t(its18_select_mc_norm_split_no_ac$data_loaded))
+temp_adapt_rank <- rankindex(tmp_md[, 8:ncol(tmp_md)], tmp_comm, 
+          indices = c("euc", "man", "gow", "bra", "kul"), 
+          stepacross = FALSE, method = "spearman")
+
+## Let's run `capscale` using Bray-Curtis. 
+
+## * Starting properties: AG_Q10, BG_Q10, BP_Q10, CE_Q10, P_Q10, N_Q10, S_Q10, XY_Q10, LP_Q10, PX_Q10, CUEcn, CUEcp, NUE, PUE, Tmin, SI
+## * Autocorrelated removed: NUE, PUE, P_Q10, SI                                                                        
+## * Remove for capscale: S_Q10
+
+temp_adapt_cap <- capscale(tmp_comm ~  AG_Q10 + BG_Q10 + BP_Q10 + CE_Q10 + 
+                                       N_Q10 + XY_Q10 + LP_Q10 + PX_Q10 + 
+                                       CUEcn + CUEcp + Tmin, 
+                           tmp_md, dist = "bray")
+tmp_auto_plt <- autoplot(temp_adapt_cap, arrows = TRUE)
+
+anova(temp_adapt_cap) # overall test of the significant of the analysis
+anova(temp_adapt_cap, by = "axis", perm.max = 500) # test axes for significance
+anova(temp_adapt_cap, by = "terms", permu = 500) # test for sign. environ. variables
+
+tmp_samp_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "sites")
+tmp_samp_scores[,1] <- NULL
+tmp_samp_scores <- tmp_samp_scores %>% dplyr::rename(SampleID = Label)
+
+tmp_md_sub <- tmp_md[, 1:4]
+tmp_md_sub <- tmp_md_sub %>% tibble::rownames_to_column("SampleID")
+temp_adapt_plot_data <- dplyr::left_join(tmp_md_sub, tmp_samp_scores, 
+                                         by = "SampleID")
+temp_adapt_md_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "biplot")
+temp_adapt_md_scores[,1] <- NULL
+temp_adapt_md_scores <- temp_adapt_md_scores %>% 
+  dplyr::mutate(parameters = Label, .before = CAP1) %>% 
+  tibble::column_to_rownames("Label")
+
+tmp_samp_scores_sub <- temp_adapt_plot_data[, 6:7]
+tmp_samp_scores_sub <- as.matrix(tmp_samp_scores_sub)
+tmp_param_list <- temp_adapt_md_scores$parameters
+
+tmp_md_sub <- subset(tmp_md,  select =  tmp_param_list)
+
+envfit_temp_adapt_md <- envfit(tmp_samp_scores_sub, tmp_md_sub,
+                 perm = 1000, choices = c(1, 2))
+
+temp_adapt_md_signif_hits <- base::subset(envfit_temp_adapt_md$vectors$pvals, 
+                                  c(envfit_temp_adapt_md$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_md$vectors$r > 0.4))
+temp_adapt_md_signif_hits <- data.frame(temp_adapt_md_signif_hits)
+temp_adapt_md_signif_hits <- rownames(temp_adapt_md_signif_hits)
+temp_adapt_md_signif <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                               temp_adapt_md_signif_hits,]
+print("Significant parameters from bioenv analysis.")
+row.names(summary(its18_temp_adapt_bioenv_ind_mantel))
+cat("_____________________________________")
+cat("\n")
+print("Significant parameters from envfit analysis.")
+temp_adapt_md_signif$parameters
+cat("_____________________________________")
+cat("\n")
+print("Found in bioenv but not envfit.")
+base::setdiff(row.names(summary(its18_temp_adapt_bioenv_ind_mantel)), 
+                       temp_adapt_md_signif$parameters)
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit but not bioenv.")
+base::setdiff(temp_adapt_md_signif$parameters, 
+              row.names(summary(its18_temp_adapt_bioenv_ind_mantel)))
+cat("_____________________________________")
+cat("\n")
+print("Found in envfit and  bioenv.")
+temp_adapt_sig_diff <- base::union(temp_adapt_md_signif$parameters, 
+                                   row.names(summary(its18_temp_adapt_bioenv_ind_mantel)))
+temp_adapt_sig_diff
+
+new_temp_adapt_md_signif_hits <- temp_adapt_sig_diff
+temp_adapt_md_signif_all <- temp_adapt_md_scores[temp_adapt_md_scores$parameters %in% 
+                                                   new_temp_adapt_md_signif_hits,]
+
+envfit_temp_adapt_asv <- envfit(tmp_samp_scores_sub, 
+                                tmp_comm[, order(colSums(-tmp_comm))][, 1:10],
+                                perm = 1000, choices = c(1, 2))
+
+temp_adapt_asv_scores <- dplyr::filter(tmp_auto_plt$plot_env$obj, Score == "species")
+
+temp_adapt_asv_scores <- temp_adapt_asv_scores %>% 
+                         dplyr::mutate(parameters = Label, .before = CAP1) %>%
+                         tibble::column_to_rownames("Label")
+temp_adapt_asv_scores[,1] <- NULL
+temp_adapt_asv_signif_hits <- base::subset(envfit_temp_adapt_asv$vectors$pvals, 
+                                  c(envfit_temp_adapt_asv$vectors$pvals 
+                                  < 0.05 & envfit_temp_adapt_asv$vectors$r > 0.5))
+temp_adapt_asv_signif_hits <- data.frame(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif_hits <- rownames(temp_adapt_asv_signif_hits)
+temp_adapt_asv_signif <- temp_adapt_asv_scores[temp_adapt_asv_scores$parameters %in% 
+                                                 temp_adapt_asv_signif_hits,]
+temp_adapt_md_signif_all$variable_type <- "metadata"
+temp_adapt_asv_signif$variable_type <- "ASV"
+temp_adapt_bioplot_data <- rbind(temp_adapt_md_signif_all, temp_adapt_asv_signif)
+
+temp_adapt_bioplot_data_md <- subset(temp_adapt_bioplot_data, 
+                                  temp_adapt_bioplot_data$variable_type == "metadata")
+temp_adapt_bioplot_data_asv <- subset(temp_adapt_bioplot_data, 
+                                   temp_adapt_bioplot_data$variable_type == "ASV")
+temp_adapt_cap_vals <- data.frame(temp_adapt_cap$CCA$eig[1:2])
+temp_adapt_cap1 <- signif((temp_adapt_cap_vals[1,] * 100), digits = 3)
+temp_adapt_cap2 <- signif((temp_adapt_cap_vals[2,] * 100), digits = 3)
+
+cpa1_lab <- paste("CAP1", " (", temp_adapt_cap1, "%)", sep = "")
+cpa2_lab <- paste("CAP2", " (", temp_adapt_cap2, "%)", sep = "")
+
+swel_col <- c("#2271B2", "#71B222", "#B22271")
+
+#####################################
+###### ITS plot code ###
+#####################################
+
+temp_adapt_plot <- ggplot(temp_adapt_plot_data) +
+  geom_point(mapping = aes(x = CAP1, y = CAP2,
+                           colour = TREAT_T), size = 6) +
+  scale_colour_manual(values = swel_col) +
+  geom_segment(aes(x = 0, y = 0, xend = CAP1, yend = CAP2),
+               data = temp_adapt_bioplot_data_md, linetype = "solid",
+               arrow = arrow(length = unit(0.3, "cm")), size = 0.6,
+               color = "#191919", inherit.aes = FALSE) +
+  geom_text(data = temp_adapt_bioplot_data_md, 
+            aes(x = CAP1, y = CAP2, label = parameters), size = 5,
+            nudge_x = 0.1, nudge_y = 0.05) +
+  theme_classic(base_size = 12) + 
+  labs(x = cpa1_lab, 
+       y = cpa2_lab)
+temp_adapt_plot <-
+  temp_adapt_plot + coord_fixed() + theme(
+    aspect.ratio = 1,
+    legend.position = "none",
+    axis.text = element_text(size = 15),
+    axis.title = element_text(size = 17)
+  )
+its18_temp_adapt_plot <- temp_adapt_plot
+
+plot.Tmin_forVmax  <- plot.Tmin_forVmax + theme(strip.text.x = element_blank())
+
+#####################################
+#####################################
+#####################################
+###### COMBO plot code ##############
+#####################################
+#####################################
+#####################################
+
+layout <- c(
+  area(t = 1, b = 11, l = 1, r = 2),
+  area(t = 1, b = 11, l = 3, r = 4),
+  area(t = 12, b = 14, l = 1, r = 4),
+  area(t = 1, b = 13, l = 5, r = 6)
+)
+plot(layout)
+
+combo_plot <- 
+  plot.Tmin_forVmax + plot.vmax.XY + plot.Tminxyl + ((ssu18_temp_adapt_plot /  its18_temp_adapt_plot)) + 
+  plot_layout(design = layout)  
+
+ggplot2::ggsave(combo_plot, path = "include/pub/MAIN/", 
+                filename =  "Figure_2.png", 
+                height = 7485, width = 9100, units = 'px', dpi = 600, bg = "white")
+                
+ggplot2::ggsave(combo_plot, path = "include/pub/MAIN/", 
+                filename = "Figure_2.pdf", 
+                height = 7485, width = 9100, units = 'px', dpi = 600, bg = "white")
+```
+
+## Figure 3
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Inkscape](https://inkscape.org/). Modifications include sample and variable renaming, and small adjustments in bar height/width. 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/MAIN/Figure_3.png)
+
+### Final
+
+![](paper/MAIN/FIGURES/Figure_3.png)
+
+:::
+
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Figure 3 data pack](include/pub/MAIN/Figure_3.rdata)  
+:::
+
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Figure 3 raw pdf](include/pub/MAIN/Figure_3.pdf)
+:::
+
+:::
+
+
+```{r}
+#| code-summary: "Access the code for Figure 3"
+#clear workspace
+rm(list = ls())
+# template for blank plot
+blankPlot <- ggplot() + geom_blank(aes(1, 1)) +
+  theme(
+    plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line = element_blank()
+  )
+
+# load data 
+# Predicted fluxes calculated using Tmin model per treatment, 
+## calculated using CO2 flux at ambient temperature (control plots)
+#Tmin_CO2pred <-
+#  read.csv("include/pub/MAIN/Fig3_CO2predict.csv", header = T)
+#CO2c_fullgrad <-
+#  read.csv("include/pub/MAIN/Fig3_CO2observed.csv", header = T)
+
+load("include/pub/MAIN/Figure_3.rdata")
+
+#determine mean values, measured data
+CO2c_fullgrad.means <-
+  plyr::ddply(
+    CO2c_fullgrad,
+    c("Treat", "Plot"),
+    summarise,
+    NCO2    = sum(!is.na(CO2)),
+    CO2 = mean(CO2, na.rm = TRUE),
+    sdCO2   = sd(CO2, na.rm = TRUE),
+    seCO2   = sdCO2 / sqrt(NCO2),
+    NTemp    = sum(!is.na(Temp)),
+    Temp = mean(Temp, na.rm = TRUE),
+    sdTemp   = sd(Temp, na.rm = TRUE),
+    seTemp   = sdTemp / sqrt(NTemp)
+  )
+
+
+#subsets, predicted data
+Tmin_CO2pred.C <- subset(Tmin_CO2pred, treat == "C")
+Tmin_CO2pred.W3 <- subset(Tmin_CO2pred, treat == "W3")
+Tmin_CO2pred.W8 <- subset(Tmin_CO2pred, treat == "W8")
+
+# data in long format , predicted data
+CO2predict.C.long <- Tmin_CO2pred.C %>%
+  gather(
+    key = measure,
+    value = value,-treat,
+    -ID,
+    -depth,
+    -year,
+    -Tmin,
+    -Tambient,
+    -CO2.at.Tmin_SQRT,
+    -CO2.at.Tambient_SQRT,
+    -slope
+  )
+CO2predict.C.long$measure <- as.factor(CO2predict.C.long$measure)
+CO2predict.C.long$value <- as.numeric(CO2predict.C.long$value)
+CO2predict.C.long$measure <-
+  plyr::revalue(
+    CO2predict.C.long$measure,
+    c(
+      "CO2_predict29" = 29,
+      "CO2_predict34" = 34,
+      "CO2.at.Tambient" = 25.93395,
+      "CO2.at.Tmin" = 0
+    )
+  )
+CO2predict.C.long$measure <-
+  as.numeric(as.character(CO2predict.C.long$measure))
+CO2predict.C.long$temp.predict.C <- CO2predict.C.long$measure
+CO2predict.C.long$co2.predict.C <- CO2predict.C.long$value
+#repeat for W3 adaptation
+CO2predict.W3.long <- Tmin_CO2pred.W3 %>%
+  gather(
+    key = measure,
+    value = value,-treat,
+    -ID,
+    -depth,
+    -year,
+    -Tmin,
+    -Tambient,
+    -CO2.at.Tmin_SQRT,
+    -CO2.at.Tambient_SQRT,
+    -slope
+  )
+CO2predict.W3.long$measure <- as.factor(CO2predict.W3.long$measure)
+CO2predict.W3.long$value <- as.numeric(CO2predict.W3.long$value)
+CO2predict.W3.long$measure <-
+  plyr::revalue(
+    CO2predict.W3.long$measure,
+    c(
+      "CO2_predict29" = 29,
+      "CO2_predict34" = 34,
+      "CO2.at.Tambient" = 25.93395,
+      "CO2.at.Tmin" = 0
+    )
+  )
+CO2predict.W3.long$measure <-
+  as.numeric(as.character(CO2predict.W3.long$measure))
+CO2predict.W3.long$temp.predict.W3 <- CO2predict.W3.long$measure
+CO2predict.W3.long$co2.predict.W3 <- CO2predict.W3.long$value
+#repeat for W8 adaptation
+CO2predict.W8.long <- Tmin_CO2pred.W8 %>%
+  gather(
+    key = measure,
+    value = value,-treat,
+    -ID,
+    -depth,
+    -year,
+    -Tmin,
+    -Tambient,
+    -CO2.at.Tmin_SQRT,
+    -CO2.at.Tambient_SQRT,
+    -slope
+  )
+CO2predict.W8.long$measure <- as.factor(CO2predict.W8.long$measure)
+CO2predict.W8.long$value <- as.numeric(CO2predict.W8.long$value)
+CO2predict.W8.long$measure <-
+  plyr::revalue(
+    CO2predict.W8.long$measure,
+    c(
+      "CO2_predict29" = 29,
+      "CO2_predict34" = 34,
+      "CO2.at.Tambient" = 25.93395,
+      "CO2.at.Tmin" = 0
+    )
+  )
+CO2predict.W8.long$measure <-
+  as.numeric(as.character(CO2predict.W8.long$measure))
+CO2predict.W8.long$temp.predict.W8 <- CO2predict.W8.long$measure
+CO2predict.W8.long$co2.predict.W8 <- CO2predict.W8.long$value
+
+#subset
+CO2c_fullgrad_sub_full <-
+  subset(CO2c_fullgrad, Treat == "C" | Treat == "W3" | Treat == "W8")
+CO2c_fullgrad_sub <-
+  subset(CO2c_fullgrad.means, Treat == "C" |
+           Treat == "W3" | Treat == "W8")
+
+
+############ scatter plot CO2 with fit #################################
+plot.CO2byT_gr <- ggplot() +
+  geom_point(data = CO2c_fullgrad, aes(
+    x = Temp,
+    y = CO2,
+    colour = factor(Treat),
+    size = 4,
+    alpha = 1
+  )) +
+  stat_smooth(
+    data = CO2c_fullgrad,
+    aes(x = Temp, y = CO2, group = 1),
+    method = "lm",
+    formula = y ~ sqrt(x),
+    se = T,
+    colour = "black",
+    fullrange = TRUE,
+    linetype = c(1)
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylim(c(0, 35)) +
+  xlim(c(18, 40)) +
+  ylab(bquote('Soil' ~ CO[2] ~ 'efflux (' * mu ~ 'mol' ~ CO[2] ~ m ^ -2 ~
+                s ^ -1 * ')')) +
+  xlab(bquote(' Soil temperature (°C)')) +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 15,
+      angle = 0,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    ),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 15,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 20,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 20,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+
+
+
+############boxplot CO2, means
+plot_CO2_box_full <-
+  ggplot(CO2c_fullgrad_sub_full, aes(x = Treat, y = CO2)) +
+  geom_boxplot(
+    data = CO2c_fullgrad_sub_full,
+    aes(Treat, CO2, fill = Treat),
+    alpha = 1,
+    size = 0.5,
+    outlier.colour = "grey80"
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylim(c(2, 35)) +
+  geom_hline(
+    yintercept = 4.736140    ,
+    linetype = "dashed",
+    alpha = 0.5,
+    size = 0.5
+  ) +
+  geom_hline(
+    yintercept = 8.427807   ,
+    linetype = "dashed",
+    alpha = 0.5,
+    size = 0.5
+  ) +
+  geom_hline(
+    yintercept = 15.984643    ,
+    linetype = "dashed",
+    alpha = 0.5,
+    size = 0.5
+  ) +
+  ylab(bquote('')) +
+  xlab(bquote('')) +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    ),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 10,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+
+############boxplot soilT, means
+plot_T_box <- ggplot(CO2c_fullgrad_sub, aes(x = Treat, y = Temp)) +
+  geom_boxplot(
+    data = CO2c_fullgrad_sub,
+    aes(Treat, Temp, fill = Treat),
+    alpha = 1,
+    size = 0.5,
+    outlier.colour = "grey80"
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylim(c(25, 41)) +
+  geom_hline(
+    yintercept = 26.07722  ,
+    linetype = "dashed",
+    alpha = 0.5,
+    size = 0.5
+  ) +
+  geom_hline(
+    yintercept = 28.53902 ,
+    linetype = "dashed",
+    alpha = 0.5,
+    size = 0.5
+  ) +
+  geom_hline(
+    yintercept = 33.84000   ,
+    linetype = "dashed",
+    alpha = 0.5,
+    size = 0.5
+  ) +
+  ylab(bquote('')) +
+  xlab(bquote('')) +
+  coord_flip() +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    ),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 10,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+
+#  overlay fitted prediction plots onto CO2 scatter
+plot.CO2byT_gr_withpredict <- plot.CO2byT_gr +
+  geom_point(
+    data = CO2predict.C.long,
+    aes (x = temp.predict.C, y = co2.predict.C) ,
+    colour = "grey40",
+    fill = "#2271b2",
+    size = 2,
+    alpha = 0
+  ) +
+  stat_smooth(
+    data = CO2predict.C.long,
+    aes(x = temp.predict.C, y = co2.predict.C, group = 1),
+    method = "lm",
+    formula = y ~ sqrt(x),
+    se = T,
+    fill = "grey40",
+    colour = "#2271b2",
+    fullrange = TRUE,
+    linetype = c(2),
+    alpha = 0.2
+  ) +
+  geom_point(
+    data = CO2predict.W3.long,
+    aes (x = temp.predict.W3, y = co2.predict.W3) ,
+    colour = "grey40",
+    fill = "#71b222",
+    size = 2,
+    alpha = 0
+  ) +
+  stat_smooth(
+    data = CO2predict.W3.long,
+    aes(x = temp.predict.W3, y = co2.predict.W3, group = 1),
+    method = "lm",
+    formula = y ~ sqrt(x),
+    se = T,
+    fill = "grey20",
+    colour = "#71b222",
+    fullrange = TRUE,
+    linetype = c(2),
+    alpha = 0.2
+  ) +
+  geom_point(
+    data = CO2predict.W8.long,
+    aes (x = temp.predict.W8, y = co2.predict.W8) ,
+    colour = "grey40",
+    fill = "#b22271",
+    size = 2,
+    alpha = 0
+  ) +
+  stat_smooth(
+    data = CO2predict.W8.long,
+    aes(x = temp.predict.W8, y = co2.predict.W8, group = 1),
+    method = "lm",
+    formula = y ~ sqrt(x),
+    se = T,
+    fill = "grey40",
+    colour = "#b22271",
+    fullrange = TRUE,
+    linetype = c(2),
+    alpha = 0.2
+  )
+
+# composite plot
+gridExtra::grid.arrange(plot_T_box, blankPlot, plot.CO2byT_gr_withpredict, plot_CO2_box_full, 
+        ncol = 2, nrow = 2, widths = c(4, 1.4), heights = c(1.4, 4))
+
+
+layout <- c(
+  area(t = 1, b = 11, l = 1, r = 4),
+  area(t = 12, b = 14, l = 1, r = 4),
+  area(t = 1, b = 11, l = 5, r = 5)
+)
+plot(layout)
+
+combo_plot <- plot.CO2byT_gr_withpredict + plot_T_box + plot_CO2_box_full + 
+  plot_layout(design = layout)  
+
+#combo_plot <- 
+#  plot.Tmin_forVmax + plot.vmax.XY + plot.Tminxyl + ((ssu18_temp_adapt_plot /  its18_temp_adapt_plot)) + 
+#  plot_layout(design = layout)  
+
+ggplot2::ggsave(combo_plot, path = "include/pub/MAIN/", 
+                filename =  "Figure_3.png", 
+                height = 19.33, width = 18.51, units = 'cm', dpi = 600, bg = "white")
+                
+ggplot2::ggsave(combo_plot, path = "include/pub/MAIN/", 
+                filename = "Figure_3.pdf", 
+                height = 19.33, width = 18.51, units = 'cm', dpi = 600, bg = "white")
+
+```
 
 # Extended Data
 
@@ -87,7 +2331,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/ext/Extended_Data_Figure_2.png)
+![](include/pub/EXD/EXD_Figure_2/Extended_Data_Figure_2.png)
 
 ### Final
 
@@ -99,12 +2343,12 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/extended_data_fig_2.rdata)  
+<i class="bi bi-download"></i> [Download Extended Data Figure 2 data pack](include/pub/EXD/EXD_Figure_2/Extended_Data_Figure_2.rdata)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_2.pdf)
+<i class="bi bi-download"></i> [Download Extended Data Figure 2 raw  pdf](include/pub/EXD/EXD_Figure_2/Extended_Data_Figure_2.pdf)
 :::
 
 :::
@@ -112,8 +2356,9 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ### Alpha diversity plot code
 
 ```{r}
+#| code-summary: "Access the code for Extended Data Figure 2 a & d"
 remove(list = ls())
-load("include/pub/ext/extended_data_fig_2.rdata")
+load("include/pub/EXD/EXD_Figure_2/Extended_Data_Figure_2.rdata")
 
 #####################################
 #####################################
@@ -253,7 +2498,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 4], 3)
+            pvalue <- round(divtest$posthoc[, 4], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -263,7 +2508,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 3], 3)
+            pvalue <- round(divtest$posthoc[, 3], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -494,12 +2739,12 @@ its18_alph_div_plots_asv <- ggarrange(
   its18_ps_perfect_q2_adt_plot, 
   ncol = 3, nrow = 1)
 its18_alph_div_plots_asv
-objects()
 ```
 
 ### Beta diversity plot code
 
 ```{r}
+#| code-summary: "Access the code for Extended Data Figure 2 b, c, e, & f"
 #####################################
 #####################################
 ### 16S rRNA BETA DIV PLOTS #########
@@ -543,7 +2788,7 @@ for (d in ssu_dist){
  }
 }
 
-plist_name <- objects(pattern="_ord_results")
+plist_name <- objects(pattern = "_ord_results")
 #plot_num <- c(1,2,3,4)
 plot_num <- c(1)
 for (i in plist_name) {
@@ -578,8 +2823,94 @@ for (i in plist_name) {
 }
 
 ## And now the code for ordination implementation in `microeco`. 
+rm(self)
+plot_group_distance_jjs <- function (choose_data, plot_group_order = NULL, color_values = RColorBrewer::brewer.pal(8, 
+    "Dark2"), distance_pair_stat = FALSE, hide_ns = FALSE, hide_ns_more = NULL, 
+    pair_compare_filter_match = NULL, pair_compare_filter_select = NULL, 
+    pair_compare_method = "wilcox.test", plot_distance_xtype = NULL) 
+{
+    self <- choose_data
+    group_distance <- self$res_group_distance
+    group <- self$group
+    if (self$measure %in% c("wei_unifrac", "unwei_unifrac", "bray", 
+        "jaccard")) {
+        titlename <- switch(self$measure, wei_unifrac = "Weighted Unifrac", 
+            unwei_unifrac = "Unweighted Unifrac", bray = "Bray-Curtis", 
+            jaccard = "Jaccard")
+        ylabname <- paste0(titlename, " distance")
+    }
+    else {
+        ylabname <- self$measure
+    }
+    if (!is.null(plot_group_order)) {
+        group_distance[, group] %<>% factor(., levels = plot_group_order)
+    }
+    else {
+        group_distance[, group] %<>% as.factor
+    }
+    message("The ordered groups are ", paste0(levels(group_distance[, 
+        group]), collapse = " "), " ...")
+    p <- ggplot(group_distance, aes_string(x = group, y = "value", 
+        color = group)) + theme_bw() + theme(panel.grid = element_blank()) + 
+        geom_boxplot(outlier.size = 1, width = 0.6, linetype = 1) + 
+        stat_summary(fun = "mean", geom = "point", shape = 20, 
+            size = 3, fill = "white") + xlab("") + ylab(ylabname) + 
+        theme(axis.text = element_text(size = 12)) + theme(axis.title = element_text(size = 17), 
+        legend.position = "none") + scale_color_manual(values = color_values)
+    if (!is.null(plot_distance_xtype)) {
+        p <- p + theme(axis.text.x = element_text(angle = plot_distance_xtype, 
+            colour = "black", vjust = 1, hjust = 1, size = 10))
+    }
+    if (distance_pair_stat == T) {
+        comparisons_list <- levels(group_distance[, group]) %>% 
+            combn(., 2)
+        if (hide_ns) {
+            pre_filter <- ggpubr::compare_means(reformulate(group, 
+                "value"), group_distance)
+            if (is.null(hide_ns_more)) {
+                filter_mark <- "ns"
+            }
+            else {
+                filter_mark <- hide_ns_more
+            }
+            comparisons_list %<>% .[, !(pre_filter$p.signif %in% 
+                filter_mark), drop = FALSE]
+        }
+        else {
+            if (!is.null(pair_compare_filter_match) & !is.null(pair_compare_filter_select)) {
+                stop("The parameter pair_compare_filter_select and pair_compare_filter_match can not be both used together!")
+            }
+            if (!is.null(pair_compare_filter_match)) {
+                comparisons_list %<>% {
+                  .[, unlist(lapply(as.data.frame(.), function(x) any(grepl(pair_compare_filter_match, 
+                    x)))), drop = FALSE]
+                }
+            }
+            if (!is.null(pair_compare_filter_select)) {
+                if (!is.numeric(pair_compare_filter_select)) {
+                  stop("The parameter pair_compare_filter_select must be numeric !")
+                }
+                messages_use <- unlist(lapply(as.data.frame(comparisons_list[, 
+                  pair_compare_filter_select, drop = FALSE]), 
+                  function(x) {
+                    paste0(x, collapse = "-")
+                  }))
+                message("Selected groups are ", paste0(messages_use, 
+                  collapse = " "), " ...")
+                comparisons_list %<>% .[, pair_compare_filter_select, 
+                  drop = FALSE]
+            }
+        }
+        comparisons_list %<>% {
+            lapply(seq_len(ncol(.)), function(x) .[, x])
+        }
+        p <- p + ggpubr::stat_compare_means(comparisons = my_comparisons)
+    }
+    p
+}
 
-microeco_path <- "include/pub/ext/"
+my_comparisons <- list( c("0", "3"), c("0", "8"), c("3", "8") )
+microeco_path <- "include/pub/EXD/"
 for (i in ssu18_data_sets) {
   tmp_dataset <- get(purrr::map_chr(i, ~paste0(., "_me")))
   tmp_dataset$cal_betadiv(unifrac = TRUE)
@@ -589,9 +2920,9 @@ for (i in ssu18_data_sets) {
 ## Here I made a custom "function" to run the analysis, plot the graphs, 
 ## save graph objects, and save plots (as `.png` and `.pdf` files). 
 ## I am sure an actual programmer would be shocked, but it works. 
-
 microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {  
   tmp_dataset <- get(purrr::map_chr(choose_input, ~paste0(., "_me")))
+  
   tmp_t1 <- trans_beta$new(dataset = tmp_dataset, group = "TEMP", measure = choose_metric)
   tmp_t1$cal_ordination(ordination = choose_ord)
   tmp_t1_ord_plot <- tmp_t1$plot_ordination(plot_color = "TEMP", 
@@ -615,11 +2946,13 @@ microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {
    tmp_t1_ord_plot <- tmp_t1_ord_plot + ggtitle(tmp_plt_name)
 
   tmp_t1$cal_group_distance()
-  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col)
+  tmp_t1$plot_group_distance_jjs <- plot_group_distance_jjs
+
+  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance_jjs(choose_data = tmp_t1, distance_pair_stat = TRUE, color_values = swel_col)
   tmp_t1_within_group_plot <- tmp_t1_within_group_plot + ggtitle(tmp_plt_name)
   tmp_t1$res_group_distance
   tmp_t1$cal_group_distance(within_group = FALSE)
-  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col) 
+  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance_jjs(choose_data = tmp_t1, distance_pair_stat = TRUE, color_values = swel_col) 
   tmp_t1_btwn_group_plot <- tmp_t1_btwn_group_plot + ggtitle(tmp_plt_name)
 
 ###### SET names
@@ -690,7 +3023,7 @@ for (d in its_dist){
  }
 }
 
-plist_name <- objects(pattern="_ord_results")
+plist_name <- objects(pattern = "_ord_results")
 #plot_num <- c(1,2,3,4)
 plot_num <- c(1)
 for (i in plist_name) {
@@ -725,8 +3058,9 @@ for (i in plist_name) {
 }
 
 ## And now the code for ordination implementation in `microeco`. 
+my_comparisons <- list( c("0", "3"), c("0", "8"), c("3", "8") )
 
-microeco_path <- "include/pub/ext/"
+microeco_path <- "include/pub/EXD/"
 for (i in its18_data_sets) {
   tmp_dataset <- get(purrr::map_chr(i, ~paste0(., "_me")))
   tmp_dataset$cal_betadiv(unifrac = FALSE)
@@ -767,11 +3101,13 @@ microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {
    tmp_t1_ord_plot <- tmp_t1_ord_plot + ggtitle(tmp_plt_name)
 
   tmp_t1$cal_group_distance()
-  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col)
+  tmp_t1$plot_group_distance_jjs <- plot_group_distance_jjs
+
+  tmp_t1_within_group_plot <- tmp_t1$plot_group_distance_jjs(choose_data = tmp_t1, distance_pair_stat = TRUE, color_values = swel_col)
   tmp_t1_within_group_plot <- tmp_t1_within_group_plot + ggtitle(tmp_plt_name)
   tmp_t1$res_group_distance
   tmp_t1$cal_group_distance(within_group = FALSE)
-  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance(distance_pair_stat = TRUE, color_values = swel_col) 
+  tmp_t1_btwn_group_plot <- tmp_t1$plot_group_distance_jjs(choose_data = tmp_t1, distance_pair_stat = TRUE, color_values = swel_col) 
   tmp_t1_btwn_group_plot <- tmp_t1_btwn_group_plot + ggtitle(tmp_plt_name)
 
 ###### SET names
@@ -781,7 +3117,7 @@ microeco_beta_plot <- function(choose_input, choose_metric, choose_ord) {
   
   assign(tmp_name_ord, tmp_t1_ord_plot, envir = parent.frame() )
   assign(tmp_name_wg, tmp_t1_within_group_plot, envir = parent.frame() )
-  assign(tmp_name_bg, tmp_t1_btwn_group_plot, envir = parent.frame() )
+  assign(tmp_name_bg, tmp_t1_btwn_group_plot, envir = parent.frame() )  
   rm(list = ls(pattern = "_PCoA"))
 }
 
@@ -798,6 +3134,7 @@ its18_wg_bray <- its18_ps_perfect_me_wg_bray_PCoA
 
 its18_wg_jsd <- its18_wg_jsd + theme(axis.title.y = element_text(size = 10)) + ylab("distance")
 its18_wg_bray <- its18_wg_bray + theme(axis.title.y = element_text(size = 10)) + ylab("distance")
+
 
 ### CREATE combo plot using PATCHWORK
 
@@ -825,9 +3162,9 @@ combo_plot <-
            its18_jsd + its18_bray +  
            its18_wg_jsd + its18_wg_bray + 
   plot_layout(design = layout)  
-ggplot2::ggsave(combo_plot, path = "include/pub/ext/", filename = "Extended_Data_Figure_2.png", height = 56, width = 40,
+ggplot2::ggsave(combo_plot, path = "include/pub/EXD/EXD_Figure_2/", filename = "Extended_Data_Figure_2.png", height = 56, width = 40,
     units = 'cm', dpi = 600, bg = "white")
-ggplot2::ggsave(combo_plot, path = "include/pub/ext/", filename = "Extended_Data_Figure_2.pdf", height = 56, width = 40,
+ggplot2::ggsave(combo_plot, path = "include/pub/EXD/EXD_Figure_2/", filename = "Extended_Data_Figure_2.pdf", height = 56, width = 40,
     units = 'cm', dpi = 600, bg = "white")
 
 ```
@@ -846,7 +3183,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/ext/Extended_Data_Figure_3.png)
+![](include/pub/EXD/EXD_Figure_3/Extended_Data_Figure_3.png)
 
 ### Final
 
@@ -858,17 +3195,18 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_ps_perfect_rf_all.rds)  
+<i class="bi bi-download"></i> [Download Extended Data Figure 3 data pack](include/pub/EXD/EXD_Figure_3/Extended_Data_Figure_3.rds)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_3.pdf)
+<i class="bi bi-download"></i> [Download Extended Data Figure 3 raw pdf](include/pub/EXD/EXD_Figure_3/Extended_Data_Figure_3.pdf)
 :::
 
 :::
 
 ```{r}
+#| code-summary: "Access the code for Extended Data Figure 3"
 ## In this section of the workflow we use the 
 ## [`microbiomeMarker`](https://github.com/yiluheihei/microbiomeMarker) package 
 ## to assess the response of taxonomic lineages to soil warming. 
@@ -876,10 +3214,9 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ## compatible with the various functions. For this analysis we use the 
 ## PERfect filtered data set.
 
-
 remove(list = ls())
 ssu18_ps_perfect_rf_all <-
-  readRDS("include/pub/ext/ssu18_ps_perfect_rf_all.rds")
+  readRDS("include/pub/EXD/EXD_Figure_3/Extended_Data_Figure_3.rds")
 
 ## FIX ps object
 ssu_ps <- ssu18_ps_perfect_rf_all
@@ -985,10 +3322,6 @@ for (i in ssu_select) {
     ylab("Relative abundance (% total reads)")
   tmp_name <- purrr::map_chr(i, ~ paste0(., "_tax_plot"))
   assign(tmp_name, tmp_plot)
-  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".png", sep = ""), 
-  #                height = 7, width = 9, units = 'cm', dpi = 600, bg = "white")
-  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".pdf", sep = ""), 
-  #                height = 5, width = 6.5)
   rm(list = ls(pattern = "tmp_"))
 } 
 
@@ -1018,14 +3351,13 @@ for (i in seq_len(nrow(ssu_plt_info))) {
 }
   
 ssu_taxa_combo_plot <- ((plot_1 + plot_2 + plot_3) / (plot_4 + plot_5 + plot_6) / (plot_7 + plot_8 + plot_9) / (plot_10 + plot_11 + plot_12))
-ssu_taxa_combo_plot
 
-ggplot2::ggsave(ssu_taxa_combo_plot, path = "include/pub/ext/", 
+ggplot2::ggsave(ssu_taxa_combo_plot, path = "include/pub/EXD/EXD_Figure_3/", 
                 filename =  "Extended_Data_Figure_3.png", 
                 height = 14157, width = 12186, 
                 units = 'px', bg = "white", dpi = 600)
                 
-ggplot2::ggsave(ssu_taxa_combo_plot, path = "include/pub/ext/", 
+ggplot2::ggsave(ssu_taxa_combo_plot, path = "include/pub/EXD/EXD_Figure_3/", 
                 filename = "Extended_Data_Figure_3.pdf", 
                 height = 14157, width = 12186, 
                 units = 'px', bg = "white", dpi = 600)
@@ -1046,7 +3378,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/ext/Extended_Data_Figure_4.png)
+![](include/pub/EXD/EXD_Figure_4/Extended_Data_Figure_4.png)
 
 ### Final
 
@@ -1058,17 +3390,19 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its18_ps_perfect_rf_all.rds)  
+<i class="bi bi-download"></i> [Download Extended Data Figure 4data pack](include/pub/EXD/EXD_Figure_4/Extended_Data_Figure_4.rds)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_4.pdf)
+<i class="bi bi-download"></i> [Download Extended Data Figure 4 raw  pdf](include/pub/EXD/EXD_Figure_4/Extended_Data_Figure_4.pdf)
 :::
 
 :::
 
 ```{r}
+#| code-summary: "Access the code for Extended Data Figure 4"
+
 ## In this section of the workflow we use the 
 ## [`microbiomeMarker`](https://github.com/yiluheihei/microbiomeMarker) package 
 ## to assess the response of taxonomic lineages to soil warming. 
@@ -1077,7 +3411,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ## PERfect filtered data set.
 remove(list = ls())
 its18_ps_perfect_rf_all <-
-  readRDS("include/pub/ext/its18_ps_perfect_rf_all.rds")
+  readRDS("include/pub/EXD/EXD_Figure_4/Extended_Data_Figure_4.rds")
 
 ## FIX ps object
 its_ps <- its18_ps_perfect_rf_all
@@ -1172,10 +3506,6 @@ for (i in its_select) {
     ylab("Relative abundance (% total reads)")
   tmp_name <- purrr::map_chr(i, ~ paste0(., "_tax_plot"))
   assign(tmp_name, tmp_plot)
-  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".png", sep = ""), 
-  #                height = 7, width = 9, units = 'cm', dpi = 600, bg = "white")
-  #ggplot2::ggsave(tmp_plot, file = paste0("include/pub/ext/", i,".pdf", sep = ""), 
-  #                height = 5, width = 6.5)
   rm(list = ls(pattern = "tmp_"))
 } 
 
@@ -1205,14 +3535,13 @@ for (i in seq_len(nrow(its_plt_info))) {
 }
   
 its_taxa_combo_plot <- ((plot_1 + plot_2 + plot_3) / (plot_4 + plot_5 + plot_6) / (plot_7 + plot_8 + plot_9) / (plot_10 + plot_11 + plot_12))
-its_taxa_combo_plot
 
-ggplot2::ggsave(its_taxa_combo_plot, path = "include/pub/ext/", 
+ggplot2::ggsave(its_taxa_combo_plot, path = "include/pub/EXD/EXD_Figure_4/", 
                 filename =  "Extended_Data_Figure_4.png", 
                 height = 14157, width = 12186, 
                 units = 'px', bg = "white", dpi = 600)
                 
-ggplot2::ggsave(its_taxa_combo_plot, path = "include/pub/ext/", 
+ggplot2::ggsave(its_taxa_combo_plot, path = "include/pub/EXD/EXD_Figure_4/", 
                 filename = "Extended_Data_Figure_4.pdf", 
                 height = 14157, width = 12186, 
                 units = 'px', bg = "white", dpi = 600)
@@ -1233,7 +3562,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/ext/Extended_Data_Figure_5.png)
+![](include/pub/EXD/EXD_Figure_5/Extended_Data_Figure_5.png)
 
 ### Final
 
@@ -1245,19 +3574,21 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/extended_data_fig_5.rdata)  
+<i class="bi bi-download"></i> [Download Extended Data Figure 5 data pack](include/pub/EXD/EXD_Figure_5/Extended_Data_Figure_5.rdata)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Extended_Data_Figure_5.pdf)
+<i class="bi bi-download"></i> [Download Extended Data Figure 5 raw  pdf](include/pub/EXD/EXD_Figure_5/Extended_Data_Figure_5.pdf)
 :::
 
 :::
 
 ```{r}
+#| code-summary: "Access the code for Extended Data Figure 5"
+
 remove(list = ls())
-load("include/pub/ext/extended_data_fig_5.rdata")
+load("include/pub/EXD/EXD_Figure_5/Extended_Data_Figure_5.rdata")
 ## 1) Run `rankindex` to compare metadata and community dissimilarity indices 
 ## for gradient detection. This will help us select the best dissimilarity 
 ## metric to use.
@@ -2159,32 +4490,696 @@ tmp_plot_final <- tmp_plot_final +
              axis.title = element_text(size = 18), 
              axis.text = element_text(size = 16)) 
 
-ggplot2::ggsave(tmp_plot_final, path = "include/pub/ext/", 
+ggplot2::ggsave(tmp_plot_final, path = "include/pub/EXD/EXD_Figure_5/", 
                 filename =  "Extended_Data_Figure_5.png", 
                 height = 8398, width = 7485, units = 'px', dpi = 600, bg = "white")
                 
-ggplot2::ggsave(tmp_plot_final, path = "include/pub/ext/", 
+ggplot2::ggsave(tmp_plot_final, path = "include/pub/EXD/EXD_Figure_5/", 
                 filename = "Extended_Data_Figure_5.pdf", 
                 height = 8398, width = 7485, units = 'px', dpi = 600, bg = "white")
-  
-
 ```
 
+## Extended Data Figure 6
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Graphic convertor](https://www.lemkesoft.de/en/products/graphicconverter/). 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/EXD/EXD_Figure_6/Extended_Data_Figure_6.png)
+
+### Final
+
+![](paper/Extended_Data/FIGURES/Extended_Data_Fig_6.png)
+
+:::
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Extended Data Figure 6 data file](include/pub/EXD/EXD_Figure_6/Extended_Data_Figure_6.csv)  
+:::
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Extended Data Figure 6 raw pdf](include/pub/EXD/EXD_Figure_6/Extended_Data_Figure_6.pdf)
+:::
+
+:::
+
+```{r}
+#clear workspace
+#| code-summary: "Access the code for Extended Data Figure 6"
+
+rm(list = ls())
+#load data
+diversity_meta <-
+  read.csv("include/pub/EXD/EXD_Figure_6/Extended_Data_Figure_6.csv", header = T)
+
+##################### Function for arranging ggplots. 
+## use png(); arrange(p1, p2, ncol=1); dev.off() to save.
+require(grid)
+vp.layout <-
+  function(x, y)
+    viewport(layout.pos.row = x, layout.pos.col = y)
+arrange_ggplot2 <-
+  function(...,
+           nrow = NULL,
+           ncol = NULL,
+           as.table = FALSE) {
+    dots <- list(...)
+    n <- length(dots)
+    if (is.null(nrow) &
+        is.null(ncol)) {
+      nrow = floor(n / 2)
+      ncol = ceiling(n / nrow)
+    }
+    if (is.null(nrow)) {
+      nrow = ceiling(n / ncol)
+    }
+    if (is.null(ncol)) {
+      ncol = ceiling(n / nrow)
+    }
+    ## NOTE see n2mfrow in grDevices for possible alternative
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow, ncol)))
+    ii.p <- 1
+    for (ii.row in seq(1, nrow)) {
+      ii.table.row <- ii.row
+      if (as.table) {
+        ii.table.row <- nrow - ii.table.row + 1
+      }
+      for (ii.col in seq(1, ncol)) {
+        ii.table <- ii.p
+        if (ii.p > n)
+          break
+        print(dots[[ii.table]], vp = vp.layout(ii.table.row, ii.col))
+        ii.p <- ii.p + 1
+      }
+    }
+  }
+
+#######################################################################
 
 
 
+#long format
+diversity_meta.long <- diversity_meta %>%
+  gather(
+    key = measure,
+    value = value,
+    -index,
+    -PLOT,
+    -SEASON,
+    -TREAT,
+    -PAIR,
+    -TEMP_AV_ACROSSPLOTS,
+    na.rm = FALSE
+  )
+diversity_meta.long$measure <- as.factor(diversity_meta.long$measure)
+diversity_meta.long$TEMP_AV_ACROSSPLOTS <-
+  as.factor(diversity_meta.long$TEMP_AV_ACROSSPLOTS)
+## NEEDed for Figure 2
+#saveRDS(diversity_meta.long, "include/pub/MAIN/diversity_meta.long.rds")
+
+#subset of long format, with values to plot in facet - in order
+
+#edaphic metadata
+diversity_meta.env <-
+  subset(
+    diversity_meta.long,
+    measure == "pH" |
+      measure == "H2O" |
+      measure == "NH4" |
+      measure == "NO3" |
+      measure == "resinP" |
+      measure == "DOC" | measure == "DON" | measure == "ECEC"
+  )
+
+#enzymes per mic C
+diversity_meta.enzmic <-
+  subset(
+    diversity_meta.long,
+    measure == "AG_micC" |
+      measure == "BG_micC" |
+      measure == "BIS_micC" |
+      measure == "CEL_micC" |
+      measure == "MUP_micC" |
+      measure == "NA_micC" |
+      measure == "S_micC" |
+      measure == "XYL_micC" |
+      measure == "LEU_micC" |
+      measure == "POX_micC" |
+      measure == "micC" | measure == "micN" | measure == "micP"
+  )
+
+#Temp response- growth and enzymes
+diversity_meta.Tresponse <-
+  subset(
+    diversity_meta.long,
+    measure == "Tmin" |
+      measure == "SI" |
+      measure == "CUEcn" |
+      measure == "CUEcp" |
+      measure == "AG_Q10" |
+      measure == "BG_Q10" |
+      measure == "BIS_Q10" |
+      measure == "CEL_Q10" |
+      measure == "MUP_Q10" |
+      measure == "NA_Q10" |
+      measure == "S_Q10" |
+      measure == "XYL_Q10" | measure == "LEU_Q10" | measure == "POX_Q10"
+  )
+
+diversity_meta.Tresponse$measure <-
+  factor(
+    diversity_meta.Tresponse$measure,
+    levels = c(
+      "Tmin",
+      "SI",
+      "CUEcn",
+      "CUEcp",
+      "AG_Q10",
+      "BG_Q10",
+      "CEL_Q10",
+      "XYL_Q10",
+      "POX_Q10",
+      "NA_Q10",
+      "LEU_Q10",
+      "MUP_Q10",
+      "BIS_Q10",
+      "S_Q10"
+    )
+  )
 
 
+#relabel
+
+levels(diversity_meta.env $TREAT)[levels(diversity_meta.env $TREAT) == "C"] <- "control"
+levels(diversity_meta.env $TREAT)[levels(diversity_meta.env $TREAT) == "W3"] <- "+3°C"
+levels(diversity_meta.env $TREAT)[levels(diversity_meta.env $TREAT) == "W8"] <- "+8°C"
+
+levels(diversity_meta.Tresponse $TREAT)[levels(diversity_meta.Tresponse $TREAT) == "C"] <- "control"
+levels(diversity_meta.Tresponse $TREAT)[levels(diversity_meta.Tresponse $TREAT) == "W3"] <- "+3°C"
+levels(diversity_meta.Tresponse $TREAT)[levels(diversity_meta.Tresponse $TREAT) == "W8"] <- "+8°C"
+
+levels(diversity_meta.enzmic $TREAT)[levels(diversity_meta.enzmic $TREAT) == "C"] <- "control"
+levels(diversity_meta.enzmic $TREAT)[levels(diversity_meta.enzmic $TREAT) == "W3"] <- "+3°C"
+levels(diversity_meta.enzmic $TREAT)[levels(diversity_meta.enzmic $TREAT) == "W8"] <- "+8°C"
+
+#reorder factor levels for plots
+diversity_meta.env$measure <-
+  factor(
+    diversity_meta.env$measure,
+    levels = c("H2O", "pH", "ECEC", "DOC", "DON", "NO3", "NH4", "resinP")
+  )
+diversity_meta.Tresponse$measure <-
+  factor(
+    diversity_meta.Tresponse$measure,
+    levels = c(
+      "Tmin",
+      "SI",
+      "CUEcn",
+      "CUEcp",
+      "AG_Q10",
+      "BG_Q10",
+      "CEL_Q10",
+      "XYL_Q10",
+      "POX_Q10",
+      "NA_Q10",
+      "LEU_Q10",
+      "MUP_Q10",
+      "BIS_Q10",
+      "S_Q10"
+    )
+  )
+diversity_meta.enzmic$measure <-
+  factor(
+    diversity_meta.enzmic$measure,
+    levels = c(
+      "micC",
+      "micN",
+      "micP",
+      "AG_micC",
+      "BG_micC",
+      "CEL_micC",
+      "XYL_micC",
+      "POX_micC",
+      "NA_micC",
+      "LEU_micC",
+      "MUP_micC",
+      "BIS_micC",
+      "S_micC"
+    )
+  )
+
+plot.diversity_meta.env <-
+  ggplot(diversity_meta.env, aes(x = TREAT, y = value), na.rm = T) +
+  geom_boxplot(
+    data = diversity_meta.env,
+    aes(TREAT, value , fill = TREAT),
+    alpha = 1,
+    size = 0.5,
+    outlier.colour = "grey"
+  ) +
+  facet_wrap(
+    facets =  . ~ measure,
+    scales = "free",
+    nrow = 1,
+    strip.position = "left",
+    labeller = as_labeller(
+      c(
+        H2O = "Soil moisture (g g-1)",
+        pH = "pH",
+        ECEC = "ECEC (cmolc/kg)",
+        NH4 = "NH4 (mg kg-1)",
+        NO3 = "NO3 (mg kg-1)",
+        resinP = "resin P (mg kg-1)",
+        DOC = "DOC (mg kg-1)",
+        DON = "DON (mg kg-1)"
+      )
+    )
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylab(bquote('')) +
+  xlab(bquote('')) +
+  labs(title = "a) Soil properties") +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    plot.title = element_text(
+      size = 15,
+      color = "black",
+      face = "bold",
+      vjust = 1.5
+    ),
+    strip.text.y = element_text(size = 12, color = "black", face = "plain"),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 12,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 20,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 20,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+
+## enzyme data per mic C
+plot.diversity_meta.enzmic <-
+  ggplot(diversity_meta.enzmic, aes(x = TREAT, y = value), na.rm = T) +
+  geom_boxplot(
+    data = diversity_meta.enzmic,
+    aes(TREAT, value , fill = TREAT),
+    alpha = 1,
+    size = 0.5,
+    outlier.colour = "grey"
+  ) +
+  facet_wrap(
+    facets =  . ~ measure,
+    scales = "free",
+    nrow = 2,
+    strip.position = "left",
+    labeller = as_labeller(
+      c(
+        micC = "Mic C (mg/kg)",
+        micN = "Mic N (mg/kg)",
+        micP = "Mic P (mg/kg)",
+        AG_micC = "AGase",
+        BG_micC = "BGase",
+        CEL_micC = "CEase",
+        XYL_micC = "XYase",
+        POX_micC = "PXase",
+        NA_micC = "Nase",
+        LEU_micC = "LPase",
+        MUP_micC = "Pase",
+        BIS_micC = "BPase",
+        S_micC = "Sase"
+      )
+    )
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylab(bquote('')) +
+  xlab(bquote('')) +
+  labs(title = "b) Microbial biomass & enzyme activity per unit microbial C") +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    plot.title = element_text(
+      size = 15,
+      color = "black",
+      face = "bold",
+      vjust = 1.5
+    ),
+    strip.text.y = element_text(size = 10, color = "black", face = "plain"),
+    legend.text = element_text(size = 13, face = "plain"),
+    legend.position = c(0.95, 0.23),
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 12,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 20,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 20,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+
+## Temp response
+plot.diversity_meta.Tresponse <-
+  ggplot(diversity_meta.Tresponse, aes(x = TREAT, y = value), na.rm = T) +
+  geom_boxplot(
+    data = diversity_meta.Tresponse,
+    aes(TREAT, value , fill = TREAT),
+    alpha = 1,
+    size = 0.5,
+    outlier.colour = "grey"
+  ) +
+  facet_wrap(
+    facets =  . ~ measure,
+    scales = "free",
+    nrow = 2,
+    strip.position = "left",
+    labeller = as_labeller(
+      c(
+        Tmin = "Tmin (°C)",
+        SI = "SI growth",
+        CUEcn = "CUE(C:N)",
+        CUEcp = "CUE(C:P)",
+        AG_Q10 = "AG Q10",
+        BG_Q10 = "BG Q10",
+        CEL_Q10 = "CE Q10",
+        XYL_Q10 = "XY Q10",
+        POX_Q10 = "PX Q10",
+        NA_Q10 = "N Q10",
+        LEU_Q10 = "LP Q10",
+        MUP_Q10 = "P Q10",
+        BIS_Q10 = "BP Q10",
+        S_Q10 = "S Q10"
+      )
+    )
+  ) +
+  scale_colour_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  scale_fill_manual(values = c(
+    "#2271b2",
+    "#71b222",
+    "#b22271",
+    "#b22271",
+    "#2271b2",
+    "#2271b2"
+  )) +
+  ylab(bquote('')) +
+  xlab(bquote('Treatment: warming level')) +
+  labs(title = "c) Microbial community temperature sensitivity: growth, carbon-use-efficiency & enzyme activity") +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    plot.title = element_text(
+      size = 15,
+      color = "black",
+      face = "bold",
+      vjust = 1.5
+    ),
+    strip.text.y = element_text(size = 10, color = "black", face = "plain"),
+    legend.text = element_text(size = 15),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 12,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 18,
+      angle = 0,
+      hjust = 0.5,
+      vjust = -0.5,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 20,
+      angle = 90,
+      hjust = 0.5,
+      vjust = 1,
+      face = "plain"
+    )
+  )
+
+##combined plots
+plot.diversity_meta.all <-
+  arrange_ggplot2(
+    plot.diversity_meta.env,
+    plot.diversity_meta.enzmic,
+    plot.diversity_meta.Tresponse,
+    ncol = 1,
+    nrow = 3
+  )
+
+layout <- c(
+  area(t = 1, b = 12, l = 1, r = 22),
+  area(t = 13, b = 24, l = 1, r = 22),
+  area(t = 25, b = 36, l = 1, r = 22)
+  )
+plot(layout)
+combo_plot <- 
+  plot.diversity_meta.env + 
+           plot.diversity_meta.enzmic + plot.diversity_meta.Tresponse  + 
+  plot_layout(design = layout)  
+ggplot2::ggsave(combo_plot, path = "include/pub/EXD/EXD_Figure_6/", filename = "Extended_Data_Figure_6.png", height = 21.59, width = 27.94,
+    units = 'cm', dpi = 600, bg = "white")
+ggplot2::ggsave(combo_plot, path = "include/pub/EXD/EXD_Figure_6/", filename = "Extended_Data_Figure_6.pdf", height = 21.59, width = 27.94,
+    units = 'cm', dpi = 600, bg = "white")
+```
+
+## Extended Data Figure 7
+
+::: {.callout-note icon=false}
+
+## Modifications
+
+Post processing performed in [Graphic convertor](https://www.lemkesoft.de/en/products/graphicconverter/). 
+
+:::
+
+::: {.panel-tabset}
+
+### Original 
+
+![](include/pub/EXD/EXD_Figure_7/Extended_Data_Figure_7.png)
+
+### Final
+
+![](paper/Extended_Data/FIGURES/Extended_Data_Fig_7.png)
+
+:::
+
+::: {layout="[ [1,1] ]"}
+
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Extended Data Figure 7 data file](include/pub/EXD/EXD_Figure_7/Extended_Data_Figure_7.csv)  
+:::
 
 
+::: {.callout appearance="minimal"}
+<i class="bi bi-download"></i> [Download Extended Data Figure 7 raw  pdf](include/pub/EXD/EXD_Figure_7/Extended_Data_Figure_7.pdf)
+:::
 
+:::
 
+```{r}
+#| code-summary: "Access the code for Extended Data Figure 7"
 
+#clear workspace
+rm(list = ls())
 
+##############################################
+enzvmax <- read.csv("include/pub/EXD/EXD_Figure_7/Extended_Data_Figure_7.csv", header = T)
 
+enzvmax$Plot <- as.factor(enzvmax$Plot)
+enzvmax$season <- as.factor(enzvmax$season)
+enzvmax$Treat <- as.factor(enzvmax$Treat)
+enzvmax$enzyme <- as.factor(enzvmax$enzyme)
 
+############ Plot all enzyme activities (extended data figure 7)
 
+plot.vmax <- ggplot(enzvmax, aes(x = assayT, y = Vmax), na.rm = T) +
+  geom_point(aes(
+    x = assayT,
+    y = Vmax,
+    colour = factor(Treat),
+    size = 2,
+    alpha = 1
+  )) +
+## forcats::fct_relevel(Treat, "Control", "+3°C", "+8°C")  
+## Added by JJS to order facets  
+## Changed color order as well  
+  facet_wrap(facets =  forcats::fct_relevel(Treat, "Control", "+3°C", "+8°C") ~ enzyme,
+             scales = "free",
+             ncol = 10) +
+  scale_colour_manual(values = c(
+    "#71b222", # green
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#2271b2"  # blue
+  )) +
+  scale_fill_manual(values = c(
+    "#71b222", # green
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#b22271", # pink
+    "#2271b2", # blue
+    "#2271b2" # blue
+  )) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    geom = "errorbar",
+    fun.args = list(mult = 1),
+    size = 1
+  ) +
+  stat_smooth(
+    method = "lm",
+    formula = y ~ I(x ^ 2),
+    size = 1,
+    colour = "grey20"
+  ) +
+  ylab(bquote('Enzyme Vmax')) +
+  xlab(bquote('Assay temperature (°C)')) +
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    legend.text = element_text(size = 5),
+    legend.position = "none",
+    legend.title = element_text(color = "white"),
+    axis.text.x = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    ),
+    strip.text.x = element_text(size = 10, color = "black", face = "plain"),
+    axis.text.y = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = 1,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.x = element_text(
+      colour = "black",
+      size = 10,
+      angle = 0,
+      hjust = .5,
+      vjust = 0,
+      face = "plain"
+    ),
+    axis.title.y = element_text(
+      colour = "black",
+      size = 10,
+      angle = 90,
+      hjust = .5,
+      vjust = .5,
+      face = "plain"
+    )
+  )
+ggplot2::ggsave(plot.vmax, path = "include/pub/EXD/EXD_Figure_7/", filename = "Extended_Data_Figure_7.png", height = 21.59, width = 27.94,
+    units = 'cm', dpi = 600, bg = "white")
+ggplot2::ggsave(plot.vmax, path = "include/pub/EXD/EXD_Figure_7/", filename = "Extended_Data_Figure_7.pdf", height = 21.59, width = 27.94,
+    units = 'cm', dpi = 600, bg = "white")
 
+```
 
 
 
@@ -2204,7 +5199,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/som/Supplementary_Figure_1.png)
+![](include/pub/SOM/Supplementary_Figure_1.png)
 
 ### Final
 
@@ -2216,22 +5211,23 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_ps_work.rds)  
+<i class="bi bi-download"></i> [Download Supplementary Figure 1 data pack](include/pub/SOM/Supplementary_Figure_1.rds)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_1.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 1 raw  pdf](include/pub/SOM/Supplementary_Figure_1.pdf)
 :::
 
 :::
-
 
 ```{r}
+#| code-summary: "Access the code for Supplementary Figure 1"
+
 ## Load data
 remove(list = ls())
 set.seed(119)
-ssu18_ps_work <- readRDS("include/pub/som/ssu18_ps_work.rds")
+ssu18_ps_work <- readRDS("include/pub/SOM/Supplementary_Figure_1.rds")
 
 ## 1) Get all Class-level Proteobacteria names
 ssu18_data_sets <- c("ssu18_ps_work")
@@ -2244,7 +5240,7 @@ for (i in ssu18_data_sets) {
      print(tmp_name)
      tmp_get_taxa <- get_taxa_unique(tmp_df,
                                      taxonomic.rank = rank_names(tmp_df)[3],
-                                     errorIfNULL=TRUE)
+                                     errorIfNULL = TRUE)
      print(tmp_get_taxa)
      rm(list = ls(pattern = "tmp_"))
      rm(list = ls(pattern = "_proteo"))
@@ -2286,8 +5282,7 @@ for (j in ssu18_data_sets) {
       errorIfNULL = TRUE
     )
   ))
-  tmp_path <- file.path("include/pub/som/")
-  saveRDS(tmp_get, paste(tmp_path, j, "_clean.rds", sep = ""))
+  tmp_path <- file.path("include/pub/SOM/")
   rm(list = ls(pattern = "tmp_"))
 }
 rm(class, order, phylum)
@@ -2365,8 +5360,6 @@ for (i in ssu18_data_sets) {
   assign(tmp_name, tmp_dataset)
   rm(list = ls(pattern = "tmp_"))
 }  
-
-saveRDS(ssu18_ps_work_me, "include/pub/som/ssu18_ps_work_me.rds")
 
 ## 5) Now, we calculate the taxa abundance at each taxonomic rank using 
 ## `cal_abund()`. This function return a list called `taxa_abund` containing 
@@ -2566,20 +5559,19 @@ for (i in ssu18_data_sets) {
      get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
    ggplot2::ggsave(
      tmp_plot_final, 
-     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.png", sep = ""), 
+     file = paste0("include/pub/SOM/", i, "_tax_div_bar_plots.png", sep = ""), 
      height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
    ggplot2::ggsave(
      tmp_plot_final, 
-     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+     file = paste0("include/pub/SOM/", i, "_tax_div_bar_plots.pdf", sep = ""), 
      height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
    rm(list = ls(pattern = "tmp_"))
 }
-file.rename("include/pub/som/ssu18_ps_work_tax_div_bar_plots.png", 
-            "include/pub/som/Supplementary_Figure_1.png")
-file.rename("include/pub/som/ssu18_ps_work_tax_div_bar_plots.pdf", 
-            "include/pub/som/Supplementary_Figure_1.pdf")
+file.rename("include/pub/SOM/ssu18_ps_work_tax_div_bar_plots.png", 
+            "include/pub/SOM/Supplementary_Figure_1.png")
+file.rename("include/pub/SOM/ssu18_ps_work_tax_div_bar_plots.pdf", 
+            "include/pub/SOM/Supplementary_Figure_1.pdf")
 ```
-
 
 ## Supplementary Figure 2
 
@@ -2595,7 +5587,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/som/Supplementary_Figure_2.png)
+![](include/pub/SOM/Supplementary_Figure_2.png)
 
 ### Final
 
@@ -2603,23 +5595,23 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 :::
 
-
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its18_ps_work.rds)  
+<i class="bi bi-download"></i> [Download Supplementary Figure 2 data pack](include/pub/SOM/Supplementary_Figure_2.rds)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_2.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 2 raw  pdf](include/pub/SOM/Supplementary_Figure_2.pdf)
 :::
 
 :::
-
 
 ```{r}
-its18_ps_work <- readRDS("include/pub/som/its18_ps_work.rds")
+#| code-summary: "Access the code for Supplementary Figure 2"
+
+its18_ps_work <- readRDS("include/pub/SOM/Supplementary_Figure_2.rds")
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 its18_data_sets <- c("its18_ps_work")
 ## 1) Choose the **number** of taxa to display and the 
@@ -2671,7 +5663,6 @@ for (i in its18_data_sets) {
   rm(list = ls(pattern = "tmp_"))
 }  
 
-saveRDS(its18_ps_work_me, "include/pub/som/its18_ps_work_me.rds")
 ## 5) Now, we calculate the taxa abundance at each taxonomic 
 ## rank using `cal_abund()`. This function return a list called 
 ## `taxa_abund` containing several data frame of the abundance 
@@ -2859,20 +5850,19 @@ for (i in its18_data_sets) {
    tmp_plot_final <- get(purrr::map_chr(i, ~paste0(., "_", top_level,  "_plot_final")))
    ggplot2::ggsave(
      tmp_plot_final, 
-     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.png", sep = ""), 
+     file = paste0("include/pub/SOM/", i, "_tax_div_bar_plots.png", sep = ""), 
      height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
    ggplot2::ggsave(
      tmp_plot_final, 
-     file = paste0("include/pub/som/", i, "_tax_div_bar_plots.pdf", sep = ""), 
+     file = paste0("include/pub/SOM/", i, "_tax_div_bar_plots.pdf", sep = ""), 
      height = 2544, width = 5043, units = 'px', bg = "white", dpi = 600)
    rm(list = ls(pattern = "tmp_"))
 }
-file.rename("include/pub/som/its18_ps_work_tax_div_bar_plots.png", 
-            "include/pub/som/Supplementary_Figure_2.png")
-file.rename("include/pub/som/its18_ps_work_tax_div_bar_plots.pdf", 
-            "include/pub/som/Supplementary_Figure_2.pdf")
+file.rename("include/pub/SOM/its18_ps_work_tax_div_bar_plots.png", 
+            "include/pub/SOM/Supplementary_Figure_2.png")
+file.rename("include/pub/SOM/its18_ps_work_tax_div_bar_plots.pdf", 
+            "include/pub/SOM/Supplementary_Figure_2.pdf")
 ```
-
 
 ## Supplementary Figure 3
 
@@ -2888,7 +5878,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/som/Supplementary_Figure_3.png)
+![](include/pub/SOM/Supplementary_Figure_3.png)
 
 ### Final
 
@@ -2900,25 +5890,21 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu_alpha_diversity.rdata)  
+<i class="bi bi-download"></i> [Download Supplementary Figure 3 data pack](include/pub/SOM/Supplementary_Figure_3.rdata)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_3.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 3 raw pdf](include/pub/SOM/Supplementary_Figure_3.pdf)
 :::
 
 :::
 
 ```{r}
-objects()
-alpha_ds
-```
+#| code-summary: "Access the code for Supplementary Figure 3"
 
-
-```{r}
 remove(list = ls())
-load("include/pub/som/ssu_alpha_diversity.rdata")
+load("include/pub/SOM/Supplementary_Figure_3.rdata")
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold) 
@@ -2948,7 +5934,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 4], 3)
+            pvalue <- round(divtest$posthoc[, 4], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -2958,7 +5944,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 3], 3)
+            pvalue <- round(divtest$posthoc[, 3], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -3149,7 +6135,7 @@ ssu18_alph_div_plots_asv <- ggarrange(
 
 ggplot2::ggsave(
   ssu18_alph_div_plots_asv,
-  file = "include/pub/som/ssu18_alph_div_plots_asv.png",
+  file = "include/pub/SOM/ssu18_alph_div_plots_asv.png",
   height = 5852,
   width = 7449,
   units = 'px',
@@ -3160,7 +6146,7 @@ ggplot2::ggsave(
 
 ggplot2::ggsave(
   ssu18_alph_div_plots_asv,
-  file = "include/pub/som/ssu18_alph_div_plots_asv.pdf",
+  file = "include/pub/SOM/ssu18_alph_div_plots_asv.pdf",
   height = 5852,
   width = 7449,
   units = 'px',
@@ -3169,12 +6155,12 @@ ggplot2::ggsave(
 )
 
 file.rename(
-  "include/pub/som/ssu18_alph_div_plots_asv.png",
-  "include/pub/som/Supplementary_Figure_3.png"
+  "include/pub/SOM/ssu18_alph_div_plots_asv.png",
+  "include/pub/SOM/Supplementary_Figure_3.png"
 )
 file.rename(
-  "include/pub/som/ssu18_alph_div_plots_asv.pdf",
-  "include/pub/som/Supplementary_Figure_3.pdf"
+  "include/pub/SOM/ssu18_alph_div_plots_asv.pdf",
+  "include/pub/SOM/Supplementary_Figure_3.pdf"
 )
 ```
 
@@ -3193,7 +6179,7 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 ### Original 
 
-![](include/pub/som/Supplementary_Figure_4.png)
+![](include/pub/SOM/Supplementary_Figure_4.png)
 
 ### Final
 
@@ -3201,23 +6187,23 @@ Post processing performed in [Inkscape](https://inkscape.org/). Modifications in
 
 :::
 
-
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its_alpha_diversity.rdata)  
+<i class="bi bi-download"></i> [Download Supplementary Figure 4 data pack](include/pub/SOM/Supplementary_Figure_4.rdata)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_4.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 4 raw pdf](include/pub/SOM/Supplementary_Figure_4.pdf)
 :::
 
 :::
 
 ```{r}
+#| code-summary: "Access the code for Supplementary Figure 4"
 remove(list = ls())
-load("include/pub/som/its_alpha_diversity.rdata")
+load("include/pub/SOM/Supplementary_Figure_4.rdata")
 swel_col <- c("#2271B2", "#71B222", "#B22271")
 
 div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold) 
@@ -3247,7 +6233,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 4], 3)
+            pvalue <- round(divtest$posthoc[, 4], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -3257,7 +6243,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 3], 3)
+            pvalue <- round(divtest$posthoc[, 3], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -3448,7 +6434,7 @@ its18_alph_div_plots_asv <- ggarrange(
 
 ggplot2::ggsave(
   its18_alph_div_plots_asv,
-  file = "include/pub/som/its18_alph_div_plots_asv.png",
+  file = "include/pub/SOM/its18_alph_div_plots_asv.png",
   height = 5852,
   width = 7449,
   units = 'px',
@@ -3459,7 +6445,7 @@ ggplot2::ggsave(
 
 ggplot2::ggsave(
   its18_alph_div_plots_asv,
-  file = "include/pub/som/its18_alph_div_plots_asv.pdf",
+  file = "include/pub/SOM/its18_alph_div_plots_asv.pdf",
   height = 5852,
   width = 7449,
   units = 'px',
@@ -3468,12 +6454,12 @@ ggplot2::ggsave(
 )
 
 file.rename(
-  "include/pub/som/its18_alph_div_plots_asv.png",
-  "include/pub/som/Supplementary_Figure_4.png"
+  "include/pub/SOM/its18_alph_div_plots_asv.png",
+  "include/pub/SOM/Supplementary_Figure_4.png"
 )
 file.rename(
-  "include/pub/som/its18_alph_div_plots_asv.pdf",
-  "include/pub/som/Supplementary_Figure_4.pdf"
+  "include/pub/SOM/its18_alph_div_plots_asv.pdf",
+  "include/pub/SOM/Supplementary_Figure_4.pdf"
 )
 ```
 
@@ -3491,7 +6477,7 @@ No post processing performed.
 
 ### Original 
 
-![](include/pub/som/Supplementary_Figure_5.png)
+![](include/pub/SOM/Supplementary_Figure_5.png)
 
 ### Final
 
@@ -3503,24 +6489,23 @@ No post processing performed.
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_select_mc_norm_split.rds)  
+<i class="bi bi-download"></i> [Download Supplementary Figure 5 data pack](include/pub/SOM/Supplementary_Figure_5.rds)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_5.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 5 raw pdf](include/pub/SOM/Supplementary_Figure_5.pdf)
 :::
 
 :::
 
 ```{r}
+#| code-summary: "Access the code for Supplementary Figure 5"
 remove(list = ls())
 ssu18_select_mc_norm_split <- readRDS(
-  "include/pub/som/ssu18_select_mc_norm_split.rds"
+  "include/pub/SOM/Supplementary_Figure_5.rds"
   )
-```
 
-```{r}
 edaphic_norm_cor <- ssu18_select_mc_norm_split$edaphic
 edaphic_norm_cor[,1:8] <- NULL
 
@@ -3581,25 +6566,6 @@ for (i in objects(pattern = "_cor$")) {
 objects(pattern = "_ggheatmap")
 edaphic_norm_cor_ggheatmap
 
-ggplot2::ggsave(
-  edaphic_norm_cor_ggheatmap,
-  path = "include/pub/som/",
-  filename = "ssu_auto_cor_edaphic.png",
-  dpi = 600
-)
-ggplot2::ggsave(
-  soil_funct_norm_cor_ggheatmap,
-  path = "include/pub/som/",
-  filename = "ssu_auto_cor_functional.png",
-  dpi = 600
-)
-ggplot2::ggsave(
-  temp_adapt_norm_cor_ggheatmap,
-  path = "include/pub/som/",
-  filename = "ssu_auto_cor_temperature.png",
-  dpi = 600
-)
-
 auto_cor_figs <- ggarrange(
   edaphic_norm_cor_ggheatmap,
   soil_funct_norm_cor_ggheatmap,
@@ -3611,7 +6577,7 @@ auto_cor_figs <- ggarrange(
 
 ggplot2::ggsave(
   auto_cor_figs,
-  file = "include/pub/som/ssu18_auto_cor_figs.png",
+  file = "include/pub/SOM/ssu18_auto_cor_figs.png",
   height = 2500,
   width = 7500,
   units = 'px',
@@ -3622,7 +6588,7 @@ ggplot2::ggsave(
 
 ggplot2::ggsave(
   auto_cor_figs,
-  file = "include/pub/som/ssu18_auto_cor_figs.pdf",
+  file = "include/pub/SOM/ssu18_auto_cor_figs.pdf",
   height = 2500,
   width = 7500,
   units = 'px',
@@ -3631,12 +6597,12 @@ ggplot2::ggsave(
 )
 
 file.rename(
-  "include/pub/som/ssu18_auto_cor_figs.png",
-  "include/pub/som/Supplementary_Figure_5.png"
+  "include/pub/SOM/ssu18_auto_cor_figs.png",
+  "include/pub/SOM/Supplementary_Figure_5.png"
 )
 file.rename(
-  "include/pub/som/ssu18_auto_cor_figs.pdf",
-  "include/pub/som/Supplementary_Figure_5.pdf"
+  "include/pub/SOM/ssu18_auto_cor_figs.pdf",
+  "include/pub/SOM/Supplementary_Figure_5.pdf"
 )
 ```
 
@@ -3655,7 +6621,7 @@ No post processing performed.
 
 ### Original 
 
-![](include/pub/som/Supplementary_Figure_6.png)
+![](include/pub/SOM/Supplementary_Figure_6.png)
 
 ### Final
 
@@ -3667,19 +6633,20 @@ No post processing performed.
 ::: {layout="[ [1,1] ]"}
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/its18_select_mc_norm_split.rds)  
+<i class="bi bi-download"></i> [Download Supplementary Figure 6 data pack](include/pub/SOM/Supplementary_Figure_6.rds)  
 :::
 
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw figure (.pdf)](include/pub/som/Supplementary_Figure_6.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 6 raw pdf](include/pub/SOM/Supplementary_Figure_6.pdf)
 :::
 
 :::
 
 ```{r}
+#| code-summary: "Access the code for Supplementary Figure 6"
 remove(list = ls())
-its18_select_mc_norm_split <- readRDS("include/pub/som/its18_select_mc_norm_split.rds")
+its18_select_mc_norm_split <- readRDS("include/pub/SOM/Supplementary_Figure_6.rds")
 
 edaphic_norm_cor <- its18_select_mc_norm_split$edaphic
 edaphic_norm_cor[,1:8] <- NULL
@@ -3748,7 +6715,7 @@ auto_cor_figs <- ggarrange(
 
 ggplot2::ggsave(
   auto_cor_figs,
-  file = "include/pub/som/its18_auto_cor_figs.png",
+  file = "include/pub/SOM/its18_auto_cor_figs.png",
   height = 2500,
   width = 7500,
   units = 'px',
@@ -3759,7 +6726,7 @@ ggplot2::ggsave(
 
 ggplot2::ggsave(
   auto_cor_figs,
-  file = "include/pub/som/its18_auto_cor_figs.pdf",
+  file = "include/pub/SOM/its18_auto_cor_figs.pdf",
   height = 2500,
   width = 7500,
   units = 'px',
@@ -3768,12 +6735,12 @@ ggplot2::ggsave(
 )
 
 file.rename(
-  "include/pub/som/its18_auto_cor_figs.png",
-  "include/pub/som/Supplementary_Figure_6.png"
+  "include/pub/SOM/its18_auto_cor_figs.png",
+  "include/pub/SOM/Supplementary_Figure_6.png"
 )
 file.rename(
-  "include/pub/som/its18_auto_cor_figs.pdf",
-  "include/pub/som/Supplementary_Figure_6.pdf"
+  "include/pub/SOM/its18_auto_cor_figs.pdf",
+  "include/pub/SOM/Supplementary_Figure_6.pdf"
 )
 ```
 
@@ -3781,12 +6748,14 @@ file.rename(
 ## Supplementary Figures 7--14
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the data pack](include/pub/som/ssu18_ps_work.rds)  
+<i class="bi bi-download"></i> [Download Supplementary Figures 7-14 data pack](include/pub/SOM/Supplementary_Figure_7.rds)  
 :::
 
 ```{r}
+#| code-summary: "Access the code for Supplementary Figures 7--14"
+
 remove(list = ls())
-ssu18_ps_work <- readRDS("include/pub/som/ssu18_ps_work.rds")
+ssu18_ps_work <- readRDS("include/pub/SOM/Supplementary_Figure_7.rds")
 ssu18_data_sets <- c("ssu18_ps_work")
 for (i in ssu18_data_sets) {
      tmp_name <- purrr::map_chr(i, ~paste0(., "_proteo"))
@@ -3829,9 +6798,8 @@ for (j in ssu18_data_sets) {
   print(c(tmp_name, tmp_get))
   print(length(get_taxa_unique(tmp_get,
                                taxonomic.rank = rank_names(tmp_get)[2],
-                               errorIfNULL=TRUE)))
-  tmp_path <- file.path("include/pub/som/")
-  saveRDS(tmp_get, paste(tmp_path, j, "_clean.rds", sep = ""))
+                               errorIfNULL = TRUE)))
+  tmp_path <- file.path("include/pub/SOM/")
   rm(list = ls(pattern = "tmp_"))
 }
 rm(class, order, phylum)
@@ -3876,7 +6844,7 @@ for (i in tax_group) {
 aggregate_top_taxa <- function (x, top, level) {
   x <- aggregate_taxa(x, level)
   
-  tops <- top_taxa(x, top)
+  tops <- microbiome::top_taxa(x, top)
   tax <- tax_table(x)
   
   inds <- which(!rownames(tax) %in% tops)
@@ -4158,7 +7126,7 @@ for (i in taxa_to_plot) {
     )))
   ggplot2::ggsave(
     tmp_get,
-    file = paste0("include/pub/som/", i, "_tax_div_bar_plots.png", sep = ""),
+    file = paste0("include/pub/SOM/", i, "_tax_div_bar_plots.png", sep = ""),
     height = 2415,
     width = 6350,
     units = 'px',
@@ -4167,7 +7135,7 @@ for (i in taxa_to_plot) {
   )
   ggplot2::ggsave(
     tmp_get,
-    file = paste0("include/pub/som/", i, "_tax_div_bar_plots.pdf", sep = ""),
+    file = paste0("include/pub/SOM/", i, "_tax_div_bar_plots.pdf", sep = ""),
     height = 2415,
     width = 6350,
     units = 'px',
@@ -4177,69 +7145,69 @@ for (i in taxa_to_plot) {
 }
 
 file.rename(
-  "include/pub/som/Acidobacteriota_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_7.png"
+  "include/pub/SOM/Acidobacteriota_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_7.png"
 )
 file.rename(
-  "include/pub/som/Actinobacteriota_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_8.png"
+  "include/pub/SOM/Actinobacteriota_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_8.png"
 )
 file.rename(
-  "include/pub/som/Alphaproteobacteria_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_9.png"
+  "include/pub/SOM/Alphaproteobacteria_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_9.png"
 )
 file.rename(
-  "include/pub/som/Gammaproteobacteria_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_10.png"
+  "include/pub/SOM/Gammaproteobacteria_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_10.png"
 )
 file.rename(
-  "include/pub/som/Bacteroidota_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_11.png"
+  "include/pub/SOM/Bacteroidota_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_11.png"
 )
 file.rename(
-  "include/pub/som/Firmicutes_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_12.png"
+  "include/pub/SOM/Firmicutes_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_12.png"
 )
 file.rename(
-  "include/pub/som/Myxococcota_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_13.png"
+  "include/pub/SOM/Myxococcota_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_13.png"
 )
 file.rename(
-  "include/pub/som/Verrucomicrobiota_tax_div_bar_plots.png",
-  "include/pub/som/Supplementary_Figure_14.png"
+  "include/pub/SOM/Verrucomicrobiota_tax_div_bar_plots.png",
+  "include/pub/SOM/Supplementary_Figure_14.png"
 )
 
 file.rename(
-  "include/pub/som/Acidobacteriota_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_7.pdf"
+  "include/pub/SOM/Acidobacteriota_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_7.pdf"
 )
 file.rename(
-  "include/pub/som/Actinobacteriota_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_8.pdf"
+  "include/pub/SOM/Actinobacteriota_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_8.pdf"
 )
 file.rename(
-  "include/pub/som/Alphaproteobacteria_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_9.pdf"
+  "include/pub/SOM/Alphaproteobacteria_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_9.pdf"
 )
 file.rename(
-  "include/pub/som/Gammaproteobacteria_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_10.pdf"
+  "include/pub/SOM/Gammaproteobacteria_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_10.pdf"
 )
 file.rename(
-  "include/pub/som/Bacteroidota_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_11.pdf"
+  "include/pub/SOM/Bacteroidota_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_11.pdf"
 )
 file.rename(
-  "include/pub/som/Firmicutes_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_12.pdf"
+  "include/pub/SOM/Firmicutes_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_12.pdf"
 )
 file.rename(
-  "include/pub/som/Myxococcota_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_13.pdf"
+  "include/pub/SOM/Myxococcota_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_13.pdf"
 )
 file.rename(
-  "include/pub/som/Verrucomicrobiota_tax_div_bar_plots.pdf",
-  "include/pub/som/Supplementary_Figure_14.pdf"
+  "include/pub/SOM/Verrucomicrobiota_tax_div_bar_plots.pdf",
+  "include/pub/SOM/Supplementary_Figure_14.pdf"
 )
 ```
 
@@ -4255,7 +7223,7 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 
 ### Original (SF7)
 
-![](include/pub/som/Supplementary_Figure_7.png)
+![](include/pub/SOM/Supplementary_Figure_7.png)
 
 ### Modified (SF7)
 
@@ -4264,14 +7232,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S7](include/pub/som/Supplementary_Figure_7.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 7 raw pdf](include/pub/SOM/Supplementary_Figure_7.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original (SF8)
 
-![](include/pub/som/Supplementary_Figure_8.png)
+![](include/pub/SOM/Supplementary_Figure_8.png)
 
 ### Modified (SF8)
 
@@ -4280,14 +7248,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S8](include/pub/som/Supplementary_Figure_8.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 8 raw pdf](include/pub/SOM/Supplementary_Figure_8.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original (SF9)
 
-![](include/pub/som/Supplementary_Figure_9.png)
+![](include/pub/SOM/Supplementary_Figure_9.png)
 
 ### Modified (SF9)
 
@@ -4296,14 +7264,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S9](include/pub/som/Supplementary_Figure_9.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 9 raw pdf](include/pub/SOM/Supplementary_Figure_9.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original (SF10)
 
-![](include/pub/som/Supplementary_Figure_10.png)
+![](include/pub/SOM/Supplementary_Figure_10.png)
 
 ### Modified (SF10)
 
@@ -4312,14 +7280,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S10](include/pub/som/Supplementary_Figure_10.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 10 raw pdf](include/pub/SOM/Supplementary_Figure_10.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original (SF11) 
 
-![](include/pub/som/Supplementary_Figure_11.png)
+![](include/pub/SOM/Supplementary_Figure_11.png)
 
 ### Modified (SF11)
 
@@ -4328,14 +7296,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S11](include/pub/som/Supplementary_Figure_11.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 11 raw pdf](include/pub/SOM/Supplementary_Figure_11.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original  (SF12)
 
-![](include/pub/som/Supplementary_Figure_12.png)
+![](include/pub/SOM/Supplementary_Figure_12.png)
 
 ### Modified (SF12)
 
@@ -4344,14 +7312,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S12](include/pub/som/Supplementary_Figure_12.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 12 raw pdf](include/pub/SOM/Supplementary_Figure_12.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original (SF13) 
 
-![](include/pub/som/Supplementary_Figure_13.png)
+![](include/pub/SOM/Supplementary_Figure_13.png)
 
 ### Modified (SF13)
 
@@ -4360,14 +7328,14 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 :::
 
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S13](include/pub/som/Supplementary_Figure_13.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 13 raw pdf](include/pub/SOM/Supplementary_Figure_13.pdf)
 :::
 
 ::: {.panel-tabset}
 
 ### Original (SF14)
 
-![](include/pub/som/Supplementary_Figure_14.png)
+![](include/pub/SOM/Supplementary_Figure_14.png)
 
 ### Modified (SF14)
 
@@ -4375,7 +7343,45 @@ Post prossessing performed in [Inkscape](https://inkscape.org/). Modifications i
 
 :::
 
-
 ::: {.callout appearance="minimal"}
-<i class="bi bi-download"></i> [Download the raw pdf file of  Figure S14](include/pub/som/Supplementary_Figure_14.pdf)
+<i class="bi bi-download"></i> [Download Supplementary Figure 14 raw pdf](include/pub/SOM/Supplementary_Figure_14.pdf)
 :::
+
+# R Session Information
+
+<details markdown="1"><summary>Show/hide  R Session Info</summary>
+
+```{r}
+#| eval: true
+#| code-fold: false
+sessionInfo()
+devtools::session_info()
+```
+</details>
+
+```{r}
+#| message: false 
+#| results: hide
+#| eval: true
+#| echo: false
+remove(list = ls())
+### COmmon formatting scripts
+### NOTE: captioner.R must be read BEFORE captions_XYZ.R
+source(file.path("assets", "functions.R"))
+```
+
+####  Source Code {.appendix}
+
+The source code for this page can be accessed on GitHub `r fa(name = "github")` by [clicking this link](`r source_code()`). 
+
+#### Data Availability {.appendix}
+
+Data generated in this workflow and the Rdata need to run the workflow can be accessed on figshare at [10.25573/data.20263857](https://doi.org/10.25573/data.20263857.v1).
+
+#### Last updated on {.appendix}
+
+```{r}
+#| echo: false
+#| eval: true
+Sys.time()
+```

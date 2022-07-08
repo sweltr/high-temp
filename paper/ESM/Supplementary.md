@@ -20,8 +20,8 @@ author: |
   | \small ^\*^Corresponding author: A.Nottingham@leeds.ac.uk
 
 crossref:
-  lof-title: "Supplementray Figures"
-  lot-title: "Supplementray Tables"
+  lof-title: "Supplementary Figures"
+  lot-title: "Supplementary Tables"
   
 format:
   pdf: 
@@ -100,12 +100,11 @@ header-includes:
 
 
 
-# Overview
 
-This document contains Supplementary methods, results, tables, and figures for the manuscript. Large tables are provided as additional **Supplementary Dataset** files. See \hyperref[appendix-1]{\color{blue}Appendix 1} for more details. 
+*** 
 
 ::: {.callout-note appearance="minimal"}
-The source code for this PDF---including all figures, tables, and data sets---can be found here: [https://github.com/sweltr/high-temp/tree/main/paper/ESM](https://github.com/sweltr/high-temp/tree/main/paper/ESM). An HTML version of this file, including all Supplementary Datasets, can be found on the project website  at [https://sweltr.github.io/high-temp/som.html](https://sweltr.github.io/high-temp/som.html).  
+This document contains Supplementary methods, results, tables, and figures for the manuscript. Large tables are provided as additional **Supplementary Dataset** files. See \hyperref[appendix-1]{\color{blue}Appendix 1} for more details. The source code for this PDF---including all figures, tables, and data sets---can be found here: [https://github.com/sweltr/high-temp/tree/main/paper/ESM](https://github.com/sweltr/high-temp/tree/main/paper/ESM). An HTML version of this file, including all Supplementary Datasets, can be found on the project website  at [https://sweltr.github.io/high-temp/som.html](https://sweltr.github.io/high-temp/som.html).  
 :::
 
 # Data & Code Availability
@@ -142,7 +141,7 @@ We provide additional data products and code through online repositories (**Supp
 
 # Supplementary Methods
 
-## Sample naming
+## DNA extraction & sequencing
 
 Samples were named by combining the plot number (P01--P10) with the treatment (C = control, W = warming), the temperature (0 = no warming, 3 = +3°C warming, and 8 = +8°C warming), and the plot pairing designation (A—E). For example, **P07_W3D** is the sample from plot #7 that was warmed by +3°C. This sample is part of group **D** which contains P07_W8D (warmed by +8°C) and P08_C0D (the control sample for this group) (**Supplementary Table 2**).
 
@@ -153,32 +152,32 @@ Samples were named by combining the plot number (P01--P10) with the treatment (C
 
 \caption{\label{tab:unnamed-chunk-10}\textbf{Supplementary Table 2 |} Sample Details.}
 \centering
-\fontsize{8}{10}\selectfont
+\fontsize{7.5}{9.5}\selectfont
 \begin{tabular}[t]{lcccc}
 \toprule
 \textcolor{black}{\textbf{Sample ID}} & \textcolor{black}{\textbf{Plot}} & \textcolor{black}{\textbf{Depth (cm)}} & \textcolor{black}{\textbf{Treatment}} & \textcolor{black}{\textbf{Pair}}\\
 \midrule
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}\cellcolor{gray!6}{P01\_W3A} & \cellcolor{gray!6}{P01} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+3°C} & \cellcolor{gray!6}{A}\\
 \hspace{1em}P01\_W8A & P01 & 00\_010 & +8°C & A\\
 \hspace{1em}\cellcolor{gray!6}{P02\_C0A} & \cellcolor{gray!6}{P02} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{Control} & \cellcolor{gray!6}{A}\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}P03\_W3B & P03 & 00\_010 & +3°C & B\\
 \hspace{1em}\cellcolor{gray!6}{P03\_W8B} & \cellcolor{gray!6}{P03} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+8°C} & \cellcolor{gray!6}{B}\\
 \hspace{1em}P04\_C0B & P04 & 00\_010 & Control & B\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}\cellcolor{gray!6}{P05\_W3C} & \cellcolor{gray!6}{P05} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+3°C} & \cellcolor{gray!6}{C}\\
 \hspace{1em}P05\_W8C & P05 & 00\_010 & +8°C & C\\
 \hspace{1em}\cellcolor{gray!6}{P06\_C0C} & \cellcolor{gray!6}{P06} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{Control} & \cellcolor{gray!6}{C}\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}P07\_W3D & P07 & 00\_010 & +3°C & D\\
 \hspace{1em}\cellcolor{gray!6}{P07\_W8D} & \cellcolor{gray!6}{P07} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+8°C} & \cellcolor{gray!6}{D}\\
 \hspace{1em}P08\_C0D & P08 & 00\_010 & Control & D\\
-\addlinespace[-0.3em]
+\addlinespace[-0.4em]
 \multicolumn{5}{l}{\textbf{}}\\
 \hspace{1em}\cellcolor{gray!6}{P09\_W3E} & \cellcolor{gray!6}{P09} & \cellcolor{gray!6}{00\_010} & \cellcolor{gray!6}{+3°C} & \cellcolor{gray!6}{E}\\
 \hspace{1em}P09\_W8E & P09 & 00\_010 & +8°C & E\\
@@ -190,8 +189,6 @@ Samples were named by combining the plot number (P01--P10) with the treatment (C
 :::
 
 
-## Processing microbial community data
-
 DNA was extracted using the DNeasy Powersoil kit (Qiagen). Bacterial and fungal communities were amplified using a two-stage PCR protocol. Locus specific primers used for PCR1 included the Illumina sequencing primer sequence on their 5’ ends. For bacteria, we amplified the V4 hypervariable region of the 16S rRNA gene with the 515F–806R[@caporaso2011global] primer pair (**Supplementary Table 3**). For fungi, we amplified the first internal transcribed spacer (ITS1) region of the rRNA operon with the primers ITS1F[@gardes1993its] and ITS2[@white1990amplification] (**Supplementary Table 3**). 
 
 
@@ -201,7 +198,7 @@ DNA was extracted using the DNeasy Powersoil kit (Qiagen). Bacterial and fungal 
 
 \caption{\label{tab:unnamed-chunk-11}\textbf{Supplementary Table 3 |} Primer sequences for 16S rRNA \& ITS gene amplification.}
 \centering
-\fontsize{9}{11}\selectfont
+\fontsize{8}{10}\selectfont
 \begin{tabular}[t]{lcl}
 \toprule
 \textcolor{black}{\textbf{Data set}} & \textcolor{black}{\textbf{Primer name}} & \textcolor{black}{\textbf{Primer sequence}}\\
@@ -221,32 +218,25 @@ DNA was extracted using the DNeasy Powersoil kit (Qiagen). Bacterial and fungal 
 :::
 
 
+We used Platinum 2X Mastermix (Thermo) in PCR reactions with a final volume of 12.5µl with 25 cycles using a 50°C annealing temperature for both loci. PCR2 used 2µl of PCR1 as template and added on remaining Illumina adaptors and index sequences. PCR2 products were cleaned and normalized using PCR Normalization plates (CharmBiotech, USA) and pooled libraries concentrated using AMPure beads (Beckman Coulter, USA). Libraries were sequenced on an Illumina MiSeq with 250bp paired end reads. 
 
-We used Platinum 2X Mastermix (Thermo) in PCR reactions with a final volume of 12.5µl with 25 cycles using a 50°C annealing temperature for both loci. PCR2 used 2µl of PCR1 as template and added on remaining Illumina adaptors and index sequences. PCR2 products were cleaned and normalized using PCR Normalization plates (CharmBiotech, USA) and the pooled libraries concentrated using AMPure beads (Beckman Coulter, USA). Libraries were sequenced on an Illumina MiSeq with 250bp paired end reads.
+## Processing microbial community data
 
-Reads in the 16S rRNA and ITS data sets were trimmed of forward and reverse primers using cutadapt[@martin2011cutadapt] (v1.18) following an initial filtering step that removed reads with ambiguous bases. Primer sequences with more than 12% error rate (--error-rate = 0.12) were discarded. Reads were then processed using DADA2[@callahan2016dada2] (v1.16.0) within the R environment[@team2013r] (v4.1.0). Reads were dropped from the data set if they had three or more expected errors (maxEE = 2), at least one base with very low quality (truncQ = 2), or at least one position with an unspecified nucleotide (maxN = 0). Based on visual inspection of quality plots, only the forward reads from the 16S rRNA data were retained, while both forward and reverse reads were retained in the ITS data set. Remaining reads were dereplicated before inferring amplicon sequence variants (ASVs). 
-
-We used ASVs over traditional OTUs because ASVs provide single nucleotide resolution, thus providing more detailed resolution when examining treatment effects. Paired-end reads (ITS only) were merged and read pairs that did not match exactly across at least 12 base pairs (minOverlap = 12) were discarded. For the 16S rRNA data we retained amplicons between 230 and 235 base pairs and for the ITS data we retained amplicons between 100 and 450 base pairs. Reads were then screened for chimeras (method = consensus). Taxonomy for the 16S rRNA data set was assigned to each ASV using the naive Bayesian classifier[@wang2007naive] against the Silva reference database[@quast2012silva] (Silva_nr_v138_train_set version 138). For taxonomic classification of the ITS data set, we used the naive Bayesian classifier[@wang2007naive] against the UNITE[@nilsson2019unite] database, specifically the UNITE general FASTA release for Fungi (v. 04.02.2020)[@abarenkov2020unite]. **Supplementary Dataset1** and **Supplementary Dataset2** contain the ASV table, taxonomic assignments, and unique sequences for the 16S rRNA and ITS data sets, respectively. The complete DADA2 workflow is available here: [https://sweltr.github.io/high-temp/dada2.html](https://sweltr.github.io/high-temp/dada2.html).
-
-Prior to community analysis of the 16S rRNA data set, ASVs classified as chloroplasts, mitochondria, or Eukaryota, or ASVs that remained unclassified (i.e., NA) at the kingdom level, were removed from the data set using the phyloseq package[@mcmurdie2013phyloseq] (v1.36.0) in the R environment[@team2013r]. No such curation was performed on the ITS data set since all ASVs could be classified to kingdom level (Fungi). The complete data set preparation workflow is available here: [https://sweltr.github.io/high-temp/data-prep.html](https://sweltr.github.io/high-temp/data-prep.html).
+Reads in both data sets were trimmed of forward and reverse primers using cutadapt[@martin2011cutadapt] (v1.18) following an initial filtering step that removed reads with ambiguous bases. Primer sequences with more than 12% error rate (--error-rate = 0.12) were discarded. Reads were then processed using DADA2[@callahan2016dada2] (v1.16.0) within R[@team2013r] (v4.1.0). Reads were dropped from the data set if they had three or more expected errors (maxEE = 2), at least one base with very low quality (truncQ = 2), or at least one position with an unspecified nucleotide (maxN = 0). Based on visual inspection of quality plots, only the forward reads from the 16S rRNA data were retained, while both forward and reverse reads were retained in the ITS data set. Remaining reads were dereplicated before inferring amplicon sequence variants (ASVs). We used ASVs over traditional OTUs because ASVs provide single nucleotide resolution, thus providing more detailed resolution when examining treatment effects. Paired-end reads (ITS only) were merged and read pairs that did not match exactly across at least 12 base pairs (minOverlap = 12) were discarded. For the 16S rRNA data we retained amplicons between 230 and 235 base pairs and for the ITS data we retained amplicons between 100 and 450 base pairs. Reads were then screened for chimeras (method = consensus). Taxonomy for the 16S rRNA data set was assigned to each ASV using the naive Bayesian classifier[@wang2007naive] against the Silva reference database[@quast2012silva] (Silva_nr_v138_train_set version 138). For taxonomic classification of the ITS data set, we used the naive Bayesian classifier[@wang2007naive] against the UNITE[@nilsson2019unite] database, specifically the UNITE general FASTA release for Fungi (v. 04.02.2020)[@abarenkov2020unite]. **Supplementary Dataset1** and **Supplementary Dataset2** contain the ASV table, taxonomic assignments, and unique sequences for the 16S rRNA and ITS data sets, respectively. The complete DADA2 workflow is available here: [https://sweltr.github.io/high-temp/dada2.html](https://sweltr.github.io/high-temp/dada2.html). Prior to community analysis of the 16S rRNA data set, ASVs classified as chloroplasts, mitochondria, or Eukaryota, or ASVs that remained unclassified (i.e., NA) at the kingdom level, were removed from the data set using the phyloseq package[@mcmurdie2013phyloseq] (v1.36.0) in R[@team2013r]. No curation was performed on the ITS data set since all ASVs could be classified to kingdom level (Fungi). The complete data set preparation workflow is available here: [https://sweltr.github.io/high-temp/data-prep.html](https://sweltr.github.io/high-temp/data-prep.html).
 
 ## Filtering
 
 We applied three complementary methods of prevalence filtering to the 16S rRNA and ITS data sets. The complete filtering workflow is available here: [https://sweltr.github.io/high-temp/filtering.html](https://sweltr.github.io/high-temp/filtering.html).
 
-**i**) Sample-wise filtering with arbitrary functions. We used the `genefilter_sample` function from the phyloseq package[@mcmurdie2013phyloseq] (v1.36.0) to remove ASVs represented by fewer than 5 reads and/or present in less that 20% of samples. 
+**i**) Sample-wise filtering with arbitrary functions. We used the `genefilter_sample` function (phyloseq package[@mcmurdie2013phyloseq], v1.36.0) to remove ASVs represented by fewer than 5 reads and/or present in less that 20% of samples. 
 
 **ii**) PERFect (PERmutation Filtering test for microbiome data)[@smirnova2019perfect] (v0.2.4) filtering. Here we used the function `PERFect_sim` with the alpha parameter set to 0.05 for the 16S rRNA data and 0.1 for the ITS data. 
 
-**iii**) PIME (Prevalence Interval for Microbiome Evaluation)[@roesch2020pime] (v0.1.0) filtering. First we rarefied all samples to even depths (per the developer's recommendation) then split the data sets by predictor variable (temperature treatment) using the `pime.split.by.variable` function. Next, we calculated the prevalence intervals with `pime.prevalence` and then used `pime.best.prevalence` to calculate the best prevalence. The best prevalence interval was selected when the out-of-bag (OOB) error rate first reached zero or close to zero. The most prevalent ASVs (at the best prevalence interval) were retained from each split. Splits were then merged to obtain the final PIME filtered data set. 
+**iii**) PIME (Prevalence Interval for Microbiome Evaluation)[@roesch2020pime] (v0.1.0) filtering. We rarefied all samples to even depths (per the developer's recommendation) then split the data sets by predictor variable (temperature treatment) using  `pime.split.by.variable`. We then calculated the prevalence intervals with `pime.prevalence` and  used `pime.best.prevalence` to calculate the best prevalence. The best prevalence interval was selected when the out-of-bag (OOB) error rate first reached zero or close to zero. The most prevalent ASVs (at the best interval) were retained from each split. Splits were merged to obtain the final PIME data set. 
 
 ## Alpha diversity estimates
 
-To account for presence of rare sequence variants caused by sequencing errors (or other technical artifacts), we used Hill numbers[@alberdi2019guide] for estimates of alpha diversity. Hill numbers allow the weight put on rare versus abundant sequence variants to be scaled while providing intuitive comparisons of diversity levels using *effective number of ASVs* as a measuring unit. This approach allows for balancing the over representation of rare ASVs that might be inflated due to sequencing errors. To calculate Hill numbers, we used the R package hilldiv[@alberdi2019hilldiv]. We calculated three metrics that put less or more weight on common ASVs: **(i)** Observed richness, where q-value = 0; **(ii)** Shannon exponential, which weighs ASVs by their frequency, where q-value = 1; and **(iii)** Simpson multiplicative inverse, which over weighs abundant ASVs, where q-value = 2.  
-
-We present all three metrics of alpha diversity, while acknowledging that each metric of alpha diversity is based on (measured) relative abundance and can be subject to bias due to variation in extraction efficiency and sequencing depth, especially when detecting rare taxa (or ASVs)[@balint2016millions]. However, we also recognize that each metric provides complementary information, by varying in their relative sensitivity towards rare and common species[@roswell2021conceptual]. We therefore interpret alpha diversity metrics in terms of changes in diversity due to changes in rarer ASVs (observed richness) and due to changes in more proportionally abundant ASVs (Shannon and inverse Simpson).
-
-Next, we assessed whether the alpha diversity estimates were normally distributed using both the Shapiro-Wilk Normality test[@shapiro1965analysis] and the Bartlett Test of Homogeneity of Variances[@bartlett1937properties]. If the p-values from both tests were not significant (p > 0.05), we accepted the null hypothesis that the results were normally distributed. If one or both of the the p-values were significant (p < 0.05), we rejected the null hypothesis. For parametric data we tested for significance across treatments using ANOVA followed by Tukey post-hoc test. For non-parametric data we tested for significance across treatments using Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg correction. All tests were performed using the vegan package[@oksanen2013community] in R[@team2013r]. The complete alpha diversity workflow is available here: [https://sweltr.github.io/high-temp/alpha.html](https://sweltr.github.io/high-temp/alpha.html).
+To account for presence of rare sequence variants caused by sequencing errors (or other technical artifacts), we used Hill numbers[@alberdi2019guide] for alpha diversity estimates. Hill numbers allow the weight put on rare versus abundant sequence variants to be scaled while providing intuitive comparisons of diversity levels using *effective number of ASVs* as a measuring unit. This approach allows for balancing the over representation of rare ASVs that might be inflated due to sequencing errors. We calculated three  Hill numbers (using the R package hilldiv[@alberdi2019hilldiv]) that weigh common ASVs differently: **(i)** Observed richness, where q-value = 0; **(ii)** Shannon exponential (q-value = 1), which weighs ASVs by their frequency; and **(iii)** Simpson multiplicative inverse (q-value = 2), which over weighs abundant ASVs. We report all three metrics of alpha diversity, while acknowledging that each metric is based on (measured) relative abundance and can be subject to bias due to variation in extraction efficiency and sequencing depth, especially when detecting rare taxa (or ASVs)[@balint2016millions]. However, we also recognize that each metric provides complementary information, by varying in their relative sensitivity towards rare and common species[@roswell2021conceptual]. We therefore interpret alpha diversity metrics in terms of changes in diversity due to changes in rarer ASVs (observed richness) and due to changes in more proportionally abundant ASVs (Shannon and inverse Simpson). Next, we assessed whether the alpha diversity estimates were normally distributed using both the Shapiro-Wilk Normality test[@shapiro1965analysis] and the Bartlett Test of Homogeneity of Variances[@bartlett1937properties]. If the p-values from both tests were not significant (p > 0.05), we accepted the null hypothesis that the results were normally distributed. If one or both of the the p-values were significant (p < 0.05), we rejected the null hypothesis. For parametric data we tested for significance across treatments using ANOVA followed by Tukey post-hoc test. For non-parametric data we tested for significance across treatments using Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg correction. All tests were performed using the vegan package[@oksanen2013community] in R[@team2013r]. The complete alpha diversity workflow is available here: [https://sweltr.github.io/high-temp/alpha.html](https://sweltr.github.io/high-temp/alpha.html).
 
 ## Beta diversity estimates
 
@@ -254,7 +244,7 @@ To test for significance between temperature treatments, we performed the follow
 
 ## Diffentially abundant ASVs
 
-Diffentially abundant ASVs across temperature treatments (PIME filtered data sets) were identified using (**i**) the `labdsv` package[@roberts2016package] (v.2.0-1)---to run Dufrene-Legendre Indicator Species Analysis (ISA)---and (**ii**) the microbiomeMarker package[@cao2020package] (v.0.0.1.9000) to run linear discriminant analysis (LDA) effect size (LEfSe)[@segata2011metagenomic]. ISA calculates the indicator value (fidelity and relative abundance) of ASVs in treatment groups. For the 16S rRNA and ITS data, we set the p-value cutoff to 0.5. For all other parameters the default values were used. For the LEfSe analysis we used pre-sample normalization of the sum of the values to 1e^+06^ (`norm = "CPM"`), set the LDA score cutoff to 2 (`lda_cutoff = 2`), set the p-value cutoff of Wilcoxon test to 0.05 (`wilcoxon_cutoff = 0.05`), and the p-value cutoff of Kruskal-Wallis test to 0.05 (`kw_cutoff = 0.05`). The complete diffentially abundant workflow is available here: [https://sweltr.github.io/high-temp/da.html](https://sweltr.github.io/high-temp/da.html).
+Diffentially abundant ASVs across temperature treatments (PIME filtered data sets) were identified using (**i**) the `labdsv` package[@roberts2016package] (v.2.0-1)---to run Dufrene-Legendre Indicator Species Analysis (ISA)---and (**ii**) the microbiomeMarker package[@cao2020package] (v.0.0.1.9000) to run linear discriminant analysis (LDA) effect size (LEfSe)[@segata2011metagenomic]. ISA calculates the indicator value (fidelity and relative abundance) of ASVs in treatment groups. For the 16S rRNA and ITS data, we set the p-value cutoff to 0.5. For all other parameters the default values were used. For the LEfSe analysis we used pre-sample normalization of the sum of the values to 1e^+06^ (norm = "CPM"), set the LDA score cutoff to 2 (lda_cutoff = 2), set the p-value cutoff of Wilcoxon test to 0.05 (wilcoxon_cutoff = 0.05), and the p-value cutoff of Kruskal-Wallis test to 0.05 (kw_cutoff = 0.05). The complete diffentially abundant workflow is available here: [https://sweltr.github.io/high-temp/da.html](https://sweltr.github.io/high-temp/da.html).
 
 ## Multivariate analysis
 
@@ -264,22 +254,22 @@ Here we compare the environmental metadata (**Supplementary Dataset3**) with bot
 2) **Normalize parameters**: Use the R package `bestNormalize`[@peterson2019ordered; @peterson2021finding] and default parameters to find and execute the best normalizing transformation for non-parametric metadata parameters identified in step #1. The function tested the following normalizing transformations: arcsinh, Box-Cox, Yeo-Johnson, Ordered Quantile (ORQ) normalization, log transformation,  square-root, and exponential. Once the non-parametric parameters were transformed, we reran the normality tests. 
 3) **Partition metadata**: Next we split the metadata parameters into three groups: **a**) environmental and edaphic properties; **b**) microbial functional responses; and **c**) temperature adaptation properties. 
 
-    i) **Environmental and edaphic properties**: AST, H~2~O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH~4~, NO~3~, PO~4~, DOC, DON, DOCN.
+    \small a) **Environmental and edaphic properties**: AST, H~2~O, N, P, Al, Ca, Fe, K, Mg, Mn, Na, TEB, ECEC, pH, NH~4~, NO~3~, PO~4~, DOC, DON, DOCN.
 
-    ii) **Microbial functional responses**: micC, micN, micP, micCN, micCP, micNP, AG~ase~, BG~ase~, BP~ase~, CE~ase~, P~ase~, N~ase~, S~ase~, XY~ase~,  LP~ase~, PX~ase~, CO~2~, enzCN, enzCP, enzNP.
+    \small b) **Microbial functional responses**: micC, micN, micP, micCN, micCP, micNP, AG~ase~, BG~ase~, BP~ase~, CE~ase~, P~ase~, N~ase~, S~ase~, XY~ase~,  LP~ase~, PX~ase~, CO~2~, enzCN, enzCP, enzNP.
 
-    iii) **Temperature adaptation**: AG~Q10~, BG~Q10~, BP~Q10~, CE~Q10~, P~Q10~, N~Q10~, S~Q10~, XY~Q10~, LP~Q10~, PX~Q10~, CUE~cn~, CUE~cp~, NUE, PUE, T~min~, SI.
+    \small c) **Temperature adaptation**: AG~Q10~, BG~Q10~, BP~Q10~, CE~Q10~, P~Q10~, N~Q10~, S~Q10~, XY~Q10~, LP~Q10~, PX~Q10~, CUE~cn~, CUE~cp~, NUE, PUE, T~min~, SI.
 
 The following parameters were collected but not used in the analysis: minPO~4~, minNH~4~, minNO~3~, minTIN.
 
 4) **Autocorrelation tests**: Then we tested all possible pair-wise comparisons of the normalized metadata (from step #2) for each group (step #3) to identify potential autocorrelated parameters.
-5) **Remove autocorrelated parameters from each group**. Based on the results of step #4, we removed autocorrelated parameters.
-6) **Dissimilarity correlation tests**: Here we used Mantel Tests to determine if any metadata groups were significantly correlated with community data. We generated Bray-Curtis[@bray1957ordination] distance matrices for the community data and Euclidean distance matrices for each metadata group. Then we performed Mantel tests[@mantel1967detection; @legendre2012numerical] for all comparisons using the function `mantel` from the vegan[@oksanen2013community] package.
-7) **Best subset of variables**: Then we determined which metadata parameters (from each group) were the most strongly correlated with the community data. For this we used the `bioenv` function from the vegan[@oksanen2013community] package where `method = "spearman"`, `index = "bray"`, and `metric = "euclidean"`.
-8) **Distance-based Redundancy Analysis (dbRDA)**: Finally, we performed ordination analysis of samples plus metadata vector overlays using `capscale`, also from the vegan package. For each of the three metadata subsets, we perform the following steps:
+5) **Remove autocorrelated parameters**. Based on the results of step #4.
+6) **Dissimilarity correlation tests**: We used Mantel Tests to determine if any metadata groups were significantly correlated with community data. We generated Bray-Curtis[@bray1957ordination] distance matrices for the community data and Euclidean distance matrices for each metadata group. We performed Mantel tests[@mantel1967detection; @legendre2012numerical] for all comparisons using the function `mantel` from the vegan[@oksanen2013community] package.
+7) **Best subset of variables**: We determined which metadata parameters (from each group) were the most strongly correlated with the community data using the `bioenv` function from the vegan[@oksanen2013community] package where method = "spearman", index = "bray", and metric = "euclidean".
+8) **Distance-based Redundancy Analysis (dbRDA)**: We performed ordination analysis of samples and metadata vectors for each of the three metadata subsets using the following recipe:
 
     i) Run `rankindex`[@faith1987compositional] in the vegan package to compare metadata and community dissimilarity indices for gradient detection. This aids in the selection of the best dissimilarity metric to use. Here we tested the following metrics: Euclidean, Manhattan, Gower, Bray–Curtis, and Kulczynski.
-    ii) Run `capscale` in the vegan package for distance-based redundancy analysis.
+    ii) Run `capscale` in the vegan[@oksanen2013community] package for distance-based redundancy analysis.
     iii) Run `envfit` to fit environmental parameters onto the ordination. This function basically calculates correlation scores between the metadata parameters and the ordination axes.
     iv) Select metadata parameters significant for `bioenv` (see above) and/or `envfit` analyses.
     v) Plot the ordination and vector overlays.
@@ -583,7 +573,7 @@ P09\_W8E & 813 & 376 & 332 & 170 & 375.3 & 165.6 & 149.9 & 67.9 & 120.2 & 55.7 &
 ::: {.cell-output-display}
 \begin{table}[H]
 
-\caption{\textbf{Supplementary Table 9 |} Summary of 16S rRNA significant tests.}
+\caption{\textbf{Supplementary Table 9 |} Summary of 16S rRNA significant tests. Posthoc p-values adjusted for multiple comparisons.}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{threeparttable}
@@ -631,7 +621,7 @@ Inverse Simpson & PIME & 0.370 & 0.371 & ANOVA & Tukey post-hoc test & 1.00e-06\
 
 ::: {.cell layout-align="center"}
 ::: {.cell-output-display}
-![\textbf{Supplementary Figure 3 |} Alpha diversity of 16S rRNA communities. Significant differences denoted by asterisks (* p $\le$ 0.05, ** p $\le$ 0.01, *** p $\le$ 0.001, **** p $\le$ 0.0001).](FIGURES/ssu_supp_alpha_div.png){fig-align='center' width=100%}
+![\textbf{Supplementary Figure 3 |} Alpha diversity estimates of 16S rRNA communities. The centre line of each box plot represents the median, the lower and upper hinges represent the first and third quartiles and whiskers represent + 1.5 the interquartile range. Shapiro-Wilk Normality Test and Bartlett Test of Homogeneity of Variances normality tests indicated all data was normally distributed except for Shannon exponential estimates of the PIME filtered data. Differences in alpha diversity assessed using analysis of variance (ANOVA) followed by Tukey HSD post hoc tests (normally distributed data) or Kruskal-Wallis followed by Dunn test with Benjamini-Hochberg correction (non-normally distributed data). Only significant differences (p-values adjusted for multiple comparisons) between treatments and controls are shown in plots, where n = 5 for each treatment.](FIGURES/ssu_supp_alpha_div.png){fig-align='center' width=100%}
 :::
 :::
 
@@ -692,7 +682,7 @@ P09\_W3E & 745 & 390 & 118 & 196 & 232.7 & 133.6 & 51.9 & 66.6 & 96.0 & 61.7 & 3
 ::: {.cell-output-display}
 \begin{table}[H]
 
-\caption{\textbf{Supplementary Table 11 |} Summary of ITS significant tests.}
+\caption{\textbf{Supplementary Table 11 |} Summary of ITS significant tests. Posthoc p-values adjusted for multiple comparisons.}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{threeparttable}
@@ -740,7 +730,7 @@ Inverse Simpson & PIME & 0.955 & 0.477 & ANOVA & Tukey post-hoc test & 3.42e-01\
 
 ::: {.cell layout-align="center"}
 ::: {.cell-output-display}
-![\textbf{Supplementary Figure 4 |} Alpha diversity of ITS communities. Significant differences denoted by asterisks (* p $\le$ 0.05, ** p $\le$ 0.01, *** p $\le$ 0.001, **** p $\le$ 0.0001). ](FIGURES/its_supp_alpha_div.png){fig-align='center' width=100%}
+![\textbf{Supplementary Figure 4 |} Alpha diversity estimates of ITS communities. The centre line of each box plot represents the median, the lower and upper hinges represent the first and third quartiles and whiskers represent + 1.5 the interquartile range. Shapiro-Wilk Normality Test and Bartlett Test of Homogeneity of Variances indicated all data was normally distributed. Differences in alpha diversity for all metrics assessed using analysis of variance (ANOVA) followed by Tukey HSD post hoc tests. Only significant differences (p-values adjusted for multiple comparisons) between treatments and controls are shown in plots, where n = 5 (control) and n = 4 (treatments).](FIGURES/its_supp_alpha_div.png){fig-align='center' width=100%}
 :::
 :::
 
@@ -827,7 +817,7 @@ To test for significance between treatment groups, we calculated the beta disper
 ::: {.cell-output-display}
 \begin{table}[H]
 
-\caption{\label{tab:unnamed-chunk-26}\textbf{Supplementary Table 14 |} Summary of beta diversity significant tests.}
+\caption{\label{tab:unnamed-chunk-26}\textbf{Supplementary Table 14 |} Summary of beta diversity significant tests. Where beta dispersion tests were not significant, we used Permutational multivariate analysis of variance (PERMANOVA) to calculate dissimilarity among treatment groups. Where beta dispersion tests were significant, we used Analysis of Similarity (ANOSIM).}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{llcccc}

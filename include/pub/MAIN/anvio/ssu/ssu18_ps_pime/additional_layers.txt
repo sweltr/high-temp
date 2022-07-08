@@ -1,0 +1,422 @@
+Group	ASV_ID	total_reads	freq	enrich_indval	test_indval	pval_indval	enrich_lefse	test_lefse	pval_lefse	Kingdom	Phylum	Class	Order	Family	Genus
+ASV147	ASV147	339								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV120	ASV120	407					W8	3.50443509157851	0.0317804134091488	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Elsterales	o_Elsterales	o_Elsterales
+ASV467	ASV467	120								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV123	ASV123	422								Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV573	ASV573	108								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV342	ASV342	184								Bacteria	Firmicutes	Bacilli	Bacillales	Bacillaceae	Bacillus
+ASV388	ASV388	141	4	C0	0.8	0.015	C0	3.115642154446	0.00714618614709697	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV270	ASV270	208	9	C0	0.769230769230769	0.003	C0	3.13660589386393	0.0039951799112744	Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Saprospiraceae	f_Saprospiraceae
+ASV40	ASV40	970								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV421	ASV421	142								Bacteria	Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota
+ASV12	ASV12	1711								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV78	ASV78	629	15	W8	0.534181240063593	0.007	W8	3.37887105966933	0.00767336528789551	Bacteria	Firmicutes	Bacilli	Paenibacillales	Paenibacillaceae	Paenibacillus
+ASV61	ASV61	633								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Hyphomicrobiaceae	Pedomicrobium
+ASV505	ASV505	101					C0	2.6811216836742	0.035279809608434	Bacteria	Chloroflexi	TK10	c_TK10	c_TK10	c_TK10
+ASV52	ASV52	736								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV22	ASV22	1260	14	W3	0.482539682539682	0.036	W3	3.42876537110149	0.0391638950989871	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV149	ASV149	359								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV157	ASV157	266					W3	3.09210254709825	0.0077218314880025	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Xiphinematobacteraceae	Candidatus_Xiphinematobacter
+ASV369	ASV369	182	3	W8	0.6	0.049	W8	3.15023932966713	0.0317804134091488	Bacteria	Armatimonadota	Fimbriimonadia	Fimbriimonadales	Fimbriimonadaceae	f_Fimbriimonadaceae
+ASV674	ASV674	102								Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV216	ASV216	144					W8	3.09319822841984	0.0317804134091488	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV111	ASV111	437								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV345	ASV345	175								Bacteria	Chloroflexi	SHA-26	c_SHA-26	c_SHA-26	c_SHA-26
+ASV30	ASV30	709					W8	3.77015959565975	0.0317804134091488	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV75	ASV75	538					C0	3.38441250194906	0.03227916403136	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV228	ASV228	223	10	C0	0.600896860986547	0.015	C0	3.05817168844672	0.00365971365718817	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV105	ASV105	371	9	W3	0.595687331536388	0.047	W3	3.24705254619451	0.0168624391396645	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV183	ASV183	297	9	C0	0.696969696969697	0.004	C0	3.22883608348472	0.0039951799112744	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Comamonadaceae	Rubrivivax
+ASV50	ASV50	737								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV55	ASV55	699								Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV385	ASV385	114					C0	2.70443723753377	0.0168624391396645	Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Parafilimonas
+ASV329	ASV329	124	9	W3	0.596774193548387	0.031	W3	2.77642288842931	0.0122446439439811	Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	f_Chitinophagaceae
+ASV91	ASV91	514								Bacteria	Acidobacteriota	Subgroup_25	c_Subgroup_25	c_Subgroup_25	c_Subgroup_25
+ASV224	ASV224	214	9	C0	0.677570093457944	0.021	C0	3.10226786518136	0.00918056373983939	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV508	ASV508	114	10	C0	0.614035087719298	0.038	C0	2.73147327638719	0.00432023947409407	Bacteria	Chloroflexi	Anaerolineae	Anaerolineales	Anaerolineaceae	f_Anaerolineaceae
+ASV89	ASV89	549					W8	3.15432015644097	0.0323869407729069	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV603	ASV603	105								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV296	ASV296	144					W8	2.99203204757824	0.0454484541704541	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV219	ASV219	216								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Terrimonas
+ASV209	ASV209	202	4	C0	0.8	0.004	C0	3.26699890503456	0.00714618614709697	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV285	ASV285	188								Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV25	ASV25	1124								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV177	ASV177	288								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV233	ASV233	244								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV180	ASV180	230					C0	3.04099576087505	0.0160721604765523	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Xiphinematobacteraceae	Candidatus_Xiphinematobacter
+ASV378	ASV378	117					C0	3.01273433149373	0.0317804134091488	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	Candidatus_Nitrososphaera
+ASV158	ASV158	355								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV429	ASV429	112	4	W3	0.8	0.01	W3	2.9471837154447	0.00714618614709697	Bacteria	MBNT15	p_MBNT15	p_MBNT15	p_MBNT15	p_MBNT15
+ASV80	ASV80	583					W8	3.27529910862797	0.0365161737537403	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV244	ASV244	203					C0	2.9929224416235	0.0175194349721074	Bacteria	Acidobacteriota	Vicinamibacteria	Subgroup_17	o_Subgroup_17	o_Subgroup_17
+ASV384	ASV384	113	4	C0	0.8	0.008	C0	2.94453354273887	0.00714618614709697	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV468	ASV468	105	8	C0	0.752380952380952	0.003	C0	2.80947489940891	0.00545560853147638	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Cellvibrionales	Spongiibacteraceae	BD1-7_clade
+ASV67	ASV67	640								Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	f_Gemmatimonadaceae
+ASV455	ASV455	134								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	Sphingomonas
+ASV374	ASV374	111								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV195	ASV195	316								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV518	ASV518	120								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV188	ASV188	247								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV83	ASV83	572								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV517	ASV517	119								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV521	ASV521	109								Bacteria	Gammaproteobacteria	Gammaproteobacteria	PLTA13	o_PLTA13	o_PLTA13
+ASV246	ASV246	246	14	C0	0.475609756097561	0.043				Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	f_Gemmatimonadaceae
+ASV116	ASV116	418								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV119	ASV119	197	4	W3	0.8	0.012	W3	3.19586901052615	0.00714618614709697	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV221	ASV221	258								Bacteria	Firmicutes	Bacilli	Bacillales	Bacillaceae	Falsibacillus
+ASV185	ASV185	240	9	C0	0.758333333333333	0.003	C0	3.18871751487928	0.00231888997543371	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	TRA3-20	f_TRA3-20
+ASV163	ASV163	317								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV127	ASV127	419								Bacteria	Actinobacteriota	Actinobacteria	Frankiales	Acidothermaceae	Acidothermus
+ASV394	ASV394	133					W3	2.75396667602584	0.0171344081157276	Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	Gemmatimonas
+ASV103	ASV103	477								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV205	ASV205	274								Bacteria	Chloroflexi	Chloroflexia	Chloroflexales	Roseiflexaceae	f_Roseiflexaceae
+ASV108	ASV108	408					W8	3.51099484893967	0.0317804134091488	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	Sphingomonas
+ASV139	ASV139	351								Bacteria	Acidobacteriota	Subgroup_25	c_Subgroup_25	c_Subgroup_25	c_Subgroup_25
+ASV171	ASV171	304								Bacteria	Actinobacteriota	Actinobacteria	Frankiales	o_Frankiales	o_Frankiales
+ASV144	ASV144	238								Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV259	ASV259	183					C0	2.97395998370349	0.0171344081157276	Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	f_Gemmatimonadaceae
+ASV502	ASV502	113								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV14	ASV14	1827								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV427	ASV427	113								Bacteria	Chloroflexi	Chloroflexia	Chloroflexales	Roseiflexaceae	f_Roseiflexaceae
+ASV107	ASV107	425								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	B1-7BS	f_B1-7BS
+ASV454	ASV454	125	9	C0	0.672	0.022	C0	2.81321289874263	0.00769898584940158	Bacteria	NB1-j	p_NB1-j	p_NB1-j	p_NB1-j	p_NB1-j
+ASV238	ASV238	222								Bacteria	Alphaproteobacteria	Alphaproteobacteria	c_Alphaproteobacteria	c_Alphaproteobacteria	c_Alphaproteobacteria
+ASV203	ASV203	236	10	C0	0.686440677966102	0.015	C0	3.13575842874926	0.00365971365718817	Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	UTBCD1
+ASV43	ASV43	875								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Steroidobacterales	Steroidobacteraceae	Steroidobacter
+ASV199	ASV199	202	5	C0	1	0.001	C0	3.21088370859321	0.0012997678332737	Bacteria	Planctomycetota	OM190	c_OM190	c_OM190	c_OM190
+ASV198	ASV198	279								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Rhodoplanes
+ASV200	ASV200	285								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Terrimonas
+ASV354	ASV354	123					W3	2.76226239547511	0.0168624391396645	Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV262	ASV262	200					W3	2.957902086041	0.0136957917253623	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV353	ASV353	152					W3	2.84093281370514	0.0298637140911596	Bacteria	Acidobacteriota	Acidobacteriae	Subgroup_2	o_Subgroup_2	o_Subgroup_2
+ASV193	ASV193	283								Bacteria	Myxococcota	Polyangia	Polyangiales	Phaselicystidaceae	Phaselicystis
+ASV87	ASV87	476					W8	3.56879477529486	0.0317804134091488	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Comamonadaceae	Ramlibacter
+ASV58	ASV58	579					W3	3.41624813465024	0.0173181533681343	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV562	ASV562	110								Bacteria	Actinobacteriota	Thermoleophilia	Solirubrobacterales	67-14	f_67-14
+ASV444	ASV444	137								Bacteria	Chloroflexi	KD4-96	c_KD4-96	c_KD4-96	c_KD4-96
+ASV142	ASV142	278					C0	3.11588960043486	0.0168624391396645	Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV56	ASV56	604	10	C0	0.640728476821192	0.018	C0	3.48243900327821	0.00246775994559997	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV344	ASV344	208								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV13	ASV13	1821								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV135	ASV135	394								Bacteria	NB1-j	p_NB1-j	p_NB1-j	p_NB1-j	p_NB1-j
+ASV302	ASV302	178								Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV362	ASV362	175								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	Sphingomonas
+ASV516	ASV516	128								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Edaphobaculum
+ASV136	ASV136	355	13	W3	0.563380281690141	0.021				Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV317	ASV317	152					W8	3.12816210020002	0.0317804134091488	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Comamonadaceae	Rivibacter
+ASV112	ASV112	396	13	C0	0.603535353535353	0.006	C0	3.19838025181375	0.0138753882129501	Bacteria	Gammaproteobacteria	Gammaproteobacteria	CCD24	o_CCD24	o_CCD24
+ASV437	ASV437	138	11	W8	0.623188405797101	0.01	W8	2.88368819066388	0.01651852621109	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV275	ASV275	114	4	C0	0.8	0.014	C0	3.02389005817307	0.00714618614709697	Bacteria	Bacteroidota	Bacteroidia	Cytophagales	Microscillaceae	Chryseolinea
+ASV165	ASV165	286	8	C0	0.618881118881119	0.029	C0	3.16597444661431	0.0175194349721074	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV17	ASV17	1491								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Xiphinematobacteraceae	Candidatus_Xiphinematobacter
+ASV379	ASV379	121					W3	2.77701016498615	0.03227916403136	Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV19	ASV19	1480					W8	3.25230994568229	0.0492916787604621	Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV265	ASV265	156	8	W3	0.628205128205128	0.023	W3	2.88342781245107	0.0206967669318216	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV602	ASV602	117								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV23	ASV23	1182								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Terrimonas
+ASV71	ASV71	662								Bacteria	Acidobacteriota	Holophagae	Subgroup_7	o_Subgroup_7	o_Subgroup_7
+ASV99	ASV99	463								Bacteria	Firmicutes	Bacilli	Bacillales	o_Bacillales	o_Bacillales
+ASV117	ASV117	401								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Rhodoplanes
+ASV45	ASV45	802	12	W3	0.628428927680798	0.05				Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Terrimonas
+ASV223	ASV223	183	9	C0	0.584699453551913	0.013	C0	2.94440132882958	0.00507886906758874	Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	f_Chitinophagaceae
+ASV41	ASV41	860								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV197	ASV197	270								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV279	ASV279	120	5	C0	1	0.001	C0	2.99269973000159	0.0012997678332737	Bacteria	Acidobacteriota	Acidobacteriae	Acidobacteriales	o_Acidobacteriales	o_Acidobacteriales
+ASV273	ASV273	153								Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV11	ASV11	1706								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV113	ASV113	411								Bacteria	Alphaproteobacteria	Alphaproteobacteria	c_Alphaproteobacteria	c_Alphaproteobacteria	c_Alphaproteobacteria
+ASV452	ASV452	107								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV335	ASV335	163					W3	3.09319566654246	0.0317804134091488	Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV164	ASV164	258	10	C0	0.666666666666667	0.002	C0	3.14440984392302	0.00196435252339595	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV155	ASV155	354								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV217	ASV217	110					W3	2.9373577880552	0.0317804134091488	Bacteria	RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54
+ASV47	ASV47	703								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	Sphingomonas
+ASV292	ASV292	259								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV348	ASV348	164								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV278	ASV278	116					W3	2.94437575201072	0.0317804134091488	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV595	ASV595	105								Bacteria	Acidobacteriota	Vicinamibacteria	Subgroup_17	o_Subgroup_17	o_Subgroup_17
+ASV133	ASV133	347								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV433	ASV433	131								Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV134	ASV134	333	9	C0	0.708708708708709	0.001	C0	3.29250793880479	0.0039951799112744	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV260	ASV260	158								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV377	ASV377	143								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV124	ASV124	204	4	C0	0.8	0.01	C0	3.23256828050079	0.00714618614709697	Bacteria	Actinobacteriota	Actinobacteria	Micromonosporales	Micromonosporaceae	Luedemannella
+ASV126	ASV126	318	8	C0	0.710691823899371	0.006	C0	3.28295467413964	0.00545560853147638	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV77	ASV77	611								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV253	ASV253	231								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Steroidobacterales	Steroidobacteraceae	f_Steroidobacteraceae
+ASV306	ASV306	156					W3	2.86255557097905	0.0298637140911596	Bacteria	Cyanobacteria	Vampirivibrionia	Obscuribacterales	Obscuribacteraceae	f_Obscuribacteraceae
+ASV167	ASV167	316								Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV38	ASV38	956								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	WX65	f_WX65
+ASV294	ASV294	207								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Flavihumibacter
+ASV251	ASV251	216								Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV392	ASV392	131	8	C0	0.770992366412214	0.007	C0	2.94918135998375	0.00720245503977478	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV227	ASV227	196					C0	2.97117991131073	0.0160721604765523	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV418	ASV418	101	4	W3	0.8	0.008	W3	2.88665729663178	0.00714618614709697	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	KF-JG30-B3	f_KF-JG30-B3
+ASV304	ASV304	468					W8	3.78362824078427	0.0317804134091488	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rickettsiales	Rickettsiaceae	Rickettsia
+ASV26	ASV26	1058					W3	3.69103539535154	0.0174107635938457	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV218	ASV218	123	4	W3	0.8	0.009	W3	2.97172950103657	0.00714618614709697	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV333	ASV333	168	8	C0	0.702380952380952	0.012	C0	3.01240517389618	0.00929965684605093	Bacteria	Nitrospirota	Nitrospiria	Nitrospirales	Nitrospiraceae	Nitrospira
+ASV196	ASV196	205	4	C0	0.8	0.013	C0	3.23238559146187	0.00714618614709697	Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV599	ASV599	103	7	C0	0.667961165048544	0.016	C0	2.85847934419292	0.0219149059808466	Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV137	ASV137	351					C0	3.21396932413187	0.00681827925135103	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV72	ASV72	555								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV336	ASV336	165								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV187	ASV187	214								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Hyphomicrobiaceae	Pedomicrobium
+ASV118	ASV118	303					W3	3.16968451269113	0.0341231998752172	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV237	ASV237	109	4	W3	0.8	0.01	W3	2.95502125731552	0.00714618614709697	Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV148	ASV148	275	9	C0	0.618181818181818	0.027	C0	3.13968077167225	0.0107161856809531	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Bradyrhizobium
+ASV70	ASV70	593								Bacteria	Firmicutes	Bacilli	Bacillales	Bacillaceae	Bacillus
+ASV240	ASV240	216					C0	3.00111542972959	0.0206967669318216	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV125	ASV125	337	9	W3	0.691394658753709	0.008	W3	3.24946006049777	0.0107161856809531	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV74	ASV74	515					C0	3.35091840492716	0.0160721604765523	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV460	ASV460	125								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Rhizobiales_Incertae_Sedis	Nordella
+ASV62	ASV62	692								Bacteria	Actinobacteriota	MB-A2-108	c_MB-A2-108	c_MB-A2-108	c_MB-A2-108
+ASV307	ASV307	173					W8	3.01271010838161	0.035279809608434	Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV145	ASV145	211	4	W3	0.8	0.01	W3	3.232324985366	0.00714618614709697	Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV192	ASV192	244					W3	3.05754142776216	0.0173181533681343	Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV213	ASV213	279								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV363	ASV363	144	8	C0	0.694444444444444	0.014	C0	2.91006370383955	0.0117436284570214	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV245	ASV245	179					W8	2.98061086799343	0.03227916403136	Bacteria	Actinobacteriota	Actinobacteria	Frankiales	Acidothermaceae	Acidothermus
+ASV60	ASV60	656								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Hyphomicrobiaceae	Hyphomicrobium
+ASV376	ASV376	102					W3	2.73950777482785	0.0392330688727753	Bacteria	Planctomycetota	Phycisphaerae	Tepidisphaerales	WD2101_soil_group	f_WD2101_soil_group
+ASV364	ASV364	126					W3	3.00043303438237	0.0317804134091488	Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV140	ASV140	356								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	B1-7BS	f_B1-7BS
+ASV420	ASV420	136					C0	2.85577421141655	0.0171344081157276	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Burkholderiaceae	Cupriavidus
+ASV42	ASV42	693					W3	3.49823788514283	0.0077218314880025	Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV215	ASV215	246								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV110	ASV110	434								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	f_Chitinophagaceae
+ASV271	ASV271	246								Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV106	ASV106	358	10	C0	0.675977653631285	0.016	C0	3.30361662541139	0.00432023947409407	Bacteria	Bacteroidota	Bacteroidia	Sphingobacteriales	AKYH767	f_AKYH767
+ASV34	ASV34	929	13	C0	0.497308934337998	0.03	C0	3.42862207712845	0.0303110395392943	Bacteria	Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota
+ASV51	ASV51	769					W8	3.25599044698702	0.0343896373434726	Bacteria	Myxococcota	Myxococcia	Myxococcales	Myxococcaceae	Corallococcus
+ASV129	ASV129	351								Bacteria	Actinobacteriota	Thermoleophilia	Solirubrobacterales	Solirubrobacteraceae	Solirubrobacter
+ASV291	ASV291	200								Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV351	ASV351	154	15	W8	0.519480519480519	0.023	W8	2.7314186883412	0.0154522601239095	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV241	ASV241	205								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV371	ASV371	143								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV97	ASV97	452								Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV82	ASV82	586								Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV65	ASV65	590								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	f_Chitinophagaceae
+ASV314	ASV314	156	5	C0	1	0.003	C0	3.08971504834993	0.0012997678332737	Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV15	ASV15	1546	15	W3	0.417205692108668	0.044				Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV122	ASV122	429	15	W8	0.552447552447553	0.013	W8	3.22901216251306	0.0188734331351516	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV101	ASV101	464								Bacteria	Myxococcota	Myxococcia	Myxococcales	Anaeromyxobacteraceae	Anaeromyxobacter
+ASV320	ASV320	150					C0	2.88391991386168	0.00769898584940158	Bacteria	Acidobacteriota	Blastocatellia	Blastocatellales	Blastocatellaceae	JGI_0001001-H03
+ASV20	ASV20	1406								Bacteria	Nitrospirota	Nitrospiria	Nitrospirales	Nitrospiraceae	Nitrospira
+ASV282	ASV282	192	10	C0	0.541666666666667	0.046	C0	2.95660855794075	0.00565726445852165	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV189	ASV189	252	4	C0	0.8	0.01	C0	3.34123856281291	0.00714618614709697	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Comamonadaceae	Azohydromonas
+ASV346	ASV346	146					C0	3.16337506807416	0.0317804134091488	Bacteria	Acidobacteriota	Acidobacteriae	Solibacterales	Solibacteraceae	Candidatus_Solibacter
+ASV590	ASV590	114								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	SC-I-84	f_SC-I-84
+ASV27	ASV27	1148								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV100	ASV100	447	14	C0	0.449664429530201	0.023				Bacteria	Chloroflexi	KD4-96	c_KD4-96	c_KD4-96	c_KD4-96
+ASV295	ASV295	211								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV138	ASV138	225	5	W3	1	0.001	W3	3.25264397484881	0.0012997678332737	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV382	ASV382	147								Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV181	ASV181	303								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV63	ASV63	675								Bacteria	Acidobacteriota	Subgroup_11	c_Subgroup_11	c_Subgroup_11	c_Subgroup_11
+ASV202	ASV202	281								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Gammaproteobacteria_Incertae_Sedis	Unknown_Family	Acidibacter
+ASV339	ASV339	197								Bacteria	Gammaproteobacteria	Gammaproteobacteria	c_Gammaproteobacteria	c_Gammaproteobacteria	c_Gammaproteobacteria
+ASV322	ASV322	140								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	f_Nitrosomonadaceae
+ASV207	ASV207	212					C0	3.0236334070579	0.035279809608434	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV284	ASV284	124					C0	2.9882010723853	0.0317804134091488	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV309	ASV309	166	8	W3	0.692771084337349	0.021	W3	2.9558570586435	0.0145039633367808	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV150	ASV150	294	8	C0	0.683673469387755	0.018	C0	3.25713230423135	0.0117436284570214	Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV130	ASV130	276	7	W3	0.547826086956522	0.042	W3	3.19224275124165	0.0330800952511814	Bacteria	Myxococcota	bacteriap25	c_bacteriap25	c_bacteriap25	c_bacteriap25
+ASV114	ASV114	353	10	C0	0.594900849858357	0.014	C0	3.24987163614201	0.00303653858076795	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV96	ASV96	466								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Hyphomicrobiaceae	Pedomicrobium
+ASV184	ASV184	112	4	W3	0.8	0.015	W3	2.95651012221406	0.00714618614709697	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV48	ASV48	784								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV186	ASV186	271								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV176	ASV176	291								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	UTBCD1
+ASV5	ASV5	5046	15	W3	0.440745144669045	0.036				Bacteria	RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54
+ASV204	ASV204	111					W3	2.94451985329299	0.0317804134091488	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV160	ASV160	202	4	W3	0.8	0.011	W3	3.20995059992533	0.00714618614709697	Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV229	ASV229	255	9	W3	0.592156862745098	0.028	W3	3.06958858744484	0.0122446439439811	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV404	ASV404	126					W8	2.80464293177515	0.03227916403136	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	Candidatus_Nitrososphaera
+ASV592	ASV592	102								Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV206	ASV206	224	8	W3	0.669642857142857	0.014	W3	3.06701844869851	0.0145039633367808	Bacteria	RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54
+ASV405	ASV405	105	4	W8	0.8	0.007	W8	2.99596232531614	0.00714618614709697	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV104	ASV104	506								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV280	ASV280	179	4	C0	0.8	0.014	C0	3.23369262432865	0.00714618614709697	Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV290	ASV290	188					W3	2.95405910224559	0.0165065171049588	Bacteria	Actinobacteriota	Actinobacteria	Streptomycetales	Streptomycetaceae	Streptomyces
+ASV482	ASV482	139								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV59	ASV59	679								Bacteria	Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota
+ASV128	ASV128	350								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Xiphinematobacteraceae	Candidatus_Xiphinematobacter
+ASV396	ASV396	161								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV552	ASV552	113	13	C0	0.619469026548673	0.003	C0	2.61642444349117	0.0131644856257777	Bacteria	Chloroflexi	AD3	c_AD3	c_AD3	c_AD3
+ASV121	ASV121	364								Bacteria	Myxococcota	Myxococcia	Myxococcales	Myxococcaceae	f_Myxococcaceae
+ASV272	ASV272	132					W3	3.00364019623058	0.0317804134091488	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV39	ASV39	739					C0	3.51016202622853	0.00725600464560742	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV179	ASV179	276					C0	3.1681296101753	0.0272434766241525	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	KF-JG30-B3	f_KF-JG30-B3
+ASV161	ASV161	312					W8	3.23666920713871	0.0270218059512091	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV501	ASV501	121								Bacteria	Actinobacteriota	Acidimicrobiia	IMCC26256	o_IMCC26256	o_IMCC26256
+ASV159	ASV159	226	8	W3	0.672566371681416	0.013	W3	3.07380287630021	0.0206967669318216	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV318	ASV318	187								Bacteria	Gammaproteobacteria	Gammaproteobacteria	PLTA13	o_PLTA13	o_PLTA13
+ASV36	ASV36	893								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV441	ASV441	130	10	C0	0.584615384615385	0.04	C0	2.81277893152127	0.00432023947409407	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV514	ASV514	104								Bacteria	Actinobacteriota	Actinobacteria	Propionibacteriales	Nocardioidaceae	Nocardioides
+ASV64	ASV64	408					W3	3.27647957056568	0.0077218314880025	Bacteria	Acidobacteriota	Thermoanaerobaculia	Thermoanaerobaculales	Thermoanaerobaculaceae	Subgroup_10
+ASV243	ASV243	232								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Caulobacterales	Caulobacteraceae	Phenylobacterium
+ASV403	ASV403	109								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	TRA3-20	f_TRA3-20
+ASV375	ASV375	132								Bacteria	Planctomycetota	vadinHA49	c_vadinHA49	c_vadinHA49	c_vadinHA49
+ASV86	ASV86	561								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV190	ASV190	270								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Sutterellaceae	f_Sutterellaceae
+ASV340	ASV340	120	5	C0	1	0.001	C0	2.9833569423306	0.0012997678332737	Bacteria	Planctomycetota	OM190	c_OM190	c_OM190	c_OM190
+ASV347	ASV347	144					W8	3.07188485931518	0.0317804134091488	Bacteria	Actinobacteriota	Actinobacteria	Propionibacteriales	Nocardioidaceae	Nocardioides
+ASV162	ASV162	312	9	C0	0.766025641025641	0.008	C0	3.31493513151447	0.00507886906758874	Bacteria	Nitrospirota	Nitrospiria	Nitrospirales	Nitrospiraceae	Nitrospira
+ASV252	ASV252	224	8	C0	0.616071428571429	0.031	C0	3.07028173402303	0.0145039633367808	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	mle1-7
+ASV146	ASV146	274	10	C0	0.686131386861314	0.007	C0	3.19695685691928	0.00196435252339595	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV54	ASV54	794								Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV337	ASV337	147					C0	2.82274974856178	0.00725600464560742	Bacteria	Acidobacteriota	Subgroup_11	c_Subgroup_11	c_Subgroup_11	c_Subgroup_11
+ASV226	ASV226	221								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV24	ASV24	1292								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV456	ASV456	130								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV18	ASV18	1503					W8	3.29233127235589	0.00814785969767997	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV293	ASV293	153								Bacteria	Chloroflexi	Chloroflexia	Chloroflexales	Roseiflexaceae	f_Roseiflexaceae
+ASV212	ASV212	188	5	W3	1	0.002	W3	3.17153183070824	0.0012997678332737	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV66	ASV66	612								Bacteria	Myxococcota	bacteriap25	c_bacteriap25	c_bacteriap25	c_bacteriap25
+ASV330	ASV330	130	4	C0	0.8	0.01	C0	3.09188143449693	0.00714618614709697	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV21	ASV21	1348								Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV94	ASV94	527					C0	3.11099126543183	0.0478348894941984	Bacteria	RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54
+ASV235	ASV235	234								Bacteria	MBNT15	p_MBNT15	p_MBNT15	p_MBNT15	p_MBNT15
+ASV471	ASV471	110	9	W3	0.590909090909091	0.04	W3	2.7176539978216	0.0160721604765523	Bacteria	Planctomycetota	Phycisphaerae	Tepidisphaerales	WD2101_soil_group	f_WD2101_soil_group
+ASV263	ASV263	126					W3	2.9760250153472	0.0317804134091488	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV386	ASV386	149								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV230	ASV230	204								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	mle1-7
+ASV523	ASV523	103					C0	2.80803264677824	0.0298637140911596	Bacteria	Acidobacteriota	Blastocatellia	Blastocatellales	Blastocatellaceae	f_Blastocatellaceae
+ASV287	ASV287	212								Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV152	ASV152	252								Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV182	ASV182	266					C0	3.05355164957125	0.0077218314880025	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV453	ASV453	109	8	W3	0.651376146788991	0.026	W3	2.75057896205168	0.00929965684605093	Bacteria	Myxococcota	bacteriap25	c_bacteriap25	c_bacteriap25	c_bacteriap25
+ASV416	ASV416	125					C0	2.80487072175188	0.0454484541704541	Bacteria	Elusimicrobiota	Lineage_IIa	c_Lineage_IIa	c_Lineage_IIa	c_Lineage_IIa
+ASV234	ASV234	215	9	C0	0.744186046511628	0.015	C0	3.16952380774905	0.00769898584940158	Bacteria	Gammaproteobacteria	Gammaproteobacteria	PLTA13	o_PLTA13	o_PLTA13
+ASV525	ASV525	106								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	Luteitalea
+ASV191	ASV191	258								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV28	ASV28	1166								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV37	ASV37	872								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	B1-7BS	f_B1-7BS
+ASV408	ASV408	144								Bacteria	Actinobacteriota	Acidimicrobiia	Microtrichales	o_Microtrichales	o_Microtrichales
+ASV268	ASV268	189					C0	2.98805490496251	0.0341231998752172	Bacteria	Acidobacteriota	Blastocatellia	11-24	o_11-24	o_11-24
+ASV257	ASV257	220								Bacteria	Actinobacteriota	Thermoleophilia	Solirubrobacterales	67-14	f_67-14
+ASV274	ASV274	219								Bacteria	Acidobacteriota	Acidobacteriae	Acidobacteriales	o_Acidobacteriales	o_Acidobacteriales
+ASV46	ASV46	767					W3	3.43509342806293	0.0369425977897186	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV90	ASV90	492								Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV154	ASV154	349								Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	f_Gemmatimonadaceae
+ASV360	ASV360	143					C0	2.87886014756617	0.0175194349721074	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV311	ASV311	173								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV153	ASV153	259								Bacteria	Acidobacteriota	Acidobacteriae	Subgroup_2	o_Subgroup_2	o_Subgroup_2
+ASV32	ASV32	924								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV85	ASV85	521								Bacteria	Actinobacteriota	Thermoleophilia	Solirubrobacterales	67-14	f_67-14
+ASV7	ASV7	2090								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Methyloligellaceae	f_Methyloligellaceae
+ASV131	ASV131	401								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV395	ASV395	160								Bacteria	Gammaproteobacteria	Gammaproteobacteria	c_Gammaproteobacteria	c_Gammaproteobacteria	c_Gammaproteobacteria
+ASV3	ASV3	9799	15	W8	0.591897132360445	0.002	W8	4.66865976667262	0.00865169520312063	Bacteria	Firmicutes	Bacilli	Bacillales	Planococcaceae	Paenisporosarcina
+ASV381	ASV381	136					W8	2.93931642600228	0.03227916403136	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV288	ASV288	167								Bacteria	Myxococcota	bacteriap25	c_bacteriap25	c_bacteriap25	c_bacteriap25
+ASV276	ASV276	107					C0	2.85424877087574	0.0317804134091488	Bacteria	Entotheonellaeota	Entotheonellia	Entotheonellales	Entotheonellaceae	f_Entotheonellaceae
+ASV431	ASV431	170								Bacteria	Actinobacteriota	MB-A2-108	c_MB-A2-108	c_MB-A2-108	c_MB-A2-108
+ASV208	ASV208	221								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV387	ASV387	160								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV93	ASV93	515								Bacteria	Actinobacteriota	Actinobacteria	Corynebacteriales	Mycobacteriaceae	Mycobacterium
+ASV81	ASV81	573								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV301	ASV301	140								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV132	ASV132	293								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	Ellin6067
+ASV308	ASV308	152					C0	2.93777496431554	0.0454484541704541	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Dongiales	Dongiaceae	Dongia
+ASV174	ASV174	293								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV391	ASV391	118	5	C0	1	0.005	C0	2.98621024599383	0.0012997678332737	Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	Chitinophagaceae	Edaphobaculum
+ASV303	ASV303	176								Bacteria	Actinobacteriota	Actinobacteria	Propionibacteriales	Nocardioidaceae	Kribbella
+ASV545	ASV545	156								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV242	ASV242	248								Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	f_Gemmatimonadaceae
+ASV436	ASV436	151								Bacteria	Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota
+ASV232	ASV232	213								Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV68	ASV68	586	14	W3	0.631399317406143	0.011	W3	3.36140497527075	0.00918668615624469	Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV102	ASV102	500								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV463	ASV463	147								Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV173	ASV173	257								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV332	ASV332	154	4	C0	0.8	0.01	C0	3.16214518152285	0.00714618614709697	Bacteria	Nitrospirota	Nitrospiria	Nitrospirales	Nitrospiraceae	Nitrospira
+ASV53	ASV53	679								Bacteria	Acidobacteriota	Acidobacteriae	Subgroup_2	o_Subgroup_2	o_Subgroup_2
+ASV390	ASV390	141								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV141	ASV141	363					W3	2.92830235595405	0.0263445531004242	Bacteria	Acidobacteriota	Holophagae	Subgroup_7	o_Subgroup_7	o_Subgroup_7
+ASV35	ASV35	912					W8	3.10306169879747	0.0103579597176137	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Rhodoplanes
+ASV210	ASV210	189	4	C0	0.8	0.015	C0	3.17459974077021	0.00714618614709697	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	Ellin6067
+ASV79	ASV79	561								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV255	ASV255	227								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV33	ASV33	963								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	GOUTA6
+ASV8	ASV8	2124								Bacteria	Nitrospirota	Nitrospiria	Nitrospirales	Nitrospiraceae	Nitrospira
+ASV109	ASV109	408								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Rhizobiaceae	Mesorhizobium
+ASV383	ASV383	135	8	W3	0.562962962962963	0.05	W3	2.7901845557748	0.0298637140911596	Bacteria	MBNT15	p_MBNT15	p_MBNT15	p_MBNT15	p_MBNT15
+ASV84	ASV84	576								Bacteria	RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54	p_RCP2-54
+ASV445	ASV445	122					W3	2.81052744583154	0.0454484541704541	Bacteria	Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota	p_Desulfobacterota
+ASV432	ASV432	114					W3	2.69162831298808	0.00627544355057924	Bacteria	Alphaproteobacteria	Alphaproteobacteria	c_Alphaproteobacteria	c_Alphaproteobacteria	c_Alphaproteobacteria
+ASV264	ASV264	210					W3	2.79255325664491	0.0298969144369263	Bacteria	Verrucomicrobiota	Verrucomicrobiae	S-BQ2-57_soil_group	o_S-BQ2-57_soil_group	o_S-BQ2-57_soil_group
+ASV538	ASV538	124	7	C0	0.6	0.024	C0	2.86789314157352	0.0219149059808466	Bacteria	Myxococcota	bacteriap25	c_bacteriap25	c_bacteriap25	c_bacteriap25
+ASV496	ASV496	105					W3	2.78608228565172	0.0392330688727753	Bacteria	Planctomycetota	Phycisphaerae	Tepidisphaerales	WD2101_soil_group	f_WD2101_soil_group
+ASV266	ASV266	197					W8	3.09558076784496	0.0239129928628052	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV225	ASV225	225								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Sphingomonadales	Sphingomonadaceae	Sphingomonas
+ASV170	ASV170	330	10	C0	0.615151515151515	0.048	C0	3.23291439006696	0.00565726445852165	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV178	ASV178	224					W8	3.26164828559329	0.0317804134091488	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Comamonadaceae	f_Comamonadaceae
+ASV57	ASV57	694								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV249	ASV249	210								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Hyphomicrobiaceae	Pedomicrobium
+ASV451	ASV451	120	8	W3	0.666666666666667	0.02	W3	2.80374824230074	0.0145039633367808	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV297	ASV297	116					W3	2.70421244823166	0.035279809608434	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV6	ASV6	3704								Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV447	ASV447	126								Bacteria	NB1-j	p_NB1-j	p_NB1-j	p_NB1-j	p_NB1-j
+ASV328	ASV328	155					C0	2.98641973675566	0.0330800952511814	Bacteria	Myxococcota	Myxococcia	Myxococcales	Anaeromyxobacteraceae	Anaeromyxobacter
+ASV1	ASV1	20470	15	W8	0.621787982413288	0.02	W8	5.00690791840437	0.00591656047368184	Bacteria	Firmicutes	Bacilli	Bacillales	Planococcaceae	f_Planococcaceae
+ASV172	ASV172	287								Bacteria	Bacteroidota	Bacteroidia	Chitinophagales	o_Chitinophagales	o_Chitinophagales
+ASV73	ASV73	515					W3	3.34787738895704	0.0077218314880025	Bacteria	Acidobacteriota	Subgroup_22	c_Subgroup_22	c_Subgroup_22	c_Subgroup_22
+ASV277	ASV277	184								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Oxalobacteraceae	Pseudoduganella
+ASV236	ASV236	228								Bacteria	Chloroflexi	Chloroflexia	Chloroflexales	Roseiflexaceae	f_Roseiflexaceae
+ASV201	ASV201	200								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV472	ASV472	116	10	C0	0.577586206896552	0.049	C0	2.74520106534158	0.00681827925135103	Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV2	ASV2	10732								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV313	ASV313	195								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	ADurb.Bin063-1
+ASV370	ASV370	152								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Azospirillales	o_Azospirillales	o_Azospirillales
+ASV88	ASV88	535								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Bradyrhizobium
+ASV9	ASV9	2017								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	f_Xanthobacteraceae
+ASV334	ASV334	171								Bacteria	Chloroflexi	KD4-96	c_KD4-96	c_KD4-96	c_KD4-96
+ASV286	ASV286	220								Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	SC-I-84	f_SC-I-84
+ASV143	ASV143	380								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV269	ASV269	134	4	C0	0.8	0.013	C0	3.07763563192221	0.00714618614709697	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Nitrosomonadaceae	MND1
+ASV327	ASV327	160					W3	2.88116667530645	0.0298637140911596	Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV326	ASV326	176	9	C0	0.653409090909091	0.023	C0	2.97727957828672	0.0107161856809531	Bacteria	Bacteroidota	Bacteroidia	Flavobacteriales	Flavobacteriaceae	Flavobacterium
+ASV534	ASV534	115	8	C0	0.617391304347826	0.043	C0	2.77570257607926	0.0239129928628052	Bacteria	Planctomycetota	OM190	c_OM190	c_OM190	c_OM190
+ASV76	ASV76	747								Bacteria	NB1-j	p_NB1-j	p_NB1-j	p_NB1-j	p_NB1-j
+ASV44	ASV44	820								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV10	ASV10	1897								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV457	ASV457	104	4	C0	0.8	0.01	C0	2.98957572890541	0.00714618614709697	Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV168	ASV168	271	9	C0	0.605166051660517	0.035	C0	3.12829087741492	0.0107161856809531	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Comamonadaceae	f_Comamonadaceae
+ASV283	ASV283	114	4	W3	0.8	0.008	W3	2.9371007554495	0.00714618614709697	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Azospirillales	o_Azospirillales	o_Azospirillales
+ASV299	ASV299	170	7	C0	0.644705882352941	0.029	C0	3.07259574216073	0.0219149059808466	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV479	ASV479	120								Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria	k_Bacteria
+ASV331	ASV331	233								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Pedosphaerales	Pedosphaeraceae	f_Pedosphaeraceae
+ASV254	ASV254	198	10	C0	0.595959595959596	0.041	C0	3.03133084303476	0.00725600464560742	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	Sutterellaceae	f_Sutterellaceae
+ASV69	ASV69	633								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Bradyrhizobium
+ASV355	ASV355	131					W8	2.80957966667561	0.035279809608434	Bacteria	Actinobacteriota	MB-A2-108	c_MB-A2-108	c_MB-A2-108	c_MB-A2-108
+ASV29	ASV29	956	10	W3	0.596234309623431	0.014	W3	3.64669555682892	0.00499529275365239	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV175	ASV175	230					W8	3.27068249320177	0.0317804134091488	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	Candidatus_Nitrososphaera
+ASV397	ASV397	146								Bacteria	Planctomycetota	Pla3_lineage	c_Pla3_lineage	c_Pla3_lineage	c_Pla3_lineage
+ASV49	ASV49	816								Bacteria	Acidobacteriota	Subgroup_5	c_Subgroup_5	c_Subgroup_5	c_Subgroup_5
+ASV498	ASV498	115					C0	3.01757609897337	0.0317804134091488	Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV220	ASV220	244								Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	o_Vicinamibacterales	o_Vicinamibacterales
+ASV341	ASV341	153					W8	2.79147148813412	0.0238332734701383	Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	Gaiellaceae	Gaiella
+ASV115	ASV115	496	14	C0	0.512096774193548	0.045				Bacteria	Gammaproteobacteria	Gammaproteobacteria	Burkholderiales	B1-7BS	f_B1-7BS
+ASV247	ASV247	222	9	C0	0.666666666666667	0.014	C0	3.08410297500109	0.00507886906758874	Bacteria	Gammaproteobacteria	Gammaproteobacteria	Gammaproteobacteria_Incertae_Sedis	Unknown_Family	Acidibacter
+ASV450	ASV450	117								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV4	ASV4	6502								Archaea	Crenarchaeota	Nitrososphaeria	Nitrososphaerales	Nitrososphaeraceae	f_Nitrososphaeraceae
+ASV398	ASV398	119	4	C0	0.8	0.012	C0	2.95706283494645	0.00714618614709697	Bacteria	Myxococcota	Polyangia	Haliangiales	Haliangiaceae	Haliangium
+ASV31	ASV31	1044	15	W3	0.443486590038314	0.044				Bacteria	Acidobacteriota	Acidobacteriae	Acidobacteriales	o_Acidobacteriales	o_Acidobacteriales
+ASV211	ASV211	237					W3	3.04424780390441	0.0149955768204777	Bacteria	Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota	p_Latescibacterota
+ASV92	ASV92	466								Bacteria	Acidobacteriota	Blastocatellia	Pyrinomonadales	Pyrinomonadaceae	RB41
+ASV422	ASV422	103					C0	2.69774728463049	0.0136957917253623	Bacteria	Planctomycetota	p_Planctomycetota	p_Planctomycetota	p_Planctomycetota	p_Planctomycetota
+ASV151	ASV151	272								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV169	ASV169	266	10	C0	0.578947368421053	0.044	C0	3.11257103315356	0.00681827925135103	Bacteria	Gemmatimonadota	Gemmatimonadetes	Gemmatimonadales	Gemmatimonadaceae	f_Gemmatimonadaceae
+ASV98	ASV98	348					W3	3.22449961353383	0.0136957917253623	Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Xanthobacteraceae	Pseudolabrys
+ASV414	ASV414	111	7	W3	0.598198198198198	0.043	W3	2.80663221773262	0.0219149059808466	Bacteria	Myxococcota	Myxococcia	Myxococcales	Anaeromyxobacteraceae	Anaeromyxobacter
+ASV411	ASV411	135								Bacteria	Actinobacteriota	Thermoleophilia	Gaiellales	o_Gaiellales	o_Gaiellales
+ASV315	ASV315	153	9	C0	0.679738562091503	0.012	C0	2.94731332371608	0.0039951799112744	Bacteria	Acidobacteriota	Vicinamibacteria	Vicinamibacterales	Vicinamibacteraceae	f_Vicinamibacteraceae
+ASV321	ASV321	153					W3	2.91143444578091	0.0206967669318216	Bacteria	NB1-j	p_NB1-j	p_NB1-j	p_NB1-j	p_NB1-j
+ASV686	ASV686	102	9	C0	0.676470588235294	0.021	C0	2.71159398921366	0.00769898584940158	Bacteria	Actinobacteriota	Actinobacteria	Frankiales	Acidothermaceae	Acidothermus
+ASV16	ASV16	1482								Bacteria	Verrucomicrobiota	Verrucomicrobiae	Chthoniobacterales	Chthoniobacteraceae	Candidatus_Udaeobacter
+ASV95	ASV95	533								Bacteria	Alphaproteobacteria	Alphaproteobacteria	Rhizobiales	Hyphomicrobiaceae	Pedomicrobium
+ASV357	ASV357	116					C0	3.03423654524839	0.0317804134091488	Bacteria	Methylomirabilota	Methylomirabilia	Rokubacteriales	o_Rokubacteriales	o_Rokubacteriales
+ASV401	ASV401	142								Bacteria	Chloroflexi	Anaerolineae	Ardenticatenales	o_Ardenticatenales	o_Ardenticatenales
