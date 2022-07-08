@@ -25,7 +25,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 4], 3)
+            pvalue <- round(divtest$posthoc[, 4], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 
@@ -35,7 +35,7 @@ div_test_plot_jjs <- function (divtest, chart, colour, posthoc, threshold)
             combinations <- matrix(gsub(" $", "", gsub("^ ", 
                 "", unlist(strsplit(as.character(rownames(divtest$posthoc)), 
                   "-", fixed = TRUE)))), ncol = 2, byrow = TRUE)
-            pvalue <- round(divtest$posthoc[, 3], 3)
+            pvalue <- round(divtest$posthoc[, 3], 4)
             pairwisetable <- as.data.frame(cbind(combinations, 
                 pvalue))
             colnames(pairwisetable) <- c("group1", "group2", 

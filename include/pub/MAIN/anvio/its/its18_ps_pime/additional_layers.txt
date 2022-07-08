@@ -1,0 +1,153 @@
+Group	ASV_ID	total_reads	freq	enrich_indval	test_indval	pval_indval	enrich_lefse	test_lefse	pval_lefse	Kingdom	Phylum	Class	Order	Family	Genus
+ASV116	ASV116	142	10	W3	0.830945558739255	0.019	W3	3.60498545666191	0.035614586211372	Fungi	Basidiomycota	Agaricomycetes	Agaricales	Crepidotaceae	Neopaxillus
+ASV4	ASV4	2532								Fungi	Basidiomycota	Tremellomycetes	Trichosporonales	Trichosporonaceae	Apiotrichum
+ASV416	ASV416	51								Fungi	Ascomycota	Sordariomycetes	Xylariales	Sporocadaceae	Pestalotiopsis
+ASV114	ASV114	126	4	C0	0.8	0.009	C0	3.46820763999927	0.0167090752555271	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV233	ASV233	56	8	W3	0.789473684210526	0.025	W3	3.10212175533113	0.0188778228160563	Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	f_Nectriaceae
+ASV12	ASV12	1661	11	W3	0.617620921670687	0.036				Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV164	ASV164	54	4	W8	1	0.007	W8	3.33204413826619	0.00316976330632297	Fungi	Basidiomycota	Agaricomycetes	Sebacinales	o_Sebacinales	o_Sebacinales
+ASV8	ASV8	2412								Fungi	Basidiomycota	Agaricomycetes	Geastrales	Geastraceae	Geastrum
+ASV45	ASV45	803					W8	4.31028195880812	0.0396819242264057	Fungi	Glomeromycota	Glomeromycetes	Glomerales	Glomeraceae	f_Glomeraceae
+ASV150	ASV150	230								Fungi	Ascomycota	Leotiomycetes	Helotiales	Helotiaceae	Scytalidium
+ASV124	ASV124	91								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV177	ASV177	147	7	W8	0.775510204081633	0.034	W8	3.63287796477527	0.0130013098725021	Fungi	Glomeromycota	Glomeromycetes	Glomerales	Glomeraceae	f_Glomeraceae
+ASV274	ASV274	62								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	Ganoderma
+ASV202	ASV202	84					W3	3.33870684638427	0.0390268076437326	Fungi	Glomeromycota	Glomeromycetes	Gigasporales	Gigasporaceae	Gigaspora
+ASV105	ASV105	280	7	W8	0.696428571428571	0.042	W8	3.88008315212879	0.0190683298386486	Fungi	Glomeromycota	Glomeromycetes	Glomerales	Glomeraceae	Kamienskia
+ASV174	ASV174	104								Fungi	Ascomycota	Saccharomycetes	Saccharomycetales	Metschnikowiaceae	Metschnikowia
+ASV60	ASV60	248								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV2	ASV2	3786								Fungi	Ascomycota	Dothideomycetes	Capnodiales	Mycosphaerellaceae	f_Mycosphaerellaceae
+ASV38	ASV38	471								Fungi	Basidiomycota	Agaricomycetes	Agaricales	o_Agaricales	o_Agaricales
+ASV57	ASV57	411								Fungi	Basidiomycota	p_Basidiomycota	p_Basidiomycota	p_Basidiomycota	p_Basidiomycota
+ASV70	ASV70	293	3	W8	0.75	0.026	W8	4.05102029608909	0.0189000074105482	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV10	ASV10	1103	4	C0	0.8	0.015	C0	4.44946530704824	0.0167090752555271	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV44	ASV44	695								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV55	ASV55	485								Fungi	Ascomycota	Sordariomycetes	c_Sordariomycetes	c_Sordariomycetes	c_Sordariomycetes
+ASV126	ASV126	88	4	C0	0.8	0.011	C0	3.32201224792857	0.0167090752555271	Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV64	ASV64	325								Fungi	Mortierellomycota	Mortierellomycetes	Mortierellales	Mortierellaceae	Mortierella
+ASV34	ASV34	135								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV95	ASV95	171	9	W3	0.894357743097239	0.011	W3	3.71045397174469	0.00897278365130607	Fungi	Ascomycota	Eurotiomycetes	Eurotiales	Aspergillaceae	Aspergillus
+ASV81	ASV81	290					W3	3.69970433965785	0.0137637867330504	Fungi	Chytridiomycota	Chytridiomycetes	Chytridiales	Chytridiales_fam_Incertae_sedis	Delfinachytrium
+ASV100	ASV100	205								Fungi	Ascomycota	Sordariomycetes	Xylariales	Sporocadaceae	Pseudopestalotiopsis
+ASV58	ASV58	59	4	C0	0.8	0.016	C0	3.07169659912317	0.0167090752555271	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV129	ASV129	139								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	f_Ganodermataceae
+ASV104	ASV104	137					W3	3.35298307381005	0.0189471511297691	Fungi	Ascomycota	Sordariomycetes	Xylariales	Microdochiaceae	Idriella
+ASV20	ASV20	819								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV86	ASV86	350					W8	3.95400191317711	0.0262371874144949	Fungi	Glomeromycota	Glomeromycetes	Glomerales	Glomeraceae	f_Glomeraceae
+ASV119	ASV119	143	3	W3	0.75	0.036	W3	3.66927546427127	0.0189000074105482	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV23	ASV23	828	9	C0	0.913946587537092	0.026	C0	4.24256576272816	0.0109408232079904	Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV120	ASV120	124								Fungi	Chytridiomycota	Rhizophydiomycetes	Rhizophydiales	Rhizophydiales_fam_Incertae_sedis	Operculomyces
+ASV278	ASV278	65								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Meripilaceae	Meripilus
+ASV118	ASV118	90	5	C0	1	0.001	C0	3.38994727806684	0.00380504077551137	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV22	ASV22	817	11	C0	0.747239976757699	0.018				Fungi	Basidiomycota	Tremellomycetes	Trichosporonales	Trichosporonaceae	Apiotrichum
+ASV300	ASV300	71								Fungi	Ascomycota	Dothideomycetes	Minutisphaerales	Minutisphaeraceae	Minutisphaera
+ASV250	ASV250	65								Fungi	Mortierellomycota	Mortierellomycetes	Mortierellales	Mortierellaceae	Mortierella
+ASV25	ASV25	467								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV261	ASV261	84	3	W8	0.75	0.028	W8	3.52044919934953	0.0189000074105482	Fungi	Basidiomycota	Agaricomycetes	Auriculariales	o_Auriculariales	o_Auriculariales
+ASV91	ASV91	270								Fungi	Ascomycota	Dothideomycetes	Botryosphaeriales	Botryosphaeriaceae	Lasiodiplodia
+ASV111	ASV111	198								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	f_Ganodermataceae
+ASV9	ASV9	1854								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV205	ASV205	88								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	Ganoderma
+ASV316	ASV316	67								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Atractium
+ASV219	ASV219	133	3	W8	0.75	0.031	W8	3.70319195248414	0.0189000074105482	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV128	ASV128	177	7	W3	0.977272727272727	0.008	W3	3.70876390273898	0.0157524419951268	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV169	ASV169	80					W3	3.11055285209997	0.0392733423360049	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV186	ASV186	74	4	C0	0.8	0.01	C0	3.18539812759575	0.0167090752555271	Fungi	Basidiomycota	Agaricomycetes	c_Agaricomycetes	c_Agaricomycetes	c_Agaricomycetes
+ASV184	ASV184	64	5	C0	1	0.002	C0	3.1867905710599	0.00380504077551137	Fungi	Rozellomycota	Rozellomycotina_cls_Incertae_sedis	GS11	o_GS11	o_GS11
+ASV262	ASV262	56								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Agaricaceae	Agaricus
+ASV259	ASV259	62	8	W3	0.649122807017544	0.026	W3	3.0406262441368	0.0149694445410315	Fungi	Ascomycota	Sordariomycetes	Hypocreales	Clavicipitaceae	Metacordyceps
+ASV286	ASV286	88					W8	3.51876839445189	0.0456084470331313	Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Fusarium
+ASV1	ASV1	5361								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Hygrophoraceae	Hygrocybe
+ASV103	ASV103	148	3	W8	0.75	0.029	W8	3.79706114927511	0.0189000074105482	Fungi	Ascomycota	Eurotiomycetes	Eurotiales	Trichocomaceae	Talaromyces
+ASV172	ASV172	76								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV208	ASV208	54								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Clavariaceae	Ramariopsis
+ASV106	ASV106	242	3	W8	0.75	0.026	W8	3.98944164316416	0.0189000074105482	Fungi	Basidiomycota	Agaricomycetes	Cantharellales	Ceratobasidiaceae	f_Ceratobasidiaceae
+ASV83	ASV83	120								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV227	ASV227	57	3	W3	0.75	0.017	W3	3.33212045522244	0.0189000074105482	Fungi	Chytridiomycota	p_Chytridiomycota	p_Chytridiomycota	p_Chytridiomycota	p_Chytridiomycota
+ASV74	ASV74	367								Fungi	Ascomycota	Sordariomycetes	c_Sordariomycetes	c_Sordariomycetes	c_Sordariomycetes
+ASV307	ASV307	68	4	W8	1	0.003	W8	3.41900093336262	0.00316976330632297	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV196	ASV196	83					W3	3.31567838592049	0.0456084470331313	Fungi	Glomeromycota	Glomeromycetes	Gigasporales	Gigasporaceae	Gigaspora
+ASV200	ASV200	74								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV125	ASV125	362	8	W8	0.93646408839779	0.023	W8	4.09754897354879	0.00572569867507039	Fungi	Ascomycota	Pezizomycetes	Pezizales	Pyronemataceae	Scutellinia
+ASV97	ASV97	246								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV147	ASV147	55								Fungi	Ascomycota	Saccharomycetes	Saccharomycetales	o_Saccharomycetales	o_Saccharomycetales
+ASV170	ASV170	57								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Mariannaea
+ASV102	ASV102	224								Fungi	Ascomycota	Dothideomycetes	Botryosphaeriales	Botryosphaeriaceae	Lasiodiplodia
+ASV268	ASV268	82								Fungi	Ascomycota	Dothideomycetes	Capnodiales	Capnodiaceae	Antennariella
+ASV101	ASV101	178								Fungi	Ascomycota	Dothideomycetes	Capnodiales	Cladosporiaceae	Cladosporium
+ASV13	ASV13	1487								Fungi	Basidiomycota	Tremellomycetes	Trichosporonales	Trichosporonaceae	f_Trichosporonaceae
+ASV148	ASV148	72								Fungi	Ascomycota	Sordariomycetes	Hypocreales	o_Hypocreales	o_Hypocreales
+ASV48	ASV48	457								Fungi	Ascomycota	Eurotiomycetes	Eurotiales	Aspergillaceae	Aspergillus
+ASV36	ASV36	981								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV49	ASV49	414								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV62	ASV62	246								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV16	ASV16	1170								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV79	ASV79	251								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Fusarium
+ASV68	ASV68	312	5	C0	1	0.002	C0	3.82321686489531	0.00380504077551137	Fungi	Basidiomycota	Agaricomycetes	c_Agaricomycetes	c_Agaricomycetes	c_Agaricomycetes
+ASV144	ASV144	102								Fungi	Ascomycota	Dothideomycetes	Pleosporales	Cucurbitariaceae	Pyrenochaetopsis
+ASV163	ASV163	76								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Clavicipitaceae	Metacordyceps
+ASV154	ASV154	107	4	W8	1	0.005	W8	3.62468808019205	0.00316976330632297	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV11	ASV11	468								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV136	ASV136	157								Fungi	Ascomycota	Dothideomycetes	Capnodiales	Capnodiaceae	Readerielliopsis
+ASV210	ASV210	98	3	W8	0.75	0.029	W8	3.58303153075271	0.0189000074105482	Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV189	ASV189	63	8	C0	0.719101123595506	0.015	C0	3.05526699840456	0.0221250127541864	Fungi	Basidiomycota	Microbotryomycetes	Sporidiobolales	Sporidiobolaceae	Rhodotorula
+ASV113	ASV113	158					W8	3.65987710309117	0.0257630343996539	Fungi	Kickxellomycota	Kickxellomycetes	Kickxellales	Kickxellaceae	Ramicandelaber
+ASV84	ASV84	163								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV131	ASV131	97								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Campylocarpon
+ASV66	ASV66	173	3	W3	0.75	0.034	W3	3.90772758592979	0.0189000074105482	Fungi	Basidiomycota	Agaricomycetes	Agaricales	o_Agaricales	o_Agaricales
+ASV358	ASV358	66					W8	3.34278313819451	0.0230927380255687	Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	f_Ganodermataceae
+ASV127	ASV127	112	7	W8	0.867158671586716	0.006	W8	3.58624946160693	0.00776321549567793	Fungi	Chytridiomycota	Rhizophydiomycetes	Rhizophydiales	Angulomycetaceae	Angulomyces
+ASV29	ASV29	520					C0	3.97888040300229	0.0375976416176472	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV71	ASV71	134	5	C0	1	0.002	C0	3.47828101808045	0.00380504077551137	Fungi	Basidiomycota	Tremellomycetes	Trichosporonales	Trichosporonaceae	Apiotrichum
+ASV88	ASV88	225								Fungi	Basidiomycota	p_Basidiomycota	p_Basidiomycota	p_Basidiomycota	p_Basidiomycota
+ASV251	ASV251	61								Fungi	Basidiomycota	Agaricomycetes	Cantharellales	Ceratobasidiaceae	f_Ceratobasidiaceae
+ASV180	ASV180	66								Fungi	Ascomycota	Dothideomycetes	Capnodiales	Capnodiaceae	Readerielliopsis
+ASV140	ASV140	248					W8	3.91623382845164	0.026477526389637	Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV40	ASV40	503					W3	3.9727181918955	0.0129396682587646	Fungi	Ascomycota	Dothideomycetes	Pleosporales	Pleosporales_fam_Incertae_sedis	Polyschema
+ASV183	ASV183	86								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Fusarium
+ASV42	ASV42	439	9	W3	0.638350720317933	0.041	W3	3.99008300987631	0.0109408232079904	Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV137	ASV137	104	3	W3	0.75	0.03	W3	3.67026525383472	0.0189000074105482	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV188	ASV188	54	4	C0	0.8	0.011	C0	3.16108324069991	0.0167090752555271	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV78	ASV78	617								Fungi	Ascomycota	Dothideomycetes	Jahnulales	Aliquandostipitaceae	Jahnula
+ASV199	ASV199	56	3	W3	0.75	0.022	W3	3.34414428216367	0.0189000074105482	Fungi	Basidiomycota	Agaricomycetes	Agaricales	Crepidotaceae	Neopaxillus
+ASV46	ASV46	251	4	W3	1	0.003	W3	3.98091125559626	0.00316976330632297	Fungi	Basidiomycota	Agaricomycetes	Cantharellales	Ceratobasidiaceae	f_Ceratobasidiaceae
+ASV24	ASV24	1570								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV190	ASV190	69								Fungi	Chytridiomycota	p_Chytridiomycota	p_Chytridiomycota	p_Chytridiomycota	p_Chytridiomycota
+ASV151	ASV151	60								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV15	ASV15	1491					W8	4.65860107904996	0.0450244568833901	Fungi	Ascomycota	Saccharomycetes	Saccharomycetales	Metschnikowiaceae	Metschnikowia
+ASV65	ASV65	226					C0	3.64937558708134	0.0437403928332736	Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Fusarium
+ASV92	ASV92	341	8	W8	0.768328445747801	0.032	W8	3.99479292606756	0.00572569867507039	Fungi	Glomeromycota	Glomeromycetes	Glomerales	Glomeraceae	Kamienskia
+ASV28	ASV28	941					W8	4.33602170585438	0.0257630343996539	Fungi	Ascomycota	Eurotiomycetes	Eurotiales	Trichocomaceae	Talaromyces
+ASV109	ASV109	161								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Entolomataceae	Clitopilus
+ASV312	ASV312	92	3	W8	0.75	0.028	W8	3.55263392625025	0.0189000074105482	Fungi	Ascomycota	Sordariomycetes	Hypocreales	Hypocreales_fam_Incertae_sedis	Acremonium
+ASV329	ASV329	66								Fungi	Ascomycota	Sordariomycetes	Sordariales	Chaetomiaceae	Zopfiella
+ASV56	ASV56	280	5	C0	1	0.004	C0	3.92603483042752	0.00380504077551137	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV135	ASV135	132								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Entolomataceae	Clitopilus
+ASV162	ASV162	124					W8	3.43879657517109	0.0274591743887209	Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	Ganoderma
+ASV54	ASV54	485								Fungi	Ascomycota	Sordariomycetes	Xylariales	Sporocadaceae	Neopestalotiopsis
+ASV3	ASV3	2521					C0	4.6800861639764	0.0178256179787564	Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV31	ASV31	555								Fungi	Ascomycota	Saccharomycetes	Saccharomycetales	Metschnikowiaceae	Metschnikowia
+ASV37	ASV37	519	4	C0	0.8	0.02	C0	4.05440684850668	0.0167090752555271	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV270	ASV270	83	11	W3	0.760598503740648	0.021				Fungi	Ascomycota	Saccharomycetes	Saccharomycetales	Metschnikowiaceae	Metschnikowia
+ASV53	ASV53	444								Fungi	Ascomycota	Sordariomycetes	Hypocreales	Nectriaceae	Fusarium
+ASV33	ASV33	750	8	W8	0.881333333333333	0.034	W8	4.45877163358946	0.00811571082108673	Fungi	Mortierellomycota	Mortierellomycetes	Mortierellales	Mortierellaceae	Mortierella
+ASV220	ASV220	57					W3	3.16595858315857	0.0478945385221728	Fungi	Ascomycota	Sordariomycetes	Hypocreales	Clavicipitaceae	Metacordyceps
+ASV39	ASV39	292								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Hygrophoraceae	Hygrocybe
+ASV18	ASV18	817								Fungi	Basidiomycota	Agaricomycetes	Agaricales	Clavariaceae	Ramariopsis
+ASV19	ASV19	782								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV94	ASV94	214	3	W3	0.75	0.027	W3	3.82132807167823	0.0189000074105482	Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV59	ASV59	343	13	W8	0.670041691483026	0.023	W8	3.92743347491723	0.00760369565777816	Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	Ganoderma
+ASV26	ASV26	798								Fungi	Ascomycota	Pezizomycetes	Pezizales	Ascobolaceae	Ascobolus
+ASV98	ASV98	161	4	C0	0.8	0.013	C0	3.53434730798277	0.0167090752555271	Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV139	ASV139	90								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV14	ASV14	1083								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV167	ASV167	73								Fungi	Basidiomycota	Agaricomycetes	Sebacinales	Sebacinaceae	Sebacina
+ASV72	ASV72	444								Fungi	Ascomycota	Archaeorhizomycetes	Archaeorhizomycetales	Archaeorhizomycetaceae	Archaeorhizomyces
+ASV222	ASV222	70								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	Ganoderma
+ASV89	ASV89	173								Fungi	Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota	p_Ascomycota
+ASV17	ASV17	980								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV253	ASV253	86								Fungi	Ascomycota	Dothideomycetes	Capnodiales	Cladosporiaceae	Cladosporium
+ASV206	ASV206	73	4	W3	1	0.003	W3	3.40499068294111	0.00316976330632297	Fungi	Ascomycota	Sordariomycetes	Diaporthales	Diaporthaceae	Diaporthe
+ASV171	ASV171	104								Fungi	Basidiomycota	Agaricomycetes	Polyporales	Ganodermataceae	f_Ganodermataceae
+ASV27	ASV27	553								Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi	k_Fungi
+ASV51	ASV51	590								Fungi	Ascomycota	Saccharomycetes	Saccharomycetales	o_Saccharomycetales	o_Saccharomycetales

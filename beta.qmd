@@ -558,6 +558,7 @@ ssu18_ps_pime_anosim_wunifrac <-
 :::
 :::
 
+
 <details markdown="1">
 <summary><strong>Detailed results</strong> of Significance tests</summary>
 
@@ -599,7 +600,6 @@ summary(ssu18_ps_filt_anosim_wunifrac)
 cat("\n")
 ```
 
-
 #### PERfect
 
 ```{r}
@@ -617,7 +617,6 @@ cat("\n", "***ANOSIM for Weighted-UniFrac distance, `wunifrac`***", "\n\n")
 summary(ssu18_ps_perfect_anosim_wunifrac)
 cat("\n")
 ```
-
 
 #### PIME
 
@@ -1077,7 +1076,6 @@ its18_ps_work_adonis2_gower <- adonis2(its18_ps_work_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-
 #### Arbitrary
 
 ```{r}
@@ -1122,7 +1120,6 @@ its18_ps_filt_adonis2_gower <- adonis2(its18_ps_filt_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
 
-
 #### PERfect
 
 ```{r}
@@ -1166,7 +1163,6 @@ its18_ps_perfect_adonis_gower <-  adonis(its18_ps_perfect_beta_dist_gower ~ TEMP
 its18_ps_perfect_adonis2_gower <- adonis2(its18_ps_perfect_beta_dist_gower ~ TEMP,
                                   data = adonis_sampledf, permutations = 1000)
 ```
-
 
 #### PIME
 
