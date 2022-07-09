@@ -17,6 +17,10 @@ To access the code, you have a few options:
 
 For information on all raw data and data products, please see the [Data Availability](https://sweltr.github.io/high-temp/data-availability.html) page. There you will find more details and links to the figshare project site and European Nucleotide Archive project page. Please also check at the bottom of individual workflow pages for access to related data.
 
+## Publication 
+
+The website contains information related to the publication. This includes a HTML version of the [Electronic Supplementary Material](https://sweltr.github.io/high-temp/som.html) and workflows to reproduce all of the figures in the paper, specifically from the [Main paper](https://sweltr.github.io/high-temp/pub.html#main-paper), [Extended Data section](https://sweltr.github.io/high-temp/pub.html#extended-data), and [Supplementary Material](https://sweltr.github.io/high-temp/pub.html#supplementary-material). 
+
 ## Workflows
 
 You can access each step of the workflows by using the navigation bar at the top of the [SWELTR](https://sweltr.github.io/high-temp/) website or by downloading the Quarto (.qmd) files in this repo. Below is a brief description of each workflow, as well as information on how to access the code. Workflows appear in order.
