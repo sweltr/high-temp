@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-0.9.646">
+<meta name="generator" content="quarto-1.1.251">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Andrew Nottingham">
 <meta name="author" content="Jarrod J Scott">
@@ -17,10 +17,15 @@
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-span.underline{text-decoration: underline;}
-div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
 div.csl-bib-body { }
 div.csl-entry {
   clear: both;
@@ -58,7 +63,7 @@ div.csl-indent {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet"><script id="quarto-search-options" type="application/json">{
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
   "collapse-after": 3,
@@ -89,8 +94,10 @@ background-size: cover;
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top"><nav class="navbar navbar-expand-lg navbar-dark "><div class="navbar-container container-fluid">
-      <a class="navbar-brand" href="./index.html">
-    <img src="./assets/icon.png" alt=""></a>
+      <div class="navbar-brand-container">
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./assets/icon.png" alt="" class="navbar-logo"></a>
+  </div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
@@ -281,101 +288,101 @@ background-size: cover;
   <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto"><div class="sidebar-menu-container"> 
     <ul class="list-unstyled mt-1">
 <li class="sidebar-item sidebar-item-section">
-    <div class="sidebar-item-container"> 
-        <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">A. Processing</a>
-      <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
-        <i class="bi bi-chevron-right ms-2"></i>
-      </a>
-    </div>
-    <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">A. Processing</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
 <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./dada2.html" class="sidebar-item-text sidebar-link">1. DADA2 Workflow</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./data-prep.html" class="sidebar-item-text sidebar-link">2. Data Set Preparation</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./filtering.html" class="sidebar-item-text sidebar-link">3. Filtering</a>
   </div>
 </li>
-    </ul>
+      </ul>
 </li>
         <li class="sidebar-item sidebar-item-section">
-    <div class="sidebar-item-container"> 
-        <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">B. Diversity</a>
-      <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
-        <i class="bi bi-chevron-right ms-2"></i>
-      </a>
-    </div>
-    <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">B. Diversity</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
 <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./taxa.html" class="sidebar-item-text sidebar-link">4. Taxonomic Diversity</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./alpha.html" class="sidebar-item-text sidebar-link">5. Alpha Diversity Estimates</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./beta.html" class="sidebar-item-text sidebar-link">6. Beta Diversity &amp; Dispersion Estimates</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./da.html" class="sidebar-item-text sidebar-link">7. Differentially Abundant ASVs &amp; Taxa</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./metadata.html" class="sidebar-item-text sidebar-link">8. Metadata Analysis</a>
   </div>
 </li>
-    </ul>
+      </ul>
 </li>
         <li class="sidebar-item sidebar-item-section">
-    <div class="sidebar-item-container"> 
-        <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">More</a>
-      <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
-        <i class="bi bi-chevron-right ms-2"></i>
-      </a>
-    </div>
-    <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">More</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
 <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./data-availability.html" class="sidebar-item-text sidebar-link">Data Availability</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./som.html" class="sidebar-item-text sidebar-link">Electronic Supplementary Material</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./about.html" class="sidebar-item-text sidebar-link">Website Contruction</a>
   </div>
 </li>
-        <li class="sidebar-item">
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./pub.html" class="sidebar-item-text sidebar-link">Code for Publication Figures</a>
   </div>
 </li>
-    </ul>
+      </ul>
 </li>
     </ul>
 </div>
 </nav><!-- margin-sidebar --><div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc"><h2 id="toc-title">On this page</h2>
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">On this page</h2>
    
-  <ul>
+  <ul class="collapse">
 <li><a href="#site-overview" id="toc-site-overview" class="nav-link active" data-scroll-target="#site-overview">Site Overview</a></li>
   <li><a href="#data-availability" id="toc-data-availability" class="nav-link" data-scroll-target="#data-availability">Data Availability</a></li>
   <li>
@@ -389,8 +396,31 @@ background-size: cover;
   </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/sweltr/high-temp/edit/main/index.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/sweltr/high-temp/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block" id="quarto-document-content"><section id="site-overview" class="level1"><h1>Site Overview</h1>
-<p>Welcome to the website of the <strong>S</strong>oil <strong>W</strong>arming <strong>E</strong>xperiment in <strong>L</strong>owland <strong>T</strong>ropical <strong>R</strong>ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR high temperature experiment, entitled <em>Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil</em>. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the <code>qmd</code> file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.</p>
+<main class="content quarto-banner-title-block" id="quarto-document-content"><script type="text/javascript" src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script><script async="" src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script><div class="pub_float">
+<div class="__dimensions_badge_embed__" data-doi="10.1038/s41564-022-01200-1" data-hide-zero-citations="false" data-legend="hover-bottom" data-style="small_circle">
+
+</div>
+<div class="altmetric-embed" data-badge-type="donut" data-doi="10.1038/s41564-022-01200-1" data-altmetric-id="135469873">
+
+</div>
+<span class="pub-title"><a href="https://doi.org/10.1038/s41564-022-01200-1" target="_new">Microbial diversity declines in warmed tropical soil and respiration rise exceed predictions as communities adapt</a></span> <span class="pub-authors">Nottingham AT, Scott JJ, Saltonstall K, Broders K, Montero-Sanchez M, Püspök J, Bååth E, Meir P. </span>
+<div class="pub-info">
+<div class="pub-featured-image">
+<p><a href="assets/main_figs.png"> <img src="assets/main_figs.png" style="max-width: 100px; max-height: 400px; width: auto; border: none; height: auto; margin: 0 auto; display: block; transform: translateY(10%);"></a></p>
+</div>
+<div class="pub-highlights">
+<p><span style="display: inline-block; padding-bottom: 5px;">- <strong>Perturbation</strong> of soil microbial communities by <strong>rising temperatures</strong> could have important consequences for biodiversity and future climate.</span><br><span style="display: inline-block; padding-bottom: 5px;">- Particularly in <strong>tropical forests</strong> where high biological diversity coincides with a <strong>vast store of soil carbon</strong>. </span><br><span style="display: inline-block; padding-bottom: 5px;">- We carried out a 2-year <em>in situ</em> soil <strong>warming experiment</strong> in a tropical forest in Panama.</span><br><span style="display: inline-block; padding-bottom: 5px;">- Found <strong>large changes</strong> in the soil microbial community and its growth sensitivity.</span><br><span style="display: inline-block; padding-bottom: 5px;">- Microbial <strong>diversity declined</strong> markedly with warming, demonstrating a breakdown in the positive temperature-diversity relationship observed elsewhere.</span><br><span style="display: inline-block; padding-bottom: 5px;">- Microbial <strong>community composition shifted</strong> with warming—many taxa were no longer detected while others enriched, including thermophilic taxa.</span><br><span style="display: inline-block; padding-bottom: 5px;">- Shifts resulted in community adaptation of growth to warmer temperatures, which we used to predict changes in soil CO<sub>2</sub> emissions.</span><br><span style="display: inline-block; padding-bottom: 5px;">- The <em>in situ</em> CO<sub>2</sub> emissions <strong>exceeded our model predictions</strong> threefold.</span><br><span style="display: inline-block; padding-bottom: 5px;">- Results suggest that warming of tropical forests will have <strong>rapid, detrimental consequences</strong> for soil microbial biodiversity and future climate.</span></p>
+</div>
+</div>
+<p><span class="pub-journal"> <b>Nature Microbiology 7 (2022)</b> <a href="https://doi.org/10.1038/s41564-022-01200-1" target="_blank">🔗</a> </span></p>
+</div>
+<p><small><em>Code for the highlight box above shamelessly stolen from the <a href="https://merenlab.org/">Meren Lab website</a>.</em></small></p>
+<blockquote class="blockquote">
+<p><a href="https://www.nature.com/articles/s41564-022-01200-1/metrics">Click here</a> for article metrics on the Nature Microbiology website.</p>
+</blockquote>
+<p><br></p>
+<section id="site-overview" class="level1"><h1>Site Overview</h1>
+<p>Welcome to the website of the <strong>S</strong>oil <strong>W</strong>arming <strong>E</strong>xperiment in <strong>L</strong>owland <strong>T</strong>ropical <strong>R</strong>ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR high temperature experiment, entitled <em>Microbial diversity declines in warmed tropical soil and respiration rise exceed predictions as communities adapt</em>. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the <code>qmd</code> file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.</p>
 </section><section id="data-availability" class="level1"><h1>Data Availability</h1>
 <p>In order to run a complete pipeline, you either need the <em>raw</em> fastq files, available on the <a href="https://doi.org/10.25573/data.c.5667571">figshare project site</a>, or the <em>trimmed</em> fastq files, available from the European Nucleotide Archive (ENA) under project accession number <a href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074 (ERP129199)</a>. See the specific pipeline or <a href="data-availability.html">Data Availability</a> page for more details.</p>
 <p>Each workflow page within a pipeline also contains a Data Availability appendix that links to specific data packets require for the workflow. Or again, you can visit the <a href="data-availability.html">Data Availability</a> page for more information.</p>
@@ -433,7 +463,9 @@ background-size: cover;
 
 </div>
 <div class="cell">
-
+<div class="cell-output-display">
+<p><img src="assets/wordcloud.png" class="img-fluid" width="1228"></p>
+</div>
 </div>
 </section></section><div id="quarto-appendix" class="default"><section id="acknowledgements" class="level3 appendix"><h2 class="quarto-appendix-heading">Acknowledgements</h2><div class="quarto-appendix-contents">
 <p>This study was supported by three fellowships to ATN—a UK NERC grant NE/T012226, a European Union Marie-Curie Fellowship FP7-2012-329360, and a STRI Tupper Fellowship. Further support came from a UK NERC grant NE/K01627X/1 to PM, an ANU Biology Innovation grant to PM and Simons Foundation grant No.&nbsp;429440 to W. Wcislo, STRI, and support from the U.S. Department of Agriculture (USDA), Agricultural Research Service to KB. We thank Ben Turner for his contribution to SWELTR, especially during its initial phase of operation. For their support we further thank Oris Acevado, Dayana Agudo, Aleksandra Bielnicka, Gloria Broders, Melissa Cano, David Dominguez, Milton Garcia, Matthew Larsen, Julio Rodriguez, Hubert Szczygiel, Irene Torres, Esther Velasquez, William Wcislo, Klaus Winter and Joe Wright. For the purpose of open access, the author has applied a Creative Commons Attribution (CC BY) licence to any Author Accepted Manuscript version arising from this submission. Many of the computations were conducted on the Smithsonian High-Performance Cluster (SI/HPC), Smithsonian Institution (<a href="https://doi.org/10.25572/SIHPC">doi:10.25572/SIHPC</a>).</p>
@@ -443,14 +475,14 @@ background-size: cover;
 
 </div>
 </div></section><section id="source-code" class="level4 appendix"><h2 class="quarto-appendix-heading">Source Code</h2><div class="quarto-appendix-contents">
-<p>The source code for this page can be accessed on GitHub <svg aria-hidden="true" role="img" viewbox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg> by <a href="https://github.com/sweltr/high-temp/blob/main/index.qmd">clicking this link</a>.</p>
+<p>The source code for this page can be accessed on GitHub <svg aria-hidden="true" role="img" viewbox="0 0 496 512" style="height:1em;width:0.97em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3 .7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3 .3 2.9 2.3 3.9 1.6 1 3.6 .7 4.3-.7 .7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3 .7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3 .7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg> by <a href="https://github.com/sweltr/high-temp/blob/main/index.qmd">clicking this link</a>.</p>
 <p><a href="https://zenodo.org/badge/latestdoi/368915237"><img src="https://zenodo.org/badge/368915237.svg" alt="DOI"></a></p>
 </div></section><section id="data-availability-1" class="level4 appendix"><h2 class="quarto-appendix-heading">Data Availability</h2><div class="quarto-appendix-contents">
 <p>All data associated with this project can be accessed through the figshare Collection at <a href="https://doi.org/10.25573/data.c.5667571">doi:10.25573/data.c.5667571</a> with the exception of trimmed fastq files (primers removed), which are available through the ENA under project accession number <a href="https://www.ebi.ac.uk/ena/browser/view/PRJEB45074">PRJEB45074 (ERP129199)</a>.</p>
 </div></section><section id="last-updated-on" class="level4 appendix"><h2 class="quarto-appendix-heading">Last updated on</h2><div class="quarto-appendix-contents">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "2022-07-07 07:59:58 EST"</code></pre>
+<pre><code>[1] "2022-09-20 08:56:19 EDT"</code></pre>
 </div>
 </div>
 
@@ -461,7 +493,7 @@ background-size: cover;
 Alberdi, Antton, and M Thomas P Gilbert. 2019. <span>“A Guide to the Application of Hill Numbers to DNA-Based Diversity Analyses.”</span> <em>Molecular Ecology Resources</em> 19 (4): 804–17. <a href="https://doi.org/10.1111/1755%E2%80%900998.13014">https://doi.org/10.1111/1755‐0998.13014</a>.
 </div>
 <div id="ref-callahan2016dada2" class="csl-entry" role="doc-biblioentry">
-Callahan, Benjamin J, Paul J McMurdie, Michael J Rosen, Andrew W Han, Amy Jo A Johnson, and Susan P Holmes. 2016. <span>“Dada2: High-Resolution Sample Inference from Illumina Amplicon Data.”</span> <em>Nature Methods</em> 13 (7): 581. <a href="https://doi.org/10.1038/nmeth.3869">https://doi.org/10.1038/nmeth.3869</a>.
+Callahan, Benjamin J, Paul J McMurdie, Michael J Rosen, Andrew W Han, Amy Jo A Johnson, and Susan P Holmes. 2016. <span>“DADA2: High-Resolution Sample Inference from Illumina Amplicon Data.”</span> <em>Nature Methods</em> 13 (7): 581. <a href="https://doi.org/10.1038/nmeth.3869">https://doi.org/10.1038/nmeth.3869</a>.
 </div>
 <div id="ref-martin2011cutadapt" class="csl-entry" role="doc-biblioentry">
 Martin, Marcel. 2011. <span>“Cutadapt Removes Adapter Sequences from High-Throughput Sequencing Reads.”</span> <em>EMBnet. Journal</em> 17 (1): 10–12. <a href="https://doi.org/10.14806/ej.17.1.200">https://doi.org/10.14806/ej.17.1.200</a>.
@@ -477,6 +509,24 @@ Smirnova, Ekaterina, Snehalata Huzurbazar, and Farhad Jafari. 2019. <span>“PER
 </div>
 </div></section></div></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
   const icon = "";
   const anchorJS = new window.AnchorJS();
   anchorJS.options = {
@@ -526,7 +576,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   for (var i=0; i<noterefs.length; i++) {
     const ref = noterefs[i];
     tippyHover(ref, function() {
-      let href = ref.getAttribute('href');
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
