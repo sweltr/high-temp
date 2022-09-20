@@ -38,7 +38,6 @@ format:
     code-tools: false    
     css: ["assets/css/styles_index.css", "assets/css/styles.css"]
 title-block-banner: assets/banner.png
-    
 ---
 
 ```{r}
@@ -52,9 +51,50 @@ pacman::p_load(tidyverse, tm, SnowballC, wordcloud, RColorBrewer,
                install = FALSE, update = FALSE)
 ```
 
+
+<script type="text/javascript" src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script>
+<script async src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script>
+
+<div class="pub_float">
+  <div class="__dimensions_badge_embed__" data-doi="10.1038/s41564-022-01200-1" data-hide-zero-citations="false" data-legend="hover-bottom" data-style="small_circle"></div>
+  <div class="altmetric-embed" data-badge-type="donut" data-doi="10.1038/s41564-022-01200-1" data-altmetric-id="135469873"></div>
+  <span class="pub-title"><a href=" https://doi.org/10.1038/s41564-022-01200-1" target="_new">Microbial diversity declines in warmed tropical soil and respiration rise exceed predictions as communities adapt</a></span>
+  <span class="pub-authors">Nottingham AT, Scott JJ, Saltonstall K, Broders K, Montero-Sanchez M, Püspök J, Bååth E, Meir P. </span>
+<div class="pub-info">
+<div class="pub-featured-image">
+  <a href="assets/main_figs.png">
+    <img src="assets/main_figs.png" style="max-width: 100px; max-height: 400px; width: auto; border: none; height: auto; margin: 0 auto; display: block; transform: translateY(10%);" />
+  </a>
+</div>
+<div class="pub-highlights">
+  <span style="display: inline-block; padding-bottom: 5px;"
+  >- **Perturbation** of soil microbial communities by **rising temperatures** could have important consequences for biodiversity and future climate.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- Particularly in **tropical forests** where high biological diversity coincides with a **vast store of soil carbon**. </span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- We carried out a 2-year *in situ* soil **warming experiment** in a tropical forest in Panama.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- Found **large changes** in the soil microbial community and its growth sensitivity.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- Microbial **diversity declined** markedly with warming, demonstrating a breakdown in the positive temperature-diversity relationship observed elsewhere.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- Microbial **community composition shifted** with warming---many taxa were no longer detected while others enriched, including thermophilic taxa.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- Shifts resulted in community adaptation of growth to warmer temperatures, which we used to predict changes in soil CO~2~ emissions.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- The *in situ* CO~2~ emissions **exceeded our model predictions** threefold.</span><br><span style="display: inline-block; padding-bottom: 5px;"
+  >- Results suggest that warming of tropical forests will have **rapid, detrimental consequences** for soil microbial biodiversity and future climate.</span>
+</div>
+  </div>
+  <span class="pub-journal">
+    <b>Nature Microbiology 7 (2022)</b>
+    <a href="https://doi.org/10.1038/s41564-022-01200-1" target="_blank">🔗</a>
+  </span>
+</div>
+
+<small><em>Code for the highlight box above shamelessly stolen from the [Meren Lab website](https://merenlab.org/).</em></small>
+
+
+> [Click here](https://www.nature.com/articles/s41564-022-01200-1/metrics) for article metrics on the  Nature Microbiology website. 
+
+<br/>
+
 # Site Overview
 
-Welcome to the website of the **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR high temperature experiment, entitled *Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil*. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the `qmd` file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
+Welcome to the website of the **S**oil **W**arming **E**xperiment in **L**owland **T**ropical **R**ainforest project, or SWELTR for short. This site contains reproducible workflows and pipelines for all aspects of processing and analyzing the SWELTR high temperature experiment, entitled *Microbial diversity declines in warmed tropical soil and respiration rise exceed predictions as communities adapt*. Most (if not all) steps were performed in R. Though we ran some steps using the Smithsonian compute cluster (Hydra), all workflows can be run on a laptop. Workflows have a modular design, meaning they can each be run independently as long as you have the necessary input files described at the beginning of each workflow. Many of the tables have download or copy buttons that allow you to quickly export data in different formats. Citations, which are embedded in the workflows, can be copied for use in reference management software. Generally, all R code is available in each workflow. Code for displaying tables and other non-analytical features are always hidden but can be accessed from the `qmd` file on the site GitHub repo. At the bottom of each page there are a variety of Appendices including a bibliography, links to source code, instructions on accessing raw data, etc.
 
 # Data Availability
 
@@ -149,10 +189,10 @@ webshot("tmp.html", "wordcloud.pdf", delay = 10, vwidth = 1180, vheight = 580)
 
 ```{r}
 #| echo: false
-#| eval: false
+#| eval: true
 #| warning: false
 #| fig-height: 1.5
-knitr::include_graphics("figures/index/wordcloud.png")
+knitr::include_graphics("assets/wordcloud.png")
 ```
 
 ### Acknowledgements {.appendix}

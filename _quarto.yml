@@ -18,7 +18,6 @@ website:
   title: "SWELTR"
   favicon: "assets/favicon.ico"
   page-footer: "© Copyright 2022 [metacrobe](https://metacrobe.github.io/) & The SWELTR Project. Site constructed using [Quarto](https://quarto.org/)."
-  license: "CC BY"
   site-url: https://sweltr.github.io/high-temp/
   repo-url: https://github.com/sweltr/high-temp/
   repo-actions: [edit, issue]

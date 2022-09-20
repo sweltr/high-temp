@@ -1,7 +1,7 @@
 
 [![DOI](https://zenodo.org/badge/368915237.svg)](https://zenodo.org/badge/latestdoi/368915237)
 
-This repo contains reproducible workflows for the study *[Microbial diversity decline and community response are decoupled from increased respiration in warmed tropical forest soil](https://www.nature.com/nmicrobiol/)*.
+This repo contains reproducible workflows for the study *[Microbial diversity declines in warmed tropical soil and respiration rise exceed predictions as communities adapt](https://www.nature.com/articles/s41564-022-01200-1)*.
 
 ## Code Availability
 
